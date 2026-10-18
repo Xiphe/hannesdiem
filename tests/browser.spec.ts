@@ -71,34 +71,95 @@ test('menu opens as a native dialog without changing static page DOM', async ({ 
   expect(errors).toEqual([])
 })
 
-test('menu opens immediately without a route or state request before opening', async ({ page }) => {
-  let requests = 0
+for (const authenticated of [false, true]) {
+  test(`menu opens immediately with a newsletter skeleton until ${authenticated ? 'authenticated' : 'anonymous'} session resolves`, async ({
+    page,
+  }) => {
+    let requests = 0
+    let finish!: () => void
+    const ready = new Promise<void>((resolve) => {
+      finish = resolve
+    })
+    await page.route('**/login', async (route) => {
+      requests++
+      await ready
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ready: true,
+          csrfToken: 'test-csrf',
+          ...(authenticated ? { email: 'listener@example.org' } : {}),
+        }),
+      })
+    })
+    await page.goto(authenticated ? '/linktree' : '/halbkreis', { waitUntil: 'networkidle' })
+    if (authenticated) {
+      await page.locator('footer a[href="/halbkreis"]').click()
+      await expect(page).toHaveURL(/\/halbkreis$/)
+    }
+    expect(requests).toBe(0)
+    const historyLength = await page.evaluate(() => history.length)
+    await page.getByRole('button', { name: 'Open menu', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
+    const newsletter = dialog.getByRole('region', { name: 'Newsletter', exact: true })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.locator('summary').first()).toBeVisible()
+    await expect(newsletter.locator('.newsletter-skeleton')).toBeVisible()
+    await expect(newsletter.getByRole('status')).toHaveText('Loading newsletter…')
+    await expect(newsletter).toHaveAttribute('aria-busy', 'true')
+    await expect(newsletter.getByRole('heading')).toHaveCount(0)
+    await expect(newsletter.getByRole('textbox', { name: 'Email address' })).toHaveCount(0)
+    await expect(newsletter.getByRole('button', { name: 'Logout', exact: true })).toHaveCount(0)
+    await expect(page).toHaveURL(/\/halbkreis$/)
+    expect(await page.evaluate(() => history.length)).toBe(historyLength)
+    await expect.poll(() => requests).toBe(1)
+    finish()
+    await expect(newsletter.locator('.newsletter-skeleton')).toHaveCount(0)
+    await expect(newsletter).toHaveAttribute('aria-busy', 'false')
+    if (authenticated) {
+      await expect(newsletter.getByText('listener@example.org', { exact: true })).toBeVisible()
+      await expect(newsletter.getByRole('button', { name: 'Logout', exact: true })).toBeEnabled()
+      await expect(newsletter.getByRole('heading')).toHaveCount(0)
+      await expect(newsletter.getByRole('textbox', { name: 'Email address' })).toHaveCount(0)
+    } else {
+      await expect(newsletter.getByRole('heading', { name: 'Let’s stay in touch.' })).toBeVisible()
+      await expect(newsletter.getByRole('textbox', { name: 'Email address' })).toBeEnabled()
+    }
+    expect(requests).toBe(1)
+  })
+}
+
+test('newsletter skeleton ends on session failure and retry can resolve it', async ({ page }) => {
+  let attempts = 0
   let finish!: () => void
   const ready = new Promise<void>((resolve) => {
     finish = resolve
   })
   await page.route('**/login', async (route) => {
-    requests++
-    await ready
-    await route.fulfill({
+    attempts++
+    if (attempts === 1) {
+      await ready
+      return route.fulfill({ status: 503, body: 'Unavailable' })
+    }
+    return route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify({ ready: true, csrfToken: 'test-csrf' }),
+      body: JSON.stringify({ ready: true, csrfToken: 'retry-csrf' }),
     })
   })
   await page.goto('/halbkreis', { waitUntil: 'networkidle' })
-  expect(requests).toBe(0)
-  const historyLength = await page.evaluate(() => history.length)
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
-  const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
-  await expect(dialog).toBeVisible()
-  await expect(dialog.locator('details').first().getByRole('link').first()).toBeVisible()
-  await expect(dialog.getByText('Loading newsletter…')).toBeVisible()
-  await expect(page).toHaveURL(/\/halbkreis$/)
-  expect(await page.evaluate(() => history.length)).toBe(historyLength)
-  await expect.poll(() => requests).toBe(1)
+  const newsletter = page
+    .getByRole('dialog', { name: 'Navigation', exact: true })
+    .getByRole('region', { name: 'Newsletter', exact: true })
+  await expect(newsletter.locator('.newsletter-skeleton')).toBeVisible()
   finish()
-  await expect(dialog.getByRole('textbox', { name: 'Email address' })).toBeEnabled()
-  expect(requests).toBe(1)
+  await expect(newsletter.locator('.newsletter-skeleton')).toHaveCount(0)
+  await expect(newsletter).toHaveAttribute('aria-busy', 'false')
+  await expect(newsletter.getByRole('button', { name: 'Retry newsletter' })).toBeEnabled()
+  await newsletter.getByRole('button', { name: 'Retry newsletter' }).click()
+  await expect(newsletter.getByRole('textbox', { name: 'Email address' })).toBeEnabled()
+  await expect(newsletter.getByRole('button', { name: 'Retry newsletter' })).toHaveCount(0)
+  expect(attempts).toBe(2)
 })
 
 test('server-rendered navigation can open without JavaScript', async ({ browser, baseURL }) => {
@@ -111,6 +172,7 @@ test('server-rendered navigation can open without JavaScript', async ({ browser,
     await expect(dialog).toBeVisible()
     await expect(dialog.locator('details').first().getByRole('link').first()).toBeVisible()
     await expect(dialog.getByRole('link', { name: 'Sign up or log in' })).toBeVisible()
+    await expect(dialog.locator('.newsletter-loading')).not.toBeVisible()
     await dialog.getByRole('button', { name: 'Close navigation' }).click()
     await expect(dialog).not.toBeVisible()
   } finally {

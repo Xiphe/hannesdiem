@@ -142,6 +142,41 @@
     line-height: 1.75rem;
     font-weight: 700;
   }
+  .newsletter-loading {
+    width: 100%;
+  }
+  @media (scripting: none) {
+    .newsletter-loading {
+      display: none;
+    }
+  }
+  .newsletter-skeleton {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2rem;
+  }
+  .newsletter-skeleton > span {
+    background: color-mix(in oklab, currentColor 15%, transparent);
+    border-radius: 0.25rem;
+  }
+  .newsletter-skeleton .newsletter-skeleton-avatar {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .newsletter-skeleton-name {
+    flex: 1;
+    max-width: 12rem;
+    height: 0.875rem;
+    margin-right: auto;
+  }
+  .newsletter-skeleton-action {
+    width: 5.5rem;
+    height: 2rem;
+    flex-shrink: 0;
+  }
   .newsletter-area ul {
     width: 100%;
     margin-bottom: 1rem;

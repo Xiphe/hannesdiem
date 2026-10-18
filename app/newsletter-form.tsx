@@ -17,7 +17,6 @@ export interface NewsletterFormProps {
   signup?: boolean
   result?: NewsletterResult
   emailValue?: string
-  loading?: boolean
 }
 
 function NewsletterIcon(
@@ -174,7 +173,7 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
   }
 
   return () => {
-    const { state, signup, loading } = handle.props
+    const { state, signup } = handle.props
     const disabled = !state.ready || pending || remainingSeconds > 0
     return (
       <form
@@ -254,9 +253,7 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
             class="newsletter-feedback"
             role="status"
           >
-            {loading
-              ? 'Loading newsletter…'
-              : 'Newsletter signup is temporarily unavailable. Please try again later.'}
+            Newsletter signup is temporarily unavailable. Please try again later.
           </p>
         )}
       </form>
@@ -358,6 +355,7 @@ export function NewsletterArea(handle: Handle<{ state: NewsletterState; lazy?: b
     <section
       class="newsletter-area"
       aria-label="Newsletter"
+      aria-busy={!loaded || pending}
       mix={ref((node) => {
         section = node
       })}
@@ -369,7 +367,22 @@ export function NewsletterArea(handle: Handle<{ state: NewsletterState; lazy?: b
           </p>
         </noscript>
       )}
-      {state.email ? (
+      {!loaded ? (
+        <div
+          class="newsletter-loading"
+          role="status"
+        >
+          <span class="sr-only">Loading newsletter…</span>
+          <div
+            class="newsletter-skeleton"
+            aria-hidden="true"
+          >
+            <span class="newsletter-skeleton-avatar" />
+            <span class="newsletter-skeleton-name" />
+            <span class="newsletter-skeleton-action" />
+          </div>
+        </div>
+      ) : state.email ? (
         <>
           <p class="newsletter-user">
             <NewsletterIcon name="user" />
@@ -410,7 +423,6 @@ export function NewsletterArea(handle: Handle<{ state: NewsletterState; lazy?: b
             key={state.csrfToken ?? 'loading'}
             state={state}
             signup
-            loading={!loaded}
           />
         </>
       )}
