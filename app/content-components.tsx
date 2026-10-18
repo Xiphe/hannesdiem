@@ -1492,6 +1492,10 @@ const lyricsLabelQuery = '@container release-details (width >= 440px)'
 export function Release(handle: Handle<ReleaseProps>) {
   return () => {
     const release = handle.props
+    const tracks = release.tracks.map((track) => ({
+      ...track,
+      title: track.title ?? track.song!.title,
+    }))
     const cover = release.cover ? getMedia(release.cover) : undefined
     const released = new Date(release.releaseDate ?? 0).getTime() <= Date.now()
     const shops = Object.keys(shopNames).flatMap((type) =>
@@ -1629,7 +1633,7 @@ export function Release(handle: Handle<ReleaseProps>) {
                       role="rowgroup"
                       mix={css({ display: 'table-row-group' })}
                     >
-                      {release.tracks.map((track, index) => (
+                      {tracks.map((track, index) => (
                         <div
                           role="row"
                           mix={css({

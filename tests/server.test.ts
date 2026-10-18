@@ -44,6 +44,32 @@ test('content strings are escaped before becoming HTML', async () => {
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>|<img src=x/)
   assert.match(html, /&lt;script&gt;/)
 })
+test('tracks inherit song titles while recordings can override them or remain instrumental', async () => {
+  const page = await publication('Sample release', '')
+  const song = { slug: 'song/shared-work', title: 'Shared work' }
+  page.document.content.default = {
+    type: 'component',
+    from: '@hannesdiem/content-components',
+    import: 'Release',
+    props: {
+      title: 'Sample release',
+      tracks: [
+        { song, duration: 120 },
+        { song, title: 'Live recording', duration: 180 },
+        { title: 'Instrumental', duration: 60 },
+      ],
+    },
+  } satisfies CmxNode
+  const app = createApp(async () => page)
+  const html = await (await app.fetch('https://example.com/publication')).text()
+  assert.match(html, />Shared work</)
+  assert.match(html, />Live recording</)
+  assert.match(html, />Instrumental</)
+  assert.match(html, /Lyrics for &quot;Shared work&quot;/)
+  assert.match(html, /Lyrics for &quot;Live recording&quot;/)
+  assert.doesNotMatch(html, /Lyrics for &quot;Instrumental&quot;/)
+  assert.equal([...html.matchAll(/href="\/song\/shared-work"/g)].length, 2)
+})
 test('public rendering emits CMX styles and cache tags without personalizing responses', async () => {
   const app = createApp(async () => publication('Sample publication', 'A complete article.'))
   const response = await app.fetch('https://example.com/publication')

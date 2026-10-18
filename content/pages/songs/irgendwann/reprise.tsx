@@ -1,14 +1,24 @@
 import { Song } from '@hannesdiem/content-components'
-import { songs } from '../../../songs.ts'
+import { people } from '../../../people.ts'
+import type { SongDefinition } from '../../../types.ts'
 
-const { slug, ...song } = songs.irgendwannReprise
+export const song = {
+  slug: 'song/irgendwann/reprise',
+  title: 'Irgendwann - Reprise',
+  subtitle: '',
+  creationDate: '2022-05-06T12:00:00+00:00',
+  hideCreationDay: false,
+  authors: [people.hannesDiem],
+} satisfies SongDefinition
+
+const { slug, ...lyrics } = song
 
 export const title = song.title
 
 export default function Content() {
   return (
     <>
-      <Song {...song}>
+      <Song {...lyrics}>
         <p>
           {'Und irgendwann sahen wir uns wieder'}
           <br />

@@ -1,14 +1,23 @@
 import { Song } from '@hannesdiem/content-components'
-import { songs } from '../../songs.ts'
+import { people } from '../../people.ts'
+import type { SongDefinition } from '../../types.ts'
 
-const { slug, ...song } = songs.yunorun
+export const song = {
+  slug: 'song/yunorun',
+  title: 'Y U NO RUN',
+  creationDate: '2023-02-03T12:00:00+00:00',
+  hideCreationDay: true,
+  authors: [people.hannesDiem],
+} satisfies SongDefinition
+
+const { slug, ...lyrics } = song
 
 export const title = song.title
 
 export default function Content() {
   return (
     <>
-      <Song {...song}>
+      <Song {...lyrics}>
         <p>
           {"You're a ten dimensional machinery"}
           <br />

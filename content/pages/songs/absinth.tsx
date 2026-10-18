@@ -1,14 +1,23 @@
 import { Song } from '@hannesdiem/content-components'
-import { songs } from '../../songs.ts'
+import { people } from '../../people.ts'
+import type { SongDefinition } from '../../types.ts'
 
-const { slug, ...song } = songs.absinth
+export const song = {
+  slug: 'song/absinth',
+  title: 'Absinth',
+  creationDate: '2014-06-04T12:00:00+00:00',
+  hideCreationDay: true,
+  authors: [people.hannesDiem, people.christinaDuewel],
+} satisfies SongDefinition
+
+const { slug, ...lyrics } = song
 
 export const title = song.title
 
 export default function Content() {
   return (
     <>
-      <Song {...song}>
+      <Song {...lyrics}>
         <p>
           {'Lass mich in dein Kopf'}
           <br />

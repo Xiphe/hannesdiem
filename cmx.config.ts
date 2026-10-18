@@ -6,6 +6,8 @@ export default {
   exports: {
     default: { required: true, type: node },
     title: { required: true, type: node },
+    song: { required: false },
+    release: { required: false },
   },
   externals: [
     {

@@ -2,11 +2,11 @@ import { build } from 'esbuild'
 import { createHash } from 'node:crypto'
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
-import routes from '../content/routes.ts'
+import type { ContentRoute } from '../content/types.ts'
 
 await rm('dist', { recursive: true, force: true })
 await mkdir('.generated', { recursive: true })
-await writeFile('.generated/routes.json', JSON.stringify(routes, null, 2) + '\n')
+const routes: ContentRoute[] = JSON.parse(await readFile('.generated/routes.json', 'utf8'))
 const documents = [...new Set([...routes.map((route) => route.document), '404'])]
 await writeFile(
   '.generated/content.ts',

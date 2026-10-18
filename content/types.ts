@@ -34,3 +34,5 @@ export interface ContentRoute {
   profile?: { firstName: string; lastName: string }
   sourceId?: string
 }
+
+export type ContentPublication = Omit<ContentRoute, 'title'> & { title?: string }

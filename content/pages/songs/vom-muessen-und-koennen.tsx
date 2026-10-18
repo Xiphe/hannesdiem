@@ -1,14 +1,24 @@
 import { Song } from '@hannesdiem/content-components'
-import { songs } from '../../songs.ts'
+import { people } from '../../people.ts'
+import type { SongDefinition } from '../../types.ts'
 
-const { slug, ...song } = songs.vomMuessenUndKoennen
+export const song = {
+  slug: 'song/vom-muessen-und-koennen',
+  title: 'Vom Müssen und Können',
+  subtitle: 'für meine geliebten Eltern',
+  creationDate: '2024-02-01T12:00:00+00:00',
+  hideCreationDay: true,
+  authors: [people.hannesDiem],
+} satisfies SongDefinition
+
+const { slug, ...lyrics } = song
 
 export const title = song.title
 
 export default function Content() {
   return (
     <>
-      <Song {...song}>
+      <Song {...lyrics}>
         <p>
           {'Ich kann fliehen, ich kann kämpfen, um zu leben'}
           <br />

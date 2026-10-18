@@ -77,13 +77,12 @@ export interface Author extends Identity {
 }
 export interface SongReference {
   slug: `song/${string}`
-}
-export interface Track {
   title: string
+}
+export type Track = {
   addition?: string
   duration?: number
-  song?: SongReference
-}
+} & ({ song: SongReference; title?: string } | { song?: undefined; title: string })
 export interface ReleaseProps {
   title: string
   subtitle?: string

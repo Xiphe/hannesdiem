@@ -1,33 +1,9 @@
-import { people } from './people.ts'
-import { songs } from './songs.ts'
-import type { ContentRoute, SongDefinition } from './types.ts'
-import { release as halbkreis } from './pages/releases/halbkreis.ts'
-import { release as hoffnung } from './pages/releases/hoffnung.ts'
-import { release as unbeschrieben } from './pages/releases/unbeschrieben.ts'
-import { release as resolveYourself } from './pages/releases/resolve-yourself.ts'
-import { release as yunorun } from './pages/releases/yunorun.ts'
-
-function songMetadata(song: SongDefinition) {
-  const authors = song.authors ?? []
-  return {
-    title: song.title,
-    description: `A text written by ${authors.map((author) => author.name).join(', ')}`,
-    ogTitle: song.title,
-    ogImageTitle: song.title,
-    creationDate: song.creationDate,
-    authors: authors.map((author) =>
-      author.link === people.hannesDiem.link
-        ? { ...author, ogProfile: 'https://hannesdiem.de/about' }
-        : author,
-    ),
-  }
-}
+import type { ContentPublication } from './types.ts'
 
 export default [
   {
     path: '/one-week-album/2025-lunow-stolzenhagen',
     document: 'one-week-album/2025-lunow-stolzenhagen',
-    title: 'Lunow-Stolzenhagen 2025',
     kind: 'page',
     description:
       'Join 7 artists and spend 7 days expanding ourselves into a band, then settle on an album of songs',
@@ -44,7 +20,6 @@ export default [
   {
     path: '/one-week-album/california-2024',
     document: 'one-week-album/california-2024',
-    title: 'California 2024 Recap',
     kind: 'page',
     description:
       'Two musicians. Two weeks. A journey through creativity, tension, and trust, capturing raw music, deep connection, and the space we choose to hold. This is One Week Album.',
@@ -62,7 +37,6 @@ export default [
   {
     path: '/one-week-album/lokken-2024',
     document: 'one-week-album/lokken-2024',
-    title: 'Løkken 2024 Recap',
     kind: 'page',
     description:
       'A creative retreat in Denmark, a house meant for ten, and two artists diving deep into music, food, and creativity. One Week Album is just getting started.',
@@ -80,7 +54,6 @@ export default [
   {
     path: '/one-week-album',
     document: 'one-week-album/index',
-    title: 'One Week Album',
     kind: 'page',
     description: 'Join 7 artists for 7 days of music, food, community and creation',
     image: 'og_image_only.jpg',
@@ -97,91 +70,56 @@ export default [
   {
     path: '/halbkreis',
     document: 'releases/halbkreis',
-    title: halbkreis.title,
     kind: 'release',
-    image: halbkreis.cover,
-    releaseDate: halbkreis.releaseDate,
     description: '...about Music, Life, and Everything',
     ogType: 'music.album',
-    ogTitle: halbkreis.title,
     updatedAt: '2025-02-28T11:05:34.098+00:00',
     sourceId: '1ebc587e-31a3-489a-aac4-e48c8927d18e',
     musicians: ['https://hannesdiem.de/about'],
-    songs: halbkreis.tracks.flatMap((track) =>
-      track.song ? ['https://hannesdiem.de/' + track.song.slug] : [],
-    ),
   },
   {
     path: '/resolve-yourself',
     document: 'releases/resolve-yourself',
-    title: resolveYourself.title,
     kind: 'release',
-    image: resolveYourself.cover,
-    releaseDate: resolveYourself.releaseDate,
     description: '...about Music, Life, and Everything',
     ogType: 'music.album',
-    ogTitle: resolveYourself.title,
     updatedAt: '2025-02-28T11:06:23.148+00:00',
     sourceId: '3da233d2-7aab-4bec-a21b-fa5aa3c17c5f',
     musicians: ['https://hannesdiem.de/about'],
-    songs: resolveYourself.tracks.flatMap((track) =>
-      track.song ? ['https://hannesdiem.de/' + track.song.slug] : [],
-    ),
   },
   {
     path: '/hoffnung',
     document: 'releases/hoffnung',
-    title: hoffnung.title,
     kind: 'release',
     description: 'Ungefär 10 Lieder über Liebe, Vertrauen und Veränderung',
-    image: hoffnung.cover,
-    releaseDate: hoffnung.releaseDate,
     ogType: 'music.album',
     ogTitle: 'Hoffnung • Hannes Diem',
     updatedAt: '2025-03-02T11:15:17.019+00:00',
     sourceId: '5e8f78ac-8784-413a-846d-b86094374756',
     musicians: ['https://hannesdiem.de/about'],
-    songs: hoffnung.tracks.flatMap((track) =>
-      track.song ? ['https://hannesdiem.de/' + track.song.slug] : [],
-    ),
   },
   {
     path: '/yunorun',
     document: 'releases/yunorun',
-    title: yunorun.title,
     kind: 'release',
-    image: yunorun.cover,
-    releaseDate: yunorun.releaseDate,
     description: '...about Music, Life, and Everything',
     ogType: 'music.album',
-    ogTitle: yunorun.title,
     updatedAt: '2025-02-27T17:27:28.556+00:00',
     sourceId: '6fe027b1-cb3a-4e82-9c16-f5fecb9a5385',
     musicians: ['https://hannesdiem.de/about'],
-    songs: yunorun.tracks.flatMap((track) =>
-      track.song ? ['https://hannesdiem.de/' + track.song.slug] : [],
-    ),
   },
   {
     path: '/unbeschrieben',
     document: 'releases/unbeschrieben',
-    title: unbeschrieben.title,
     kind: 'release',
-    image: unbeschrieben.cover,
-    releaseDate: unbeschrieben.releaseDate,
     description: '...about Music, Life, and Everything',
     ogType: 'music.album',
-    ogTitle: unbeschrieben.title,
     updatedAt: '2025-03-04T22:25:18.244+00:00',
     sourceId: 'b3275533-cf41-4e04-8339-d67de7e96dda',
     musicians: ['https://hannesdiem.de/about'],
-    songs: unbeschrieben.tracks.flatMap((track) =>
-      track.song ? ['https://hannesdiem.de/' + track.song.slug] : [],
-    ),
   },
   {
-    ...songMetadata(songs.vomMuessenUndKoennen),
-    path: '/' + songs.vomMuessenUndKoennen.slug,
+    path: '/song/vom-muessen-und-koennen',
     document: 'songs/vom-muessen-und-koennen',
     kind: 'song',
     ogType: 'music.song',
@@ -189,8 +127,7 @@ export default [
     sourceId: '127eacec-2ed6-4dbe-8aae-aa8fc7cac1b5',
   },
   {
-    ...songMetadata(songs.irgendwann),
-    path: '/' + songs.irgendwann.slug,
+    path: '/song/irgendwann',
     document: 'songs/irgendwann',
     kind: 'song',
     ogType: 'music.song',
@@ -198,8 +135,7 @@ export default [
     sourceId: '1ec100df-ffbe-4160-8d9e-c2d3dfec6ce4',
   },
   {
-    ...songMetadata(songs.leuchtturm),
-    path: '/' + songs.leuchtturm.slug,
+    path: '/song/leuchtturm',
     document: 'songs/leuchtturm',
     kind: 'song',
     ogType: 'music.song',
@@ -207,8 +143,7 @@ export default [
     sourceId: '3043c485-a913-412f-939c-617be608a87c',
   },
   {
-    ...songMetadata(songs.irgendwannReprise),
-    path: '/' + songs.irgendwannReprise.slug,
+    path: '/song/irgendwann/reprise',
     document: 'songs/irgendwann/reprise',
     kind: 'song',
     ogType: 'music.song',
@@ -216,8 +151,7 @@ export default [
     sourceId: '39caac18-8290-4523-9150-21dad0b1b4e3',
   },
   {
-    ...songMetadata(songs.wasNichtInWortePasst),
-    path: '/' + songs.wasNichtInWortePasst.slug,
+    path: '/song/was-nicht-in-worte-passt',
     document: 'songs/was-nicht-in-worte-passt',
     kind: 'song',
     ogType: 'music.song',
@@ -225,8 +159,7 @@ export default [
     sourceId: '3d84d40e-c075-4fd3-bb2a-b2863c6d320f',
   },
   {
-    ...songMetadata(songs.dasVersprechenReprise),
-    path: '/' + songs.dasVersprechenReprise.slug,
+    path: '/song/das-versprechen/reprise',
     document: 'songs/das-versprechen/reprise',
     kind: 'song',
     ogType: 'music.song',
@@ -234,8 +167,7 @@ export default [
     sourceId: '41a4c03a-8d79-4167-a3b9-dcf8a87d3a27',
   },
   {
-    ...songMetadata(songs.absinth),
-    path: '/' + songs.absinth.slug,
+    path: '/song/absinth',
     document: 'songs/absinth',
     kind: 'song',
     ogType: 'music.song',
@@ -243,8 +175,7 @@ export default [
     sourceId: '4484385c-af11-4fac-8f9f-681e896c0b0a',
   },
   {
-    ...songMetadata(songs.gedankengaenge),
-    path: '/' + songs.gedankengaenge.slug,
+    path: '/song/gedankengaenge',
     document: 'songs/gedankengaenge',
     kind: 'song',
     ogType: 'music.song',
@@ -252,8 +183,7 @@ export default [
     sourceId: '4ee8263a-2053-4b56-9c01-a398e9229287',
   },
   {
-    ...songMetadata(songs.resolveYourself),
-    path: '/' + songs.resolveYourself.slug,
+    path: '/song/resolve-yourself',
     document: 'songs/resolve-yourself',
     kind: 'song',
     ogType: 'music.song',
@@ -261,8 +191,7 @@ export default [
     sourceId: '5c312a1c-a393-4c21-aa73-24c7253d25f0',
   },
   {
-    ...songMetadata(songs.yunorun),
-    path: '/' + songs.yunorun.slug,
+    path: '/song/yunorun',
     document: 'songs/yunorun',
     kind: 'song',
     ogType: 'music.song',
@@ -270,8 +199,7 @@ export default [
     sourceId: '62cdef61-4e2a-416d-a566-c9af4130da94',
   },
   {
-    ...songMetadata(songs.dasVersprechen),
-    path: '/' + songs.dasVersprechen.slug,
+    path: '/song/das-versprechen',
     document: 'songs/das-versprechen',
     kind: 'song',
     ogType: 'music.song',
@@ -279,8 +207,7 @@ export default [
     sourceId: '6342bfca-6e7c-4566-8643-71e6873ce2b7',
   },
   {
-    ...songMetadata(songs.wiedergeboren),
-    path: '/' + songs.wiedergeboren.slug,
+    path: '/song/wiedergeboren',
     document: 'songs/wiedergeboren',
     kind: 'song',
     ogType: 'music.song',
@@ -288,8 +215,7 @@ export default [
     sourceId: '71461a84-f584-43f8-bab7-76e811e1748f',
   },
   {
-    ...songMetadata(songs.feuerUndVergessen),
-    path: '/' + songs.feuerUndVergessen.slug,
+    path: '/song/feuer-und-vergessen',
     document: 'songs/feuer-und-vergessen',
     kind: 'song',
     ogType: 'music.song',
@@ -297,8 +223,7 @@ export default [
     sourceId: '8ae804ea-2b41-4e04-bb64-58432b8dc46d',
   },
   {
-    ...songMetadata(songs.pidderLueng),
-    path: '/' + songs.pidderLueng.slug,
+    path: '/song/pidder-lueng',
     document: 'songs/pidder-lueng',
     kind: 'song',
     ogType: 'music.song',
@@ -306,8 +231,7 @@ export default [
     sourceId: '8c9ff36b-fb1f-4b1c-9383-931dccd9bfc4',
   },
   {
-    ...songMetadata(songs.bruder),
-    path: '/' + songs.bruder.slug,
+    path: '/song/bruder',
     document: 'songs/bruder',
     kind: 'song',
     ogType: 'music.song',
@@ -315,8 +239,7 @@ export default [
     sourceId: 'b77a2ae5-0ebe-4b57-8f93-da8ba3ba004a',
   },
   {
-    ...songMetadata(songs.allesBrennt),
-    path: '/' + songs.allesBrennt.slug,
+    path: '/song/alles-brennt',
     document: 'songs/alles-brennt',
     kind: 'song',
     ogType: 'music.song',
@@ -324,8 +247,7 @@ export default [
     sourceId: 'bdcb1828-dbe3-4a25-a5fa-4f00c5476d49',
   },
   {
-    ...songMetadata(songs.zeigMirDieWelt),
-    path: '/' + songs.zeigMirDieWelt.slug,
+    path: '/song/zeig-mir-die-welt',
     document: 'songs/zeig-mir-die-welt',
     kind: 'song',
     ogType: 'music.song',
@@ -333,8 +255,7 @@ export default [
     sourceId: 'd9bd56fd-0b3c-4615-885a-69ea8bfd5435',
   },
   {
-    ...songMetadata(songs.dieGanzeZeit),
-    path: '/' + songs.dieGanzeZeit.slug,
+    path: '/song/die-ganze-zeit',
     document: 'songs/die-ganze-zeit',
     kind: 'song',
     ogType: 'music.song',
@@ -342,8 +263,7 @@ export default [
     sourceId: 'dddcbf95-38b7-41c6-912c-9ff2082719f7',
   },
   {
-    ...songMetadata(songs.wieEsMirGefaellt),
-    path: '/' + songs.wieEsMirGefaellt.slug,
+    path: '/song/wie-es-mir-gefaellt',
     document: 'songs/wie-es-mir-gefaellt',
     kind: 'song',
     ogType: 'music.song',
@@ -351,8 +271,7 @@ export default [
     sourceId: 'e87e226b-06bb-47d8-8533-ded1db3d5d33',
   },
   {
-    ...songMetadata(songs.dieMuehle),
-    path: '/' + songs.dieMuehle.slug,
+    path: '/song/die-muehle',
     document: 'songs/die-muehle',
     kind: 'song',
     ogType: 'music.song',
@@ -360,8 +279,7 @@ export default [
     sourceId: 'ea9ef5e1-cb79-4d39-9ed1-c4a81364abd7',
   },
   {
-    ...songMetadata(songs.meer),
-    path: '/' + songs.meer.slug,
+    path: '/song/meer',
     document: 'songs/meer',
     kind: 'song',
     ogType: 'music.song',
@@ -371,7 +289,6 @@ export default [
   {
     path: '/linktree',
     document: 'linktree',
-    title: 'Hannes Diem',
     kind: 'linktree',
     image: 'portrait.png',
     theme: 'electrocute',
@@ -396,7 +313,6 @@ export default [
   {
     path: '/imprint',
     document: 'imprint',
-    title: 'Imprint',
     kind: 'page',
     theme: 'electrocute',
     noindex: true,
@@ -408,7 +324,6 @@ export default [
   {
     path: '/privacy',
     document: 'privacy',
-    title: 'Privacy',
     kind: 'page',
     theme: 'electrocute',
     noindex: true,
@@ -417,4 +332,4 @@ export default [
     ogTitle: 'Privacy',
     nofollow: true,
   },
-] satisfies ContentRoute[]
+] satisfies ContentPublication[]
