@@ -523,7 +523,6 @@ const proseBase: CSS = {
   '& > :first-child': { marginTop: 0 }, '& > :last-child': { marginBottom: 0 },
   ...linkFocus,
 }
-const prose = css(proseBase)
 const largeProse = css(mergeCss(proseBase, { [lg]: proseSizes.xl }))
 const centeredProse = css({ marginInline: 'auto', paddingInline: '1rem' })
 const proseRules = css(hr)
@@ -569,10 +568,13 @@ export function Hero(handle: Handle<HeroProps>) {
     </Comp>
   }
 }
-const textBox = css({ background: 'var(--theme-contrast)', marginInline: 'auto', padding: '2rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px -1px rgb(0 0 0 / 10%)', position: 'relative', zIndex: 10,
+const textBox: CSS = { background: 'var(--theme-contrast)', marginInline: 'auto', padding: '2rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px -1px rgb(0 0 0 / 10%)', position: 'relative', zIndex: 10,
   '& > :is(h1,h2,h3,h4):first-child': { background: 'var(--theme-accent)', color: 'var(--theme-fg)', padding: '1.5rem', marginTop: '-2rem', marginInline: '-2rem', marginBottom: '1rem', [md]: { translate: '-2rem -2rem', marginBottom: '-1rem' } },
   [sm]: { marginBottom: '2rem' },
-})
+}
+// Keep heading offsets and prose resets in one cascade layer.
+const textBlock = css(mergeCss(proseBase, textBox))
+const largeTextBlock = css(mergeCss(proseBase, { [lg]: proseSizes.xl }, textBox))
 export function TextBlock(handle: Handle<TextBlockProps>) {
   return () => {
     const { title, portrait, pullUp = true, bigOnLg = true, as: Comp = 'section', children } = handle.props
@@ -580,7 +582,7 @@ export function TextBlock(handle: Handle<TextBlockProps>) {
       {portrait ? <div mix={css({ position: 'relative', zIndex: 20, marginInline: 'auto', marginBottom: '-1.5rem', maxWidth: '24rem', paddingInline: '2rem', [md]: { marginBottom: '0.5rem' } })}>
         <div mix={css({ borderRadius: '50%', overflow: 'hidden' })}>{imageElement(portrait, { sizes: '320px' })}</div>
       </div> : null}
-      <Comp mix={[bigOnLg ? largeProse : prose, textBox, pullUp && !portrait && css({ [sm]: { marginTop: '-0.5rem' }, [md]: { marginTop: '-2rem' } })]}>
+      <Comp mix={[bigOnLg ? largeTextBlock : textBlock, pullUp && !portrait && css({ [sm]: { marginTop: '-0.5rem' }, [md]: { marginTop: '-2rem' } })]}>
         {title ? <h2>{title}</h2> : null}{children}
       </Comp>
     </>

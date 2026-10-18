@@ -94,7 +94,7 @@ test('Amazon Music logos preserve the open letter shapes with sizing styles',asy
 })
 
 for(const width of [360,1280,2732]){
-  test(`OWA portraits stay above their biography cards at ${width}px`,async({page})=>{
+  test(`OWA portraits overlap their biography headlines at ${width}px`,async({page})=>{
     await page.setViewportSize({width,height:900})
     await page.goto('/one-week-album')
     const about=page.locator('section').filter({has:page.getByRole('heading',{name:'About us',exact:true})})
@@ -103,9 +103,13 @@ for(const width of [360,1280,2732]){
       await portrait.scrollIntoViewIfNeeded()
       await portrait.evaluate((img:HTMLImageElement)=>img.decode())
       const image=await portrait.boundingBox()
-      const card=await about.getByRole('heading',{name,exact:true}).locator('..').boundingBox()
+      const headline=about.getByRole('heading',{name,exact:true})
+      const heading=await headline.boundingBox()
+      const card=await headline.locator('..').boundingBox()
       expect(image!.width).toBeGreaterThan(250)
-      expect(image!.y+image!.height).toBeLessThanOrEqual(card!.y+24)
+      const overlap=image!.y+image!.height-heading!.y
+      expect(overlap).toBeGreaterThanOrEqual(20)
+      expect(overlap).toBeLessThanOrEqual(28)
       expect(Math.abs(image!.x+image!.width/2-card!.x-card!.width/2)).toBeLessThan(2)
     }
   })
