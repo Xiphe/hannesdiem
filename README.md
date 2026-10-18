@@ -19,10 +19,10 @@ Pushes to `main` run checks, deploy the checked artifacts, then smoke test the p
 
 | Kind | Name | Value |
 | --- | --- | --- |
-| Secret | `CLOUDFLARE_API_TOKEN` | Account-owned API token; Workers **Admin** at Workers product scope, limited to the target account. Required to create the initial Worker. |
+| Secret | `CLOUDFLARE_API_TOKEN` | Account-owned token: **Specified Workers** → `hannesdiem-remix-spike` → **Editor**. |
 | Variable | `CLOUDFLARE_ACCOUNT_ID` | Target account ID. |
 
-After bootstrap, the token can use **Editor** scoped to the existing Worker. No zone permissions: this spike uses `workers.dev`. [Token creation](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/), [Workers permissions](https://developers.cloudflare.com/workers/authorization/workers/), [account ID](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/).
+First create `hannesdiem-remix-spike` yourself: Workers & Pages → Create application → Start with Hello World! → Get started → name → Deploy. CI updates this existing Worker; no Admin or zone permissions. Create its token under Manage account → Account API tokens. [Scoped tokens](https://developers.cloudflare.com/changelog/post/2026-09-15-granular-worker-permissions/), [token creation](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/), [account ID](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/).
 
 Missing credentials fail after checks with setup instructions. Set the values, then rerun the failed deployment job.
 
