@@ -28,6 +28,16 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Install palette processor (Actions only)
+        run: npm ci --prefix tools/palette
+      - name: Extract image metadata
+        run: node scripts/extract-palettes.ts
+      - name: Save palette metadata for local previews
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: media-palettes
+          path: .generated/palettes.json
+          include-hidden-files: true
       - run: npx playwright install --with-deps chromium
       - run: npm run check
       - name: Check deployment credentials

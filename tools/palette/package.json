@@ -1,0 +1,6 @@
+{
+  "name": "hannesdiem-palette-processing",
+  "private": true,
+  "description": "Installed only by GitHub Actions; not a website dependency.",
+  "dependencies": { "node-vibrant": "4.0.4" }
+}
