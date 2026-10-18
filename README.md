@@ -31,6 +31,8 @@ Missing credentials fail after checks with setup instructions. Set the values, t
 
 ## Assets
 
+`content/media/**` uses Git LFS. Install Git LFS, then run `git lfs install` once per machine and `git lfs pull` in existing clones. CI downloads LFS sources before building; generated variants remain in R2.
+
 `app/assets/mark.svg` is hashed into `/assets/` and deployed with the Worker. `content/media/landscape.svg` becomes WebP variants at 480/960/1440px; SHA-256 filenames and a plain `.generated/media.json` manifest feed CMX `<img>` props (`src`, `srcSet`, dimensions). This manifest is temporary glue until CMX supports assets.
 
 Local builds default to `/media/` and copy variants into `dist`; no cloud credentials needed. Production CI sets `MEDIA_BASE_URL=https://media.hannesdiem.de`, keeps media out of the Worker artifact, and uploads `.generated/media-files.json` entries to R2 over S3 before deploying. Objects use immutable caching; old objects remain available. `sharp` runs at build time only; uploads use the runner's AWS CLI. `npm run media:upload` requires `R2_ACCOUNT_ID`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY`.
