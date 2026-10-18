@@ -2,15 +2,18 @@ import { expect, test, type BrowserContext } from '@playwright/test'
 import mediaFiles from '../.generated/media-files.json' with { type: 'json' }
 import media from '../.generated/media.json' with { type: 'json' }
 
+const mediaByKey = new Map(mediaFiles.map((file) => [file.key, file]))
+
 async function mockRemoteMedia(context: BrowserContext) {
   const first = Object.values(media)[0]
   if (!first.src.startsWith('https://')) return
   const origin = new URL(first.src).origin
-  for (const file of mediaFiles) {
-    await context.route(`${origin}/${file.key}`, (route) =>
-      route.fulfill({ path: file.path, contentType: file.contentType }),
-    )
-  }
+  await context.route(`${origin}/**`, (route) => {
+    const file = mediaByKey.get(new URL(route.request().url()).pathname.slice(1))
+    return file
+      ? route.fulfill({ path: file.path, contentType: file.contentType })
+      : route.fallback()
+  })
 }
 test.beforeEach(async ({ context, page }) => {
   await mockRemoteMedia(context)
@@ -23,26 +26,19 @@ test.beforeEach(async ({ context, page }) => {
       : route.fallback(),
   )
 })
-for (const path of ['/linktree', '/one-week-album', '/hoffnung', '/song/alles-brennt']) {
-  test(`${path} renders content and styles without JavaScript`, async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
-    await mockRemoteMedia(context)
-    try {
-      const page = await context.newPage()
-      const response = await page.goto(path)
-      expect(response?.status()).toBe(200)
-      await expect(page.locator('main')).not.toBeEmpty()
-      expect(await page.locator('style[data-rmx-style]').count()).toBeGreaterThan(0)
-      if (path === '/linktree')
-        await expect(page.getByText("Hi I'm Hannes", { exact: false })).toBeVisible()
-      if (path === '/hoffnung') await expect(page.locator('h1')).toHaveText('Hoffnung')
-      if (path === '/one-week-album') await expect(page.locator('header img')).toBeVisible()
-      if (path.startsWith('/song/')) await expect(page.locator('h1')).toHaveText('Alles Brennt')
-    } finally {
-      await context.close()
-    }
-  })
-}
+test('server renders content and styles without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
+  await mockRemoteMedia(context)
+  try {
+    const page = await context.newPage()
+    const response = await page.goto('/halbkreis')
+    expect(response?.status()).toBe(200)
+    await expect(page.locator('main')).not.toBeEmpty()
+    expect(await page.locator('style[data-rmx-style]').count()).toBeGreaterThan(0)
+  } finally {
+    await context.close()
+  }
+})
 test('menu opens as a native dialog without changing static page DOM', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
@@ -57,11 +53,11 @@ test('menu opens as a native dialog without changing static page DOM', async ({ 
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(
-    page.getByRole('dialog').getByRole('heading', { name: 'Let’s stay in touch.' }),
+    page.getByRole('dialog').getByRole('region', { name: 'Newsletter', exact: true }),
   ).toBeVisible()
   await page.getByRole('dialog').getByText('Work', { exact: true }).click()
   await expect(
-    page.getByRole('dialog').getByRole('link', { name: 'Hoffnung', exact: true }),
+    page.getByRole('dialog').locator('details').first().getByRole('link').first(),
   ).toBeVisible()
   expect(
     await page.evaluate(() => ({
@@ -94,7 +90,7 @@ test('menu opens immediately without a route or state request before opening', a
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
   await expect(dialog).toBeVisible()
-  await expect(dialog.getByRole('link', { name: 'Hoffnung', exact: true })).toBeVisible()
+  await expect(dialog.locator('details').first().getByRole('link').first()).toBeVisible()
   await expect(dialog.getByText('Loading newsletter…')).toBeVisible()
   await expect(page).toHaveURL(/\/halbkreis$/)
   expect(await page.evaluate(() => history.length)).toBe(historyLength)
@@ -112,7 +108,7 @@ test('server-rendered navigation can open without JavaScript', async ({ browser,
     await page.getByRole('button', { name: 'Open menu', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
     await expect(dialog).toBeVisible()
-    await expect(dialog.getByRole('link', { name: 'Hoffnung', exact: true })).toBeVisible()
+    await expect(dialog.locator('details').first().getByRole('link').first()).toBeVisible()
     await expect(dialog.getByRole('link', { name: 'Sign up or log in' })).toBeVisible()
     await dialog.getByRole('button', { name: 'Close navigation' }).click()
     await expect(dialog).not.toBeVisible()
@@ -124,18 +120,20 @@ test('release lyrics open over the release, close on Escape, and support direct 
   page,
 }) => {
   await page.goto('/halbkreis', { waitUntil: 'networkidle' })
-  const link = page.locator('a[href="/song/alles-brennt"]').first()
+  const title = await page.locator('main h1').textContent()
+  const link = page.locator('main a[data-rmx-target="overlay"]').first()
+  const song = await link.getAttribute('href')
   await link.click()
   await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.getByRole('dialog').locator('h1')).toHaveText('Alles Brennt')
-  await expect(page).toHaveURL(/\/song\/alles-brennt$/)
-  await expect(page.locator('main h1')).toHaveText('Halbkreis')
+  await expect(page.getByRole('dialog').locator('h1')).not.toBeEmpty()
+  await expect(page).toHaveURL((url) => url.pathname === song)
+  await expect(page.locator('main h1')).toHaveText(title!)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).not.toBeVisible()
   await expect(page).toHaveURL(/\/halbkreis$/)
-  await page.goto('/m/song/alles-brennt')
-  await expect(page).toHaveURL(/\/song\/alles-brennt$/)
-  await expect(page.locator('main h1')).toHaveText('Alles Brennt')
+  await page.goto(`/m${song}`)
+  await expect(page).toHaveURL((url) => url.pathname === song)
+  await expect(page.locator('main h1')).not.toBeEmpty()
 })
 
 for (const width of [360, 1280]) {
@@ -144,11 +142,14 @@ for (const width of [360, 1280]) {
   }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/hoffnung', { waitUntil: 'networkidle' })
-    await page.locator('a[href="/song/gedankengaenge"]').click()
+    const title = await page.locator('main h1').textContent()
+    const link = page.locator('main a[data-rmx-target="overlay"]').first()
+    const song = await link.getAttribute('href')
+    await link.click()
     const dialog = page.getByRole('dialog', { name: 'Page dialog' })
     await expect(dialog).toBeVisible()
-    await expect(page).toHaveURL(/\/song\/gedankengaenge$/)
-    await expect(page.locator('main h1')).toHaveText('Hoffnung')
+    await expect(page).toHaveURL((url) => url.pathname === song)
+    await expect(page.locator('main h1')).toHaveText(title!)
     const contained = await dialog.locator('.lyrics-sheet').evaluate((el) => {
       const sheet = el.querySelector('article')!.getBoundingClientRect()
       const close = el.querySelector('[aria-label="Close lyrics"]')!.getBoundingClientRect()
@@ -165,30 +166,27 @@ for (const width of [360, 1280]) {
     await expect(page).toHaveURL(/\/hoffnung$/)
     await page.goForward()
     await expect(dialog).toBeVisible()
-    await expect(page).toHaveURL(/\/song\/gedankengaenge$/)
+    await expect(page).toHaveURL((url) => url.pathname === song)
     await page.reload()
     await expect(page.getByRole('dialog')).not.toBeVisible()
-    await expect(page.locator('main h1')).toHaveText('Gedankengänge')
+    await expect(page.locator('main h1')).not.toBeEmpty()
   })
 }
 for (const width of [360, 1280]) {
   test(`media decodes and pages fit ${width}px viewport`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 })
-    for (const path of ['/linktree', '/one-week-album', '/halbkreis', '/song/alles-brennt']) {
-      await page.goto(path, { waitUntil: 'networkidle' })
-      const image = page.locator('main img').first()
-      if (await image.count()) {
-        const result = await image.evaluate(async (img: HTMLImageElement) => {
-          await img.decode()
-          return { src: img.currentSrc, width: img.naturalWidth }
-        })
-        expect(result.src).toMatch(/\/images\/.*\.webp$/)
-        expect(result.width).toBeGreaterThan(0)
-      }
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-        width,
-      )
+    await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+    const image = page.locator('main img').first()
+    if (await image.count()) {
+      const result = await image.evaluate(async (img: HTMLImageElement) => {
+        await img.decode()
+        return img.naturalWidth
+      })
+      expect(result).toBeGreaterThan(0)
     }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    )
   })
 }
 
@@ -230,7 +228,6 @@ test('newsletter signup stays in the sidebar with pending and success feedback',
   await expect(dialog.getByText('Link sent! Please check your email.')).toBeVisible()
   await expect(dialog).toBeVisible()
   await expect(input).toHaveCount(0)
-  await expect(dialog.getByText('Receive updates about new releases')).toHaveCount(0)
   await expect(page).toHaveURL(/\/halbkreis$/)
   expect(
     await page.evaluate(() => (window as any).originalContent === document.querySelector('main')),
@@ -338,12 +335,15 @@ test('navigation follows content links, renders 404, and serves app assets', asy
   const asset = await request.get(mark!)
   expect(asset.status()).toBe(200)
   expect(asset.headers()['content-type']).toMatch(/image\/svg/)
-  await page.getByRole('link', { name: 'Hoffnung', exact: true }).click()
-  await expect(page.locator('main h1')).toHaveText('Hoffnung')
+  const link = page.locator('footer a[href^="/"]:not([href="/"])').first()
+  const destination = new URL((await link.getAttribute('href'))!, page.url()).pathname
+  await link.click()
+  await expect(page).toHaveURL((url) => url.pathname === destination)
+  await expect(page.locator('main')).not.toBeEmpty()
   const response = await page.goto('/missing-migrated-route')
   expect(response?.status()).toBe(404)
   expect(response?.headers()['cache-control']).toBe('no-store')
-  await expect(page.locator('h1')).toHaveText('404 - Page Not Found')
+  await expect(page.locator('main')).not.toBeEmpty()
 })
 
 test('Amazon Music logos preserve the open letter shapes with sizing styles', async ({ page }) => {
@@ -395,25 +395,23 @@ for (const width of [360, 1280]) {
 }
 
 for (const width of [360, 1280, 2732]) {
-  test(`OWA portraits overlap their biography headlines at ${width}px`, async ({ page }) => {
+  test(`portrait text blocks overlap their headlines at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/one-week-album')
-    const about = page
-      .locator('section')
-      .filter({ has: page.getByRole('heading', { name: 'About us', exact: true }) })
-    for (const [index, name] of ['Hannes', 'Roxanna'].entries()) {
-      const portrait = about.locator('img').nth(index)
+    const cards = page.locator('main div:has(> div > img) + :is(div, section):has(> h2)')
+    expect(await cards.count()).toBeGreaterThan(0)
+    for (const card of await cards.all()) {
+      const portrait = card.locator('xpath=preceding-sibling::div[1]//img')
       await portrait.scrollIntoViewIfNeeded()
       await portrait.evaluate((img: HTMLImageElement) => img.decode())
       const image = await portrait.boundingBox()
-      const headline = about.getByRole('heading', { name, exact: true })
-      const heading = await headline.boundingBox()
-      const card = await headline.locator('..').boundingBox()
+      const heading = await card.locator(':scope > h2').boundingBox()
+      const box = await card.boundingBox()
       expect(image!.width).toBeGreaterThan(250)
       const overlap = image!.y + image!.height - heading!.y
       expect(overlap).toBeGreaterThanOrEqual(20)
       expect(overlap).toBeLessThanOrEqual(28)
-      expect(Math.abs(image!.x + image!.width / 2 - card!.x - card!.width / 2)).toBeLessThan(2)
+      expect(Math.abs(image!.x + image!.width / 2 - box!.x - box!.width / 2)).toBeLessThan(2)
     }
   })
 }
@@ -422,6 +420,7 @@ test('outside clicks close overlays and local menu navigation adds no menu histo
   page,
 }) => {
   await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  const title = await page.locator('main h1').textContent()
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.mouse.click(20, 400)
@@ -430,12 +429,14 @@ test('outside clicks close overlays and local menu navigation adds no menu histo
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
-  await dialog.getByRole('link', { name: 'Hoffnung', exact: true }).click()
-  await expect(page.locator('main h1')).toHaveText('Hoffnung')
-  await expect(page.getByRole('dialog')).not.toBeVisible()
+  const link = dialog.locator('details').first().getByRole('link').first()
+  const destination = new URL((await link.getAttribute('href'))!, page.url()).pathname
+  await link.click()
+  await expect(page).toHaveURL((url) => url.pathname === destination)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.goBack()
   await expect(page).toHaveURL(/\/halbkreis$/)
-  await expect(page.locator('main h1')).toHaveText('Halbkreis')
+  await expect(page.locator('main h1')).toHaveText(title!)
   expect((await page.goto('/nav'))?.status()).toBe(404)
 })
 
@@ -450,10 +451,9 @@ test('sidebar keeps the original header and menu item spacing with SVG controls'
   expect((await close.locator('..').boundingBox())!.height).toBe(32)
   const work = dialog.locator('summary').filter({ hasText: 'Work' })
   await expect(work.locator('svg')).toBeVisible()
-  const first = await dialog.getByRole('link', { name: 'Hoffnung', exact: true }).boundingBox()
-  const second = await dialog
-    .getByRole('link', { name: 'Resolve Yourself', exact: true })
-    .boundingBox()
+  const links = dialog.locator('details').first().getByRole('link')
+  const first = await links.nth(0).boundingBox()
+  const second = await links.nth(1).boundingBox()
   expect(second!.y - first!.y - first!.height).toBe(4)
 })
 
@@ -470,7 +470,7 @@ test('sidebar slides and sections animate open and closed', async ({ page }) => 
     ),
   ).toBe(true)
   await expect.poll(() => panel.evaluate((el) => el.getAnimations().length)).toBe(0)
-  const work = dialog.locator('details').filter({ hasText: 'Halbkreis' })
+  const work = dialog.locator('details').first()
   const expanded = (await work.boundingBox())!.height
   await work.locator('summary').click()
   await expect
@@ -480,7 +480,7 @@ test('sidebar slides and sections animate open and closed', async ({ page }) => 
     })
     .toBe(true)
   await expect.poll(async () => (await work.boundingBox())!.height).toBeLessThan(expanded)
-  await expect(dialog.getByRole('link', { name: 'Halbkreis', exact: true })).not.toBeVisible()
+  await expect(dialog.locator('details').first().getByRole('link').first()).not.toBeVisible()
   await work.locator('summary').click()
   await expect
     .poll(async () => {
@@ -488,7 +488,7 @@ test('sidebar slides and sections animate open and closed', async ({ page }) => 
       return height > 50 && height < expanded - 1
     })
     .toBe(true)
-  await expect(dialog.getByRole('link', { name: 'Halbkreis', exact: true })).toBeVisible()
+  await expect(dialog.locator('details').first().getByRole('link').first()).toBeVisible()
   await dialog.getByRole('button', { name: 'Close navigation' }).click()
   await expect(dialog).not.toBeVisible()
 })
@@ -504,9 +504,9 @@ test('sidebar respects reduced motion and keyboard disclosure controls', async (
   const summary = dialog.locator('summary').filter({ hasText: 'Work' })
   await summary.focus()
   await page.keyboard.press('Enter')
-  await expect(dialog.getByRole('link', { name: 'Halbkreis', exact: true })).not.toBeVisible()
+  await expect(dialog.locator('details').first().getByRole('link').first()).not.toBeVisible()
   await page.keyboard.press('Space')
-  await expect(dialog.getByRole('link', { name: 'Halbkreis', exact: true })).toBeVisible()
+  await expect(dialog.locator('details').first().getByRole('link').first()).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(dialog).not.toBeVisible()
 })
@@ -525,7 +525,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     for (const control of [
       dialog.getByRole('button', { name: 'Close navigation' }),
       dialog.locator('summary').filter({ hasText: 'Work' }),
-      dialog.getByRole('link', { name: 'Hoffnung', exact: true }),
+      dialog.locator('details').first().getByRole('link').first(),
       dialog.getByRole('textbox', { name: 'Email address' }),
       dialog.getByRole('button', { name: 'Signup' }),
       dialog.getByRole('link', { name: 'Twitch', exact: true }),

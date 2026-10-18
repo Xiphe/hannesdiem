@@ -1,8 +1,17 @@
 import assert from 'node:assert/strict'
-import routes from '../content/routes.json' with { type: 'json' }
+import mediaFiles from '../.generated/media-files.json' with { type: 'json' }
+
 const origin = new URL(process.argv[2])
+const mediaBase = process.env.MEDIA_BASE_URL ?? '/media'
 async function get(path: string, redirect: RequestRedirect = 'follow') {
   return fetch(new URL(path, origin), { redirect, signal: AbortSignal.timeout(20_000) })
+}
+async function asset(path: string, contentType: RegExp, immutable = false) {
+  const response = await get(path)
+  assert.equal(response.status, 200, path)
+  assert.match(response.headers.get('Content-Type') ?? '', contentType, path)
+  if (immutable) assert.match(response.headers.get('Cache-Control') ?? '', /immutable/, path)
+  assert.ok((await response.arrayBuffer()).byteLength, path)
 }
 let failure: unknown
 for (let attempt = 0; attempt < 5; attempt++) {
@@ -12,46 +21,38 @@ for (let attempt = 0; attempt < 5; attempt++) {
     assert.deepEqual(await health.json(), { ok: true })
     const home = await get('/', 'manual')
     assert.equal(home.status, 307)
-    assert.equal(home.headers.get('Location'), '/linktree')
-    for (const route of routes) {
-      const response = await get(route.path)
-      assert.equal(response.status, 200, route.path)
-      assert.equal(response.headers.get('Set-Cookie'), null, route.path)
-      const html = await response.text()
-      assert.match(html, /<style data-rmx-style/)
-      assert.doesNotMatch(html, /\[object Object\]/)
-    }
-    const linktree = await (await get('/linktree')).text()
-    const script = linktree.match(/src="(\/assets\/[^"\s]+\.js)"/)
+    const location = home.headers.get('Location')
+    assert.ok(location)
+    const page = await get(location)
+    assert.equal(page.status, 200)
+    assert.equal(page.headers.get('Set-Cookie'), null)
+    const html = await page.text()
+    assert.match(html, /<style data-rmx-style/)
+    assert.match(html, /<dialog[^>]*id="site-navigation"[^>]*data-navigation-dialog/)
+    assert.doesNotMatch(html, /\[object Object\]/)
+    const script = html.match(/src="(\/assets\/[^"\s]+\.js)"/)
+    const mark = html.match(/\/assets\/mark-[a-f0-9]{16}\.svg/)
     assert.ok(script)
-    const asset = await get(script[1])
-    assert.equal(asset.status, 200)
-    assert.match(asset.headers.get('Content-Type') ?? '', /javascript/)
-    const content = await (await get('/one-week-album')).text()
-    const media = content.match(/<img[^>]*\bsrc="([^"]+)"/)
-    assert.ok(media)
-    const image = await get(media[1])
-    assert.equal(image.status, 200)
-    assert.match(image.headers.get('Content-Type') ?? '', /image\/webp/)
-    assert.match(image.headers.get('Cache-Control') ?? '', /immutable/)
-    assert.ok((await image.arrayBuffer()).byteLength)
-    const og = content.match(/property="og:image" content="([^"]+)"/)
-    assert.ok(og)
-    const card = await get(og[1])
-    assert.equal(card.status, 200)
-    assert.match(card.headers.get('Content-Type') ?? '', /image\/jpeg/)
-    const mark = linktree.match(/\/assets\/mark-[a-f0-9]{16}\.svg/)
     assert.ok(mark)
-    assert.equal((await get(mark[0])).status, 200)
-    const nav = await get('/nav')
-    assert.equal(nav.status, 200)
-    assert.equal(nav.headers.get('Cache-Control'), 'no-store')
-    const missing = await get('/missing-migrated-route')
+    const checks = [asset(script[1], /javascript/), asset(mark[0], /image\/svg\+xml/)]
+    // Exercise the upload pipeline without depending on editorial markup or image order.
+    for (const contentType of ['image/webp', 'image/jpeg']) {
+      const file = mediaFiles.find((candidate) => candidate.contentType === contentType)
+      if (file)
+        checks.push(
+          asset(
+            `${mediaBase.replace(/\/+$/, '')}/${file.key}`,
+            new RegExp(`^${contentType}`),
+            true,
+          ),
+        )
+    }
+    await Promise.all(checks)
+    const missing = await get('/missing-route')
     assert.equal(missing.status, 404)
     assert.equal(missing.headers.get('Cache-Control'), 'no-store')
-    assert.match(await missing.text(), /Page Not Found/)
     console.log(
-      `Deployment smoke passed: ${routes.length} content routes, app assets, R2 images/share cards, private navigation, and 404 at ${origin.origin}`,
+      `Deployment smoke passed: app, local navigation, assets, media, and 404 at ${origin.origin}`,
     )
     process.exit(0)
   } catch (error) {

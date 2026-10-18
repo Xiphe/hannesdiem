@@ -11,13 +11,13 @@ npm run dev
 npm run check
 ```
 
-`npm run format` applies Prettier to authored files, including CMX. `check` enforces formatting before the media/CMX/app build, typechecks, server/browser tests, and deployment dry run. `npm test` uses existing build artifacts. Local development needs no cloud credentials.
+`npm run format` applies Prettier to authored files, including CMX. After `build` (or `dev`), `check` enforces formatting, app types, and server/browser functionality; it does not rebuild or assert editorial content, route counts, or a migration inventory. `npm test` also uses existing build artifacts. Local development needs no cloud credentials.
 
 ## Content
 
 34 routes: four CMS pages, five releases, 21 lyric pages, linktree/about/imprint/privacy. `/` redirects to `/linktree`; legacy aliases and direct lyric URLs remain supported. `content/routes.json` holds paths and metadata; `content/pages/*.tsx` are authored CMX; `content/contract` is the external component contract. `app/content-components.tsx` owns native Remix styling/markup; `app/media.ts` resolves image identities. Ordinary rich-text HTML and intentional one-offs are allowed. No Payload/Next/React runtime.
 
-`npm run build`: media → CMX bundle/documents/Environment → browser assets/content registry. Generated files: `.generated/`, `.cmx/`, `dist/`. `cmx.config.ts` implementation paths are relative to `.cmx/environment.ts`. Content stays outside the browser graph. Current publication still requires CI; hosted CMX will replace the async loader.
+`npm run build`: `media:build` → `build:app` (CMX bundle/documents/Environment → browser assets/content registry). Generated files: `.generated/`, `.cmx/`, `dist/`. `cmx.config.ts` implementation paths are relative to `.cmx/environment.ts`. Content stays outside the browser graph. Current publication still requires CI; hosted CMX will replace the async loader.
 
 Native Remix `css`/`mix` emits server-rendered styles. Only menu/dialog controls, newsletter state/forms, and localized dates hydrate. Navigation is cached page HTML and opens locally; its island loads private state after opening. Lyric links use canonical `/song/*` URLs; `data-rmx-src` fetches private `/m/song/*` Frame fragments. Public content DOM remains static. Decisions: `docs/adr/0003-*` through `0006-*`.
 
@@ -27,11 +27,11 @@ Native Remix `css`/`mix` emits server-rendered styles. Only menu/dialog controls
 
 Actions alone installs `tools/palette` and runs `scripts/extract-palettes.ts` using legacy `node-vibrant@4.0.4`. `content/palettes.json` is a saved Actions output for local previews; SHA mismatches fall back to the default theme until preprocessing. Refresh it from the `media-palettes` workflow artifact after changing originals. Do not install the palette tool locally.
 
-Local `MEDIA_BASE_URL` defaults to `/media`; production uses `https://media.hannesdiem.de`. CI uploads variants, share cards, and a content-hashed metadata manifest directly to R2 before deploying; retains old objects. `sharp` is build-only. Browser tests substitute local files for remote media; deployment smoke checks actual hosting. App logo/font stay in Workers Static Assets. Preprocessing will move alongside hosted content.
+Local `MEDIA_BASE_URL` defaults to `/media`; production uses `https://media.hannesdiem.de`. CI caches palettes, variants, share cards, and manifests by preprocessing inputs and media base; an exact hit skips palette-tool installation and all image processing. A single R2 listing finds missing immutable keys; only those upload, and old objects remain. Cache eviction rebuilds locally without re-uploading existing objects. `sharp` is build-only. Browser tests substitute local files for remote media; deployment smoke checks actual hosting. App logo/font stay in Workers Static Assets. Preprocessing will move alongside hosted content.
 
 ## Deployment
 
-Only pushes to `main` run checks, upload media, deploy, and smoke-test all 34 routes. Worker: `hannesdiem`; deployment URL appears in Actions. [Production environment](https://github.com/Xiphe/hannesdiem/settings/environments/24638962215/edit):
+Only pushes to `main` prepare media, build the app, run checks, upload missing media, deploy, and smoke-test app endpoints/assets and representative R2 files. New pushes cancel superseded runs. Worker: `hannesdiem`; deployment URL appears in Actions. [Production environment](https://github.com/Xiphe/hannesdiem/settings/environments/24638962215/edit):
 
 | Kind     | Name                              | Value                                                         |
 | -------- | --------------------------------- | ------------------------------------------------------------- |

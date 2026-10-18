@@ -44,23 +44,15 @@ test('content strings are escaped before becoming HTML', async () => {
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>|<img src=x/)
   assert.match(html, /&lt;script&gt;/)
 })
-test('all 34 migrated routes render CMX and keep public responses unpersonalized', async () => {
-  assert.equal(contentRoutes.length, 34)
-  const app = createApp()
-  for (const route of contentRoutes) {
-    const response = await app.fetch(`https://example.com${route.path}`)
-    assert.equal(response.status, 200, route.path)
-    assert.equal(response.headers.get('Set-Cookie'), null, route.path)
-    assert.equal(response.headers.get('Cache-Tag'), `page:${route.document}`, route.path)
-    const html = await response.text()
-    assert.ok(
-      html.includes(route.title.replaceAll('&', '&amp;').replaceAll('<', '&lt;')),
-      route.path,
-    )
-    assert.match(html, /<style data-rmx-style/)
-    assert.doesNotMatch(html, /\[object Object\]|Count:|data-rmx-key="example-counter"/)
-    if (route.kind === 'release') assert.match(html, /data-rmx-target="overlay"/)
-  }
+test('public rendering emits CMX styles and cache tags without personalizing responses', async () => {
+  const app = createApp(async () => publication('Sample publication', 'A complete article.'))
+  const response = await app.fetch('https://example.com/publication')
+  assert.equal(response.status, 200)
+  assert.equal(response.headers.get('Set-Cookie'), null)
+  assert.equal(response.headers.get('Cache-Tag'), 'page:test-publication')
+  const html = await response.text()
+  assert.match(html, /<style data-rmx-style/)
+  assert.doesNotMatch(html, /\[object Object\]/)
 })
 test('missing routes, removed navigation endpoint, and health are uncached', async () => {
   const app = createApp()
@@ -71,7 +63,6 @@ test('missing routes, removed navigation endpoint, and health are uncached', asy
     assert.equal(response.headers.get('Cache-Tag'), null, path)
     if (path === '/missing' || path === '/nav') {
       assert.equal(response.status, 404)
-      assert.match(await response.text(), /Page Not Found/)
     }
     if (path === '/health') assert.deepEqual(await response.json(), { ok: true })
   }
@@ -102,8 +93,7 @@ test('public pages include a local navigation dialog without accessing newslette
     const html = await response.text()
     assert.match(html, /<dialog[^>]*id="site-navigation"[^>]*data-navigation-dialog/)
     assert.match(html, /command="request-close" commandfor="site-navigation"/)
-    assert.match(html, /Let’s stay in touch/)
-    assert.match(html, /href="\/hoffnung" aria-current="page"/)
+    assert.match(html, /aria-current="page"/)
     assert.doesNotMatch(html, /href="\/nav|data-rmx-src="\/nav|data-rmx-history="replace"/)
   }
 })
