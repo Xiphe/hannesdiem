@@ -1,0 +1,12 @@
+# Newsletter
+
+- `/nav`: private SSR form/account state; native POST `/login` and `/logout`; hidden `_csrf`. Propagate `getNewsletterState(...).headers.getSetCookie()`; `Cache-Control: no-store`.
+- `GET /login/api?token=…`: 1h, atomically consumed link; confirms Resend membership, rotates session, redirects home. Failed contact synchronization consumes the link; request another. `?action=session`: `{email}` or `null`. `DELETE /login/api`: logout compatibility, CSRF required.
+- Remix owns cookies, sessions, forms, validation, CSRF. Signed `hdm_user_session` contains only an opaque ID. Secure on HTTPS, HttpOnly, SameSite=Lax, path `/`, browser-session lifetime. Server records expire after 30 idle days; logout deletes them. Previous Next.js sessions reset.
+- `NEWSLETTER_STATE`: SQLite Durable Object, single `newsletter` instance; sessions, SHA256-indexed tokens, case-insensitive 2min email cooldown. Worker exports `NewsletterState.fetch` → `handleNewsletterStorage`; `alarm` → `cleanupNewsletterStorage`. Cleanup removes expired records; access checks expiry immediately.
+- GitHub Production environment → Worker secrets: `NEWSLETTER_SESSION_SECRET` (random ≥32 bytes), `RESEND_HANNESDIEM_DE_API_KEY` (sending + contacts access). GitHub Production environment → Worker var: `RESEND_HANNESDIEM_DE_SEGMENT_ID` (reuse existing site's segment).
+- Resend sender `Hannes Diem <hi@hannesdiem.de>`; confirmation only, no broadcasts. Existing audience `ebed0ce7-7220-4955-a176-6e2f31acb5bd` is now a segment; preserve it plus configured site segment. Existing global unsubscribe status stays untouched. No subscriber data imported into Git.
+- Missing configuration disables signup. Automated tests inject delivery; no external email/contact mutations. Production verification needs one human-confirmed signup.
+- Actions verifies access to both existing segments before deployment (read-only), then forwards the two secrets and segment variable. Resend `sending_access` cannot manage contacts; reuse the old key or use a dedicated `full_access` key.
+
+API references: [Resend contacts](https://resend.com/docs/api-reference/contacts/create-contact), [segments](https://resend.com/docs/api-reference/contacts/add-contact-to-segment), [audience migration](https://resend.com/blog/new-contacts-experience), [DO authorization](https://developers.cloudflare.com/workers/authorization/durable-objects/).

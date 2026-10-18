@@ -1,3 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <path fill="none" stroke="#315c50" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M10 9v30m0-12c0-13 17-13 17 0v12m11-30v30M5 39h38"/>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 149.3 333.3">
+  <style>
+    .lt {
+      fill: #ae1ee4;
+    }
+    .lb {
+      fill: #6C0FB8;
+    }
+    .rt {
+      fill: #134d8b;
+    }
+    .rb {
+      fill: #02154b;
+    }
+    @media (prefers-color-scheme: dark) {
+      .lt {
+        fill: #add4ed;
+      }
+      .lb {
+        fill: #4097dd;
+      }
+      .rt {
+        fill: #f934e5;
+      }
+      .rb {
+        fill: #ae1ee4;
+      }
+    }
+  </style>
+  <g>
+    <polygon class="lt" points="9.9,241.7 70.2,208.5 70.2,19.1"></polygon>
+    <polygon class="lb" points="70.2,218.6 9.7,251.9 70.2,326.2"></polygon>
+    <polygon class="rt" points="139.4,241.7 79,19.1 79,208.5"></polygon>
+    <polygon class="rb" points="139.6,251.9 79,218.6 79.1,326.2"></polygon>
+  </g>
 </svg>

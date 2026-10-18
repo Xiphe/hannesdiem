@@ -2,11 +2,13 @@ export const title = 'Page not found'
 
 export default function NotFound() {
   return (
-    <article id="content">
-      <span class="eyebrow">404</span>
-      <h1>{title}</h1>
-      <p>There is no page at this address.</p>
-      <a href="/">Back home</a>
-    </article>
+    <div class="not-found">
+      <h1>404 - Page Not Found</h1>
+      <p>
+        <span>Sorry, this page doesn&apos;t exist...</span>
+        <br />
+        <a href="/">Go back to the homepage</a>
+      </p>
+    </div>
   )
 }

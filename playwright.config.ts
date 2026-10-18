@@ -12,7 +12,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run dev',
+    command: 'npx wrangler dev --ip 127.0.0.1 --port 8787',
     url: 'http://127.0.0.1:8787',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

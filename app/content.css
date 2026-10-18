@@ -1,0 +1,69 @@
+/* Global tokens and the few code-owned legacy page exceptions. Component styles use Remix css(). */
+@layer base {
+  :root {
+  --color-black: #020024;
+  --color-real-black: #000000;
+  --color-white: #fff8fb;
+  --color-real-white: #ffffff;
+  --color-gray-50: #fff8fb;
+  --color-gray-100: #dbd4d8;
+  --color-gray-200: #b5abb2;
+  --color-gray-300: #9d909b;
+  --color-gray-400: #837984;
+  --color-gray-500: #69606c;
+  --color-gray-600: #4d4851;
+  --color-gray-700: #312f35;
+  --color-gray-800: #222028;
+  --color-gray-900: #010015;
+  --color-gray: #69606c;
+  --color-blue-50: #add4ed;
+  --color-blue-100: #77b7e4;
+  --color-blue-200: #4097dd;
+  --color-blue-300: #1e70be;
+  --color-blue-400: #134d8b;
+  --color-blue-500: #093871;
+  --color-blue-600: #022456;
+  --color-blue-700: #02154b;
+  --color-blue-800: #010a3c;
+  --color-blue-900: #020024;
+  --color-blue: #134d8b;
+  --color-violet-50: #d9c2fc;
+  --color-violet-100: #b591f8;
+  --color-violet-200: #8b5ff2;
+  --color-violet-300: #6134ea;
+  --color-violet-400: #3f1ace;
+  --color-violet-500: #271e9f;
+  --color-violet-600: #1e236f;
+  --color-violet-700: #111b5f;
+  --color-violet-800: #07134b;
+  --color-violet-900: #010d30;
+  --color-violet: #6134ea;
+  --color-pink-50: #ffe5f2;
+  --color-pink-100: #ffb8e4;
+  --color-pink-200: #ff8ce2;
+  --color-pink-300: #fd5ee0;
+  --color-pink-400: #f934e5;
+  --color-pink-500: #ef2bf3;
+  --color-pink-600: #cf27ec;
+  --color-pink-700: #ae1ee4;
+  --color-pink-800: #6c0fb8;
+  --color-pink-900: #340782;
+  --color-pink: #f934e5;
+    interpolate-size: allow-keywords;
+  }
+  html { background: var(--theme-bg, #fff8fb); color: var(--theme-fg, #020024); }
+  .legal-page { margin: 3rem auto 0; max-width:65ch; padding-inline:1.5rem; font-size:1rem; line-height:1.75; }
+  .legal-page > section { padding-inline:0!important; max-width:none!important; }
+  .policy-note { display: block; padding-left: 2rem; opacity: 0.6; }
+  .policy-note.spaced { margin-top: 1.5rem; }
+  .compact-list > li + li { margin-top: 0 !important; }
+  .policy-link { border-radius: 0.25rem; text-decoration: underline; }
+  .policy-link:focus-visible { outline: 4px solid var(--theme-fg); outline-offset: 4px; }
+  .not-found { width:100%; max-width:80rem; min-height:60vh; margin-inline:auto; display:flex; flex-direction:column; justify-content:center; padding:1.5rem; text-align:center; }
+  .not-found h1 { font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif; font-size:2.25rem; line-height:1.111111; margin-bottom:1.5rem; }
+  .not-found p > span { opacity:0.5; }
+  .not-found a { text-decoration:underline; }
+  @media (width >= 48rem) { .policy-note { padding-left: 3rem; } }
+  @media (width >= 64rem) { .legal-page { font-size:1.25rem; line-height:1.8; } }
+  @media (width >= 80rem) { :root { --shop-logo-height: 3rem; } }
+}

@@ -5,8 +5,11 @@ import { gzipSync } from 'node:zlib'
 
 await rm('dist', { recursive: true, force: true })
 await mkdir('.generated', { recursive: true })
+const routes = JSON.parse(await readFile('content/routes.json', 'utf8')) as { document: string }[]
+const documents = [...new Set([...routes.map(route => route.document), '404'])]
+await writeFile('.generated/content.ts', documents.map((name, i) => `import doc${i} from '../.cmx/documents/${name}.json' with { type: 'json' }`).join('\n') + '\nexport const documents = {\n' + documents.map((name, i) => `${JSON.stringify(name)}: doc${i}`).join(',\n') + '\n}\n')
 const result = await build({
-  entryPoints: { entry: 'app/browser.ts', counter: 'app/counter.tsx', style: 'app/style.css' },
+  entryPoints: { entry: 'app/browser.ts', chrome: 'app/chrome.tsx', date: 'app/date.tsx', style: 'app/style.css' },
   outdir: 'dist/assets',
   entryNames: '[name]-[hash]',
   chunkNames: 'shared-[hash]',
@@ -19,9 +22,10 @@ const result = await build({
   jsxImportSource: 'remix/component',
   minify: true,
   metafile: true,
+  external: ['/font/*'],
 })
 
-const serverModules = ['app/page.tsx', 'app/content.ts', 'app/cmx-components.ts', 'app/router.tsx', 'app/worker.ts']
+const serverModules = ['app/page.tsx', 'app/content.ts', 'app/content-components.tsx', 'app/cmx-components.ts', 'app/media.ts', 'app/theme.ts', 'app/navigation.tsx', 'app/newsletter.ts', 'app/newsletter-view.tsx', 'app/router.tsx', 'app/worker.ts']
 for (const path of serverModules) {
   if (path in result.metafile.inputs) throw new Error(`Server-only module in browser bundle: ${path}`)
 }
@@ -33,22 +37,26 @@ for (const path of Object.keys(result.metafile.inputs)) {
 const entries = Object.fromEntries(Object.entries(result.metafile.outputs)
   .filter(([, output]) => output.entryPoint)
   .map(([path, output]) => [
-    ({ 'app/browser.ts': 'entry', 'app/counter.tsx': 'counter', 'app/style.css': 'style' })[output.entryPoint!],
+    ({ 'app/browser.ts': 'entry', 'app/chrome.tsx': 'chrome', 'app/date.tsx': 'date', 'app/style.css': 'style' })[output.entryPoint!],
     '/' + path.replace(/^dist\//, ''),
   ]))
 const mark = await readFile('app/assets/mark.svg')
 entries.mark = `/assets/mark-${createHash('sha256').update(mark).digest('hex').slice(0, 16)}.svg`
 await writeFile(`dist${entries.mark}`, mark)
+await mkdir('dist/font', { recursive: true })
+await cp('app/assets/fuggles.woff2', 'dist/font/fuggles-v12-latin-regular.woff2')
+await cp('app/assets/googlef6f5b9a886cf5949.html', 'dist/googlef6f5b9a886cf5949.html')
 const media = JSON.parse(await readFile('.generated/media.json', 'utf8'))
 let mediaHeaders = ''
-if (media.landscape.src.startsWith('/')) {
+const firstImage = Object.values(media)[0] as { src: string }
+if (firstImage.src.startsWith('/')) {
   const files = JSON.parse(await readFile('.generated/media-files.json', 'utf8'))
-  const prefix = media.landscape.src.slice(0, -files.at(-1).key.length)
+  const prefix = firstImage.src.slice(0, firstImage.src.indexOf('/images/') + 1)
   await cp('.generated/media', `dist${prefix}`, { recursive: true })
   mediaHeaders = `${prefix}*\n  Cache-Control: public, max-age=31536000, immutable\n`
 }
 await writeFile('.generated/assets.json', JSON.stringify(entries, null, 2) + '\n')
-await writeFile('dist/_headers', '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n' + mediaHeaders)
+await writeFile('dist/_headers', '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/font/*\n  Cache-Control: public, max-age=31536000, immutable\n' + mediaHeaders)
 await writeFile('.generated/browser-meta.json', JSON.stringify(result.metafile, null, 2) + '\n')
 
 let bytes = 0

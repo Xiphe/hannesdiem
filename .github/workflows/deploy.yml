@@ -68,8 +68,20 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-deploy.jsonl
+          NEWSLETTER_SESSION_SECRET: ${{ secrets.NEWSLETTER_SESSION_SECRET }}
+          RESEND_HANNESDIEM_DE_API_KEY: ${{ secrets.RESEND_HANNESDIEM_DE_API_KEY }}
+          RESEND_HANNESDIEM_DE_SEGMENT_ID: ${{ vars.RESEND_HANNESDIEM_DE_SEGMENT_ID }}
         run: |
-          npm run deploy
+          if [[ -n "$NEWSLETTER_SESSION_SECRET" && -n "$RESEND_HANNESDIEM_DE_API_KEY" && -n "$RESEND_HANNESDIEM_DE_SEGMENT_ID" ]]; then
+            node scripts/verify-newsletter.ts
+            secrets_file="$RUNNER_TEMP/newsletter-secrets.json"
+            node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({NEWSLETTER_SESSION_SECRET:process.env.NEWSLETTER_SESSION_SECRET,RESEND_HANNESDIEM_DE_API_KEY:process.env.RESEND_HANNESDIEM_DE_API_KEY}), {mode:0o600})' "$secrets_file"
+            trap 'rm -f "$secrets_file"' EXIT
+            npm run deploy -- --secrets-file "$secrets_file" --var "RESEND_HANNESDIEM_DE_SEGMENT_ID:$RESEND_HANNESDIEM_DE_SEGMENT_ID"
+          else
+            npm run deploy
+            echo 'Newsletter disabled until its Production secrets and segment variable are configured; see docs/newsletter.md.' >> "$GITHUB_STEP_SUMMARY"
+          fi
           deployment_url=$(jq -ers '[.[] | select(.type == "deploy") | .targets[]? | select(startswith("https://"))][0] // error("Wrangler returned no deployment URL")' "$WRANGLER_OUTPUT_FILE_PATH")
           echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
           printf 'Deployed: [%s](%s)\n' "$deployment_url" "$deployment_url" >> "$GITHUB_STEP_SUMMARY"

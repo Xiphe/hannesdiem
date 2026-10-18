@@ -1,186 +1,104 @@
-import { expect, test, type BrowserContext } from '@playwright/test'
-import media from '../.generated/media.json' with { type: 'json' }
-import mediaFiles from '../.generated/media-files.json' with { type: 'json' }
+import { expect,test,type BrowserContext } from '@playwright/test'
+import mediaFiles from '../.generated/media-files.json' with {type:'json'}
+import media from '../.generated/media.json' with {type:'json'}
 
-// Production documents use the real media origin; browser checks stay offline.
-// Deployment smoke checks verify that origin after uploading the same files.
-async function mockRemoteMedia(context: BrowserContext) {
-  if (!media.landscape.src.startsWith('https://')) return
-  const prefix = media.landscape.src.slice(0, -mediaFiles.at(-1)!.key.length)
-  for (const file of mediaFiles) {
-    await context.route(`${prefix}${file.key}`, (route) => route.fulfill({
-      path: file.path, contentType: file.contentType,
-    }))
-  }
+async function mockRemoteMedia(context:BrowserContext){
+  const first=Object.values(media)[0]
+  if(!first.src.startsWith('https://'))return
+  const origin=new URL(first.src).origin
+  for(const file of mediaFiles){await context.route(`${origin}/${file.key}`,route=>route.fulfill({path:file.path,contentType:file.contentType}))}
 }
-
-test.beforeEach(async ({ context }) => { await mockRemoteMedia(context) })
-
-declare global {
-  interface Window {
-    staticProbe: { root: Element; nodes: Node[]; mutations: number }
-  }
-}
-
-for (const example of [
-  {
-    path: '/', title: 'Hannes Diem', initialCount: 0,
-    paragraphs: [
-      'Music, words, and a place to share what comes next.',
-      'This is placeholder content for the Remix and Cloudflare spike.',
-    ],
-  },
-  {
-    path: '/example', title: 'Another example', initialCount: 10,
-    paragraphs: [
-      'This page is authored in CMX, including the interactive counter below.',
-      'Its initial count travels through the CMX document into a Remix island.',
-    ],
-  },
-]) {
-  test(`${example.path}: content and CMX counter render without browser JavaScript`, async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
+test.beforeEach(async({context})=>{await mockRemoteMedia(context)})
+for(const path of ['/linktree','/one-week-album','/hoffnung','/song/alles-brennt']){
+  test(`${path} renders content and styles without JavaScript`,async({browser,baseURL})=>{
+    const context=await browser.newContext({javaScriptEnabled:false,baseURL})
     await mockRemoteMedia(context)
-    try {
-      const page = await context.newPage()
-      const response = await page.goto(example.path)
+    try{
+      const page=await context.newPage()
+      const response=await page.goto(path)
       expect(response?.status()).toBe(200)
-      await expect(page).toHaveTitle(example.title)
-      await expect(page.locator('#content h1')).toHaveText(example.title)
-      await expect(page.locator('#content p')).toHaveText(example.paragraphs)
-      await expect(page.locator('#island button')).toHaveText(`Count: ${example.initialCount}`)
-      if (example.path === '/example') {
-        await expect(page.getByRole('img', { name: /illustrated landscape/ })).toBeVisible()
-      }
-    } finally {
-      await context.close()
-    }
+      await expect(page.locator('main')).not.toBeEmpty()
+      expect(await page.locator('style[data-rmx-style]').count()).toBeGreaterThan(0)
+      if(path==='/linktree')await expect(page.getByText("Hi I'm Hannes",{exact:false})).toBeVisible()
+      if(path==='/hoffnung')await expect(page.locator('h1')).toHaveText('Hoffnung')
+      if(path==='/one-week-album')await expect(page.locator('header img')).toBeVisible()
+      if(path.startsWith('/song/'))await expect(page.locator('h1')).toHaveText('Alles Brennt')
+    }finally{await context.close()}
   })
-
-  test(`${example.path}: CMX island hydration and updates leave the static DOM untouched`, async ({ page }) => {
-    const errors: string[] = []
-    const requests: string[] = []
-    const scripts: { status: number; type: string }[] = []
-    page.on('pageerror', (error) => errors.push(error.message))
-    page.on('console', (message) => {
-      if (message.type() === 'error') errors.push(message.text())
-    })
-    page.on('request', (request) => requests.push(request.url()))
-    page.on('response', (response) => {
-      if (/\/assets\/[^?]+\.js(?:\?|$)/.test(response.url())) {
-        scripts.push({ status: response.status(), type: response.headers()['content-type'] ?? '' })
+}
+test('menu opens as a native dialog without changing static page DOM',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
+  await page.goto('/one-week-album',{waitUntil:'networkidle'})
+  await page.evaluate(()=>{
+    const root=document.querySelector('main')!
+    Object.assign(window,{staticRoot:root,mutations:0})
+    new MutationObserver(records=>{(window as any).mutations+=records.length}).observe(root,{childList:true,subtree:true,attributes:true,characterData:true})
+  })
+  await page.getByRole('link',{name:'Open menu',exact:true}).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByRole('dialog').getByRole('heading',{name:'Let’s stay in touch.'})).toBeVisible()
+  await page.getByRole('dialog').getByText('Work',{exact:true}).click()
+  await expect(page.getByRole('dialog').getByRole('link',{name:'Hoffnung',exact:true})).toBeVisible()
+  expect(await page.evaluate(()=>({same:(window as any).staticRoot===document.querySelector('main'),mutations:(window as any).mutations}))).toEqual({same:true,mutations:0})
+  await page.getByRole('link',{name:'Close navigation'}).click()
+  await expect(page.getByRole('dialog')).not.toBeVisible()
+  expect(errors).toEqual([])
+})
+test('release lyrics open over the release, close on Escape, and support direct URLs',async({page})=>{
+  await page.goto('/halbkreis',{waitUntil:'networkidle'})
+  const link=page.locator('a[href="/m/song/alles-brennt"]').first()
+  await link.click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByRole('dialog').locator('h1')).toHaveText('Alles Brennt')
+  await expect(page.locator('main h1')).toHaveText('Halbkreis')
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).not.toBeVisible()
+  await expect(page).toHaveURL(/\/halbkreis$/)
+  await page.goto('/m/song/alles-brennt')
+  await expect(page).toHaveURL(/\/song\/alles-brennt$/)
+  await expect(page.locator('main h1')).toHaveText('Alles Brennt')
+})
+for(const width of [360,1280]){
+  test(`media decodes and pages fit ${width}px viewport`,async({page})=>{
+    await page.setViewportSize({width,height:800})
+    for(const path of ['/linktree','/one-week-album','/halbkreis','/song/alles-brennt']){
+      await page.goto(path,{waitUntil:'networkidle'})
+      const image=page.locator('main img').first()
+      if(await image.count()){
+        const result=await image.evaluate(async(img:HTMLImageElement)=>{await img.decode();return{src:img.currentSrc,width:img.naturalWidth}})
+        expect(result.src).toMatch(/\/images\/.*\.webp$/);expect(result.width).toBeGreaterThan(0)
       }
-    })
-
-    let releaseScripts!: () => void
-    const scriptsAllowed = new Promise<void>((resolve) => { releaseScripts = resolve })
-    let heldScripts = 0
-    await page.route('**/assets/*.js', async (route) => {
-      heldScripts++
-      await scriptsAllowed
-      await route.continue()
-    })
-
-    try {
-      await page.goto(example.path, { waitUntil: 'commit' })
-      await expect(page.locator('#content h1')).toHaveText(example.title)
-      await expect(page.locator('#island button')).toHaveText(`Count: ${example.initialCount}`)
-      await expect.poll(() => heldScripts).toBeGreaterThan(0)
-      await page.evaluate(() => {
-        const root = document.querySelector('#content')!
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_ALL)
-        const nodes: Node[] = [root]
-        while (walker.nextNode()) nodes.push(walker.currentNode)
-        window.staticProbe = { root, nodes, mutations: 0 }
-        new MutationObserver((records) => {
-          window.staticProbe.mutations += records.length
-        }).observe(root, { subtree: true, childList: true, attributes: true, characterData: true })
-      })
-      releaseScripts()
-      await page.waitForLoadState('networkidle')
-
-      const counter = page.getByRole('button', { name: /^Count:/ })
-      for (let count = 1; count <= 5; count++) {
-        const requestCount = requests.length
-        await counter.click()
-        await expect(counter).toHaveText(`Count: ${example.initialCount + count}`)
-        expect(requests).toHaveLength(requestCount)
-      }
-
-      expect(await page.evaluate(() => {
-        const { root, nodes, mutations } = window.staticProbe
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_ALL)
-        const current: Node[] = [root]
-        while (walker.nextNode()) current.push(walker.currentNode)
-        return {
-          sameNodes: root === document.querySelector('#content') &&
-            nodes.length === current.length && nodes.every((node, index) =>
-              node.isConnected && node === current[index]),
-          mutations,
-        }
-      })).toEqual({ sameNodes: true, mutations: 0 })
-      expect(scripts.length).toBeGreaterThan(0)
-      for (const script of scripts) {
-        expect(script.status).toBe(200)
-        expect(script.type).toMatch(/javascript/)
-      }
-      expect(errors).toEqual([])
-    } finally {
-      releaseScripts()
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
     }
   })
 }
-
-test('CMX page links navigate between the examples', async ({ page }) => {
-  await page.goto('/')
-  await page.waitForLoadState('networkidle')
-  await page.getByRole('button', { name: 'Count: 0', exact: true }).click()
-  await expect(page.locator('#island button')).toHaveText('Count: 1')
-  await page.getByRole('link', { name: 'Another example' }).click()
-  await expect(page).toHaveURL(/\/example$/)
-  await expect(page.locator('#content h1')).toHaveText('Another example')
-  await expect(page.locator('#island button')).toHaveText('Count: 10')
-  await page.waitForLoadState('networkidle')
-  await page.locator('#island button').click()
-  await expect(page.locator('#island button')).toHaveText('Count: 11')
-  await page.getByRole('link', { name: 'Back home' }).click()
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.locator('#content h1')).toHaveText('Hannes Diem')
-  await expect(page.locator('#island button')).toHaveText('Count: 0')
+test('navigation follows content links, renders 404, and serves app assets',async({page,request})=>{
+  await page.goto('/linktree',{waitUntil:'networkidle'})
+  const mark=await page.locator('link[rel=icon]').getAttribute('href')
+  const asset=await request.get(mark!);expect(asset.status()).toBe(200);expect(asset.headers()['content-type']).toMatch(/image\/svg/)
+  await page.getByRole('link',{name:'Hoffnung',exact:true}).click()
+  await expect(page.locator('main h1')).toHaveText('Hoffnung')
+  const response=await page.goto('/missing-migrated-route')
+  expect(response?.status()).toBe(404);expect(response?.headers()['cache-control']).toBe('no-store')
+  await expect(page.locator('h1')).toHaveText('404 - Page Not Found')
 })
 
-test('unknown URLs render CMX content with HTTP 404 and a working way home', async ({ page }) => {
-  const response = await page.goto('/this-route/does-not-exist')
-  expect(response?.status()).toBe(404)
-  expect(response?.headers()['cache-control']).toBe('no-store')
-  await expect(page).toHaveTitle('Page not found')
-  await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
-  await expect(page.getByRole('button')).toHaveCount(0)
-  await page.getByRole('link', { name: 'Back home' }).click()
-  await expect(page.locator('#content h1')).toHaveText('Hannes Diem')
-})
-
-for (const viewport of [{ width: 360, variant: 480 }, { width: 1280, variant: 960 }]) {
-  test(`responsive CMX image selects the ${viewport.variant}px variant at ${viewport.width}px`, async ({ page }) => {
-    await page.setViewportSize({ width: viewport.width, height: 900 })
-    await page.goto('/example')
-    const image = page.getByRole('img', { name: /illustrated landscape/ })
-    await expect(image).toHaveAttribute('width', '1440')
-    await expect(image).toHaveAttribute('height', '900')
-    await expect(image).toHaveAttribute('sizes', '(max-width: 864px) calc(100vw - 48px), 816px')
-    await image.evaluate(async (element: HTMLImageElement) => { await element.decode() })
-    expect(await image.evaluate((element: HTMLImageElement) => element.currentSrc)).toMatch(
-      new RegExp(`landscape-${viewport.variant}-[a-f0-9]{16}\\.webp$`),
-    )
-  })
-}
-
-test('the app-owned mark is a hashed immutable static asset', async ({ page, request }) => {
-  await page.goto('/')
-  const src = await page.locator('.site-mark img').getAttribute('src')
-  expect(src).toMatch(/^\/assets\/mark-[a-f0-9]{16}\.svg$/)
-  const response = await request.get(src!)
-  expect(response.status()).toBe(200)
-  expect(response.headers()['content-type']).toMatch(/image\/svg\+xml/)
-  expect(response.headers()['cache-control']).toContain('immutable')
+test('outside clicks close overlays and menu selections replace the overlay history entry',async({page})=>{
+  await page.goto('/halbkreis',{waitUntil:'networkidle'})
+  await page.getByRole('link',{name:'Open menu',exact:true}).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.mouse.click(20,400)
+  await expect(page.getByRole('dialog')).not.toBeVisible()
+  await expect(page).toHaveURL(/\/halbkreis$/)
+  await page.getByRole('link',{name:'Open menu',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('link',{name:'Hoffnung',exact:true}).click()
+  await expect(page.locator('main h1')).toHaveText('Hoffnung')
+  await expect(page.getByRole('dialog')).not.toBeVisible()
+  await page.goBack()
+  await expect(page).toHaveURL(/\/halbkreis$/)
+  await expect(page.locator('main h1')).toHaveText('Halbkreis')
+  await page.goto('/nav',{waitUntil:'networkidle'})
+  await expect(page.getByRole('link',{name:'Open menu',exact:true})).toHaveCount(0)
 })
