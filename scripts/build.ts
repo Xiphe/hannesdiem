@@ -24,6 +24,11 @@ const serverModules = ['app/page.tsx', 'app/content.ts', 'app/router.tsx', 'app/
 for (const path of serverModules) {
   if (path in result.metafile.inputs) throw new Error(`Server-only module in browser bundle: ${path}`)
 }
+for (const path of Object.keys(result.metafile.inputs)) {
+  if (/^(?:content|\.cmx)\//.test(path) || path.includes('node_modules/@cmx-tools/')) {
+    throw new Error(`CMX content or runtime in browser bundle: ${path}`)
+  }
+}
 const entries = Object.fromEntries(Object.entries(result.metafile.outputs)
   .filter(([, output]) => output.entryPoint)
   .map(([path, output]) => [

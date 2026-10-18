@@ -18,11 +18,7 @@ export function Page(handle: Handle<PageContent>) {
       </head>
       <body>
         <main>
-          <article id="content">
-            <span class="eyebrow">A small beginning</span>
-            <h1>{handle.props.title}</h1>
-            {handle.props.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-          </article>
+          {handle.props.body}
           <section id="island" aria-label="Interactive counter">
             <Counter />
           </section>

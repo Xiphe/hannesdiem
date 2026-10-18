@@ -1,6 +1,6 @@
 # hannesdiem.de
 
-Remix 3 / Cloudflare Workers spike: cached SSR, one browser island, bundled content fixture. Node 24 + npm.
+Remix 3 / Cloudflare Workers spike: cached SSR, one browser island, same-repo CMX content. Node 24 + npm.
 
 ```sh
 npm ci
@@ -28,6 +28,10 @@ Missing credentials fail after checks with setup instructions. Set the values, t
 
 ## Content and caching
 
-Async content loader currently reads a bundled fixture; future CMX HTTP content replaces its implementation. Bundled content changes require app deployment; hosted content publication will be independent.
+`content/pages/home.tsx` → CMX bundle → JSON document → generated Environment → application build. `npm run build` runs the entire sequence; `npm run cmx:build` runs only CMX. Generated output lives in ignored `.cmx/`. Content uses CMX intrinsics; the site uses native Remix components. [CMX workflow](https://github.com/cmx-tools/packages#use-cmx-in-a-static-site-build).
+
+`app/content.ts` loads the generated document asynchronously; `@cmx-tools/remix` resolves it against the generated Environment during SSR. Content and CMX stay outside the browser graph. The counter remains a separate island.
+
+Content changes currently require build/deployment. Future hosted CMX replaces the document loader, preserving runtime SSR and independent publication.
 
 SSR HTML: 60-second edge TTL; browsers revalidate. Future CMX publication triggers cache invalidation; this spike has no webhook endpoint. Code deployments start with a fresh cache. JS/CSS use Workers Static Assets. [Workers Cache](https://developers.cloudflare.com/workers/cache/), [static asset versioning](https://developers.cloudflare.com/workers/versions-and-deployments/).

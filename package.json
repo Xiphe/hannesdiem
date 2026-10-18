@@ -6,17 +6,28 @@
     "node": ">=24.3.0"
   },
   "scripts": {
-    "build": "node scripts/build.ts",
+    "cmx:compile": "cmx-bundle compile \"content/pages/**/*.tsx\" .cmx/bundle --config cmx.config.ts",
+    "cmx:render": "cmx-document render .cmx/bundle --out-dir .cmx/documents",
+    "cmx:environment": "cmx-environment generate .cmx/environment.ts --config cmx.config.ts",
+    "cmx:build": "npm run cmx:compile && npm run cmx:render && npm run cmx:environment",
+    "build": "npm run cmx:build && node scripts/build.ts",
     "dev": "npm run build && wrangler dev --ip 127.0.0.1 --port 8787",
-    "typecheck": "wrangler types && tsc --noEmit",
+    "typecheck": "wrangler types && tsc --noEmit && tsc --noEmit -p content/tsconfig.json",
     "test": "node --import remix/node-tsx --test tests/server.test.ts && playwright test",
     "check": "npm run build && npm run typecheck && npm test && wrangler deploy --dry-run",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@cmx-tools/contracts": "0.2.0",
+    "@cmx-tools/remix": "0.1.0",
     "remix": "3.0.0"
   },
   "devDependencies": {
+    "@cmx-tools/bundle": "0.1.1",
+    "@cmx-tools/cli": "0.1.1",
+    "@cmx-tools/document": "0.2.0",
+    "@cmx-tools/environment": "0.1.1",
+    "@cmx-tools/intrinsics": "0.1.0",
     "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
     "esbuild": "0.28.2",

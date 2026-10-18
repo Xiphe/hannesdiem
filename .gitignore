@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .generated/
+.cmx/
 .wrangler/
 worker-configuration.d.ts
 test-results/

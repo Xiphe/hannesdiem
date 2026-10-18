@@ -1,10 +1,25 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import type { CmxNode } from '@cmx-tools/contracts'
+import { loadContent } from '../app/content.ts'
 import { createApp } from '../app/router.tsx'
+
+async function publication(title: string, paragraph: string) {
+  const document = structuredClone(await loadContent(new Request('https://example.com/')))
+  document.content.title = title
+  document.content.default = {
+    type: 'element', tag: 'article', props: { id: 'content' },
+    children: [
+      { type: 'element', tag: 'h1', children: [title] },
+      { type: 'element', tag: 'p', children: [paragraph] },
+    ],
+  } satisfies CmxNode
+  return document
+}
 
 test('content changes are rendered without rebuilding or recreating the app', async () => {
   let title = 'First publication'
-  const app = createApp(async () => ({ title, paragraphs: ['A complete article.'] }))
+  const app = createApp(async () => publication(title, 'A complete article.'))
   const first = await app.fetch('https://example.com/')
   assert.equal(first.headers.get('Cloudflare-CDN-Cache-Control'), 'public, max-age=60, stale-if-error=0')
   assert.equal(first.headers.get('Cache-Control'), 'no-cache')
@@ -20,7 +35,7 @@ test('content changes are rendered without rebuilding or recreating the app', as
 })
 
 test('content is escaped before becoming HTML', async () => {
-  const app = createApp(async () => ({ title: '<script>alert(1)</script>', paragraphs: ['<img src=x onerror=alert(1)>'] }))
+  const app = createApp(async () => publication('<script>alert(1)</script>', '<img src=x onerror=alert(1)>'))
   const html = await (await app.fetch('https://example.com/')).text()
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>|<img src=x/)
   assert.match(html, /&lt;script&gt;/)
