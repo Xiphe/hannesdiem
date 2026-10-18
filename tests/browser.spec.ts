@@ -245,6 +245,66 @@ for (const width of [320, 360, 768]) {
   })
 }
 
+for (const [width, height] of [
+  [768, 900],
+  [1280, 900],
+  [1280, 500],
+]) {
+  test(`two-column release cover stays centered and fully visible at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+    const cover = page.locator('main img').first()
+    await cover.evaluate((image: HTMLImageElement) => image.decode())
+    const title = await page.locator('main h1').boundingBox()
+    for (const scroll of [0, 300]) {
+      await page.evaluate((y) => window.scrollTo(0, y), scroll)
+      await expect
+        .poll(() =>
+          cover.evaluate((image) => {
+            const box = image.getBoundingClientRect()
+            const column = image.parentElement!.parentElement!.getBoundingClientRect()
+            const centeredTop = (innerHeight - box.height) / 2
+            return Math.abs(box.y - Math.min(centeredTop, column.bottom - box.height))
+          }),
+        )
+        .toBeLessThanOrEqual(2)
+      const box = (await cover.boundingBox())!
+      expect(box.y).toBeGreaterThanOrEqual(0)
+      expect(box.y + box.height).toBeLessThanOrEqual(height)
+      expect(box.x + box.width).toBeLessThanOrEqual(title!.x)
+      expect(
+        await cover.evaluate((image: HTMLImageElement) => {
+          const box = image.getBoundingClientRect()
+          return Math.abs(box.width / box.height - image.naturalWidth / image.naturalHeight)
+        }),
+      ).toBeLessThan(0.01)
+    }
+  })
+}
+
+test('short release keeps its cover centered in the two-column viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/resolve-yourself', { waitUntil: 'networkidle' })
+  const cover = page.locator('main img').first()
+  await cover.evaluate((image: HTMLImageElement) => image.decode())
+  const box = (await cover.boundingBox())!
+  expect(Math.abs(box.y + box.height / 2 - 450)).toBeLessThanOrEqual(2)
+})
+
+test('stacked release cover scrolls in normal flow', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 900 })
+  await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+  const cover = page.locator('main img').first()
+  await cover.evaluate((image: HTMLImageElement) => image.decode())
+  const before = (await cover.boundingBox())!
+  const title = (await page.locator('main h1').boundingBox())!
+  expect(before.y + before.height).toBeLessThanOrEqual(title.y)
+  await page.evaluate(() => window.scrollTo(0, 180))
+  await expect.poll(async () => before.y - (await cover.boundingBox())!.y).toBeCloseTo(180, 0)
+})
+
 for (const width of [360, 1280]) {
   test(`lyrics use canonical URLs and keep close inside the sheet at ${width}px`, async ({
     page,

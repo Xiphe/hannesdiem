@@ -1490,6 +1490,7 @@ const srOnly = css({
 export function Release(handle: Handle<ReleaseProps>) {
   return () => {
     const release = handle.props
+    const cover = release.cover ? getMedia(release.cover) : undefined
     const released = new Date(release.releaseDate ?? 0).getTime() <= Date.now()
     const shops = Object.keys(shopNames).flatMap((type) =>
       release.shops?.[type] ? [{ type, url: release.shops[type]! }] : [],
@@ -1503,12 +1504,18 @@ export function Release(handle: Handle<ReleaseProps>) {
             marginBottom: '1rem',
             gap: '1.5rem',
             [sm]: { padding: '1.5rem' },
-            [md]: { display: 'flex' },
+            [md]: { display: 'flex', minHeight: cover ? '100dvh' : undefined },
             [lg]: { gap: '4rem' },
           })}
         >
-          {release.cover ? (
-            <div mix={css({ width: '100%', flexShrink: 0, [md]: { width: '50%' } })}>
+          {release.cover && cover ? (
+            <div
+              mix={css({
+                width: '100%',
+                flexShrink: 0,
+                [md]: { width: '50%', containerType: 'inline-size' },
+              })}
+            >
               <div
                 mix={css({
                   position: 'sticky',
@@ -1517,6 +1524,12 @@ export function Release(handle: Handle<ReleaseProps>) {
                   [sm]: {
                     borderRadius: '0.5rem',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 50%), 0 2px 4px -2px rgb(0 0 0 / 50%)',
+                  },
+                  [md]: {
+                    '--cover-height': `min(${(cover.height / cover.width) * 100}cqw, calc(100dvh - 3rem))`,
+                    top: 'calc((100dvh - var(--cover-height)) / 2)',
+                    width: `calc(var(--cover-height) * ${cover.width / cover.height})`,
+                    marginInline: 'auto',
                   },
                 })}
               >
