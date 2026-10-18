@@ -19,13 +19,13 @@ Pushes to `main` run checks, deploy the checked artifacts, then smoke test the p
 
 | Kind | Name | Value |
 | --- | --- | --- |
-| Secret | `CLOUDFLARE_API_TOKEN` | Account-owned token: **Specified Workers** → `hannesdiem-remix`; **Editor** minimum (Worker-scoped Admin also works). |
+| Secret | `CLOUDFLARE_API_TOKEN` | Account-owned token: **Specified Workers** → `hannesdiem`; **Editor** minimum (Worker-scoped Admin also works). |
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | Target account ID. |
 | Variable | `R2_ACCOUNT_ID` | Account containing `hannesdiem-media` and the `hannesdiem.de` DNS zone. Independent of the Worker account. |
 | Secret | `R2_ACCESS_KEY_ID` | R2 S3 access key: **Object Read & Write**, scoped only to `hannesdiem-media`. |
 | Secret | `R2_SECRET_ACCESS_KEY` | Matching R2 S3 secret key. |
 
-Existing Worker: `hannesdiem-remix`. CI deploys through the `Production` environment; no account-wide or zone permissions required. Token creation: Manage account → Account API tokens. [Scoped tokens](https://developers.cloudflare.com/changelog/post/2026-09-15-granular-worker-permissions/), [token creation](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/), [account ID](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/).
+Existing Worker: `hannesdiem`. CI deploys through the `Production` environment; no account-wide or zone permissions required. Token creation: Manage account → Account API tokens. [Scoped tokens](https://developers.cloudflare.com/changelog/post/2026-09-15-granular-worker-permissions/), [token creation](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/), [account ID](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/).
 
 Missing credentials fail after checks with setup instructions. Set the values, then rerun the failed deployment job.
 
