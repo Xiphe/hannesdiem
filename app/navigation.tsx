@@ -1,6 +1,6 @@
 import { css, type Handle } from 'remix/component'
 import assets from '../.generated/assets.json' with { type: 'json' }
-import routeData from '../content/routes.json' with { type: 'json' }
+import routeData from '../.generated/routes.json' with { type: 'json' }
 import { ServiceLogo } from './icons.tsx'
 import { ChevronDownIcon, XMarkIcon } from './heroicons.tsx'
 import { NewsletterArea } from './newsletter-view.tsx'

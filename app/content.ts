@@ -2,31 +2,14 @@ import { isCmxDocument, type CmxDocument } from '@cmx-tools/contracts'
 import { cmx } from '@cmx-tools/remix'
 import { environment } from '../.cmx/environment.ts'
 import { documents } from '../.generated/content.ts'
-import routeData from '../content/routes.json' with { type: 'json' }
+import routeData from '../.generated/routes.json' with { type: 'json' }
+import type { ContentRoute } from '../content/types.ts'
 import { getMedia } from './media.ts'
 import { beachTheme, defaultTheme, paletteToTheme, type Theme } from './theme.ts'
 
-export interface ContentRoute {
-  path: string
-  document: string
-  title: string
-  kind: string
-  description?: string
-  image?: string
-  theme?: string
-  releaseDate?: string
-  noindex?: boolean
-  ogTitle?: string
-  ogType?: string
-  updatedAt?: string
-  nofollow?: boolean
-  musicians?: string[]
-  songs?: string[]
-  authors?: { name: string; link?: string; ogProfile?: string }[]
-  profile?: { firstName: string; lastName: string }
-  sourceId?: string
-}
-export const contentRoutes: ContentRoute[] = routeData
+export type { ContentRoute } from '../content/types.ts'
+
+export const contentRoutes = routeData as ContentRoute[]
 const pages = new Map(contentRoutes.map((route) => [route.path, route]))
 export interface ContentPage {
   document: CmxDocument

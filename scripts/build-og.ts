@@ -2,17 +2,8 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import sharp, { type OverlayOptions } from 'sharp'
+import routes from '../content/routes.ts'
 
-interface Route {
-  path: string
-  kind: string
-  image?: string
-  title: string
-  ogImageTitle?: string
-  ogSubtitle?: string
-  ogTextColor?: 'light' | 'dark'
-  shareImage?: boolean
-}
 interface Media {
   src: string
   srcSet: string
@@ -36,7 +27,6 @@ interface ShareImage {
 }
 const width = 1052,
   height = 550
-const routes: Route[] = JSON.parse(await readFile('content/routes.json', 'utf8'))
 const media: Record<string, Media> = JSON.parse(await readFile('.generated/media.json', 'utf8'))
 const files: MediaFile[] = JSON.parse(await readFile('.generated/media-files.json', 'utf8'))
 const retainedFiles = files.filter((file) => !file.key.startsWith('og/'))

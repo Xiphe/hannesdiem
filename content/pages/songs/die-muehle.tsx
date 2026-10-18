@@ -1,0 +1,145 @@
+import { Song } from '@hannesdiem/content-components'
+import { songs } from '../../songs.ts'
+
+const { slug, ...song } = songs.dieMuehle
+
+export const title = song.title
+
+export default function Content() {
+  return (
+    <>
+      <Song {...song}>
+        <p>
+          {'Ein Zeichen von mir'}
+          <br />
+          {'In Liebe erbracht'}
+          <br />
+          {'Gelegt auf einen silbernen Faden'}
+          <br />
+          {'Dort vor deiner Tür'}
+          <br />
+          {'So habe ich es mir gedacht'}
+          <br />
+          {'Wird es tobende Wellen bald schlagen'}
+        </p>
+        <p>
+          {'Doch die Zeit, die verstreicht'}
+          <br />
+          {'Und das Wasser verfließt'}
+          <br />
+          {'Ich bin bereit in die Flammen zu springen'}
+          <br />
+          {'Doch denn lass ich es sein'}
+          <br />
+          {'Wenn der Kreis sich nicht schließt'}
+          <br />
+          {'Will ich dir keine Zeichen mehr bringen'}
+        </p>
+        <p>
+          <strong>{'Und so ließ ich mich leiten'}</strong>
+          <br />
+          {'Von Feuer und Eis'}
+          <br />
+          {'Denn dort, fern aller Zeiten'}
+          <br />
+          {'Auf Schicksals geheiß'}
+          <br />
+          {'Gibt es nur Eines, dass ich fühle'}
+          <br />
+          {'Nur Eines, dass ich weiß'}
+          <br />
+          {'Wir drehen wie die Mühle'}
+          <br />
+          {'Uns stetig im Kreis'}
+          <br />
+          {'Wir drehen wie die Mühle im Kreis'}
+        </p>
+        <p>
+          {'Gefühlt, wie getan'}
+          <br />
+          {'Ein Zeichen in ehren'}
+          <br />
+          {'Gebettet auf goldenen Waagen'}
+          <br />
+          {'Bin zur Hölle gefahren'}
+          <br />
+          {'Um es dir zu gewähren'}
+          <br />
+          {'Dass es Licht bringt in düsteren Tagen'}
+        </p>
+        <p>
+          {'Doch die Zeit, die verstreicht'}
+          <br />
+          {'Und kein glimmen erscheint'}
+          <br />
+          {'Will mich selbst in den Fluten ertränken'}
+          <br />
+          {'Doch dann lass ich es sein'}
+          <br />
+          {'Wenn der Kreis sich nicht eint'}
+          <br />
+          {'Will ich dir keine Zeichen mehr schenken'}
+        </p>
+        <p>
+          <strong>{'Und so ließ ich mich leiten'}</strong>
+          <br />
+          {'Von Feuer und Eis'}
+          <br />
+          {'Denn dort, fern aller Zeiten'}
+          <br />
+          {'Auf Schicksals geheiß'}
+          <br />
+          {'Gibt es nur Eines, dass ich fühle'}
+          <br />
+          {'Nur Eines, dass ich weiß'}
+          <br />
+          {'Wir drehen wie die Mühle'}
+          <br />
+          {'Uns stetig im Kreis'}
+          <br />
+          {'Wir drehen wie die Mühle im Kreis'}
+        </p>
+        <p>
+          {'Keine Pforte, kein Weg und kein Schrein'}
+          <br />
+          {'Keine Stunde will ich bei dir sein'}
+          <br />
+          {'Keine Tage mehr zählen'}
+          <br />
+          {'Keine Fäden, kein Bild, keine Waage'}
+          <br />
+          {'Keine Tränen mehr weinen'}
+          <br />
+          {'Keine Wahl bleibt mir, wenn ich das Ende sehe'}
+          <br />
+          {'Keine andere Tat, die noch verbleibt'}
+          <br />
+          {"Ich werde ganz leis'"}
+          <br />
+          {'Und greife im nu'}
+          <br />
+          {'Zum Dolch und steche zu'}
+          <br />
+          {'Endlich schließt sich der Kreis'}
+        </p>
+        <p>
+          <strong>{'So ließ ich mich leiten'}</strong>
+          <br />
+          {'Von Feuer und Eis'}
+          <br />
+          {'Denn dort, fern aller Zeiten'}
+          <br />
+          {'Auf Schicksals geheiß'}
+          <br />
+          {'Gibt es nur Eines, dass ich fühle'}
+          <br />
+          {'Nur Eines, dass ich weiß'}
+          <br />
+          {'Wir drehen wie die Mühle'}
+          <br />
+          {'Uns stetig im Kreis'}
+        </p>
+      </Song>
+    </>
+  )
+}

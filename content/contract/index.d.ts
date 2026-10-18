@@ -64,16 +64,25 @@ export interface IconListProps {
 export interface TimetableProps {
   list: { time: string; title?: RemixNode }[]
 }
-export interface Contributor {
+export interface Identity {
   name: string
   link?: string
+}
+export interface Contributor extends Identity {
   description?: string
   roles: string[]
 }
-export interface Author {
-  name: string
-  link?: string
+export interface Author extends Identity {
   description?: string
+}
+export interface SongReference {
+  slug: `song/${string}`
+}
+export interface Track {
+  title: string
+  addition?: string
+  duration?: number
+  song?: SongReference
 }
 export interface ReleaseProps {
   title: string
@@ -84,7 +93,7 @@ export interface ReleaseProps {
   hideReleaseDay?: boolean
   genres?: string[]
   languages?: string[]
-  tracks: { title: string; addition?: string; duration?: number; song?: { slug: string } }[]
+  tracks: Track[]
   shops?: Record<string, string>
   contributors?: Contributor[]
   children?: RemixNode

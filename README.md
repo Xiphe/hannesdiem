@@ -15,7 +15,7 @@ npm run check
 
 ## Content
 
-34 routes: four CMS pages, five releases, 21 lyric pages, linktree/about/imprint/privacy. `/` redirects to `/linktree`; legacy aliases and direct lyric URLs remain supported. `content/routes.json` holds paths and metadata; `content/pages/*.tsx` are authored CMX; `content/contract` is the external component contract. `app/content-components.tsx` owns native Remix styling/markup; `app/media.ts` resolves image identities. Ordinary rich-text HTML and intentional one-offs are allowed. No Payload/Next/React runtime.
+`content/pages/` groups authored CMX into releases, songs, and One Week Album pages. Shared identities/song metadata and release-local credits are typed TypeScript; [content/README.md](content/README.md) maps ownership. `content/routes.ts` publishes routes and metadata using those records; the build writes `.generated/routes.json` for the Worker. `/` redirects to `/linktree`; legacy aliases and direct lyric URLs remain supported. `app/content-components.tsx` owns native Remix styling/markup; `app/media.ts` resolves image identities. Ordinary rich-text HTML and intentional one-offs are allowed. No Payload/Next/React runtime.
 
 `npm run build`: `media:build` → `build:app` (CMX bundle/documents/Environment → browser assets/content registry). Generated files: `.generated/`, `.cmx/`, `dist/`. `cmx.config.ts` implementation paths are relative to `.cmx/environment.ts`. Content stays outside the browser graph. Current publication still requires CI; hosted CMX will replace the async loader.
 
