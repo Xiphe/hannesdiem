@@ -1,6 +1,7 @@
 import { createRouter } from 'remix/router'
 import { render } from 'remix/middleware/render'
 import { css } from 'remix/component'
+import { XMarkIcon, ArrowLeftIcon } from './heroicons.tsx'
 import { redirect } from 'remix/response/redirect'
 import { loadContent, renderContent, contentRoutes, type ContentLoader } from './content.ts'
 import { Page } from './page.tsx'
@@ -39,9 +40,9 @@ export function createApp(content:ContentLoader=loadContent,env:NewsletterEnviro
     if(page.status===404||page.route?.kind!=='song')return new Response('Not found',{status:404,headers:privateHeaders})
     if(request.headers.get('X-Remix-Target')!=='overlay')return redirect(path,307)
     return render(<div mix={css({display:'flex',minHeight:'100dvh',alignItems:'center',justifyContent:'center',padding:'1rem'})}><div data-overlay-panel mix={css({position:'relative','--letter-bg':'var(--theme-bg)','--letter-fg':'var(--theme-fg)','--letter-heading':'var(--theme-fg)'})}>
-      <button type="button" data-close-overlay aria-label="Close lyrics" mix={css({position:'absolute',top:'1rem',right:'1rem',zIndex:10,padding:'.25rem',fontSize:'1.75rem',lineHeight:1,opacity:.5})}>×</button>
+      <button type="button" data-close-overlay aria-label="Close lyrics" mix={css({position:'absolute',top:'1rem',right:'1rem',zIndex:10,padding:'.25rem',borderRadius:'.375rem',opacity:.5})}><XMarkIcon width={24} height={24}/></button>
       {renderContent(page.document).body}
-      <button type="button" data-close-overlay mix={css({position:'absolute',bottom:'1.5rem',left:'50%',transform:'translateX(-50%)',background:'color-mix(in oklab,var(--theme-fg) 5%,transparent)',borderRadius:4,padding:'.25rem .75rem','@media (width >= 48rem)':{display:'none'}})}>← Back</button>
+      <button type="button" data-close-overlay mix={css({display:'flex',alignItems:'center',gap:'.5rem',position:'absolute',bottom:'1.5rem',left:'50%',transform:'translateX(-50%)',background:'color-mix(in oklab,var(--theme-fg) 5%,transparent)',borderRadius:4,padding:'.25rem .75rem','@media (width >= 48rem)':{display:'none'}})}><ArrowLeftIcon width={16} height={16}/>Back</button>
     </div></div>,{headers:privateHeaders})
   })
   router.get(routes.sitemap,()=>new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+contentRoutes.filter(route=>!route.noindex&&route.path!=='/about').map(route=>`<url><loc>https://hannesdiem.de${route.path}</loc>${route.updatedAt?`<lastmod>${new Date(route.updatedAt).toISOString()}</lastmod>`:''}<changefreq>monthly</changefreq><priority>0.8</priority></url>`).join('')+'</urlset>',{headers:{'Content-Type':'application/xml; charset=utf-8','Cache-Control':'public, max-age=3600'}}))

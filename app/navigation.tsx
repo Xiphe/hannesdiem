@@ -2,6 +2,7 @@ import { css, type Handle } from 'remix/component'
 import assets from '../.generated/assets.json' with { type:'json' }
 import routeData from '../content/routes.json' with { type:'json' }
 import { ServiceLogo } from './icons.tsx'
+import { ChevronDownIcon, XMarkIcon } from './heroicons.tsx'
 import { NewsletterArea } from './newsletter-view.tsx'
 import type { NewsletterState } from './newsletter.ts'
 
@@ -25,9 +26,9 @@ export const sections = [
 ]
 const quietLink = css({opacity:.6,'&:hover':{opacity:1}})
 export function Brand(handle:Handle<{footer?:boolean}>) {
-  return () => <a href="/" mix={css({display:'flex',alignItems:'center',borderRadius:4})}>
-    <img src={assets.mark} alt="" mix={css({height:handle.props.footer?'4rem':'2.5rem',width:handle.props.footer?'1.8rem':'2.5rem',marginRight:handle.props.footer?'.75rem':0,marginBottom:handle.props.footer?'.375rem':0})}/>
-    <span mix={css({fontSize:handle.props.footer?'1.5rem':'1.25rem',fontWeight:200,color:'var(--theme-fg)'})}>Hannes Diem</span>
+  return () => <a href="/" mix={css({display:'flex',alignItems:'center',borderRadius:4,...(!handle.props.footer?{height:'1.75rem',paddingRight:'1rem'}:{})})}>
+    <img src={assets.mark} alt="" mix={css({height:handle.props.footer?'4rem':'2.5rem',width:handle.props.footer?'1.8rem':'2.5rem',marginLeft:handle.props.footer?0:'-.5rem',marginRight:handle.props.footer?'.75rem':0,marginBottom:handle.props.footer?'.375rem':0})}/>
+    <span mix={css({fontSize:handle.props.footer?'1.5rem':'1.25rem',fontWeight:200,...(!handle.props.footer?{lineHeight:'1.75rem'}:{}),color:'var(--theme-fg)'})}>Hannes Diem</span>
   </a>
 }
 export function SocialLinks(handle:Handle<{listen?:boolean;footer?:boolean}>) {
@@ -38,13 +39,13 @@ export function SocialLinks(handle:Handle<{listen?:boolean;footer?:boolean}>) {
   </ul>
 }
 const navStyle = css({display:'flex',height:'100%',minHeight:'100dvh',flexDirection:'column',overflowY:'auto',padding:'1rem',background:'color-mix(in oklab,var(--theme-contrast) 70%,transparent)',boxShadow:'0 20px 25px -5px rgb(0 0 0 / .1)',backdropFilter:'blur(40px)','@media (prefers-color-scheme: dark)':{background:'color-mix(in oklab,var(--theme-contrast) 90%,transparent)'},
- '& summary':{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:'1.125rem',fontWeight:500,padding:'.25rem .25rem .25rem .75rem',borderRadius:4,listStyle:'none'},'& summary::-webkit-details-marker':{display:'none'},'& summary::after':{content:'"⌄"',fontSize:'1.25rem',opacity:.4},'& details[open] summary::after':{transform:'rotate(180deg)'},'& details':{borderBottom:'1px solid color-mix(in oklab,var(--theme-fg) 10%,transparent)',paddingBlock:'.25rem'},'& summary:hover,& .nav-item:hover':{background:'color-mix(in oklab,var(--theme-fg) 5%,transparent)'},'& .nav-item':{display:'block',padding:'.5rem .75rem .5rem 1.5rem',borderRadius:4,color:'color-mix(in oklab,var(--theme-fg) 70%,transparent)'},'& [aria-current=page]':{fontWeight:500,color:'var(--theme-primary)'}})
+ '& summary':{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:'1.125rem',lineHeight:'1.75rem',fontWeight:500,padding:'.25rem .25rem .25rem .75rem',borderRadius:4,listStyle:'none'},'& summary::-webkit-details-marker':{display:'none'},'& .nav-chevron':{width:'1.25rem',height:'1.25rem',margin:'.125rem',color:'color-mix(in oklab,var(--theme-fg) 40%,transparent)',transition:'transform 150ms ease'},'& details[open] .nav-chevron':{transform:'rotate(180deg)'},'& details':{paddingBlock:'.25rem'},'& details+details':{borderTop:'1px solid color-mix(in oklab,var(--theme-fg) 10%,transparent)'},'& .nav-items li+li':{marginTop:'.25rem'},'& summary:hover,& .nav-item:hover':{background:'color-mix(in oklab,var(--theme-fg) 5%,transparent)'},'& .nav-item':{display:'block',padding:'.5rem .75rem .5rem 1.5rem',borderRadius:4,color:'color-mix(in oklab,var(--theme-fg) 70%,transparent)'},'& [aria-current=page]':{fontWeight:500,color:'var(--theme-primary)'}})
 export function Navigation(handle:Handle<{pathname:string;state:NewsletterState}>) {
   return () => <div mix={css({display:'flex',minHeight:'100dvh',justifyContent:'end'})}><div data-overlay-panel mix={css({width:'100vw',maxWidth:'28rem'})}>
     <div mix={navStyle}>
-      <div mix={css({display:'flex',alignItems:'center',justifyContent:'space-between'})}><Brand/><a href="/" aria-label="Close navigation" data-close-overlay mix={css({fontSize:'1.75rem',lineHeight:1,padding:'.25rem',opacity:.4})}>×</a></div>
+      <div mix={css({display:'flex',alignItems:'center',justifyContent:'space-between'})}><Brand/><a href="/" aria-label="Close navigation" data-close-overlay mix={css({display:'inline-flex',padding:'.25rem',borderRadius:'.375rem',color:'color-mix(in oklab,var(--theme-fg) 40%,transparent)','&:hover':{color:'var(--theme-fg)'}})}><XMarkIcon width={24} height={24}/></a></div>
       <nav aria-label="Main Navigation" mix={css({display:'flex',flex:1,flexDirection:'column',marginTop:'1.5rem'})}>
-        {sections.map(section=><details open={section.items.some(item=>handle.props.pathname.startsWith(item.href))}><summary>{section.name}</summary><ul mix={css({paddingBlock:'.5rem'})}>{section.items.map(item=><li><a class="nav-item" href={item.href} data-rmx-history="replace" aria-current={handle.props.pathname===item.href?'page':undefined}>{item.name}</a></li>)}</ul></details>)}
+        {sections.map(section=><details open={section.items.some(item=>handle.props.pathname.startsWith(item.href))}><summary><span>{section.name}</span><ChevronDownIcon class="nav-chevron"/></summary><ul class="nav-items" mix={css({paddingBlock:'.5rem'})}>{section.items.map(item=><li><a class="nav-item" href={item.href} data-rmx-history="replace" aria-current={handle.props.pathname===item.href?'page':undefined}>{item.name}</a></li>)}</ul></details>)}
         <div mix={css({flexGrow:1,minHeight:'5rem'})}/><NewsletterArea state={handle.props.state}/><div mix={css({marginBottom:'.5rem'})}><SocialLinks/></div><div mix={css({marginBottom:'1rem'})}><SocialLinks listen/></div>
       </nav>
     </div>

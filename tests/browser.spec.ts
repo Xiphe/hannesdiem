@@ -248,3 +248,17 @@ test('outside clicks close overlays and menu selections replace the overlay hist
   await page.goto('/nav',{waitUntil:'networkidle'})
   await expect(page.getByRole('link',{name:'Open menu',exact:true})).toHaveCount(0)
 })
+
+test('sidebar keeps the original header and menu item spacing with SVG controls',async({page})=>{
+  await page.goto('/halbkreis',{waitUntil:'networkidle'})
+  await page.getByRole('link',{name:'Open menu',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  const close=dialog.getByRole('link',{name:'Close navigation'})
+  await expect(close.locator('svg')).toBeVisible()
+  expect((await close.locator('..').boundingBox())!.height).toBe(32)
+  const work=dialog.locator('summary').filter({hasText:'Work'})
+  await expect(work.locator('svg')).toBeVisible()
+  const first=await dialog.getByRole('link',{name:'Hoffnung',exact:true}).boundingBox()
+  const second=await dialog.getByRole('link',{name:'Resolve Yourself',exact:true}).boundingBox()
+  expect(second!.y-first!.y-first!.height).toBe(4)
+})
