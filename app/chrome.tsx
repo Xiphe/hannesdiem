@@ -28,7 +28,7 @@ const dialogStyle = css({
   overflowY: 'auto',
   '&:not([open])': { display: 'none' },
   '&::backdrop': {
-    background: 'color-mix(in oklab,var(--theme-bg) 30%,transparent)',
+    background: 'color-mix(in oklab,var(--theme-fg) 18%,transparent)',
     backdropFilter: 'blur(4px)',
   },
 })
