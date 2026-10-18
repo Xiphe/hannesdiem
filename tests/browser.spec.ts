@@ -91,10 +91,11 @@ test('server-rendered navigation can open without JavaScript',async({browser,bas
 })
 test('release lyrics open over the release, close on Escape, and support direct URLs',async({page})=>{
   await page.goto('/halbkreis',{waitUntil:'networkidle'})
-  const link=page.locator('a[href="/m/song/alles-brennt"]').first()
+  const link=page.locator('a[href="/song/alles-brennt"]').first()
   await link.click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(page.getByRole('dialog').locator('h1')).toHaveText('Alles Brennt')
+  await expect(page).toHaveURL(/\/song\/alles-brennt$/)
   await expect(page.locator('main h1')).toHaveText('Halbkreis')
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).not.toBeVisible()
@@ -103,6 +104,33 @@ test('release lyrics open over the release, close on Escape, and support direct 
   await expect(page).toHaveURL(/\/song\/alles-brennt$/)
   await expect(page.locator('main h1')).toHaveText('Alles Brennt')
 })
+
+for(const width of [360,1280]){
+  test(`lyrics use canonical URLs and keep close inside the sheet at ${width}px`,async({page})=>{
+    await page.setViewportSize({width,height:900})
+    await page.goto('/hoffnung',{waitUntil:'networkidle'})
+    await page.locator('a[href="/song/gedankengaenge"]').click()
+    const dialog=page.getByRole('dialog',{name:'Page dialog'})
+    await expect(dialog).toBeVisible()
+    await expect(page).toHaveURL(/\/song\/gedankengaenge$/)
+    await expect(page.locator('main h1')).toHaveText('Hoffnung')
+    const contained=await dialog.locator('.lyrics-sheet').evaluate(el=>{
+      const sheet=el.querySelector('article')!.getBoundingClientRect()
+      const close=el.querySelector('[aria-label="Close lyrics"]')!.getBoundingClientRect()
+      return close.top>=sheet.top&&close.right<=sheet.right&&close.bottom<=sheet.bottom&&close.left>=sheet.left
+    })
+    expect(contained).toBe(true)
+    await dialog.getByRole('button',{name:'Close lyrics'}).click()
+    await expect(dialog).not.toBeVisible()
+    await expect(page).toHaveURL(/\/hoffnung$/)
+    await page.goForward()
+    await expect(dialog).toBeVisible()
+    await expect(page).toHaveURL(/\/song\/gedankengaenge$/)
+    await page.reload()
+    await expect(page.getByRole('dialog')).not.toBeVisible()
+    await expect(page.locator('main h1')).toHaveText('Gedankengänge')
+  })
+}
 for(const width of [360,1280]){
   test(`media decodes and pages fit ${width}px viewport`,async({page})=>{
     await page.setViewportSize({width,height:800})

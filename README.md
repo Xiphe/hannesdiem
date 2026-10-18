@@ -19,7 +19,7 @@ npm run check
 
 `npm run build`: media → CMX bundle/documents/Environment → browser assets/content registry. Generated files: `.generated/`, `.cmx/`, `dist/`. `cmx.config.ts` implementation paths are relative to `.cmx/environment.ts`. Content stays outside the browser graph. Current publication still requires CI; hosted CMX will replace the async loader.
 
-Native Remix `css`/`mix` emits server-rendered styles. Only menu/dialog controls and localized dates hydrate. Named overlay Frames fetch private navigation/lyrics; public content DOM remains static. Styling, media, and newsletter decisions: `docs/adr/0003-*` through `0005-*`.
+Native Remix `css`/`mix` emits server-rendered styles. Only menu/dialog controls, newsletter state/forms, and localized dates hydrate. Navigation is cached page HTML and opens locally; its island loads private state after opening. Lyric links use canonical `/song/*` URLs; `data-rmx-src` fetches private `/m/song/*` Frame fragments. Public content DOM remains static. Decisions: `docs/adr/0003-*` through `0006-*`.
 
 ## Media
 

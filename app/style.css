@@ -100,3 +100,5 @@
   .navigation-menu details::details-content,.navigation-menu .nav-items > li,
   .navigation-menu .nav-chevron { transition:none!important; }
 }
+
+.lyrics-sheet article { margin-block:0; }

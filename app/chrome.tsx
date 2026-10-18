@@ -77,7 +77,7 @@ export function Chrome(handle: Handle<{path:string}>) {
       if (new URL(frame.src, location.href).pathname === '/_overlay') dialog?.close()
     }, { signal: handle.signal })
     window.addEventListener('popstate', () => {
-      if (!location.pathname.startsWith('/m/')) dialog?.close()
+      if (location.pathname === handle.props.path) dialog?.close()
     }, { signal: handle.signal })
   })
   function close() { dialog?.close(); history.back() }
