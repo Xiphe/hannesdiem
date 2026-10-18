@@ -6,10 +6,12 @@
     "node": ">=24.3.0"
   },
   "scripts": {
+    "media:build": "node scripts/build-media.ts",
+    "media:upload": "node scripts/upload-media.ts",
     "cmx:compile": "cmx-bundle compile \"content/pages/**/*.tsx\" .cmx/bundle --config cmx.config.ts",
     "cmx:render": "cmx-document render .cmx/bundle --out-dir .cmx/documents",
     "cmx:environment": "cmx-environment generate .cmx/environment.ts --config cmx.config.ts",
-    "cmx:build": "npm run cmx:compile && npm run cmx:render && npm run cmx:environment",
+    "cmx:build": "npm run media:build && npm run cmx:compile && npm run cmx:render && npm run cmx:environment",
     "build": "npm run cmx:build && node scripts/build.ts",
     "dev": "npm run build && wrangler dev --ip 127.0.0.1 --port 8787",
     "typecheck": "wrangler types && tsc --noEmit && tsc --noEmit -p content/tsconfig.json",
@@ -31,6 +33,7 @@
     "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
     "esbuild": "0.28.2",
+    "sharp": "0.35.5",
     "typescript": "7.0.2",
     "wrangler": "4.151.1"
   }

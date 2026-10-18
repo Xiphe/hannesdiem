@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1">
+      <stop stop-color="#adc9d0"/>
+      <stop offset="1" stop-color="#f0e4cf"/>
+    </linearGradient>
+    <linearGradient id="lake" x2="0" y2="1">
+      <stop stop-color="#abc8c2"/>
+      <stop offset="1" stop-color="#638f92"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1440v900H0z"/>
+  <circle cx="1080" cy="235" r="105" fill="#f7e8bc"/>
+  <path fill="#839c99" d="m0 545 240-305 215 240 210-175 265 240 210-180 300 225v310H0z"/>
+  <path fill="#d4d7c7" d="m240 240-68 86 70-27 54 34zm425 65-58 48 60-14 48 13z"/>
+  <path fill="#506f6a" d="m0 570 310-155 270 175 320-115 290 155 250-100v370H0z"/>
+  <path fill="url(#lake)" d="M0 660q370-65 720 0t720-10v250H0z"/>
+  <path fill="none" stroke="#d0dfd1" stroke-width="5" opacity=".6" d="M925 715h240m-190 35h145m-310 45h340m-880-65h200m-135 50h255"/>
+  <path fill="#294e46" d="M0 810q130-75 300-20t260 110H0zm1440-120q-120 50-200 210h200z"/>
+</svg>

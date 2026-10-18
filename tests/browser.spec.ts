@@ -1,4 +1,20 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type BrowserContext } from '@playwright/test'
+import media from '../.generated/media.json' with { type: 'json' }
+import mediaFiles from '../.generated/media-files.json' with { type: 'json' }
+
+// Production documents use the real media origin; browser checks stay offline.
+// Deployment smoke checks verify that origin after uploading the same files.
+async function mockRemoteMedia(context: BrowserContext) {
+  if (!media.landscape.src.startsWith('https://')) return
+  const prefix = media.landscape.src.slice(0, -mediaFiles.at(-1)!.key.length)
+  for (const file of mediaFiles) {
+    await context.route(`${prefix}${file.key}`, (route) => route.fulfill({
+      path: file.path, contentType: file.contentType,
+    }))
+  }
+}
+
+test.beforeEach(async ({ context }) => { await mockRemoteMedia(context) })
 
 declare global {
   interface Window {
@@ -24,6 +40,7 @@ for (const example of [
 ]) {
   test(`${example.path}: content and CMX counter render without browser JavaScript`, async ({ browser, baseURL }) => {
     const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
+    await mockRemoteMedia(context)
     try {
       const page = await context.newPage()
       const response = await page.goto(example.path)
@@ -32,6 +49,9 @@ for (const example of [
       await expect(page.locator('#content h1')).toHaveText(example.title)
       await expect(page.locator('#content p')).toHaveText(example.paragraphs)
       await expect(page.locator('#island button')).toHaveText(`Count: ${example.initialCount}`)
+      if (example.path === '/example') {
+        await expect(page.getByRole('img', { name: /illustrated landscape/ })).toBeVisible()
+      }
     } finally {
       await context.close()
     }
@@ -113,12 +133,14 @@ for (const example of [
 
 test('CMX page links navigate between the examples', async ({ page }) => {
   await page.goto('/')
+  await page.waitForLoadState('networkidle')
   await page.getByRole('button', { name: 'Count: 0', exact: true }).click()
   await expect(page.locator('#island button')).toHaveText('Count: 1')
   await page.getByRole('link', { name: 'Another example' }).click()
   await expect(page).toHaveURL(/\/example$/)
   await expect(page.locator('#content h1')).toHaveText('Another example')
   await expect(page.locator('#island button')).toHaveText('Count: 10')
+  await page.waitForLoadState('networkidle')
   await page.locator('#island button').click()
   await expect(page.locator('#island button')).toHaveText('Count: 11')
   await page.getByRole('link', { name: 'Back home' }).click()
@@ -136,4 +158,29 @@ test('unknown URLs render CMX content with HTTP 404 and a working way home', asy
   await expect(page.getByRole('button')).toHaveCount(0)
   await page.getByRole('link', { name: 'Back home' }).click()
   await expect(page.locator('#content h1')).toHaveText('Hannes Diem')
+})
+
+for (const viewport of [{ width: 360, variant: 480 }, { width: 1280, variant: 960 }]) {
+  test(`responsive CMX image selects the ${viewport.variant}px variant at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: 900 })
+    await page.goto('/example')
+    const image = page.getByRole('img', { name: /illustrated landscape/ })
+    await expect(image).toHaveAttribute('width', '1440')
+    await expect(image).toHaveAttribute('height', '900')
+    await expect(image).toHaveAttribute('sizes', '(max-width: 864px) calc(100vw - 48px), 816px')
+    await image.evaluate(async (element: HTMLImageElement) => { await element.decode() })
+    expect(await image.evaluate((element: HTMLImageElement) => element.currentSrc)).toMatch(
+      new RegExp(`landscape-${viewport.variant}-[a-f0-9]{16}\\.webp$`),
+    )
+  })
+}
+
+test('the app-owned mark is a hashed immutable static asset', async ({ page, request }) => {
+  await page.goto('/')
+  const src = await page.locator('.site-mark img').getAttribute('src')
+  expect(src).toMatch(/^\/assets\/mark-[a-f0-9]{16}\.svg$/)
+  const response = await request.get(src!)
+  expect(response.status()).toBe(200)
+  expect(response.headers()['content-type']).toMatch(/image\/svg\+xml/)
+  expect(response.headers()['cache-control']).toContain('immutable')
 })

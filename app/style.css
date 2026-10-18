@@ -4,6 +4,11 @@ body { margin: 0; }
 main { max-width: 54rem; margin: 12vh auto; padding: 0 1.5rem; }
 h1 { font: 500 clamp(3rem, 10vw, 6rem)/1.05 Georgia, serif; letter-spacing: -.055em; margin: 1rem 0 2rem; }
 p { max-width: 36rem; font-size: 1.125rem; line-height: 1.7; }
+.site-mark { display: inline-block; color: inherit; }
+.site-mark img { display: block; }
+figure { margin: 2rem 0; }
+figure img { display: block; width: 100%; height: auto; border-radius: .5rem; }
+figcaption { margin-top: .75rem; font-size: .875rem; line-height: 1.5; }
 .eyebrow { font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; }
 #island { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #c6c3b9; }
 button { font: inherit; border: 1px solid currentColor; border-radius: .25rem; padding: .75rem 1.25rem; cursor: pointer; color: inherit; background: transparent; }

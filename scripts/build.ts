@@ -1,5 +1,6 @@
 import { build } from 'esbuild'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 
 await rm('dist', { recursive: true, force: true })
@@ -35,8 +36,19 @@ const entries = Object.fromEntries(Object.entries(result.metafile.outputs)
     ({ 'app/browser.ts': 'entry', 'app/counter.tsx': 'counter', 'app/style.css': 'style' })[output.entryPoint!],
     '/' + path.replace(/^dist\//, ''),
   ]))
+const mark = await readFile('app/assets/mark.svg')
+entries.mark = `/assets/mark-${createHash('sha256').update(mark).digest('hex').slice(0, 16)}.svg`
+await writeFile(`dist${entries.mark}`, mark)
+const media = JSON.parse(await readFile('.generated/media.json', 'utf8'))
+let mediaHeaders = ''
+if (media.landscape.src.startsWith('/')) {
+  const files = JSON.parse(await readFile('.generated/media-files.json', 'utf8'))
+  const prefix = media.landscape.src.slice(0, -files.at(-1).key.length)
+  await cp('.generated/media', `dist${prefix}`, { recursive: true })
+  mediaHeaders = `${prefix}*\n  Cache-Control: public, max-age=31536000, immutable\n`
+}
 await writeFile('.generated/assets.json', JSON.stringify(entries, null, 2) + '\n')
-await writeFile('dist/_headers', '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n')
+await writeFile('dist/_headers', '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n' + mediaHeaders)
 await writeFile('.generated/browser-meta.json', JSON.stringify(result.metafile, null, 2) + '\n')
 
 let bytes = 0
