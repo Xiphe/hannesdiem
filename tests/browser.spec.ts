@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext } from '@playwright/test'
+import { expect, test, type BrowserContext, type Locator } from '@playwright/test'
+import sharp from 'sharp'
 import mediaFiles from '../.generated/media-files.json' with { type: 'json' }
 import media from '../.generated/media.json' with { type: 'json' }
 
@@ -357,6 +358,47 @@ test('Amazon Music logos preserve the open letter shapes with sizing styles', as
       .evaluate((letter: SVGPathElement) => letter.isPointInFill(new DOMPoint(12, 32)))
     expect(filled, `The hole in Amazon’s first “a” must remain open on ${path}`).toBe(false)
   }
+})
+
+test('SoundCloud artwork stays visible with repeated logos and a closed navigation dialog', async ({
+  page,
+}) => {
+  await page.goto('/resolve-yourself')
+
+  async function expectArtwork(logo: Locator) {
+    await expect(logo).toBeVisible()
+    await logo.evaluate((svg: SVGElement) => {
+      Object.assign(svg.style, {
+        width: '250px',
+        height: '30px',
+        maxWidth: 'none',
+        color: '#fff',
+        background: '#000',
+      })
+    })
+    const { data, info } = await sharp(await logo.screenshot())
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    const filledRows = Array.from({ length: info.height - 2 }, (_, row) => {
+      const y = row + 1
+      let filled = 0
+      for (let x = 0; x < info.width; x++) {
+        if (data[y * info.width + x] > 128) filled++
+      }
+      return filled / info.width
+    })
+    const fullestRow = Math.max(...filledRows)
+    expect(fullestRow, 'The artwork must paint visible cloud and letter shapes').toBeGreaterThan(
+      0.2,
+    )
+    expect(fullestRow, 'The logo must not paint a solid rectangular bar').toBeLessThan(0.9)
+  }
+
+  await expectArtwork(page.locator('main svg[aria-label="SoundCloud"]'))
+  await expectArtwork(page.locator('footer a[aria-label="SoundCloud"] svg'))
+  await page.getByRole('button', { name: 'Open menu', exact: true }).click()
+  await expectArtwork(page.getByRole('dialog').locator('a[aria-label="SoundCloud"] svg'))
 })
 
 for (const width of [360, 1280]) {
