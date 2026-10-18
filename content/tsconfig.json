@@ -1,7 +1,4 @@
 {
   "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "jsxImportSource": "@cmx-tools/intrinsics"
-  },
   "include": ["pages/**/*.tsx"]
 }

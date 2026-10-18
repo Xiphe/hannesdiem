@@ -20,7 +20,7 @@ const result = await build({
   metafile: true,
 })
 
-const serverModules = ['app/page.tsx', 'app/content.ts', 'app/router.tsx', 'app/worker.ts']
+const serverModules = ['app/page.tsx', 'app/content.ts', 'app/cmx-components.ts', 'app/router.tsx', 'app/worker.ts']
 for (const path of serverModules) {
   if (path in result.metafile.inputs) throw new Error(`Server-only module in browser bundle: ${path}`)
 }

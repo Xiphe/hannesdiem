@@ -27,7 +27,7 @@
     "@cmx-tools/cli": "0.1.1",
     "@cmx-tools/document": "0.2.0",
     "@cmx-tools/environment": "0.1.1",
-    "@cmx-tools/intrinsics": "0.1.0",
+    "@hannesdiem/content-components": "file:content/contract",
     "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
     "esbuild": "0.28.2",

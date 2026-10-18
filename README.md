@@ -28,9 +28,13 @@ Missing credentials fail after checks with setup instructions. Set the values, t
 
 ## Content and caching
 
-`content/pages/home.tsx` → CMX bundle → JSON document → generated Environment → application build. `npm run build` runs the entire sequence; `npm run cmx:build` runs only CMX. Generated output lives in ignored `.cmx/`. Content uses CMX intrinsics; the site uses native Remix components. [CMX workflow](https://github.com/cmx-tools/packages#use-cmx-in-a-static-site-build).
+`content/pages/*.tsx` → CMX bundle → JSON documents → generated Environment → application build. `npm run build` runs the entire sequence; `npm run cmx:build` runs only CMX. Generated output lives in ignored `.cmx/`. [CMX workflow](https://github.com/cmx-tools/packages#use-cmx-in-a-static-site-build).
 
-`app/content.ts` loads the generated document asynchronously; `@cmx-tools/remix` resolves it against the generated Environment during SSR. Content and CMX stay outside the browser graph. The counter remains a separate island.
+`app/content.ts` maps `/` and `/example` to documents; unknown GET paths use `404.json` with HTTP 404 and `no-store`. Health remains `/health`. Successful pages have separate `page:home` / `page:example` cache tags.
+
+Content imports `Counter` from the local `@hannesdiem/content-components` contract (`content/contract`). The generated Environment maps it to `app/cmx-components.ts`, which wraps the browser entry with Remix `clientEntry`. Content uses Remix JSX types; CMX compilation replaces the JSX runtime. `@cmx-tools/remix` resolves document components during SSR; only the counter hydrates. Home starts at 0, `/example` at 10. Content, Environment, and CMX stay outside the browser graph.
+
+Environment implementation paths in `cmx.config.ts` are relative to `.cmx/environment.ts`. Page-specific `data-rmx-key` values on island sections reset state when navigating between documents; component JSX keys do not survive server hydration metadata.
 
 Content changes currently require build/deployment. Future hosted CMX replaces the document loader, preserving runtime SSR and independent publication.
 

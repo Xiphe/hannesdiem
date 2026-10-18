@@ -5,16 +5,22 @@ import { loadContent } from '../app/content.ts'
 import { createApp } from '../app/router.tsx'
 
 async function publication(title: string, paragraph: string) {
-  const document = structuredClone(await loadContent(new Request('https://example.com/')))
-  document.content.title = title
-  document.content.default = {
-    type: 'element', tag: 'article', props: { id: 'content' },
+  const page = structuredClone(await loadContent(new Request('https://example.com/')))
+  page.document.content.title = title
+  page.document.content.default = {
+    type: 'fragment',
     children: [
-      { type: 'element', tag: 'h1', children: [title] },
-      { type: 'element', tag: 'p', children: [paragraph] },
+      {
+        type: 'element', tag: 'article', props: { id: 'content' },
+        children: [
+          { type: 'element', tag: 'h1', children: [title] },
+          { type: 'element', tag: 'p', children: [paragraph] },
+        ],
+      },
+      { type: 'component', from: '@hannesdiem/content-components', import: 'Counter', props: { initialCount: 0 } },
     ],
   } satisfies CmxNode
-  return document
+  return page
 }
 
 test('content changes are rendered without rebuilding or recreating the app', async () => {
@@ -46,7 +52,30 @@ test('missing routes and health responses cannot enter the HTML cache', async ()
   const missing = await app.fetch('https://example.com/missing')
   assert.equal(missing.status, 404)
   assert.equal(missing.headers.get('Cache-Control'), 'no-store')
+  assert.equal(missing.headers.get('Cloudflare-CDN-Cache-Control'), null)
+  assert.equal(missing.headers.get('Cache-Tag'), null)
+  const html = await missing.text()
+  assert.match(html, /Page not found/)
+  assert.match(html, /href="\/"/)
+  assert.doesNotMatch(html, /Count:/)
   const health = await app.fetch('https://example.com/health')
   assert.deepEqual(await health.json(), { ok: true })
   assert.equal(health.headers.get('Cache-Control'), 'no-store')
+})
+
+test('each CMX page resolves its own content, counter props, and cache tag', async () => {
+  const app = createApp()
+  const home = await app.fetch('https://example.com/')
+  assert.equal(home.status, 200)
+  assert.equal(home.headers.get('Cache-Tag'), 'page:home')
+  assert.match(await home.text(), /Count: 0/)
+
+  const example = await app.fetch('https://example.com/example?source=test')
+  assert.equal(example.status, 200)
+  assert.equal(example.headers.get('Cache-Tag'), 'page:example')
+  const html = await example.text()
+  assert.match(html, /Another example/)
+  assert.match(html, /Count: 10/)
+  assert.match(html, /"exportName":"Counter"/)
+  assert.doesNotMatch(html, /A small beginning/)
 })

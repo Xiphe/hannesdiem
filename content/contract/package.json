@@ -1,0 +1,12 @@
+{
+  "name": "@hannesdiem/content-components",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "types": "./index.d.ts" }
+  },
+  "peerDependencies": {
+    "remix": "^3.0.0"
+  }
+}

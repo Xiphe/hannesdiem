@@ -7,5 +7,8 @@ export default {
     default: { required: true, type: node },
     title: { required: true, type: node },
   },
-  externals: [],
+  externals: [{
+    contract: '@hannesdiem/content-components',
+    implementation: { '.': '../app/cmx-components.ts' },
+  }],
 } satisfies CmxConfig

@@ -1,9 +1,6 @@
-import { clientEntry, type Handle } from 'remix/component'
+import type { Handle } from 'remix/component'
 import assets from '../.generated/assets.json' with { type: 'json' }
 import type { PageContent } from './content.ts'
-import { Counter as CounterComponent } from './counter.tsx'
-
-const Counter = clientEntry(`${assets.counter}#Counter`, CounterComponent)
 
 export function Page(handle: Handle<PageContent>) {
   return () => (
@@ -19,9 +16,6 @@ export function Page(handle: Handle<PageContent>) {
       <body>
         <main>
           {handle.props.body}
-          <section id="island" aria-label="Interactive counter">
-            <Counter />
-          </section>
         </main>
       </body>
     </html>
