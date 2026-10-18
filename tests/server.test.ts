@@ -47,16 +47,35 @@ test('all 34 migrated routes render CMX and keep public responses unpersonalized
     if(route.kind==='release')assert.match(html,/data-rmx-target="overlay"/)
   }
 })
-test('missing routes, health, and personalized navigation are uncached',async()=>{
+test('missing routes, removed navigation endpoint, and health are uncached',async()=>{
   const app=createApp()
   for(const path of ['/missing','/health','/nav','/_overlay']){
     const response=await app.fetch(`https://example.com${path}`)
     assert.equal(response.headers.get('Cache-Control'),'no-store',path)
     assert.equal(response.headers.get('Cloudflare-CDN-Cache-Control'),null,path)
     assert.equal(response.headers.get('Cache-Tag'),null,path)
-    if(path==='/missing'){assert.equal(response.status,404);assert.match(await response.text(),/Page Not Found/)}
+    if(path==='/missing'||path==='/nav'){assert.equal(response.status,404);assert.match(await response.text(),/Page Not Found/)}
     if(path==='/health')assert.deepEqual(await response.json(),{ok:true})
-    if(path==='/nav')assert.match(await response.text(),/Let’s stay in touch/)
+  }
+})
+test('public pages include a local navigation dialog without accessing newsletter sessions',async()=>{
+  const app=createApp(loadContent,{
+    NEWSLETTER_SESSION_SECRET:'test-only-secret-with-at-least-thirty-two-bytes',
+    RESEND_HANNESDIEM_DE_API_KEY:'test-only-resend-key',
+    RESEND_HANNESDIEM_DE_SEGMENT_ID:'test-newsletter-segment',
+    NEWSLETTER_STATE:{getByName(){throw new Error('Public rendering must not access subscriber state')}},
+  })
+  for(const cookie of [undefined,'hdm_user_session=existing-browser-session']){
+    const response=await app.fetch(new Request('https://example.com/hoffnung',{headers:cookie?{Cookie:cookie}:undefined}))
+    assert.equal(response.status,200)
+    assert.equal(response.headers.get('Set-Cookie'),null)
+    assert.equal(response.headers.get('Cloudflare-CDN-Cache-Control'),'public, max-age=60, stale-if-error=0')
+    const html=await response.text()
+    assert.match(html,/<dialog[^>]*id="site-navigation"[^>]*data-navigation-dialog/)
+    assert.match(html,/command="request-close" commandfor="site-navigation"/)
+    assert.match(html,/Let’s stay in touch/)
+    assert.match(html,/href="\/hoffnung" aria-current="page"/)
+    assert.doesNotMatch(html,/href="\/nav|data-rmx-src="\/nav|data-rmx-history="replace"/)
   }
 })
 test('legacy aliases and direct modal URLs keep their redirects',async()=>{

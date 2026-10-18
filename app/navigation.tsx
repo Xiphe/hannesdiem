@@ -40,16 +40,21 @@ export function SocialLinks(handle:Handle<{listen?:boolean;footer?:boolean}>) {
 }
 const navStyle = css({display:'flex',height:'100%',minHeight:'100dvh',flexDirection:'column',overflowY:'auto',padding:'1rem',background:'color-mix(in oklab,var(--theme-contrast) 70%,transparent)',boxShadow:'0 20px 25px -5px rgb(0 0 0 / .1)',backdropFilter:'blur(40px)','@media (prefers-color-scheme: dark)':{background:'color-mix(in oklab,var(--theme-contrast) 90%,transparent)'},
  '& summary':{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:'1.125rem',lineHeight:'1.75rem',fontWeight:500,padding:'.25rem .25rem .25rem .75rem',borderRadius:4,listStyle:'none'},'& summary::-webkit-details-marker':{display:'none'},'& .nav-chevron':{width:'1.25rem',height:'1.25rem',margin:'.125rem',color:'color-mix(in oklab,var(--theme-fg) 40%,transparent)',transition:'transform 150ms ease'},'& details[open] .nav-chevron':{transform:'rotate(180deg)'},'& details':{paddingBlock:'.25rem'},'& details+details':{borderTop:'1px solid color-mix(in oklab,var(--theme-fg) 10%,transparent)'},'& .nav-items li+li':{marginTop:'.25rem'},'& summary:hover,& .nav-item:hover':{background:'color-mix(in oklab,var(--theme-fg) 5%,transparent)'},'& .nav-item':{display:'block',padding:'.5rem .75rem .5rem 1.5rem',borderRadius:4,color:'color-mix(in oklab,var(--theme-fg) 70%,transparent)'},'& [aria-current=page]':{fontWeight:500,color:'var(--theme-primary)'}})
-export function Navigation(handle:Handle<{pathname:string;state:NewsletterState}>) {
+export function Navigation(handle:Handle<{pathname:string;state:NewsletterState;lazy?:boolean}>) {
   return () => <div mix={css({display:'flex',minHeight:'100dvh',justifyContent:'end'})}><div data-overlay-panel data-navigation-panel mix={css({width:'100vw',maxWidth:'28rem'})}>
     <div class="navigation-menu" mix={navStyle}>
-      <div mix={css({display:'flex',alignItems:'center',justifyContent:'space-between'})}><Brand/><a href="/" aria-label="Close navigation" data-close-overlay mix={css({display:'inline-flex',padding:'.25rem',borderRadius:'.375rem',color:'color-mix(in oklab,var(--theme-fg) 40%,transparent)','&:hover':{color:'var(--theme-fg)'}})}><XMarkIcon width={24} height={24}/></a></div>
+      <div mix={css({display:'flex',alignItems:'center',justifyContent:'space-between'})}><Brand/><button type="button" command="request-close" commandFor="site-navigation" aria-label="Close navigation" mix={css({display:'inline-flex',padding:'.25rem',borderRadius:'.375rem',color:'color-mix(in oklab,var(--theme-fg) 40%,transparent)','&:hover':{color:'var(--theme-fg)'}})}><XMarkIcon width={24} height={24}/></button></div>
       <nav aria-label="Main Navigation" mix={css({display:'flex',flex:1,flexDirection:'column',marginTop:'1.5rem'})}>
-        {sections.map(section=><details open={section.items.some(item=>handle.props.pathname.startsWith(item.href))}><summary><span>{section.name}</span><ChevronDownIcon class="nav-chevron"/></summary><ul class="nav-items" mix={css({paddingBlock:'.5rem'})}>{section.items.map(item=><li><a class="nav-item" href={item.href} data-rmx-history="replace" aria-current={handle.props.pathname===item.href?'page':undefined}>{item.name}</a></li>)}</ul></details>)}
-        <div mix={css({flexGrow:1,minHeight:'5rem'})}/><NewsletterArea state={handle.props.state}/><div mix={css({marginBottom:'.5rem'})}><SocialLinks/></div><div mix={css({marginBottom:'1rem'})}><SocialLinks listen/></div>
+        {sections.map(section=><details open={section.items.some(item=>handle.props.pathname.startsWith(item.href))}><summary><span>{section.name}</span><ChevronDownIcon class="nav-chevron"/></summary><ul class="nav-items" mix={css({paddingBlock:'.5rem'})}>{section.items.map(item=><li><a class="nav-item" href={item.href} aria-current={handle.props.pathname===item.href?'page':undefined}>{item.name}</a></li>)}</ul></details>)}
+        <div mix={css({flexGrow:1,minHeight:'5rem'})}/><NewsletterArea state={handle.props.state} lazy={handle.props.lazy}/><div mix={css({marginBottom:'.5rem'})}><SocialLinks/></div><div mix={css({marginBottom:'1rem'})}><SocialLinks listen/></div>
       </nav>
     </div>
   </div></div>
+}
+export function NavigationDialog(handle:Handle<{pathname:string}>) {
+  return () => <dialog id="site-navigation" data-navigation-dialog class="page-dialog" aria-label="Navigation" mix={css({position:'fixed',inset:0,width:'100vw',maxWidth:'none',height:'100dvh',maxHeight:'none',margin:0,padding:0,background:'transparent',color:'var(--theme-fg)',border:0,overflowY:'auto','&:not([open])':{display:'none'},'&::backdrop':{background:'color-mix(in oklab,var(--theme-bg) 30%,transparent)',backdropFilter:'blur(4px)'}})}>
+    <Navigation pathname={handle.props.pathname} state={{ready:false}} lazy/>
+  </dialog>
 }
 export function Footer() {
   return () => <footer mix={css({maxWidth:'80rem',marginInline:'auto',padding:'4rem 1.5rem 2rem'})}>

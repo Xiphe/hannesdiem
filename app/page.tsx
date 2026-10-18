@@ -1,7 +1,7 @@
 import { clientEntry, type Handle, type RemixNode } from 'remix/component'
 import assets from '../.generated/assets.json' with { type:'json' }
 import { Chrome as ChromeComponent } from './chrome.tsx'
-import { Footer } from './navigation.tsx'
+import { Footer, NavigationDialog } from './navigation.tsx'
 import { contentTheme, type ContentRoute } from './content.ts'
 import { getMedia } from './media.ts'
 import { themeCss } from './theme.ts'
@@ -29,6 +29,6 @@ export function Page(handle:Handle<{title:string;body:RemixNode;route?:ContentRo
       <meta name="twitter:card" content="summary_large_image"/>
       <link rel="icon" href={assets.mark} type="image/svg+xml"/><link rel="stylesheet" href={assets.style}/>
       <style>{themeCss(contentTheme(route))}</style><script type="module" src={assets.entry}></script>
-    </head><body>{!plain&&<Chrome path={path}/>}<main id="content">{body}</main>{!plain&&<Footer/>}</body></html>
+    </head><body>{!plain&&<><Chrome path={path}/><NavigationDialog pathname={path}/></>}<main id="content">{body}</main>{!plain&&<Footer/>}</body></html>
   }
 }

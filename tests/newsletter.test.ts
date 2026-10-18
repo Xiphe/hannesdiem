@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createCookie } from 'remix/cookie'
 import {
-  cleanupNewsletterStorage, getNewsletterState, handleNewsletter, handleNewsletterStorage,
-  type NewsletterEnvironment, type NewsletterStorage, type NewsletterTransaction,
+  cleanupNewsletterStorage, handleNewsletter, handleNewsletterStorage,
+  type NewsletterEnvironment, type NewsletterState, type NewsletterStorage, type NewsletterTransaction,
 } from '../app/newsletter.ts'
 
 class MemoryStorage implements NewsletterStorage {
@@ -63,8 +63,9 @@ function harness() {
     return result
   }
   const state = async (cookie?: string) => {
-    const value = await getNewsletterState(request('/nav', { headers: cookie ? { Cookie: cookie } : undefined }), env)
-    return { ...value, cookie: cookieFrom(value.headers) ?? cookie! }
+    const response = await handle('/login', { headers: { Accept: 'application/json', ...(cookie ? { Cookie: cookie } : {}) } })
+    const value = await response.json() as NewsletterState
+    return { ...value, headers: response.headers, cookie: cookieFrom(response.headers) ?? cookie! }
   }
   const submit = (email: string, csrfToken: string, cookie: string, extra?: Record<string, string>) => handle('/login', {
     method: 'POST', headers: { Origin: 'https://example.com', Cookie: cookie, ...extra },
@@ -206,7 +207,6 @@ test('missing configuration leaves content routes alone and disables signup with
   const response = await handleNewsletter(new Request('https://example.com/login'), {})
   assert.equal(response?.status, 503)
   assert.match(await response!.text(), /disabled/)
-  assert.equal((await getNewsletterState(new Request('https://example.com/nav'), {})).ready, false)
 })
 
 test('inline signup returns success and cooldown results without navigation or flash messages', async () => {

@@ -128,9 +128,6 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       csrf(), render(),
     ],
   })
-  router.get('/__newsletter/state', context => Response.json({
-    ready: true, email: context.session.get('email'), csrfToken: getCsrfToken(context),
-  }))
   router.get('/login', context => {
     const email = context.session.get('email')
     const state: NewsletterState = {
@@ -249,16 +246,6 @@ export async function handleNewsletter(
     }
     return failure('Something went wrong. Please try again.', 503)
   }
-}
-
-export async function getNewsletterState(
-  request: Request, env: NewsletterEnvironment,
-): Promise<NewsletterState & { headers: Headers }> {
-  if (!configured(env)) return { ready: false, headers: new Headers() }
-  const url = new URL('/__newsletter/state', request.url)
-  const response = await createNewsletterRouter(env, {}).fetch(new Request(url, { headers: request.headers }))
-  if (!response.ok) throw new Error('Newsletter state unavailable')
-  return { ...await response.json() as NewsletterState, headers: response.headers }
 }
 
 async function resendRequest(

@@ -5,8 +5,7 @@ import { XMarkIcon, ArrowLeftIcon } from './heroicons.tsx'
 import { redirect } from 'remix/response/redirect'
 import { loadContent, renderContent, contentRoutes, type ContentLoader } from './content.ts'
 import { Page } from './page.tsx'
-import { Navigation } from './navigation.tsx'
-import { getNewsletterState, type NewsletterEnvironment } from './newsletter.ts'
+import type { NewsletterEnvironment } from './newsletter.ts'
 import { routes } from './routes.ts'
 import shareImages from '../.generated/og.json' with {type:'json'}
 
@@ -23,17 +22,6 @@ export function createApp(content:ContentLoader=loadContent,env:NewsletterEnviro
   const router=createRouter({middleware:[render()],defaultHandler:()=>new Response('Not found',{status:404,headers:privateHeaders})})
   router.get(routes.health,()=>Response.json({ok:true},{headers:privateHeaders}))
   router.get(routes.emptyOverlay,()=>new Response('',{headers:{...privateHeaders,'Content-Type':'text/html; charset=utf-8'}}))
-  router.get(routes.navigation,async({request,render})=>{
-    const state=await getNewsletterState(request,env)
-    const referer=request.headers.get('Referer')
-    const sourcePath=new URL(request.url).searchParams.get('from')
-    const path=sourcePath?.startsWith('/')&&!sourcePath.startsWith('//')?sourcePath:referer&&new URL(referer).origin===new URL(request.url).origin?new URL(referer).pathname:'/nav'
-    const body=<Navigation pathname={path} state={state}/>
-    const response=render(request.headers.get('X-Remix-Target')==='overlay'?body:<Page title="Navigation" body={body} path="/nav" noindex plain/>,{headers:privateHeaders})
-    const result=await response
-    for(const cookie of state.headers.getSetCookie()) result.headers.append('Set-Cookie',cookie)
-    return result
-  })
   router.get(routes.songOverlay,async({request,params,render})=>{
     const path='/'+params.path
     const page=await content(new Request(new URL(path,request.url)))
@@ -52,7 +40,7 @@ export function createApp(content:ContentLoader=loadContent,env:NewsletterEnviro
     const image=page&&shareImages[page.path as keyof typeof shareImages]
     return image?redirect(image.src,307):new Response('Not found',{status:404,headers:privateHeaders})
   })
-  router.get(routes.robots,()=>new Response('User-agent: *\nAllow: /\nDisallow: /nav\nDisallow: /login\nDisallow: /m/\nSitemap: https://hannesdiem.de/sitemap.xml\n',{headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'public, max-age=3600'}}))
+  router.get(routes.robots,()=>new Response('User-agent: *\nAllow: /\nDisallow: /login\nDisallow: /m/\nSitemap: https://hannesdiem.de/sitemap.xml\n',{headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'public, max-age=3600'}}))
   router.get(routes.content,async({request,render})=>{
     const path=new URL(request.url).pathname
     const destination=legacyRedirects.get(path)
