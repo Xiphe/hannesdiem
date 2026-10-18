@@ -322,13 +322,21 @@ for (const [width, height] of [
   })
 }
 
-test('short release keeps its cover centered in the two-column viewport', async ({ page }) => {
+test('short releases center both columns in the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/resolve-yourself', { waitUntil: 'networkidle' })
-  const cover = page.locator('main img').first()
-  await cover.evaluate((image: HTMLImageElement) => image.decode())
-  const box = (await cover.boundingBox())!
-  expect(Math.abs(box.y + box.height / 2 - 450)).toBeLessThanOrEqual(2)
+  for (const path of ['/resolve-yourself', '/yunorun']) {
+    await page.goto(path, { waitUntil: 'networkidle' })
+    const cover = page.locator('main img').first()
+    await cover.evaluate((image: HTMLImageElement) => image.decode())
+    const box = (await cover.boundingBox())!
+    expect(Math.abs(box.y + box.height / 2 - 450)).toBeLessThanOrEqual(2)
+    const details = await page.locator('main h1').evaluate((heading) => {
+      const box = heading.parentElement!.getBoundingClientRect()
+      return { height: box.height, center: box.y + box.height / 2 }
+    })
+    expect(details.height).toBeLessThan(900)
+    expect(Math.abs(details.center - 450)).toBeLessThanOrEqual(2)
+  }
 })
 
 test('stacked release cover scrolls in normal flow', async ({ page }) => {

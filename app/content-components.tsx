@@ -1557,7 +1557,11 @@ export function Release(handle: Handle<ReleaseProps>) {
               gap: '3rem',
               padding: '1.5rem',
               [sm]: { paddingInline: 0 },
-              [md]: { flexDirection: 'column', paddingTop: 0 },
+              [md]: {
+                flexDirection: 'column',
+                paddingBlock: 0,
+                justifyContent: cover ? 'safe center' : undefined,
+              },
             })}
           >
             <div mix={[largeProse, proseRules]}>
