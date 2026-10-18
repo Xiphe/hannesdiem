@@ -83,6 +83,16 @@ test('navigation follows content links, renders 404, and serves app assets',asyn
   await expect(page.locator('h1')).toHaveText('404 - Page Not Found')
 })
 
+test('Amazon Music logos preserve the open letter shapes with sizing styles',async({page})=>{
+  for(const path of ['/linktree','/halbkreis']){
+    await page.goto(path)
+    const logo=page.locator('main svg[aria-label="Amazon Music"]')
+    await expect(logo).toBeVisible()
+    const filled=await logo.locator('path').nth(5).evaluate((letter:SVGPathElement)=>letter.isPointInFill(new DOMPoint(12,32)))
+    expect(filled,`The hole in Amazon’s first “a” must remain open on ${path}`).toBe(false)
+  }
+})
+
 for(const width of [360,1280,2732]){
   test(`OWA portraits stay above their biography cards at ${width}px`,async({page})=>{
     await page.setViewportSize({width,height:900})

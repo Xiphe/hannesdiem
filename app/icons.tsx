@@ -207,12 +207,10 @@ export function AmazonMusicLogo(handle: Handle<SvgProps>) {
       viewBox="0 0 324 64"
       xmlns="http://www.w3.org/2000/svg"
       fill="currentColor"
-      style={{
-        fillRule: "evenodd",
-        clipRule: "evenodd",
-        strokeLinejoin: "round",
-        strokeMiterlimit: 2,
-      }}
+      fillRule="evenodd"
+      clipRule="evenodd"
+      strokeLinejoin="round"
+      strokeMiterlimit={2}
       {...props}
     >
       <path d="M99.042,17.609l-0,-3.85c0.004,-0.587 0.444,-0.976 0.977,-0.975l17.255,-0.001c0.552,-0 0.995,0.401 0.995,0.971l-0,3.302c-0.005,0.554 -0.472,1.276 -1.299,2.424l-8.939,12.761c3.318,-0.077 6.828,0.42 9.842,2.115c0.68,0.381 0.862,0.947 0.916,1.502l-0,4.108c-0,0.565 -0.62,1.221 -1.271,0.879c-5.311,-2.781 -12.359,-3.085 -18.232,0.035c-0.6,0.319 -1.228,-0.326 -1.228,-0.893l-0,-3.905c-0,-0.625 0.012,-1.693 0.643,-2.646l10.355,-14.856l-9.016,-0.001c-0.552,-0 -0.994,-0.393 -0.998,-0.97" />
@@ -371,12 +369,10 @@ export function SoundCloudLogo(handle: Handle<SvgProps>) {
       viewBox="0 0 125 15"
       xmlns="http://www.w3.org/2000/svg"
       fill="currentColor"
-      style={{
-        fillRule: "evenodd",
-        clipRule: "evenodd",
-        strokeLinejoin: "round",
-        strokeMiterlimit: 2,
-      }}
+      fillRule="evenodd"
+      clipRule="evenodd"
+      strokeLinejoin="round"
+      strokeMiterlimit={2}
       {...props}
     >
       <g>
@@ -414,12 +410,10 @@ export function TidalLogo(handle: Handle<SvgProps>) {
       viewBox="0 0 193 28"
       xmlns="http://www.w3.org/2000/svg"
       fill="currentColor"
-      style={{
-        fillRule: "evenodd",
-        clipRule: "evenodd",
-        strokeLinejoin: "round",
-        strokeMiterlimit: 2,
-      }}
+      fillRule="evenodd"
+      clipRule="evenodd"
+      strokeLinejoin="round"
+      strokeMiterlimit={2}
       {...props}
     >
       <path d="M70.343,25.71l-4.892,-0l-0,-17.351l-6.327,-0l0,-4.193l17.546,-0l-0,4.193l-6.327,-0l-0,17.351Z" />
