@@ -83,6 +83,24 @@ test('navigation follows content links, renders 404, and serves app assets',asyn
   await expect(page.locator('h1')).toHaveText('404 - Page Not Found')
 })
 
+for(const width of [360,1280,2732]){
+  test(`OWA portraits stay above their biography cards at ${width}px`,async({page})=>{
+    await page.setViewportSize({width,height:900})
+    await page.goto('/one-week-album')
+    const about=page.locator('section').filter({has:page.getByRole('heading',{name:'About us',exact:true})})
+    for(const [index,name] of ['Hannes','Roxanna'].entries()){
+      const portrait=about.locator('img').nth(index)
+      await portrait.scrollIntoViewIfNeeded()
+      await portrait.evaluate((img:HTMLImageElement)=>img.decode())
+      const image=await portrait.boundingBox()
+      const card=await about.getByRole('heading',{name,exact:true}).locator('..').boundingBox()
+      expect(image!.width).toBeGreaterThan(250)
+      expect(image!.y+image!.height).toBeLessThanOrEqual(card!.y+24)
+      expect(Math.abs(image!.x+image!.width/2-card!.x-card!.width/2)).toBeLessThan(2)
+    }
+  })
+}
+
 test('outside clicks close overlays and menu selections replace the overlay history entry',async({page})=>{
   await page.goto('/halbkreis',{waitUntil:'networkidle'})
   await page.getByRole('link',{name:'Open menu',exact:true}).click()
