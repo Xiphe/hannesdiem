@@ -15,14 +15,14 @@ Pushes to `main` run checks, deploy the checked artifacts, then smoke test the p
 
 ## GitHub Actions configuration
 
-[Repository settings → Secrets and variables → Actions](https://github.com/Xiphe/hannesdiem/settings/secrets/actions):
+[GitHub environment: Production](https://github.com/Xiphe/hannesdiem/settings/environments/24638962215/edit):
 
 | Kind | Name | Value |
 | --- | --- | --- |
-| Secret | `CLOUDFLARE_API_TOKEN` | Account-owned token: **Specified Workers** → `hannesdiem-remix-spike` → **Editor**. |
-| Variable | `CLOUDFLARE_ACCOUNT_ID` | Target account ID. |
+| Secret | `CLOUDFLARE_API_TOKEN` | Account-owned token: **Specified Workers** → `hannesdiem-remix`; **Editor** minimum (Worker-scoped Admin also works). |
+| Secret | `CLOUDFLARE_ACCOUNT_ID` | Target account ID. |
 
-First create `hannesdiem-remix-spike` yourself: Workers & Pages → Create application → Start with Hello World! → Get started → name → Deploy. CI updates this existing Worker; no Admin or zone permissions. Create its token under Manage account → Account API tokens. [Scoped tokens](https://developers.cloudflare.com/changelog/post/2026-09-15-granular-worker-permissions/), [token creation](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/), [account ID](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/).
+Existing Worker: `hannesdiem-remix`. CI deploys through the `Production` environment; no account-wide or zone permissions required. Token creation: Manage account → Account API tokens. [Scoped tokens](https://developers.cloudflare.com/changelog/post/2026-09-15-granular-worker-permissions/), [token creation](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/), [account ID](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/).
 
 Missing credentials fail after checks with setup instructions. Set the values, then rerun the failed deployment job.
 
