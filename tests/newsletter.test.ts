@@ -70,7 +70,7 @@ function harness() {
   const delivery: typeof fetch = async (input, init) => {
     const url = String(input)
     assert.equal(new URL(url).origin, 'https://api.resend.com')
-    assert.equal(init?.redirect, 'error')
+    assert.equal(init?.redirect, 'manual')
     assert.equal(new Headers(init?.headers).get('Authorization'), 'Bearer test-only-resend-key')
     const method = init?.method ?? 'GET'
     const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null

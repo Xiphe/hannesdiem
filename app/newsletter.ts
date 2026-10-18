@@ -344,7 +344,7 @@ async function resendRequest(
     const response = await send(`https://api.resend.com${path}`, {
       ...init,
       headers,
-      redirect: 'error',
+      redirect: 'manual',
       signal: AbortSignal.timeout(10000),
     })
     if (response.status !== 429 || attempt === 2) return response
