@@ -1,0 +1,52 @@
+name: Check and deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check
+      - name: Check deployment credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
+            echo "::error::Configure repository Actions secret CLOUDFLARE_API_TOKEN and variable CLOUDFLARE_ACCOUNT_ID; see README.md. Checks passed; deployment has not run."
+            exit 1
+          fi
+      - name: Deploy
+        id: deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-deploy.jsonl
+        run: |
+          npm run deploy
+          deployment_url=$(jq -ers '[.[] | select(.type == "deploy") | .targets[]? | select(startswith("https://"))][0] // error("Wrangler returned no deployment URL")' "$WRANGLER_OUTPUT_FILE_PATH")
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+          printf 'Deployed: [%s](%s)\n' "$deployment_url" "$deployment_url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Smoke test deployment
+        env:
+          DEPLOYMENT_URL: ${{ steps.deployment.outputs.url }}
+        run: node scripts/smoke.ts "$DEPLOYMENT_URL"

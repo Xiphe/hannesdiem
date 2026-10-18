@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hannesdiem-remix-spike",
+  "main": "app/worker.ts",
+  "compatibility_date": "2026-10-18",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": { "directory": "dist" },
+  "cache": { "enabled": true },
+  "observability": {
+    "enabled": true,
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  }
+}
