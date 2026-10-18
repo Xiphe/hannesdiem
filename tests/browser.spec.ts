@@ -199,6 +199,52 @@ test('release lyrics open over the release, close on Escape, and support direct 
   await expect(page.locator('main h1')).not.toBeEmpty()
 })
 
+for (const width of [320, 360, 768]) {
+  test(`tracklist stays readable with compact lyrics controls at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+    const table = page.getByRole('table')
+    const links = table.getByRole('link')
+    expect(await links.count()).toBeGreaterThan(0)
+    for (const link of await links.all()) {
+      await expect(link).toHaveAccessibleName(/Lyrics/)
+      await expect(link).toHaveAttribute('title', /Lyrics/)
+      await expect(link.locator('svg')).toBeVisible()
+      await expect(link.locator('span')).toHaveCount(1)
+      if (width < 768) {
+        await expect(link.locator('span')).toBeHidden()
+        expect(
+          await link.evaluate((element) => element.getBoundingClientRect().width),
+        ).toBeLessThanOrEqual(44)
+      } else {
+        await expect(link.locator('span')).toBeVisible()
+      }
+    }
+    const layout = await table.evaluate((element) => {
+      const viewport = document.documentElement.clientWidth
+      const table = element.getBoundingClientRect()
+      return {
+        fitsViewport: table.left >= 0 && table.right <= viewport,
+        rowsDoNotOverlap: [...element.querySelectorAll('[role="row"]')].every((row) => {
+          const cells = row.querySelectorAll('[role="cell"]')
+          if (cells.length !== 4) return true
+          const title = document.createRange()
+          title.selectNodeContents(cells[1])
+          const action = cells[2].getBoundingClientRect()
+          const duration = cells[3].getBoundingClientRect()
+          const link = cells[2].querySelector('a')?.getBoundingClientRect()
+          return (
+            [...title.getClientRects()].every((rect) => rect.right <= action.left + 1) &&
+            (!link || link.right <= duration.left + 1) &&
+            duration.right <= viewport
+          )
+        }),
+      }
+    })
+    expect(layout).toEqual({ fitsViewport: true, rowsDoNotOverlap: true })
+  })
+}
+
 for (const width of [360, 1280]) {
   test(`lyrics use canonical URLs and keep close inside the sheet at ${width}px`, async ({
     page,

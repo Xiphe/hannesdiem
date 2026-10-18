@@ -1532,6 +1532,7 @@ export function Release(handle: Handle<ReleaseProps>) {
               display: 'flex',
               width: '100%',
               flexDirection: 'column-reverse',
+              minWidth: 0,
               gap: '3rem',
               padding: '1.5rem',
               [sm]: { paddingInline: 0 },
@@ -1624,7 +1625,10 @@ export function Release(handle: Handle<ReleaseProps>) {
                             mix={css({
                               display: 'table-cell',
                               paddingBlock: '0.5rem',
-                              paddingLeft: '1rem',
+                              paddingLeft: '0.5rem',
+                              paddingRight: '0.5rem',
+                              whiteSpace: 'nowrap',
+                              [md]: { paddingLeft: '1rem' },
                               fontWeight: 200,
                               fontStyle: 'italic',
                               opacity: 0.4,
@@ -1634,7 +1638,13 @@ export function Release(handle: Handle<ReleaseProps>) {
                           </span>
                           <span
                             role="cell"
-                            mix={css({ display: 'table-cell' })}
+                            mix={css({
+                              display: 'table-cell',
+                              width: '100%',
+                              paddingBlock: '0.5rem',
+                              paddingRight: '0.5rem',
+                              overflowWrap: 'anywhere',
+                            })}
                           >
                             {track.title}
                             {track.addition ? (
@@ -1646,18 +1656,25 @@ export function Release(handle: Handle<ReleaseProps>) {
                           </span>
                           <span
                             role="cell"
-                            mix={css({ display: 'table-cell' })}
+                            mix={css({
+                              display: 'table-cell',
+                              width: '1%',
+                              whiteSpace: 'nowrap',
+                              verticalAlign: 'middle',
+                            })}
                           >
                             {track.song ? (
                               <a
                                 data-rmx-target="overlay"
                                 href={'/' + track.song.slug.replace(/^\//, '')}
                                 data-rmx-src={'/m/' + track.song.slug.replace(/^\//, '')}
-                                title={`Details and Lyrics for "${track.title}"`}
+                                title={`Lyrics for "${track.title}"`}
+                                aria-label={`Lyrics for "${track.title}"`}
                                 mix={css({
                                   ...focus,
                                   display: 'inline-flex',
                                   alignItems: 'center',
+                                  justifyContent: 'center',
                                   gap: '0.5rem',
                                   borderRadius: '0.375rem',
                                   fontSize: '1rem',
@@ -1666,7 +1683,10 @@ export function Release(handle: Handle<ReleaseProps>) {
                                     '1px solid color-mix(in oklab, var(--theme-fg) 30%, transparent)',
                                   background:
                                     'color-mix(in oklab, var(--theme-fg) 5%, transparent)',
-                                  padding: '0.25rem 0.5rem',
+                                  padding: '0.375rem',
+                                  minWidth: '2rem',
+                                  minHeight: '2rem',
+                                  [md]: { padding: '0.25rem 0.5rem' },
                                   textDecoration: 'none',
                                   '&:hover': {
                                     background:
@@ -1678,13 +1698,20 @@ export function Release(handle: Handle<ReleaseProps>) {
                                   icon="DocumentTextIcon"
                                   iconSize="1rem"
                                 />
-                                Lyrics
+                                <span mix={css({ display: 'none', [md]: { display: 'inline' } })}>
+                                  Lyrics
+                                </span>
                               </a>
                             ) : null}
                           </span>
                           <span
                             role="cell"
-                            mix={css({ display: 'table-cell' })}
+                            mix={css({
+                              display: 'table-cell',
+                              width: '1%',
+                              paddingInline: '0.5rem',
+                              whiteSpace: 'nowrap',
+                            })}
                           >
                             {track.duration ? (
                               <time
