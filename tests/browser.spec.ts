@@ -200,10 +200,18 @@ test('release lyrics open over the release, close on Escape, and support direct 
 })
 
 for (const width of [320, 360, 768]) {
-  test(`tracklist stays readable with compact lyrics controls at ${width}px`, async ({ page }) => {
+  test(`tracklist lyrics controls fit their container at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/hoffnung', { waitUntil: 'networkidle' })
     const table = page.getByRole('table')
+    const containerWidth = await table.locator('xpath=../..').evaluate((element) => {
+      const style = getComputedStyle(element)
+      return (
+        element.getBoundingClientRect().width -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight)
+      )
+    })
     const links = table.getByRole('link')
     expect(await links.count()).toBeGreaterThan(0)
     for (const link of await links.all()) {
@@ -211,7 +219,7 @@ for (const width of [320, 360, 768]) {
       await expect(link).toHaveAttribute('title', /Lyrics/)
       await expect(link.locator('svg')).toBeVisible()
       await expect(link.locator('span')).toHaveCount(1)
-      if (width < 768) {
+      if (containerWidth < 440) {
         await expect(link.locator('span')).toBeHidden()
         expect(
           await link.evaluate((element) => element.getBoundingClientRect().width),
@@ -244,6 +252,36 @@ for (const width of [320, 360, 768]) {
     expect(layout).toEqual({ fitsViewport: true, rowsDoNotOverlap: true })
   })
 }
+
+test('lyrics labels switch at a 440px container width without resizing the viewport', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+  const table = page.getByRole('table')
+  const details = table.locator('xpath=../..')
+  const link = table.getByRole('link').first()
+  for (const width of [439, 440, 439]) {
+    await details.evaluate((element: HTMLElement, width) => {
+      Object.assign(element.style, {
+        boxSizing: 'content-box',
+        width: `${width}px`,
+        flexShrink: '0',
+        paddingInline: '0',
+      })
+    }, width)
+    expect(await details.evaluate((element) => element.getBoundingClientRect().width)).toBe(width)
+    expect(await page.evaluate(() => innerWidth)).toBe(1440)
+    await expect(link).toHaveAccessibleName(/Lyrics/)
+    await expect(link).toHaveAttribute('title', /Lyrics/)
+    await expect(link.locator('svg')).toBeVisible()
+    if (width < 440) {
+      await expect(link.locator('span')).toBeHidden()
+    } else {
+      await expect(link.locator('span')).toBeVisible()
+    }
+  }
+})
 
 for (const [width, height] of [
   [768, 900],

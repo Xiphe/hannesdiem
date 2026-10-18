@@ -1487,6 +1487,8 @@ const srOnly = css({
   whiteSpace: 'nowrap',
   borderWidth: 0,
 })
+const lyricsLabelQuery = '@container release-details (width >= 440px)'
+
 export function Release(handle: Handle<ReleaseProps>) {
   return () => {
     const release = handle.props
@@ -1546,6 +1548,8 @@ export function Release(handle: Handle<ReleaseProps>) {
               width: '100%',
               flexDirection: 'column-reverse',
               minWidth: 0,
+              containerType: 'inline-size',
+              containerName: 'release-details',
               gap: '3rem',
               padding: '1.5rem',
               [sm]: { paddingInline: 0 },
@@ -1699,7 +1703,7 @@ export function Release(handle: Handle<ReleaseProps>) {
                                   padding: '0.375rem',
                                   minWidth: '2rem',
                                   minHeight: '2rem',
-                                  [md]: { padding: '0.25rem 0.5rem' },
+                                  [lyricsLabelQuery]: { padding: '0.25rem 0.5rem' },
                                   textDecoration: 'none',
                                   '&:hover': {
                                     background:
@@ -1711,7 +1715,12 @@ export function Release(handle: Handle<ReleaseProps>) {
                                   icon="DocumentTextIcon"
                                   iconSize="1rem"
                                 />
-                                <span mix={css({ display: 'none', [md]: { display: 'inline' } })}>
+                                <span
+                                  mix={css({
+                                    display: 'none',
+                                    [lyricsLabelQuery]: { display: 'inline' },
+                                  })}
+                                >
                                   Lyrics
                                 </span>
                               </a>
