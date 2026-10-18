@@ -363,7 +363,7 @@ for (const width of [360, 1280]) {
   test(`lower sidebar retains the newsletter card and compact logo rows at ${width}px`, async ({
     page,
   }) => {
-    await page.setViewportSize({ width, height: 1000 })
+    await page.setViewportSize({ width, height: 600 })
     await page.goto('/halbkreis', { waitUntil: 'networkidle' })
     await page.getByRole('button', { name: 'Open menu', exact: true }).click()
     const dialog = page.getByRole('dialog')
@@ -377,7 +377,17 @@ for (const width of [360, 1280]) {
     expect(card.border).toBeGreaterThanOrEqual(1)
     expect(card.radius).toBe(12)
     expect(card.icons).toBe(2)
-    await expect(newsletter.getByRole('textbox', { name: 'Email address' })).toBeEnabled()
+    const email = newsletter.getByRole('textbox', { name: 'Email address' })
+    await expect(email).toBeEnabled()
+    const menu = dialog.locator('.navigation-menu')
+    await menu.hover({ position: { x: 20, y: 200 } })
+    await page.mouse.wheel(0, 2000)
+    await expect.poll(() => menu.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
+    await email.scrollIntoViewIfNeeded()
+    const input = (await email.boundingBox())!
+    expect(input.y).toBeGreaterThanOrEqual(0)
+    expect(input.y + input.height).toBeLessThanOrEqual(600)
+    expect(await dialog.evaluate((el) => el.scrollLeft)).toBe(0)
     const gap = await newsletter.evaluate((el) => {
       const input = el.querySelector('input[type=email]')!.getBoundingClientRect()
       const button = el.querySelector('button[type=submit]')!.getBoundingClientRect()
@@ -457,19 +467,99 @@ test('sidebar keeps the original header and menu item spacing with SVG controls'
   expect(second!.y - first!.y - first!.height).toBe(4)
 })
 
-test('sidebar slides and sections animate open and closed', async ({ page }) => {
+test('sidebar slide and backdrop share the opening timeline on every open', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
+
+  for (let opening = 0; opening < 2; opening++) {
+    await page.evaluate(() => {
+      ;(window as any).navigationOpening = new Promise((resolve) => {
+        document.addEventListener(
+          'click',
+          () => {
+            requestAnimationFrame(async () => {
+              const dialog = document.querySelector<HTMLDialogElement>('#site-navigation')!
+              const panel = dialog.querySelector<HTMLElement>('[data-navigation-panel]')!
+              const animations = dialog.getAnimations({ subtree: true })
+              const slide = animations.find((animation) => {
+                const effect = animation.effect as KeyframeEffect
+                return effect.target === panel && effect.getKeyframes().some((key) => key.transform)
+              })
+              const backdrop = animations.find((animation) => {
+                const effect = animation.effect as KeyframeEffect
+                return effect.target === dialog && effect.getKeyframes().some((key) => key.opacity)
+              })
+              if (!slide || !backdrop) {
+                resolve({ slide: Boolean(slide), backdrop: Boolean(backdrop) })
+                return
+              }
+              await Promise.all([slide.ready, backdrop.ready])
+              const startTimes = [slide.startTime, backdrop.startTime]
+              const timing = [slide.effect!.getTiming(), backdrop.effect!.getTiming()]
+              slide.pause()
+              backdrop.pause()
+              const samples = [0, 0.25, 0.5, 0.75, 1].map((progress) => {
+                slide.currentTime = Number(timing[0].duration) * progress
+                backdrop.currentTime = Number(timing[1].duration) * progress
+                return {
+                  right: panel.getBoundingClientRect().right,
+                  opacity: Number(getComputedStyle(dialog, '::backdrop').opacity),
+                  scrollLeft: dialog.scrollLeft,
+                }
+              })
+              slide.finish()
+              backdrop.finish()
+              resolve({
+                slide: true,
+                backdrop: true,
+                startTimes,
+                durations: timing.map((value) => value.duration),
+                easing: [slide, backdrop].map((animation, index) =>
+                  timing[index].easing === 'linear'
+                    ? (animation.effect as KeyframeEffect).getKeyframes()[0].easing
+                    : timing[index].easing,
+                ),
+                width: panel.getBoundingClientRect().width,
+                viewport: innerWidth,
+                samples,
+              })
+            })
+          },
+          { capture: true, once: true },
+        )
+      })
+    })
+    await page.getByRole('button', { name: 'Open menu', exact: true }).click()
+    const motion = await page.evaluate(() => (window as any).navigationOpening)
+    expect(motion).toMatchObject({ slide: true, backdrop: true })
+    expect(motion.durations).toEqual([300, 300])
+    expect(motion.easing).toEqual(['ease-in-out', 'ease-in-out'])
+    expect(Math.abs(motion.startTimes[0] - motion.startTimes[1])).toBeLessThan(1)
+    expect(motion.samples[0].opacity).toBe(0)
+    expect(motion.samples.at(-1).opacity).toBe(1)
+    for (const [index, sample] of motion.samples.entries()) {
+      expect(sample.scrollLeft).toBe(0)
+      expect(sample.opacity).toBeGreaterThanOrEqual(0)
+      expect(sample.opacity).toBeLessThanOrEqual(1)
+      expect(sample.right).toBeGreaterThanOrEqual(motion.viewport)
+      expect(sample.right).toBeLessThanOrEqual(motion.viewport + motion.width)
+      expect(sample.right - motion.viewport).toBeCloseTo(motion.width * (1 - sample.opacity), 0)
+      if (index > 0) {
+        expect(sample.opacity).toBeGreaterThanOrEqual(motion.samples[index - 1].opacity)
+        expect(sample.right).toBeLessThanOrEqual(motion.samples[index - 1].right)
+      }
+    }
+    await dialog.getByRole('button', { name: 'Close navigation' }).click()
+    await expect(dialog).not.toBeVisible()
+  }
+})
+
+test('sidebar sections animate open and closed', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.goto('/halbkreis', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog')
-  const panel = dialog.locator('[data-navigation-panel]')
-  await expect(panel).toBeVisible()
-  expect(
-    await panel.evaluate((el) =>
-      el.getAnimations().some((animation) => animation.effect?.getTiming().duration === 300),
-    ),
-  ).toBe(true)
-  await expect.poll(() => panel.evaluate((el) => el.getAnimations().length)).toBe(0)
   const work = dialog.locator('details').first()
   const expanded = (await work.boundingBox())!.height
   await work.locator('summary').click()

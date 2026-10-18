@@ -196,7 +196,7 @@ export function Navigation(
       <div
         data-overlay-panel
         data-navigation-panel
-        mix={css({ width: '100vw', maxWidth: '28rem' })}
+        mix={css({ width: '100vw', maxWidth: '28rem', height: '100dvh' })}
       >
         <div
           class="navigation-menu"
@@ -291,7 +291,7 @@ export function NavigationDialog(handle: Handle<{ pathname: string }>) {
         background: 'transparent',
         color: 'var(--theme-fg)',
         border: 0,
-        overflowY: 'auto',
+        overflow: 'clip',
         '&:not([open])': { display: 'none' },
         '&::backdrop': {
           background: 'color-mix(in oklab,var(--theme-bg) 30%,transparent)',
