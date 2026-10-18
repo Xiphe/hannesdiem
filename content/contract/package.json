@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": { "types": "./index.d.ts" }
+    ".": {
+      "types": "./index.d.ts"
+    }
   },
   "peerDependencies": {
     "remix": "^3.0.0"

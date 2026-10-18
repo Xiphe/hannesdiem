@@ -9,7 +9,10 @@ export interface ImageProps {
   priority?: boolean
   title?: string
 }
-export interface PageProps { firstIsHero?: boolean; children?: RemixNode }
+export interface PageProps {
+  firstIsHero?: boolean
+  children?: RemixNode
+}
 export interface HeroProps {
   title?: string
   subtitle?: string
@@ -33,19 +36,45 @@ export interface ImageBandProps {
   breakPoint?: 'none' | 'sm' | 'md' | 'lg'
   images: { image: string; includeStacked?: boolean; title?: string }[]
 }
-export interface TwoColumnTextProps { headline?: string; children?: RemixNode }
-export interface ProseProps { textSize?: 'small' | 'medium' | 'large' | 'xl'; bigOnLg?: boolean; children?: RemixNode }
+export interface TwoColumnTextProps {
+  headline?: string
+  children?: RemixNode
+}
+export interface ProseProps {
+  textSize?: 'small' | 'medium' | 'large' | 'xl'
+  bigOnLg?: boolean
+  children?: RemixNode
+}
 export interface IconProps {
   icon: string
   iconLabel?: string
   iconVariant?: 'solid' | 'outline'
   iconSize?: string
 }
-export interface ButtonProps { label: string; href: string; blank?: boolean; icon?: string; iconLabel?: string }
-export interface IconListProps { list: { icon: string; iconLabel?: string; text: string }[] }
-export interface TimetableProps { list: { time: string; title?: RemixNode }[] }
-export interface Contributor { name: string; link?: string; description?: string; roles: string[] }
-export interface Author { name: string; link?: string; description?: string }
+export interface ButtonProps {
+  label: string
+  href: string
+  blank?: boolean
+  icon?: string
+  iconLabel?: string
+}
+export interface IconListProps {
+  list: { icon: string; iconLabel?: string; text: string }[]
+}
+export interface TimetableProps {
+  list: { time: string; title?: RemixNode }[]
+}
+export interface Contributor {
+  name: string
+  link?: string
+  description?: string
+  roles: string[]
+}
+export interface Author {
+  name: string
+  link?: string
+  description?: string
+}
 export interface ReleaseProps {
   title: string
   subtitle?: string

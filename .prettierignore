@@ -1,0 +1,19 @@
+# Generated output and local state
+node_modules/
+dist/
+.generated/
+.cmx/
+.wrangler/
+worker-configuration.d.ts
+test-results/
+playwright-report/
+.env*
+.dev.vars*
+
+# Upstream sources and media
+.agents/skills/
+app/assets/
+content/media/
+
+# npm owns lockfile formatting
+**/package-lock.json

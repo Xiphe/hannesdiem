@@ -6,6 +6,8 @@
     "node": ">=24.3.0"
   },
   "scripts": {
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "media:build": "node scripts/build-media.ts && node scripts/build-og.ts",
     "media:upload": "node scripts/upload-media.ts",
     "cmx:compile": "cmx-bundle compile \"content/pages/**/*.tsx\" .cmx/bundle --config cmx.config.ts",
@@ -16,7 +18,7 @@
     "dev": "npm run build && wrangler dev --ip 127.0.0.1 --port 8787",
     "typecheck": "wrangler types && tsc --noEmit && tsc --noEmit -p content/tsconfig.json",
     "test": "node --import remix/node-tsx --test tests/*.test.ts && playwright test",
-    "check": "npm run build && npm run typecheck && npm test && wrangler deploy --dry-run",
+    "check": "npm run format:check && npm run build && npm run typecheck && npm test && wrangler deploy --dry-run",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
@@ -33,6 +35,7 @@
     "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
     "esbuild": "0.28.2",
+    "prettier": "3.9.10",
     "sharp": "0.35.5",
     "typescript": "7.0.2",
     "wrangler": "4.151.1"

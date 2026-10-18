@@ -11,7 +11,7 @@ npm run dev
 npm run check
 ```
 
-`check`: media/CMX/app build, typechecks, server/browser tests, deployment dry run. `npm test` uses existing build artifacts. Local development needs no cloud credentials.
+`npm run format` applies Prettier to authored files, including CMX. `check` enforces formatting before the media/CMX/app build, typechecks, server/browser tests, and deployment dry run. `npm test` uses existing build artifacts. Local development needs no cloud credentials.
 
 ## Content
 
@@ -33,16 +33,16 @@ Local `MEDIA_BASE_URL` defaults to `/media`; production uses `https://media.hann
 
 Only pushes to `main` run checks, upload media, deploy, and smoke-test all 34 routes. Worker: `hannesdiem`; deployment URL appears in Actions. [Production environment](https://github.com/Xiphe/hannesdiem/settings/environments/24638962215/edit):
 
-| Kind | Name | Value |
-| --- | --- | --- |
-| Secret | `CLOUDFLARE_API_TOKEN` | Account token, specified Worker `hannesdiem`, Editor minimum. |
-| Secret | `CLOUDFLARE_ACCOUNT_ID` | Destination account ID. |
-| Variable | `R2_ACCOUNT_ID` | Account containing `hannesdiem-media` and the DNS zone. |
-| Secret | `R2_ACCESS_KEY_ID` | Object Read & Write, only `hannesdiem-media`. |
-| Secret | `R2_SECRET_ACCESS_KEY` | Matching S3 secret. |
-| Secret | `NEWSLETTER_SESSION_SECRET` | Stable random ≥32 bytes; e.g. `openssl rand -base64 32`. |
-| Secret | `RESEND_HANNESDIEM_DE_API_KEY` | Existing Resend key with sending and contact access. |
-| Variable | `RESEND_HANNESDIEM_DE_SEGMENT_ID` | Existing site's segment ID. |
+| Kind     | Name                              | Value                                                         |
+| -------- | --------------------------------- | ------------------------------------------------------------- |
+| Secret   | `CLOUDFLARE_API_TOKEN`            | Account token, specified Worker `hannesdiem`, Editor minimum. |
+| Secret   | `CLOUDFLARE_ACCOUNT_ID`           | Destination account ID.                                       |
+| Variable | `R2_ACCOUNT_ID`                   | Account containing `hannesdiem-media` and the DNS zone.       |
+| Secret   | `R2_ACCESS_KEY_ID`                | Object Read & Write, only `hannesdiem-media`.                 |
+| Secret   | `R2_SECRET_ACCESS_KEY`            | Matching S3 secret.                                           |
+| Secret   | `NEWSLETTER_SESSION_SECRET`       | Stable random ≥32 bytes; e.g. `openssl rand -base64 32`.      |
+| Secret   | `RESEND_HANNESDIEM_DE_API_KEY`    | Existing Resend key with sending and contact access.          |
+| Variable | `RESEND_HANNESDIEM_DE_SEGMENT_ID` | Existing site's segment ID.                                   |
 
 R2 custom domain: `media.hannesdiem.de`; `r2.dev` disabled. No Worker media proxy or plain-image CORS setup. Worker deploy declares its SQLite Durable Object; no account-wide permission needed. Actions deploys newsletter secrets/variable when all three are present; otherwise content deploys with signup unavailable. Details: [newsletter](docs/newsletter.md).
 

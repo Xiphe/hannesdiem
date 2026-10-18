@@ -7,20 +7,35 @@ import { getMedia } from './media.ts'
 import { beachTheme, defaultTheme, paletteToTheme, type Theme } from './theme.ts'
 
 export interface ContentRoute {
-  path: string; document: string; title: string; kind: string
-  description?: string; image?: string; theme?: string; releaseDate?: string; noindex?: boolean
-  ogTitle?: string; ogType?: string; updatedAt?: string; nofollow?: boolean
-  musicians?: string[]; songs?: string[]; authors?: {name:string;link?:string;ogProfile?:string}[]
+  path: string
+  document: string
+  title: string
+  kind: string
+  description?: string
+  image?: string
+  theme?: string
+  releaseDate?: string
+  noindex?: boolean
+  ogTitle?: string
+  ogType?: string
+  updatedAt?: string
+  nofollow?: boolean
+  musicians?: string[]
+  songs?: string[]
+  authors?: { name: string; link?: string; ogProfile?: string }[]
   profile?: { firstName: string; lastName: string }
   sourceId?: string
 }
 export const contentRoutes: ContentRoute[] = routeData
-const pages = new Map(contentRoutes.map(route => [route.path, route]))
+const pages = new Map(contentRoutes.map((route) => [route.path, route]))
 export interface ContentPage {
-  document: CmxDocument; status: 200 | 404; key: string; route?: ContentRoute
+  document: CmxDocument
+  status: 200 | 404
+  key: string
+  route?: ContentRoute
 }
 export type ContentLoader = (request: Request) => Promise<ContentPage>
-export const loadContent: ContentLoader = async request => {
+export const loadContent: ContentLoader = async (request) => {
   const route = pages.get(new URL(request.url).pathname)
   const key = route?.document ?? '404'
   const document = documents[key as keyof typeof documents]

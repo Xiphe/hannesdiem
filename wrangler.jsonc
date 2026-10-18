@@ -5,12 +5,14 @@
   "compatibility_date": "2026-10-18",
   "workers_dev": true,
   "exports": { "NewsletterState": { "type": "durable-object", "storage": "sqlite" } },
-  "durable_objects": { "bindings": [{ "name": "NEWSLETTER_STATE", "class_name": "NewsletterState" }] },
+  "durable_objects": {
+    "bindings": [{ "name": "NEWSLETTER_STATE", "class_name": "NewsletterState" }],
+  },
   "preview_urls": false,
   "assets": { "directory": "dist" },
   "cache": { "enabled": true },
   "observability": {
     "enabled": true,
-    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
-  }
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 },
+  },
 }

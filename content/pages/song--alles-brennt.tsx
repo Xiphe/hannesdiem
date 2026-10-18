@@ -1,11 +1,143 @@
 import { Song } from '@hannesdiem/content-components'
 
-export const title = "Alles Brennt"
+export const title = 'Alles Brennt'
 
 export default function Content() {
   return (
     <>
-      <Song title={"Alles Brennt"} creationDate={"2008-01-08T12:00:00+00:00"} hideCreationDay={true} authors={[{"name":"Hannes Diem","link":"https://hannesdiem.de"}]}><p>{"Ich war dir immer ein Freund"}<br />{"Auch in dunkler Zeit"}<br />{"Wir haben zusammen geträumt"}<br />{"Doch nun geht's zu Weit"}</p><p>{"Ich war dein Stecken, dein Stab"}<br />{"Unser Mondeslicht"}<br />{"Doch in mir wächst eine Saat"}<br />{"Die nun aus mir bricht"}</p><p>{"Ich kann hier nicht mehr warten"}<br />{"Denn mich verfolgt das Grauen"}<br />{"Ich hab mich selbst verraten"}<br />{"An einen bösen Traum"}</p><p>{"Und Tag für Tag"}<br />{"Wird sie schwerer, meine Last"}<br />{"Die Worte, die ich heute schreib'"}<br />{"Sind ganz in Glut gefasst"}</p><p><strong>{"Alles brennt"}</strong><br />{"Alles steht in Flammen"}<br />{"Alles brennt"}<br />{"Und ich will nicht weg von hier"}<br />{"Bis alles brennt"}<br />{"In der Welt aus der wir stammen"}<br />{"Ist nichts, wie man es kennt"}<br />{"Seitdem ich dich verlier'"}<br />{"Und alles brennt"}</p><p>{"Ich hab stehts zu dir aufgesehen"}<br />{"Und hab mich angepasst"}<br />{"Doch nie ist etwas geschehen"}<br />{"Ich hab die Nacht gehasst"}<br />{"Hab dich und deine Moral"}<br />{"In mir eingefangen"}<br />{"Doch dadurch wuchs meine Qual"}<br />{"Und mein Rachegang"}</p><p>{"Ich hab mich selbst verraten"}<br />{"Zu viel ist schon geschehen"}<br />{"Ich kann nicht mehr warten"}<br />{"Ich hab den Tod gesehen"}</p><p>{"Und Tag für Tag"}<br />{"Wird sie schwerer, meine Last"}<br />{"Die Worte, die ich heute schreib'"}<br />{"Sind ganz in Rauch und Glut gefasst"}</p><p>{"Denn wo kein Regen mehr fällt"}<br />{"Wach' ich auf in einer Welt"}<br />{"Die gezeichnet durch mich"}<br />{"Jede Schönheit zersticht"}<br />{"Wo jede Blume verwelkt"}<br />{"Das Feuer jeden Baum gefällt"}<br />{"Dort leb' ich einsam verbannt"}<br />{"Verbrannt durch meine eigene Hand"}</p><p><strong>{"Alles brennt"}</strong><br />{"Alles steht in Flammen"}<br />{"Alles brennt"}<br />{"Doch ich will nicht weg von hier"}<br />{"Bis alles brennt"}<br />{"In der Welt aus der wir stammen"}<br />{"Ist nichts, wie man es kennt"}<br />{"Seitdem ich dich verlier'"}<br />{"Und alles brennt"}</p></Song>
+      <Song
+        title={'Alles Brennt'}
+        creationDate={'2008-01-08T12:00:00+00:00'}
+        hideCreationDay={true}
+        authors={[{ name: 'Hannes Diem', link: 'https://hannesdiem.de' }]}
+      >
+        <p>
+          {'Ich war dir immer ein Freund'}
+          <br />
+          {'Auch in dunkler Zeit'}
+          <br />
+          {'Wir haben zusammen geträumt'}
+          <br />
+          {"Doch nun geht's zu Weit"}
+        </p>
+        <p>
+          {'Ich war dein Stecken, dein Stab'}
+          <br />
+          {'Unser Mondeslicht'}
+          <br />
+          {'Doch in mir wächst eine Saat'}
+          <br />
+          {'Die nun aus mir bricht'}
+        </p>
+        <p>
+          {'Ich kann hier nicht mehr warten'}
+          <br />
+          {'Denn mich verfolgt das Grauen'}
+          <br />
+          {'Ich hab mich selbst verraten'}
+          <br />
+          {'An einen bösen Traum'}
+        </p>
+        <p>
+          {'Und Tag für Tag'}
+          <br />
+          {'Wird sie schwerer, meine Last'}
+          <br />
+          {"Die Worte, die ich heute schreib'"}
+          <br />
+          {'Sind ganz in Glut gefasst'}
+        </p>
+        <p>
+          <strong>{'Alles brennt'}</strong>
+          <br />
+          {'Alles steht in Flammen'}
+          <br />
+          {'Alles brennt'}
+          <br />
+          {'Und ich will nicht weg von hier'}
+          <br />
+          {'Bis alles brennt'}
+          <br />
+          {'In der Welt aus der wir stammen'}
+          <br />
+          {'Ist nichts, wie man es kennt'}
+          <br />
+          {"Seitdem ich dich verlier'"}
+          <br />
+          {'Und alles brennt'}
+        </p>
+        <p>
+          {'Ich hab stehts zu dir aufgesehen'}
+          <br />
+          {'Und hab mich angepasst'}
+          <br />
+          {'Doch nie ist etwas geschehen'}
+          <br />
+          {'Ich hab die Nacht gehasst'}
+          <br />
+          {'Hab dich und deine Moral'}
+          <br />
+          {'In mir eingefangen'}
+          <br />
+          {'Doch dadurch wuchs meine Qual'}
+          <br />
+          {'Und mein Rachegang'}
+        </p>
+        <p>
+          {'Ich hab mich selbst verraten'}
+          <br />
+          {'Zu viel ist schon geschehen'}
+          <br />
+          {'Ich kann nicht mehr warten'}
+          <br />
+          {'Ich hab den Tod gesehen'}
+        </p>
+        <p>
+          {'Und Tag für Tag'}
+          <br />
+          {'Wird sie schwerer, meine Last'}
+          <br />
+          {"Die Worte, die ich heute schreib'"}
+          <br />
+          {'Sind ganz in Rauch und Glut gefasst'}
+        </p>
+        <p>
+          {'Denn wo kein Regen mehr fällt'}
+          <br />
+          {"Wach' ich auf in einer Welt"}
+          <br />
+          {'Die gezeichnet durch mich'}
+          <br />
+          {'Jede Schönheit zersticht'}
+          <br />
+          {'Wo jede Blume verwelkt'}
+          <br />
+          {'Das Feuer jeden Baum gefällt'}
+          <br />
+          {"Dort leb' ich einsam verbannt"}
+          <br />
+          {'Verbrannt durch meine eigene Hand'}
+        </p>
+        <p>
+          <strong>{'Alles brennt'}</strong>
+          <br />
+          {'Alles steht in Flammen'}
+          <br />
+          {'Alles brennt'}
+          <br />
+          {'Doch ich will nicht weg von hier'}
+          <br />
+          {'Bis alles brennt'}
+          <br />
+          {'In der Welt aus der wir stammen'}
+          <br />
+          {'Ist nichts, wie man es kennt'}
+          <br />
+          {"Seitdem ich dich verlier'"}
+          <br />
+          {'Und alles brennt'}
+        </p>
+      </Song>
     </>
   )
 }

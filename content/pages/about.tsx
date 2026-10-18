@@ -1,4 +1,4 @@
-export const title = "About"
+export const title = 'About'
 
 export default function Content() {
   return (

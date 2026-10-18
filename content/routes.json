@@ -78,9 +78,7 @@
     "ogTitle": "Halbkreis",
     "updatedAt": "2025-02-28T11:05:34.098+00:00",
     "sourceId": "1ebc587e-31a3-489a-aac4-e48c8927d18e",
-    "musicians": [
-      "https://hannesdiem.de/about"
-    ],
+    "musicians": ["https://hannesdiem.de/about"],
     "songs": [
       "https://hannesdiem.de/song/alles-brennt",
       "https://hannesdiem.de/song/bruder",
@@ -101,12 +99,8 @@
     "ogTitle": "Resolve Yourself",
     "updatedAt": "2025-02-28T11:06:23.148+00:00",
     "sourceId": "3da233d2-7aab-4bec-a21b-fa5aa3c17c5f",
-    "musicians": [
-      "https://hannesdiem.de/about"
-    ],
-    "songs": [
-      "https://hannesdiem.de/song/resolve-yourself"
-    ]
+    "musicians": ["https://hannesdiem.de/about"],
+    "songs": ["https://hannesdiem.de/song/resolve-yourself"]
   },
   {
     "path": "/hoffnung",
@@ -120,9 +114,7 @@
     "ogTitle": "Hoffnung • Hannes Diem",
     "updatedAt": "2025-03-02T11:15:17.019+00:00",
     "sourceId": "5e8f78ac-8784-413a-846d-b86094374756",
-    "musicians": [
-      "https://hannesdiem.de/about"
-    ],
+    "musicians": ["https://hannesdiem.de/about"],
     "songs": [
       "https://hannesdiem.de/song/gedankengaenge",
       "https://hannesdiem.de/song/irgendwann",
@@ -150,12 +142,8 @@
     "ogTitle": "Y U NO RUN?",
     "updatedAt": "2025-02-27T17:27:28.556+00:00",
     "sourceId": "6fe027b1-cb3a-4e82-9c16-f5fecb9a5385",
-    "musicians": [
-      "https://hannesdiem.de/about"
-    ],
-    "songs": [
-      "https://hannesdiem.de/song/yunorun"
-    ]
+    "musicians": ["https://hannesdiem.de/about"],
+    "songs": ["https://hannesdiem.de/song/yunorun"]
   },
   {
     "path": "/unbeschrieben",
@@ -169,9 +157,7 @@
     "ogTitle": "unbeschrieben",
     "updatedAt": "2025-03-04T22:25:18.244+00:00",
     "sourceId": "b3275533-cf41-4e04-8339-d67de7e96dda",
-    "musicians": [
-      "https://hannesdiem.de/about"
-    ],
+    "musicians": ["https://hannesdiem.de/about"],
     "songs": [
       "https://hannesdiem.de/song/zeig-mir-die-welt",
       "https://hannesdiem.de/song/absinth",

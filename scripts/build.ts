@@ -6,10 +6,24 @@ import { gzipSync } from 'node:zlib'
 await rm('dist', { recursive: true, force: true })
 await mkdir('.generated', { recursive: true })
 const routes = JSON.parse(await readFile('content/routes.json', 'utf8')) as { document: string }[]
-const documents = [...new Set([...routes.map(route => route.document), '404'])]
-await writeFile('.generated/content.ts', documents.map((name, i) => `import doc${i} from '../.cmx/documents/${name}.json' with { type: 'json' }`).join('\n') + '\nexport const documents = {\n' + documents.map((name, i) => `${JSON.stringify(name)}: doc${i}`).join(',\n') + '\n}\n')
+const documents = [...new Set([...routes.map((route) => route.document), '404'])]
+await writeFile(
+  '.generated/content.ts',
+  documents
+    .map((name, i) => `import doc${i} from '../.cmx/documents/${name}.json' with { type: 'json' }`)
+    .join('\n') +
+    '\nexport const documents = {\n' +
+    documents.map((name, i) => `${JSON.stringify(name)}: doc${i}`).join(',\n') +
+    '\n}\n',
+)
 const result = await build({
-  entryPoints: { entry: 'app/browser.ts', chrome: 'app/chrome.tsx', date: 'app/date.tsx', newsletter: 'app/newsletter-form.tsx', style: 'app/style.css' },
+  entryPoints: {
+    entry: 'app/browser.ts',
+    chrome: 'app/chrome.tsx',
+    date: 'app/date.tsx',
+    newsletter: 'app/newsletter-form.tsx',
+    style: 'app/style.css',
+  },
   outdir: 'dist/assets',
   entryNames: '[name]-[hash]',
   chunkNames: 'shared-[hash]',
@@ -25,21 +39,42 @@ const result = await build({
   external: ['/font/*'],
 })
 
-const serverModules = ['app/page.tsx', 'app/content.ts', 'app/content-components.tsx', 'app/cmx-components.ts', 'app/media.ts', 'app/theme.ts', 'app/navigation.tsx', 'app/newsletter.ts', 'app/newsletter-view.tsx', 'app/router.tsx', 'app/worker.ts']
+const serverModules = [
+  'app/page.tsx',
+  'app/content.ts',
+  'app/content-components.tsx',
+  'app/cmx-components.ts',
+  'app/media.ts',
+  'app/theme.ts',
+  'app/navigation.tsx',
+  'app/newsletter.ts',
+  'app/newsletter-view.tsx',
+  'app/router.tsx',
+  'app/worker.ts',
+]
 for (const path of serverModules) {
-  if (path in result.metafile.inputs) throw new Error(`Server-only module in browser bundle: ${path}`)
+  if (path in result.metafile.inputs)
+    throw new Error(`Server-only module in browser bundle: ${path}`)
 }
 for (const path of Object.keys(result.metafile.inputs)) {
   if (/^(?:content|\.cmx)\//.test(path) || path.includes('node_modules/@cmx-tools/')) {
     throw new Error(`CMX content or runtime in browser bundle: ${path}`)
   }
 }
-const entries = Object.fromEntries(Object.entries(result.metafile.outputs)
-  .filter(([, output]) => output.entryPoint)
-  .map(([path, output]) => [
-    ({ 'app/browser.ts': 'entry', 'app/chrome.tsx': 'chrome', 'app/date.tsx': 'date', 'app/newsletter-form.tsx': 'newsletter', 'app/style.css': 'style' })[output.entryPoint!],
-    '/' + path.replace(/^dist\//, ''),
-  ]))
+const entries = Object.fromEntries(
+  Object.entries(result.metafile.outputs)
+    .filter(([, output]) => output.entryPoint)
+    .map(([path, output]) => [
+      {
+        'app/browser.ts': 'entry',
+        'app/chrome.tsx': 'chrome',
+        'app/date.tsx': 'date',
+        'app/newsletter-form.tsx': 'newsletter',
+        'app/style.css': 'style',
+      }[output.entryPoint!],
+      '/' + path.replace(/^dist\//, ''),
+    ]),
+)
 const mark = await readFile('app/assets/mark.svg')
 entries.mark = `/assets/mark-${createHash('sha256').update(mark).digest('hex').slice(0, 16)}.svg`
 await writeFile(`dist${entries.mark}`, mark)
@@ -56,7 +91,11 @@ if (firstImage.src.startsWith('/')) {
   mediaHeaders = `${prefix}*\n  Cache-Control: public, max-age=31536000, immutable\n`
 }
 await writeFile('.generated/assets.json', JSON.stringify(entries, null, 2) + '\n')
-await writeFile('dist/_headers', '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/font/*\n  Cache-Control: public, max-age=31536000, immutable\n' + mediaHeaders)
+await writeFile(
+  'dist/_headers',
+  '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/font/*\n  Cache-Control: public, max-age=31536000, immutable\n' +
+    mediaHeaders,
+)
 await writeFile('.generated/browser-meta.json', JSON.stringify(result.metafile, null, 2) + '\n')
 
 let bytes = 0
