@@ -526,7 +526,6 @@ for (const colorScheme of ['light', 'dark'] as const) {
       dialog.getByRole('button', { name: 'Close navigation' }),
       dialog.locator('summary').filter({ hasText: 'Work' }),
       dialog.locator('details').first().getByRole('link').first(),
-      dialog.getByRole('textbox', { name: 'Email address' }),
       dialog.getByRole('button', { name: 'Signup' }),
       dialog.getByRole('link', { name: 'Twitch', exact: true }),
       dialog.getByRole('link', { name: 'Spotify', exact: true }),
@@ -546,6 +545,21 @@ for (const colorScheme of ['light', 'dark'] as const) {
         )
         .toEqual({ visible: true, width: '4px', offset: '4px', color: themeColor })
     }
+    const email = dialog.getByRole('textbox', { name: 'Email address' })
+    await email.focus()
+    await expect
+      .poll(() =>
+        email.evaluate((el) => ({
+          visible: el.matches(':focus-visible'),
+          outline: getComputedStyle(el).outlineStyle,
+          shadow: getComputedStyle(el).boxShadow,
+        })),
+      )
+      .toEqual({
+        visible: true,
+        outline: 'none',
+        shadow: `${themeColor} 0px 0px 0px 1px inset`,
+      })
     expect(
       await dialog
         .locator('details[open]')
