@@ -10,7 +10,7 @@
   button,input,textarea,select { font:inherit; color:inherit; background:transparent; }
   button { cursor:pointer; } img,svg,video { display:block; vertical-align:middle; } img,video { max-width:100%; height:auto; }
   ul,ol { list-style:none; padding:0; } summary { display:list-item; cursor:pointer; }
-  button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible { outline:2px solid var(--theme-primary); outline-offset:2px; }
+  :is(button,a,summary,input,textarea,select):focus-visible { outline:4px solid var(--theme-fg); outline-offset:4px; z-index:10; }
   @font-face { font-family:Fuggles; font-style:normal; font-weight:400; font-display:swap; src:url('/font/fuggles-v12-latin-regular.woff2') format('woff2'); }
   [hidden] { display:none!important; }
   @media (prefers-reduced-motion:reduce) { *,::before,::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
@@ -81,12 +81,18 @@
   .navigation-menu details[open]::details-content {
     height:auto;
     content-visibility:visible;
+    animation:navigation-reveal-focus 500ms step-end forwards;
   }
   .navigation-menu details .nav-items > li {
     transform:translateX(-1rem);
     transition:transform 500ms ease-in-out;
   }
   .navigation-menu details[open] .nav-items > li { transform:translateX(0); }
+}
+
+@keyframes navigation-reveal-focus {
+  from { overflow:clip; }
+  to { overflow:visible; }
 }
 
 @media (prefers-reduced-motion:reduce) {

@@ -275,11 +275,11 @@ test('sidebar slides and sections animate open and closed',async({page})=>{
   const work=dialog.locator('details').filter({hasText:'Halbkreis'})
   const expanded=(await work.boundingBox())!.height
   await work.locator('summary').click()
-  expect(await work.evaluate(el=>el.getAnimations({subtree:true}).some(animation=>animation.effect?.getTiming().duration===500))).toBe(true)
+  await expect.poll(async()=>{const height=(await work.boundingBox())!.height;return height>50&&height<expanded-1}).toBe(true)
   await expect.poll(async()=>(await work.boundingBox())!.height).toBeLessThan(expanded)
   await expect(dialog.getByRole('link',{name:'Halbkreis',exact:true})).not.toBeVisible()
   await work.locator('summary').click()
-  expect(await work.evaluate(el=>el.getAnimations({subtree:true}).some(animation=>animation.effect?.getTiming().duration===500))).toBe(true)
+  await expect.poll(async()=>{const height=(await work.boundingBox())!.height;return height>50&&height<expanded-1}).toBe(true)
   await expect(dialog.getByRole('link',{name:'Halbkreis',exact:true})).toBeVisible()
   await dialog.getByRole('link',{name:'Close navigation'}).click()
   await expect(dialog).not.toBeVisible()
@@ -302,3 +302,31 @@ test('sidebar respects reduced motion and keyboard disclosure controls',async({p
   await page.keyboard.press('Escape')
   await expect(dialog).not.toBeVisible()
 })
+
+for(const colorScheme of ['light','dark'] as const){
+  test(`sidebar keyboard focus uses the original visible outline in ${colorScheme} mode`,async({page})=>{
+    await page.route('**/nav?from=*',async route=>route.fulfill({contentType:'text/html',body:await renderToString(jsx(Navigation,{pathname:'/halbkreis',state:{ready:true,csrfToken:'test-csrf'}}))}))
+    await page.emulateMedia({colorScheme,reducedMotion:'reduce'})
+    await page.goto('/halbkreis',{waitUntil:'networkidle'})
+    await page.getByRole('link',{name:'Open menu',exact:true}).click()
+    const dialog=page.getByRole('dialog')
+    const themeColor=await page.locator('body').evaluate(el=>getComputedStyle(el).color)
+    await page.keyboard.press('Tab')
+    for(const control of [
+      dialog.getByRole('link',{name:'Close navigation'}),
+      dialog.locator('summary').filter({hasText:'Work'}),
+      dialog.getByRole('link',{name:'Hoffnung',exact:true}),
+      dialog.getByRole('textbox',{name:'Email address'}),
+      dialog.getByRole('button',{name:'Signup'}),
+      dialog.getByRole('link',{name:'Twitch',exact:true}),
+      dialog.getByRole('link',{name:'Spotify',exact:true}),
+    ]){
+      await control.focus()
+      await expect.poll(()=>control.evaluate(el=>{
+        const style=getComputedStyle(el)
+        return{visible:el.matches(':focus-visible'),width:style.outlineWidth,offset:style.outlineOffset,color:style.outlineColor}
+      })).toEqual({visible:true,width:'4px',offset:'4px',color:themeColor})
+    }
+    expect(await dialog.locator('details[open]').evaluate(el=>getComputedStyle(el,'::details-content').overflow)).toBe('visible')
+  })
+}

@@ -33,7 +33,7 @@ export function Brand(handle:Handle<{footer?:boolean}>) {
 }
 export function SocialLinks(handle:Handle<{listen?:boolean;footer?:boolean}>) {
   return () => <ul aria-label={handle.props.listen?'Find my music':'Connect on social media'} mix={css({display:'flex',flexWrap:'wrap',gap:handle.props.footer?'.75rem':'0 1rem',justifyContent:handle.props.footer?'start':'center',padding:0,listStyle:'none'})}>
-    {(handle.props.listen?listenLinks:socialLinks).map(link=><li><a href={link.href} aria-label={link.title} title={link.title} target="_blank" rel="noopener noreferrer" mix={css({display:'inline-flex',padding:'.25rem',color:'color-mix(in oklab,var(--theme-fg) 40%,transparent)','&:hover':{color:'var(--theme-fg)'}})}>
+    {(handle.props.listen?listenLinks:socialLinks).map(link=><li><a href={link.href} aria-label={link.title} title={link.title} target="_blank" rel="noopener noreferrer" mix={css({display:'inline-flex',padding:'.25rem',borderRadius:4,color:'color-mix(in oklab,var(--theme-fg) 40%,transparent)','&:hover':{color:'var(--theme-fg)'}})}>
       <ServiceLogo name={link.name} style={{width:handle.props.listen?(handle.props.footer?'5.5rem':'6.5rem'):(handle.props.footer?'1.25rem':'1.5rem'),height:handle.props.listen?(handle.props.footer?'1.75rem':'2rem'):(handle.props.footer?'1.25rem':'1.5rem')}}/>
     </a></li>)}
   </ul>
