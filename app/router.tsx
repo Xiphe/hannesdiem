@@ -55,7 +55,7 @@ export function createApp(content:ContentLoader=loadContent,env:NewsletterEnviro
   router.get(routes.content,async({request,render})=>{
     const path=new URL(request.url).pathname
     const destination=legacyRedirects.get(path)
-    if(destination)return redirect(destination.to,destination.status)
+    if(destination)return redirect(destination.to+(path==='/'?new URL(request.url).search:''),destination.status)
     if(path.endsWith('/')&&path!=='/')return redirect(path.slice(0,-1)+new URL(request.url).search,308)
     const page=await content(request)
     return render(<Page {...renderContent(page.document)} route={page.route} path={path} noindex={page.status===404}/>,{status:page.status,headers:page.status===404?privateHeaders:{

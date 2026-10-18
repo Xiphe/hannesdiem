@@ -9,7 +9,7 @@ const routes = JSON.parse(await readFile('content/routes.json', 'utf8')) as { do
 const documents = [...new Set([...routes.map(route => route.document), '404'])]
 await writeFile('.generated/content.ts', documents.map((name, i) => `import doc${i} from '../.cmx/documents/${name}.json' with { type: 'json' }`).join('\n') + '\nexport const documents = {\n' + documents.map((name, i) => `${JSON.stringify(name)}: doc${i}`).join(',\n') + '\n}\n')
 const result = await build({
-  entryPoints: { entry: 'app/browser.ts', chrome: 'app/chrome.tsx', date: 'app/date.tsx', style: 'app/style.css' },
+  entryPoints: { entry: 'app/browser.ts', chrome: 'app/chrome.tsx', date: 'app/date.tsx', newsletter: 'app/newsletter-form.tsx', style: 'app/style.css' },
   outdir: 'dist/assets',
   entryNames: '[name]-[hash]',
   chunkNames: 'shared-[hash]',
@@ -37,7 +37,7 @@ for (const path of Object.keys(result.metafile.inputs)) {
 const entries = Object.fromEntries(Object.entries(result.metafile.outputs)
   .filter(([, output]) => output.entryPoint)
   .map(([path, output]) => [
-    ({ 'app/browser.ts': 'entry', 'app/chrome.tsx': 'chrome', 'app/date.tsx': 'date', 'app/style.css': 'style' })[output.entryPoint!],
+    ({ 'app/browser.ts': 'entry', 'app/chrome.tsx': 'chrome', 'app/date.tsx': 'date', 'app/newsletter-form.tsx': 'newsletter', 'app/style.css': 'style' })[output.entryPoint!],
     '/' + path.replace(/^dist\//, ''),
   ]))
 const mark = await readFile('app/assets/mark.svg')

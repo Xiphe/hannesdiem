@@ -31,7 +31,7 @@ export function Brand(handle:Handle<{footer?:boolean}>) {
   </a>
 }
 export function SocialLinks(handle:Handle<{listen?:boolean;footer?:boolean}>) {
-  return () => <ul aria-label={handle.props.listen?'Find my music':'Connect on social media'} mix={css({display:'flex',flexWrap:'wrap',gap:handle.props.footer?'.75rem':'1rem',justifyContent:handle.props.footer?'start':'center',padding:0,listStyle:'none'})}>
+  return () => <ul aria-label={handle.props.listen?'Find my music':'Connect on social media'} mix={css({display:'flex',flexWrap:'wrap',gap:handle.props.footer?'.75rem':'0 1rem',justifyContent:handle.props.footer?'start':'center',padding:0,listStyle:'none'})}>
     {(handle.props.listen?listenLinks:socialLinks).map(link=><li><a href={link.href} aria-label={link.title} title={link.title} target="_blank" rel="noopener noreferrer" mix={css({display:'inline-flex',padding:'.25rem',color:'color-mix(in oklab,var(--theme-fg) 40%,transparent)','&:hover':{color:'var(--theme-fg)'}})}>
       <ServiceLogo name={link.name} style={{width:handle.props.listen?(handle.props.footer?'5.5rem':'6.5rem'):(handle.props.footer?'1.25rem':'1.5rem'),height:handle.props.listen?(handle.props.footer?'1.75rem':'2rem'):(handle.props.footer?'1.25rem':'1.5rem')}}/>
     </a></li>)}
@@ -45,7 +45,7 @@ export function Navigation(handle:Handle<{pathname:string;state:NewsletterState}
       <div mix={css({display:'flex',alignItems:'center',justifyContent:'space-between'})}><Brand/><a href="/" aria-label="Close navigation" data-close-overlay mix={css({fontSize:'1.75rem',lineHeight:1,padding:'.25rem',opacity:.4})}>×</a></div>
       <nav aria-label="Main Navigation" mix={css({display:'flex',flex:1,flexDirection:'column',marginTop:'1.5rem'})}>
         {sections.map(section=><details open={section.items.some(item=>handle.props.pathname.startsWith(item.href))}><summary>{section.name}</summary><ul mix={css({paddingBlock:'.5rem'})}>{section.items.map(item=><li><a class="nav-item" href={item.href} data-rmx-history="replace" aria-current={handle.props.pathname===item.href?'page':undefined}>{item.name}</a></li>)}</ul></details>)}
-        <div mix={css({flexGrow:1,minHeight:'5rem'})}/><NewsletterArea state={handle.props.state}/><SocialLinks/><div mix={css({marginTop:'.5rem',marginBottom:'1rem'})}><SocialLinks listen/></div>
+        <div mix={css({flexGrow:1,minHeight:'5rem'})}/><NewsletterArea state={handle.props.state}/><div mix={css({marginBottom:'.5rem'})}><SocialLinks/></div><div mix={css({marginBottom:'1rem'})}><SocialLinks listen/></div>
       </nav>
     </div>
   </div></div>

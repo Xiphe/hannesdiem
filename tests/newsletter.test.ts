@@ -208,3 +208,104 @@ test('missing configuration leaves content routes alone and disables signup with
   assert.match(await response!.text(), /disabled/)
   assert.equal((await getNewsletterState(new Request('https://example.com/nav'), {})).ready, false)
 })
+
+test('inline signup returns success and cooldown results without navigation or flash messages', async () => {
+  const h = harness()
+  const stateResponse = await h.handle('/login', { headers: { Accept: 'application/json' } })
+  const state = await stateResponse.json() as { ready: boolean; csrfToken: string }
+  const cookie = cookieFrom(stateResponse.headers)!
+  assert.equal(state.ready, true)
+  assert.ok(state.csrfToken)
+  const sent = await h.submit('test@example.org', state.csrfToken, cookie, { Accept: 'application/json' })
+  assert.equal(sent.status, 200)
+  assert.equal(sent.headers.get('Location'), null)
+  assert.deepEqual(await sent.json(), {
+    type: 'success', message: 'Link sent! Please check your email.', csrfToken: state.csrfToken,
+  })
+  assert.equal(h.calls.length, 1)
+  const page = await h.handle('/login', { headers: { Cookie: cookie } })
+  assert.doesNotMatch(await page.text(), /Link sent! Please check your email\./)
+
+  const cooldown = await h.submit('TEST@example.org', state.csrfToken, cookie, { Accept: 'application/json' })
+  assert.equal(cooldown.status, 429)
+  assert.equal(cooldown.headers.get('Retry-After'), '120')
+  assert.deepEqual(await cooldown.json(), {
+    type: 'spam_protection', message: 'Please wait 120s before requesting another login token',
+    remainingSeconds: 120, csrfToken: state.csrfToken,
+  })
+  assert.equal(h.calls.length, 1)
+})
+
+test('inline validation, CSRF, and delivery failures preserve a retryable form without sending twice', async () => {
+  const h = harness()
+  const state = await h.state()
+  const json = { Accept: 'application/json' }
+  const invalid = await h.submit('invalid', state.csrfToken!, state.cookie, json)
+  assert.equal(invalid.status, 400)
+  assert.deepEqual(await invalid.json(), {
+    type: 'error', message: 'Please enter your email address.', csrfToken: state.csrfToken,
+  })
+  assert.equal((await h.submit('test@example.org', 'wrong', state.cookie, json)).status, 403)
+  assert.equal((await h.submit('test@example.org', state.csrfToken!, state.cookie, {
+    ...json, Origin: 'https://elsewhere.example',
+  })).status, 403)
+  assert.equal(h.calls.length, 0)
+
+  h.setFailDelivery(true)
+  const failed = await h.submit('test@example.org', state.csrfToken!, state.cookie, json)
+  assert.equal(failed.status, 503)
+  assert.deepEqual(await failed.json(), {
+    type: 'error', message: 'Something went wrong. Please try again.', csrfToken: state.csrfToken,
+  })
+  assert.equal([...h.storage.entries.keys()].filter(key => !key.startsWith('session:')).length, 0)
+  h.setFailDelivery(false)
+  const retry = await h.submit('test@example.org', state.csrfToken!, state.cookie, json)
+  assert.equal(retry.status, 200)
+  assert.equal((await retry.json() as { type: string }).type, 'success')
+})
+
+test('inline logout revokes authentication and bootstrap creates a fresh anonymous CSRF session', async () => {
+  const h = harness()
+  const initial = await h.state()
+  await h.submit('test@example.org', initial.csrfToken!, initial.cookie, { Accept: 'application/json' })
+  const accepted = await h.handle(h.confirmation(), { headers: { Cookie: initial.cookie } })
+  const cookie = cookieFrom(accepted.headers)!
+  const authenticatedResponse = await h.handle('/login', {
+    headers: { Cookie: cookie, Accept: 'application/json' },
+  })
+  assert.equal(authenticatedResponse.status, 200)
+  assert.equal(authenticatedResponse.headers.get('Location'), null)
+  const authenticated = await authenticatedResponse.json() as { email: string; csrfToken: string }
+  assert.equal(authenticated.email, 'test@example.org')
+
+  const logout = await h.handle('/logout', {
+    method: 'POST', headers: { Cookie: cookie, Origin: 'https://example.com', Accept: 'application/json' },
+    body: new URLSearchParams({ _csrf: authenticated.csrfToken }),
+  })
+  assert.equal(logout.status, 200)
+  assert.equal(logout.headers.get('Location'), null)
+  assert.deepEqual(await logout.json(), { type: 'success', message: 'Logged out successfully' })
+  assert.equal(cookieFrom(logout.headers), 'hdm_user_session=')
+  const bootstrap = await h.handle('/login', { headers: { Accept: 'application/json' } })
+  const anonymous = await bootstrap.json() as { ready: boolean; email?: string; csrfToken: string }
+  const anonymousCookie = cookieFrom(bootstrap.headers)!
+  assert.equal(anonymous.ready, true)
+  assert.equal(anonymous.email, undefined)
+  assert.ok(anonymous.csrfToken)
+  assert.notEqual(anonymous.csrfToken, authenticated.csrfToken)
+  assert.notEqual(anonymousCookie, cookie)
+  const rejectedReplay = await h.submit('new@example.org', authenticated.csrfToken, anonymousCookie, { Accept: 'application/json' })
+  assert.equal(rejectedReplay.status, 403)
+  assert.equal((await h.state(cookie)).email, undefined)
+})
+
+test('inline signup is unavailable as JSON when configuration is missing', async () => {
+  const response = await handleNewsletter(new Request('https://example.com/login', {
+    headers: { Accept: 'application/json' },
+  }), {})
+  assert.equal(response?.status, 503)
+  assert.equal(response?.headers.get('Cache-Control'), 'no-store')
+  assert.deepEqual(await response!.json(), {
+    type: 'error', message: 'Newsletter signup is temporarily unavailable. Please try again later.',
+  })
+})

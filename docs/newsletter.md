@@ -1,6 +1,7 @@
 # Newsletter
 
 - `/nav`: private SSR form/account state; native POST `/login` and `/logout`; hidden `_csrf`. Propagate `getNewsletterState(...).headers.getSetCookie()`; `Cache-Control: no-store`.
+- `newsletter-form.tsx`: isolated client entry; inline pending/success/error/cooldown and logout. `Accept: application/json`: GET `/login` bootstraps state/CSRF; POST `/login` and `/logout` return `NewsletterResult`. Native HTML fallback remains. After logout, bootstrap a fresh anonymous session before signup. Confirmation's `login_success` query triggers a one-use welcome notice in `Chrome`.
 - `GET /login/api?token=…`: 1h, atomically consumed link; confirms Resend membership, rotates session, redirects home. Failed contact synchronization consumes the link; request another. `?action=session`: `{email}` or `null`. `DELETE /login/api`: logout compatibility, CSRF required.
 - Remix owns cookies, sessions, forms, validation, CSRF. Signed `hdm_user_session` contains only an opaque ID. Secure on HTTPS, HttpOnly, SameSite=Lax, path `/`, browser-session lifetime. Server records expire after 30 idle days; logout deletes them. Previous Next.js sessions reset.
 - `NEWSLETTER_STATE`: SQLite Durable Object, single `newsletter` instance; sessions, SHA256-indexed tokens, case-insensitive 2min email cooldown. Worker exports `NewsletterState.fetch` → `handleNewsletterStorage`; `alarm` → `cleanupNewsletterStorage`. Cleanup removes expired records; access checks expiry immediately.

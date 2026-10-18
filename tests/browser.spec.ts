@@ -1,6 +1,9 @@
 import { expect,test,type BrowserContext } from '@playwright/test'
 import mediaFiles from '../.generated/media-files.json' with {type:'json'}
 import media from '../.generated/media.json' with {type:'json'}
+import { renderToString } from 'remix/component/server'
+import { jsx } from 'remix/component/jsx-runtime'
+import { Navigation } from '../app/navigation.tsx'
 
 async function mockRemoteMedia(context:BrowserContext){
   const first=Object.values(media)[0]
@@ -72,6 +75,94 @@ for(const width of [360,1280]){
     }
   })
 }
+
+test('newsletter signup stays in the sidebar with pending and success feedback',async({page})=>{
+  await page.route('**/nav?from=*',async route=>route.fulfill({contentType:'text/html',body:await renderToString(jsx(Navigation,{pathname:'/halbkreis',state:{ready:true,csrfToken:'test-csrf'}}))}))
+  let finish!:()=>void
+  let submissions=0
+  const responseReady=new Promise<void>(resolve=>{finish=resolve})
+  await page.route('**/login',async route=>{
+    expect(route.request().method()).toBe('POST')
+    submissions++
+    await responseReady
+    await route.fulfill({contentType:'application/json',body:JSON.stringify({type:'success',message:'Link sent! Please check your email.'})})
+  })
+  await page.goto('/halbkreis',{waitUntil:'networkidle'})
+  await page.evaluate(()=>{(window as any).originalContent=document.querySelector('main')})
+  await page.getByRole('link',{name:'Open menu',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  const input=dialog.getByRole('textbox',{name:'Email address'})
+  const submit=dialog.getByRole('region',{name:'Newsletter',exact:true}).getByRole('button')
+  await submit.click()
+  expect(await input.evaluate((el:HTMLInputElement)=>el.validity.valueMissing)).toBe(true)
+  await input.fill('listener@example.org')
+  await submit.click()
+  await expect(input).toBeDisabled()
+  await expect(submit).toBeDisabled()
+  finish()
+  await expect(dialog.getByText('Link sent! Please check your email.')).toBeVisible()
+  await expect(dialog).toBeVisible()
+  await expect(input).toHaveCount(0)
+  await expect(dialog.getByText('Receive updates about new releases')).toHaveCount(0)
+  await expect(page).toHaveURL(/\/nav$/)
+  expect(await page.evaluate(()=>(window as any).originalContent===document.querySelector('main'))).toBe(true)
+  expect(submissions).toBe(1)
+})
+
+test('newsletter cooldown and failures preserve the email and allow retry without closing the sidebar',async({page})=>{
+  await page.route('**/nav?from=*',async route=>route.fulfill({contentType:'text/html',body:await renderToString(jsx(Navigation,{pathname:'/halbkreis',state:{ready:true,csrfToken:'test-csrf'}}))}))
+  let attempts=0
+  await page.route('**/login',async route=>{
+    attempts++
+    if(attempts===1)return route.fulfill({status:429,contentType:'application/json',body:JSON.stringify({type:'spam_protection',message:'Please wait before requesting another login token',remainingSeconds:2})})
+    if(attempts===2)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({type:'error',message:'Something went wrong. Please try again.'})})
+    if(attempts===3)return route.abort('failed')
+    return route.fulfill({contentType:'application/json',body:JSON.stringify({type:'success',message:'Link sent! Please check your email.'})})
+  })
+  await page.goto('/halbkreis',{waitUntil:'networkidle'})
+  await page.getByRole('link',{name:'Open menu',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  const input=dialog.getByRole('textbox',{name:'Email address'})
+  const submit=dialog.getByRole('region',{name:'Newsletter',exact:true}).getByRole('button')
+  await input.fill('listener@example.org')
+  await submit.click()
+  await expect(input).toBeDisabled()
+  await expect(dialog.getByText(/Please wait/)).toBeVisible()
+  await expect(submit).toBeEnabled()
+  await expect(input).toHaveValue('listener@example.org')
+  await submit.click()
+  await expect(dialog.getByText('Something went wrong. Please try again.')).toBeVisible()
+  await expect(input).toHaveValue('listener@example.org')
+  await submit.click()
+  await expect(dialog.getByRole('alert')).toBeVisible()
+  await expect(input).toHaveValue('listener@example.org')
+  await expect(submit).toBeEnabled()
+  await submit.click()
+  await expect(dialog.getByText('Link sent! Please check your email.')).toBeVisible()
+  await expect(dialog).toBeVisible()
+})
+
+test('newsletter logout stays inline and refreshes the anonymous signup session',async({page})=>{
+  await page.route('**/nav?from=*',async route=>route.fulfill({contentType:'text/html',body:await renderToString(jsx(Navigation,{pathname:'/halbkreis',state:{ready:true,email:'listener@example.org',csrfToken:'test-csrf'}}))}))
+  await page.route('**/logout',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({type:'success',message:'Logged out successfully'})}))
+  await page.route('**/login',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({ready:true,csrfToken:'fresh-csrf'})}))
+  await page.goto('/halbkreis',{waitUntil:'networkidle'})
+  await page.getByRole('link',{name:'Open menu',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  await dialog.getByRole('button',{name:'Logout'}).click()
+  await expect(dialog.getByText('Logged out successfully')).toBeVisible()
+  await expect(dialog.getByRole('textbox',{name:'Email address'})).toBeEnabled()
+  await expect(dialog.locator('input[name="_csrf"]')).toHaveValue('fresh-csrf')
+  await expect(dialog).toBeVisible()
+})
+
+test('email confirmation shows a welcome notice once after the home redirect',async({page})=>{
+  await page.goto('/?login_success=true')
+  await expect(page.getByRole('status')).toHaveText('Welcome! You are now logged in.')
+  await expect(page).toHaveURL(/\/linktree$/)
+  await page.reload()
+  await expect(page.getByText('Welcome! You are now logged in.')).toHaveCount(0)
+})
 test('navigation follows content links, renders 404, and serves app assets',async({page,request})=>{
   await page.goto('/linktree',{waitUntil:'networkidle'})
   const mark=await page.locator('link[rel=icon]').getAttribute('href')
@@ -92,6 +183,29 @@ test('Amazon Music logos preserve the open letter shapes with sizing styles',asy
     expect(filled,`The hole in Amazon’s first “a” must remain open on ${path}`).toBe(false)
   }
 })
+
+for(const width of [360,1280]){
+  test(`lower sidebar retains the newsletter card and compact logo rows at ${width}px`,async({page})=>{
+    await page.setViewportSize({width,height:1000})
+    await page.goto('/halbkreis',{waitUntil:'networkidle'})
+    await page.getByRole('link',{name:'Open menu',exact:true}).click()
+    const dialog=page.getByRole('dialog')
+    const newsletter=dialog.getByRole('region',{name:'Newsletter',exact:true})
+    await expect(newsletter).toBeVisible()
+    const card=await newsletter.evaluate(el=>({border:parseFloat(getComputedStyle(el).borderTopWidth),radius:parseFloat(getComputedStyle(el).borderTopLeftRadius),icons:el.querySelectorAll('li svg').length}))
+    expect(card.border).toBeGreaterThanOrEqual(1)
+    expect(card.radius).toBe(12)
+    expect(card.icons).toBe(2)
+    const input=await newsletter.getByRole('textbox',{name:'Email address'}).boundingBox()
+    const button=await newsletter.getByRole('button',{name:'Signup'}).boundingBox()
+    expect(Math.abs(button!.x-input!.x-input!.width)).toBeLessThanOrEqual(1)
+    const music=dialog.getByRole('list',{name:'Find my music'})
+    expect(await music.evaluate(el=>getComputedStyle(el).rowGap)).toBe('0px')
+    const spotify=await music.getByRole('link',{name:'Spotify',exact:true}).boundingBox()
+    const amazon=await music.getByRole('link',{name:'Amazon Music',exact:true}).boundingBox()
+    expect(amazon!.y-spotify!.y).toBeLessThanOrEqual(48)
+  })
+}
 
 for(const width of [360,1280,2732]){
   test(`OWA portraits overlap their biography headlines at ${width}px`,async({page})=>{

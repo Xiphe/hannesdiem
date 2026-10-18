@@ -18,6 +18,7 @@ import { createRouter } from 'remix/router'
 import { createSession, type Session, type SessionStorage } from 'remix/session'
 import { renderToString } from 'remix/component/server'
 import { NewsletterPage } from './newsletter-view.tsx'
+import type { NewsletterResult } from './newsletter-contract.ts'
 
 export interface NewsletterEnvironment {
   NEWSLETTER_STATE?: { getByName(name: string): { fetch(request: Request): Promise<Response> } }
@@ -70,6 +71,11 @@ function privateResponse(response: Response): Response {
   result.headers.set('Cache-Control', 'no-store')
   result.headers.set('Referrer-Policy', 'no-referrer')
   return result
+}
+
+function wantsJson(request: Request): boolean {
+  return request.headers.get('Accept')?.split(',').some(type =>
+    /^application\/json(?:\s*;|\s*$)/i.test(type.trim())) ?? false
 }
 
 async function digest(value: string): Promise<string> {
@@ -126,6 +132,11 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
     ready: true, email: context.session.get('email'), csrfToken: getCsrfToken(context),
   }))
   router.get('/login', context => {
+    const email = context.session.get('email')
+    const state: NewsletterState = {
+      ready: true, email: typeof email === 'string' ? email : undefined, csrfToken: getCsrfToken(context),
+    }
+    if (wantsJson(context.request)) return Response.json(state)
     if (context.session.get('email')) return redirect('/', 303)
     const error = context.url.searchParams.get('error')
     const message = error === 'invalid_token' || error === 'missing_token'
@@ -133,16 +144,24 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       : error ? 'Verification failed. Please try again.'
       : context.session.get('newsletterMessage')
     return context.render(NewsletterPage({
-      state: { ready: true, csrfToken: getCsrfToken(context) },
+      state,
       message: typeof message === 'string' ? message : undefined,
+      result: typeof message === 'string'
+        ? { type: error ? 'error' : 'success', message } : undefined,
     }))
   })
   router.post('/login', async context => {
     const parsed = s.parseSafe(loginForm, context.formData)
     const state = { ready: true, csrfToken: getCsrfToken(context) }
-    if (!parsed.success) return context.render(NewsletterPage({
-      state, message: 'Please enter your email address.',
-    }), { status: 400 })
+    const json = wantsJson(context.request)
+    const emailValue = typeof context.formData.get('email') === 'string'
+      ? String(context.formData.get('email')) : undefined
+    const resultResponse = (result: NewsletterResult, status: number, headers?: HeadersInit) =>
+      json ? Response.json({ ...result, csrfToken: state.csrfToken }, { status, headers })
+        : context.render(NewsletterPage({ state, result, emailValue }), { status, headers })
+    if (!parsed.success) return resultResponse({
+      type: 'error', message: 'Please enter your email address.',
+    }, 400)
 
     const email = parsed.value.email
     const token = Array.from(crypto.getRandomValues(new Uint8Array(32)),
@@ -151,9 +170,10 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
     const issued = await call('/tokens/issue', { email, tokenHash })
     if (issued.status === 429) {
       const { remainingSeconds } = await issued.json() as { remainingSeconds: number }
-      return context.render(NewsletterPage({
-        state, message: `Please wait ${remainingSeconds}s before requesting another login token`,
-      }), { status: 429, headers: { 'Retry-After': String(remainingSeconds) } })
+      return resultResponse({
+        type: 'spam_protection', remainingSeconds,
+        message: `Please wait ${remainingSeconds}s before requesting another login token`,
+      }, 429, { 'Retry-After': String(remainingSeconds) })
     }
     if (!issued.ok) throw new Error('Newsletter token issue failed')
     try {
@@ -162,10 +182,9 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       await sendConfirmation(email, link.href, tokenHash, env, services)
     } catch {
       await call('/tokens/revoke', { tokenHash })
-      return context.render(NewsletterPage({
-        state, message: 'Something went wrong. Please try again.',
-      }), { status: 503 })
+      return resultResponse({ type: 'error', message: 'Something went wrong. Please try again.' }, 503)
     }
+    if (json) return resultResponse({ type: 'success', message: 'Link sent! Please check your email.' }, 200)
     context.session.flash('newsletterMessage', 'Link sent! Please check your email.')
     return redirect('/login', 303)
   })
@@ -190,6 +209,9 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
   })
   router.post('/logout', context => {
     context.session.destroy()
+    if (wantsJson(context.request)) return Response.json({
+      type: 'success', message: 'Logged out successfully',
+    } satisfies NewsletterResult)
     return redirect('/', 303)
   })
   router.delete('/login/api', context => {
@@ -204,6 +226,9 @@ export async function handleNewsletter(
 ): Promise<Response | null> {
   if (!['/login', '/login/api', '/logout'].includes(new URL(request.url).pathname)) return null
   if (!configured(env)) {
+    if (wantsJson(request)) return privateResponse(Response.json({
+      type: 'error', message: 'Newsletter signup is temporarily unavailable. Please try again later.',
+    } satisfies NewsletterResult, { status: 503 }))
     return privateResponse(new Response(await renderToString(NewsletterPage({
       state: { ready: false }, message: 'Newsletter signup is temporarily unavailable. Please try again later.',
     })), { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }))
@@ -211,15 +236,18 @@ export async function handleNewsletter(
   try {
     return privateResponse(await createNewsletterRouter(env, services).fetch(request))
   } catch (error) {
+    const failure = (message: string, status: number) => privateResponse(wantsJson(request)
+      ? Response.json({ type: 'error', message } satisfies NewsletterResult, { status })
+      : new Response(message, { status }))
     if (error instanceof MaxFilesExceededError || error instanceof MaxFileSizeExceededError ||
       error instanceof MaxHeaderSizeExceededError || error instanceof MaxPartsExceededError ||
       error instanceof MaxTotalSizeExceededError) {
-      return privateResponse(new Response('Form submission is too large.', { status: 413 }))
+      return failure('Form submission is too large.', 413)
     }
     if (error instanceof FormDataParseError) {
-      return privateResponse(new Response('Invalid form submission.', { status: 400 }))
+      return failure('Invalid form submission.', 400)
     }
-    return privateResponse(new Response('Something went wrong. Please try again.', { status: 503 }))
+    return failure('Something went wrong. Please try again.', 503)
   }
 }
 
