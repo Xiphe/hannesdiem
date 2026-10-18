@@ -6,6 +6,21 @@ const dialogStyle = css({ position:'fixed', inset:0, width:'100vw', maxWidth:'no
 export function Chrome(handle: Handle<{path:string}>) {
   let dialog: HTMLDialogElement | undefined
   let welcome = false
+  let closing: Promise<void> | undefined
+  function dismiss() {
+    if (closing) return closing
+    if (!dialog?.open) return Promise.resolve()
+    const animate = dialog.querySelector('[data-navigation-panel]') && !matchMedia('(prefers-reduced-motion: reduce)').matches
+    dialog.dataset.closing = 'true'
+    closing = new Promise<void>(resolve => {
+      setTimeout(() => {
+        dialog?.close()
+        closing = undefined
+        resolve()
+      }, animate ? 300 : 0)
+    })
+    return closing
+  }
   handle.queueTask(() => {
     const url = new URL(location.href)
     if (url.searchParams.has('login_success')) {
@@ -16,24 +31,29 @@ export function Chrome(handle: Handle<{path:string}>) {
       const timeout = setTimeout(() => { welcome = false; void handle.update() }, 5000)
       handle.signal.addEventListener('abort', () => clearTimeout(timeout), { once:true })
     }
-    handle.frames.top.addEventListener('reloadComplete', () => dialog?.close(), { signal: handle.signal })
+    handle.frames.top.addEventListener('reloadComplete', () => { void dismiss() }, { signal: handle.signal })
     const frame = handle.frames.get('overlay')
     if (!frame) return
-    frame.addEventListener('reloadStart', () => { if (!dialog?.open) dialog?.showModal() }, { signal: handle.signal })
+    frame.addEventListener('reloadStart', () => {
+      if (dialog && !dialog.open) { delete dialog.dataset.closing; dialog.showModal() }
+    }, { signal: handle.signal })
     frame.addEventListener('reloadComplete', () => {
-      if (new URL(frame.src, location.href).pathname === '/_overlay') dialog?.close()
+      if (new URL(frame.src, location.href).pathname === '/_overlay') void dismiss()
     }, { signal: handle.signal })
     window.addEventListener('popstate', () => {
-      if (!location.pathname.startsWith('/m/') && location.pathname !== '/nav') dialog?.close()
+      if (!location.pathname.startsWith('/m/') && location.pathname !== '/nav') void dismiss()
     }, { signal: handle.signal })
   })
-  function close() { dialog?.close(); history.back() }
+  function close() {
+    if (closing) return
+    void dismiss().then(() => { if (!handle.signal.aborted) history.back() })
+  }
   return () => <>
     {welcome && <div role="status" mix={css({position:'fixed',bottom:'1rem',left:'1rem',right:'1rem',zIndex:150,borderRadius:'.5rem',padding:'1rem',color:'#14532d',background:'#dcfce7',boxShadow:'0 4px 12px rgb(0 0 0 / .15)','@media (width >= 40rem)':{top:'1rem',bottom:'auto',left:'50%',right:'auto',translate:'-50% 0',maxWidth:'26rem',width:'calc(100% - 2rem)'}})}>Welcome! You are now logged in.</div>}
     <a href="/nav" aria-label="Open menu" data-rmx-target="overlay" data-rmx-src={`/nav?from=${encodeURIComponent(handle.props.path)}`} mix={menuStyle}>
       <Bars3Icon width={24} height={24}/>
     </a>
-    <dialog aria-label="Page dialog" mix={[dialogStyle, ref(node => { dialog = node }), on('cancel', event => { event.preventDefault(); close() }), on('click', event => {
+    <dialog class="page-dialog" aria-label="Page dialog" mix={[dialogStyle, ref(node => { dialog = node }), on('cancel', event => { event.preventDefault(); close() }), on('click', event => {
       const target = event.target as Element
       if (!target.closest('[data-overlay-panel]') || target.closest('[data-close-overlay]')) { event.preventDefault(); close() }
     })]}>
