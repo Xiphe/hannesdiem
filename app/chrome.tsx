@@ -37,6 +37,12 @@ export function Chrome(handle: Handle<{ path: string }>) {
   let welcome = false
   let navigationOpen = false
   let closingNavigation: Promise<void> | undefined
+  let closingOverlay: ReturnType<typeof setTimeout> | undefined
+  function cancelOverlayClose() {
+    clearTimeout(closingOverlay)
+    closingOverlay = undefined
+    if (dialog) delete dialog.dataset.closing
+  }
   function navigationDialog() {
     return document.querySelector<HTMLDialogElement>('[data-navigation-dialog]')
   }
@@ -70,6 +76,7 @@ export function Chrome(handle: Handle<{ path: string }>) {
     void handle.update()
   }
   handle.queueTask(() => {
+    handle.signal.addEventListener('abort', cancelOverlayClose, { once: true })
     const url = new URL(location.href)
     if (url.searchParams.has('login_success')) {
       welcome = true
@@ -139,8 +146,8 @@ export function Chrome(handle: Handle<{ path: string }>) {
     frame.addEventListener(
       'reloadStart',
       () => {
+        cancelOverlayClose()
         if (dialog && !dialog.open) {
-          delete dialog.dataset.closing
           dialog.showModal()
         }
       },
@@ -161,9 +168,19 @@ export function Chrome(handle: Handle<{ path: string }>) {
       { signal: handle.signal },
     )
   })
-  function close() {
-    dialog?.close()
-    history.back()
+  function closeOverlay() {
+    if (!dialog?.open || closingOverlay !== undefined) return
+    dialog.dataset.closing = 'true'
+    closingOverlay = setTimeout(
+      () => {
+        closingOverlay = undefined
+        if (handle.signal.aborted || !dialog?.open) return
+        dialog.close()
+        // Traversing history can replace the frame; preserve it until the exit finishes.
+        history.back()
+      },
+      matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300,
+    )
   }
   return () => (
     <>
@@ -211,7 +228,7 @@ export function Chrome(handle: Handle<{ path: string }>) {
         />
       </button>
       <dialog
-        class="page-dialog"
+        class="page-dialog lyrics-dialog"
         aria-label="Page dialog"
         mix={[
           dialogStyle,
@@ -220,13 +237,20 @@ export function Chrome(handle: Handle<{ path: string }>) {
           }),
           on('cancel', (event) => {
             event.preventDefault()
-            close()
+            closeOverlay()
+          }),
+          on('keydown', (event) => {
+            if (event.key === 'Escape') {
+              // Repeated native Escape requests can bypass the cancel event.
+              event.preventDefault()
+              closeOverlay()
+            }
           }),
           on('click', (event) => {
             const target = event.target as Element
             if (!target.closest('[data-overlay-panel]') || target.closest('[data-close-overlay]')) {
               event.preventDefault()
-              close()
+              closeOverlay()
             }
           }),
         ]}

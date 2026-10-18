@@ -199,6 +199,96 @@ test('release lyrics open over the release, close on Escape, and support direct 
   await expect(page.locator('main h1')).not.toBeEmpty()
 })
 
+for (const control of ['close button', 'Escape', 'outside click'] as const) {
+  test(`lyrics sheet and backdrop animate out together through ${control}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+    const releaseEntry = await page.evaluate(() => navigation.currentEntry!.index)
+    const link = page.locator('main a[data-rmx-target="overlay"]').first()
+    const song = await link.getAttribute('href')
+    await link.click()
+    const dialog = page.getByRole('dialog', { name: 'Page dialog' })
+    await expect(dialog.locator('h1')).not.toBeEmpty()
+    await dialog.evaluate(async (element) => {
+      await Promise.all(
+        element.getAnimations({ subtree: true }).map((animation) => animation.finished),
+      )
+    })
+    await page.evaluate((control) => {
+      ;(window as any).lyricsClosing = new Promise((resolve) => {
+        document.addEventListener(
+          control === 'Escape' ? 'keydown' : 'click',
+          () => {
+            const started = performance.now()
+            const sample = () => {
+              const dialog = document.querySelector<HTMLDialogElement>('.lyrics-dialog')!
+              const sheet = dialog.querySelector<HTMLElement>('[data-overlay-panel]')!
+              const opacity = Number(getComputedStyle(sheet).opacity)
+              const backdropOpacity = Number(getComputedStyle(dialog, '::backdrop').opacity)
+              if (
+                !dialog.open ||
+                (opacity < 0.95 && backdropOpacity < 0.95) ||
+                performance.now() - started > 250
+              ) {
+                resolve({
+                  open: dialog.open,
+                  connected: sheet.isConnected,
+                  path: location.pathname,
+                  opacity,
+                  backdropOpacity,
+                  translateY: new DOMMatrix(getComputedStyle(sheet).transform).m42,
+                })
+              } else {
+                requestAnimationFrame(sample)
+              }
+            }
+            requestAnimationFrame(sample)
+          },
+          { once: true, capture: true },
+        )
+      })
+    }, control)
+    if (control === 'close button') {
+      await dialog.getByRole('button', { name: 'Close lyrics' }).click()
+    } else if (control === 'Escape') {
+      await page.keyboard.press('Escape')
+      await page.keyboard.press('Escape')
+    } else {
+      await page.mouse.click(4, 4)
+    }
+    const motion = await page.evaluate(() => (window as any).lyricsClosing)
+    expect(motion).toMatchObject({ open: true, connected: true, path: song })
+    expect(motion.opacity).toBeGreaterThan(0)
+    expect(motion.opacity).toBeLessThan(1)
+    expect(motion.backdropOpacity).toBeGreaterThan(0)
+    expect(motion.backdropOpacity).toBeLessThan(1)
+    expect(motion.opacity).toBeCloseTo(motion.backdropOpacity, 1)
+    expect(motion.translateY).toBeGreaterThan(0)
+    await expect(dialog).not.toBeVisible()
+    await expect(page).toHaveURL(/\/halbkreis$/)
+    expect(await page.evaluate(() => navigation.currentEntry!.index)).toBe(releaseEntry)
+  })
+}
+
+test('lyrics close without an exit animation when reduced motion is requested', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.locator('main a[data-rmx-target="overlay"]').first().click()
+  const dialog = page.getByRole('dialog', { name: 'Page dialog' })
+  await expect(dialog.locator('h1')).not.toBeEmpty()
+  const closed = await dialog.evaluate(async (element) => {
+    const dialog = element as HTMLDialogElement
+    dialog.querySelector<HTMLButtonElement>('[aria-label="Close lyrics"]')!.click()
+    const animations = dialog.getAnimations({ subtree: true }).length
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    return { animations, open: dialog.open }
+  })
+  expect(closed).toEqual({ animations: 0, open: false })
+  await expect(page).toHaveURL(/\/halbkreis$/)
+})
+
 for (const width of [320, 360, 768]) {
   test(`tracklist lyrics controls fit their container at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })

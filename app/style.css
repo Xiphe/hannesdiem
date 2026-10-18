@@ -393,6 +393,17 @@
 .page-dialog[data-closing='true'] [data-navigation-panel] {
   transform: translateX(100%);
 }
+.lyrics-dialog [data-overlay-panel] {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 300ms ease-in-out,
+    transform 300ms ease-in-out;
+}
+.lyrics-dialog[data-closing='true'] [data-overlay-panel] {
+  opacity: 0;
+  transform: translateY(0.75rem);
+}
 @starting-style {
   .page-dialog[open]::backdrop {
     opacity: 0;
@@ -438,6 +449,7 @@
 @media (prefers-reduced-motion: reduce) {
   .page-dialog::backdrop,
   .page-dialog [data-navigation-panel],
+  .lyrics-dialog [data-overlay-panel],
   .navigation-menu details::details-content,
   .navigation-menu .nav-items > li,
   .navigation-menu .nav-chevron {
