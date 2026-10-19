@@ -2,6 +2,10 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "hannesdiem",
   "main": "app/worker.ts",
+  "build": {
+    "command": "node scripts/build-dev.ts",
+    "watch_dir": ["content", "app", "cmx.config.ts", "scripts"],
+  },
   "compatibility_date": "2026-10-18",
   "workers_dev": true,
   "exports": { "NewsletterState": { "type": "durable-object", "storage": "sqlite" } },

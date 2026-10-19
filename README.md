@@ -13,6 +13,8 @@ npm run check
 
 `npm run format` applies Prettier to authored files, including CMX. After `build` (or `dev`), `check` enforces formatting, app types, and server/browser functionality; it does not rebuild or assert editorial content, route counts, or a migration inventory. `npm test` also uses existing build artifacts. Local development needs no cloud credentials.
 
+`npm run dev`: port 8787; watches `content/`, `app/`, `cmx.config.ts`, and `scripts/`, rebuilds CMX/app assets, and reloads the browser. Existing processed media is reused; run `npm run build` after media changes. `sand tunnel 8787` forwards the preview. The custom build hook runs only for `wrangler dev`; Actions owns production builds.
+
 ## Content
 
 `content/pages/` groups authored CMX into releases, songs, and One Week Album pages. Each song/release owns its typed metadata and body in one CMX file; people are shared. [content/README.md](content/README.md) maps ownership. `content/routes.ts` declares publication paths and SEO overrides; the build combines these with CMX exports into `.generated/routes.json`. `/` redirects to `/linktree`; legacy aliases and direct lyric URLs remain supported. `app/content-components.tsx` owns native Remix styling/markup; `app/media.ts` resolves image identities. Ordinary rich-text HTML and intentional one-offs are allowed. No Payload/Next/React runtime.
