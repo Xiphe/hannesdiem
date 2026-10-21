@@ -214,6 +214,29 @@ test('signed publications persist, update the complete site and reject replay or
     },
   )
 
+  await t.test('conditional publication reads survive edge removal of If-None-Match', async () => {
+    const { contentHash } = await createCmxPublicationState(documents)
+    const request = await signed(
+      new Request(endpoint, {
+        headers: { 'If-None-Match': `"${contentHash}"` },
+      }),
+    )
+    const headers = new Headers(request.headers)
+    headers.delete('If-None-Match') // Cloudflare removes this before the Worker on a cold path.
+    assert.equal((await dispatch(new Request(request.url, { headers }))).status, 304)
+    const tampered = await signed(
+      new Request(endpoint, {
+        headers: { 'If-None-Match': `"${contentHash}"` },
+      }),
+    )
+    const tamperedHeaders = new Headers(tampered.headers)
+    tamperedHeaders.set('CMX-If-None-Match', '"tampered"')
+    assert.equal(
+      (await dispatch(new Request(tampered.url, { headers: tamperedHeaders }))).status,
+      401,
+    )
+  })
+
   await t.test(
     'an invalid complete collection leaves the accepted publication active',
     async () => {

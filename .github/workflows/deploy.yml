@@ -1,60 +1,37 @@
-name: Check and deploy
+name: Deploy website
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'app/**'
+      - 'content/contract/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'cmx.config.ts'
+      - 'tsconfig*.json'
+      - 'wrangler.jsonc'
+      - 'playwright*.config.ts'
+      - 'scripts/build.ts'
+      - 'scripts/build-dev.ts'
+      - 'scripts/check-content-host.ts'
+      - 'scripts/verify-newsletter.ts'
+      - 'scripts/publish-transport.ts'
+      - 'tests/host-fixture.ts'
+      - 'tests/publication-worker.test.ts'
+      - 'tests/newsletter*.ts'
+      - 'tests/website.spec.ts'
+      - '.github/workflows/deploy.yml'
 
 permissions:
   contents: read
-  actions: read
 
-# One release lane for code and content; never cancel a live mutation.
 concurrency:
-  group: release-main
+  group: production-main
   cancel-in-progress: false
 
 jobs:
-  plan:
-    runs-on: ubuntu-24.04
-    environment: Production
-    outputs:
-      website: ${{ steps.changes.outputs.website }}
-      content: ${{ steps.changes.outputs.content }}
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: 24
-          cache: npm
-      - id: changes
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node scripts/release-plan.ts
-      - if: steps.changes.outputs.content == 'true'
-        run: npm ci
-      - name: Verify publishing configuration before changing the live site
-        if: steps.changes.outputs.content == 'true'
-        env:
-          CMX_PUBLISH_PRIVATE_KEY: ${{ secrets.CMX_PUBLISH_PRIVATE_KEY }}
-          CMX_PUBLISH_KEY_ID: ${{ vars.CMX_PUBLISH_KEY_ID }}
-          CMX_PUBLISH_PUBLIC_KEYS: ${{ vars.CMX_PUBLISH_PUBLIC_KEYS }}
-          SITE_URL: ${{ vars.SITE_URL }}
-        run: node scripts/check-publishing-config.ts
-
-  prepare-content:
-    needs: plan
-    if: needs.plan.outputs.content == 'true'
-    uses: ./.github/workflows/content.yml
-    with:
-      phase: prepare
-    secrets: inherit
-
   website:
-    needs: [plan, prepare-content]
-    if: always() && needs.plan.result == 'success' && needs.plan.outputs.website == 'true' && (needs.prepare-content.result == 'success' || needs.prepare-content.result == 'skipped')
     runs-on: ubuntu-24.04
     environment: Production
     timeout-minutes: 20
@@ -117,11 +94,3 @@ jobs:
         env:
           DEPLOYMENT_URL: ${{ steps.deployment.outputs.url }}
         run: node --input-type=module -e 'const r = await fetch(new URL("/health", process.env.DEPLOYMENT_URL), {signal:AbortSignal.timeout(20000)}); if (!r.ok || !(await r.json()).ok) process.exit(1)'
-
-  content:
-    needs: [plan, prepare-content, website]
-    if: always() && needs.plan.result == 'success' && needs.plan.outputs.content == 'true' && needs.prepare-content.result == 'success' && (needs.website.result == 'success' || needs.website.result == 'skipped')
-    uses: ./.github/workflows/content.yml
-    with:
-      phase: publish
-    secrets: inherit
