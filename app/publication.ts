@@ -1,5 +1,5 @@
 import { isCmxDocument, type CmxDocument } from '@cmx-tools/contracts'
-import type { ContentRoute } from '../content/types.ts'
+import type { ContentRoute } from './content-route.ts'
 import type { MediaImage } from './media.ts'
 
 export const siteEntry = '_site'

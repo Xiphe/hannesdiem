@@ -33,10 +33,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/release-plan.ts
-      - if: steps.changes.outputs.website == 'true' || steps.changes.outputs.content == 'true'
+      - if: steps.changes.outputs.content == 'true'
         run: npm ci
       - name: Verify publishing configuration before changing the live site
-        if: steps.changes.outputs.website == 'true' || steps.changes.outputs.content == 'true'
+        if: steps.changes.outputs.content == 'true'
         env:
           CMX_PUBLISH_PRIVATE_KEY: ${{ secrets.CMX_PUBLISH_PRIVATE_KEY }}
           CMX_PUBLISH_KEY_ID: ${{ vars.CMX_PUBLISH_KEY_ID }}
@@ -44,30 +44,39 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
         run: node scripts/check-publishing-config.ts
 
-  website:
+  prepare-content:
     needs: plan
-    if: needs.plan.outputs.website == 'true'
+    if: needs.plan.outputs.content == 'true'
+    uses: ./.github/workflows/content.yml
+    with:
+      phase: prepare
+    secrets: inherit
+
+  website:
+    needs: [plan, prepare-content]
+    if: always() && needs.plan.result == 'success' && needs.plan.outputs.website == 'true' && (needs.prepare-content.result == 'success' || needs.prepare-content.result == 'skipped')
     runs-on: ubuntu-24.04
     environment: Production
-    env:
-      MEDIA_BASE_URL: https://media.hannesdiem.de
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          lfs: true
           persist-credentials: false
+          sparse-checkout: |
+            .github
+            app
+            scripts
+            tests
+            content/contract
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
           cache: npm
       - run: npm ci
-      - uses: ./.github/actions/prepare-content
+      - run: npm run build:app
       - run: npx playwright install --with-deps --only-shell chromium
-      - run: node scripts/build.ts --local-content
-      - run: npm run check
-      - name: Check whether initial content bootstrap is needed
-        id: bootstrap
+      - run: npm run check:website
+      - name: Check compatibility with the published CMS interface
         env:
           SITE_URL: ${{ vars.SITE_URL }}
         run: node --import remix/node-tsx scripts/check-content-host.ts
@@ -75,25 +84,11 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: |
           if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
             echo "::error::Configure Production environment secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID; see README.md. Checks passed; deployment has not run."
             exit 1
           fi
-          if [[ -z "$R2_ACCOUNT_ID" || -z "$R2_ACCESS_KEY_ID" || -z "$R2_SECRET_ACCESS_KEY" ]]; then
-            echo "::error::Configure Production variable R2_ACCOUNT_ID and secrets R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY; see README.md."
-            exit 1
-          fi
-      - name: Upload bootstrap media before the initial compatibility deployment
-        if: steps.bootstrap.outputs.required == 'true'
-        env:
-          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        run: npm run media:upload
       - name: Deploy
         id: deployment
         env:
@@ -101,7 +96,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-deploy.jsonl
           CMX_PUBLISH_PUBLIC_KEYS: ${{ vars.CMX_PUBLISH_PUBLIC_KEYS }}
-          CMX_BOOTSTRAP_CONTENT: ${{ steps.bootstrap.outputs.required }}
           NEWSLETTER_SESSION_SECRET: ${{ secrets.NEWSLETTER_SESSION_SECRET }}
           RESEND_HANNESDIEM_DE_API_KEY: ${{ secrets.RESEND_HANNESDIEM_DE_API_KEY }}
           RESEND_HANNESDIEM_DE_SEGMENT_ID: ${{ vars.RESEND_HANNESDIEM_DE_SEGMENT_ID }}
@@ -125,7 +119,9 @@ jobs:
         run: node --input-type=module -e 'const r = await fetch(new URL("/health", process.env.DEPLOYMENT_URL), {signal:AbortSignal.timeout(20000)}); if (!r.ok || !(await r.json()).ok) process.exit(1)'
 
   content:
-    needs: [plan, website]
-    if: always() && needs.plan.result == 'success' && needs.plan.outputs.content == 'true' && (needs.website.result == 'success' || needs.website.result == 'skipped')
+    needs: [plan, prepare-content, website]
+    if: always() && needs.plan.result == 'success' && needs.plan.outputs.content == 'true' && needs.prepare-content.result == 'success' && (needs.website.result == 'success' || needs.website.result == 'skipped')
     uses: ./.github/workflows/content.yml
+    with:
+      phase: publish
     secrets: inherit

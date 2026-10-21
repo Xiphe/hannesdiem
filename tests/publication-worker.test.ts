@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFile } from 'node:child_process'
@@ -8,7 +8,7 @@ import { promisify } from 'node:util'
 import { build } from 'esbuild'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { publishCmxDocuments, createCmxPublicationState } from '@cmx-tools/publish'
-import { documents as fixture } from './content-fixture.ts'
+import { documents as fixture } from './host-fixture.ts'
 import { siteEntry, publicationPath } from '../app/publication.ts'
 import { signPublicationRequest } from '../app/publication-signatures.ts'
 
@@ -40,7 +40,7 @@ test('signed publications persist, update the complete site and reject replay or
         name: 'hosted-content',
         setup(builder) {
           builder.onLoad({ filter: /\.generated\/local-content\.ts$/ }, () => ({
-            contents: `import documents from ${JSON.stringify(join(process.cwd(), '.generated/publication.json'))}; export const localPublication = null; export const bootstrapPublication = documents;`,
+            contents: 'export const localPublication = null;',
             loader: 'ts',
           }))
         },
@@ -103,7 +103,7 @@ test('signed publications persist, update the complete site and reject replay or
   await t.test(
     'the publishing endpoint authenticates reads and writes and rejects replay',
     async () => {
-      assert.equal((await get('/linktree')).headers.get('X-Content-Revision'), 'bootstrap')
+      assert.equal((await get('/fixture')).status, 503)
       assert.equal(((await (await get('/_cmx/status')).json()) as { ready: boolean }).ready, false)
       assert.equal((await dispatch(new Request(endpoint))).status, 401)
       assert.equal(
@@ -145,7 +145,7 @@ test('signed publications persist, update the complete site and reject replay or
   )
 
   const documents = structuredClone(fixture)
-  documents.linktree.content.default = 'Hosted content replaces the migration fallback.'
+  documents.fixture.content.default = 'Hosted content is published independently.'
   const site = documents[siteEntry].content.site as import('../app/publication.ts').SiteMetadata
   const page = structuredClone(documents['404'])
   page.content.title = 'Independent publication'
@@ -163,7 +163,7 @@ test('signed publications persist, update the complete site and reject replay or
     ],
   }
   // Use a page that declares the component dependency, as real CMX compilation does.
-  page.interface.imports = structuredClone(documents.linktree.interface.imports)
+  page.interface.imports = structuredClone(documents.fixture.interface.imports)
   documents['test-publication'] = page
   site.routes.push({
     path: '/test-publication',
@@ -193,8 +193,8 @@ test('signed publications persist, update the complete site and reject replay or
     async () => {
       const { contentHash } = await publish(documents)
       assert.match(
-        await (await get('/linktree')).text(),
-        /Hosted content replaces the migration fallback\./,
+        await (await get('/fixture')).text(),
+        /Hosted content is published independently\./,
       )
       assert.equal(((await (await get('/_cmx/status')).json()) as { ready: boolean }).ready, true)
       const { html, hash } = await readPage()
@@ -299,11 +299,13 @@ test('signed publications persist, update the complete site and reject replay or
     'the released CMX CLI loads the signed config and publishes directly to the host',
     async () => {
       const endpoint = new URL(publicationPath, await runtime.ready).href
+      const publicationFile = join(directory, 'publication.json')
+      await writeFile(publicationFile, JSON.stringify(fixture))
       const { stdout } = await promisify(execFile)(
         process.execPath,
         [
           'node_modules/@cmx-tools/publish/dist/cli/cli.js',
-          '.generated/publication.json',
+          publicationFile,
           endpoint,
           '--config',
           'cmx.config.ts',
@@ -323,7 +325,7 @@ test('signed publications persist, update the complete site and reject replay or
       const published = JSON.parse(stdout) as { contentHash: string }
       const expected = await createCmxPublicationState(fixture)
       assert.equal(published.contentHash, expected.contentHash)
-      assert.equal((await get('/linktree')).headers.get('X-Content-Revision'), expected.contentHash)
+      assert.equal((await get('/fixture')).headers.get('X-Content-Revision'), expected.contentHash)
       const preflight = await promisify(execFile)(
         process.execPath,
         ['--import', 'remix/node-tsx', 'scripts/check-content-host.ts'],
@@ -332,7 +334,7 @@ test('signed publications persist, update the complete site and reject replay or
           timeout: 20_000,
         },
       )
-      assert.match(preflight.stdout, /Persistent content is initialized/)
+      assert.match(preflight.stdout, /Published content is compatible/)
     },
   )
 })

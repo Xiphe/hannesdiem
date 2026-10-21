@@ -2,7 +2,7 @@ import { DurableObject } from 'cloudflare:workers'
 import { createApp } from './router.tsx'
 import { ContentState } from './content-state.ts'
 import { contentPage, type ContentLoader } from './content.ts'
-import { localPublication, bootstrapPublication } from '../.generated/local-content.ts'
+import { localPublication } from '../.generated/local-content.ts'
 import { publicationPath, validatePublication, type PublishedDocuments } from './publication.ts'
 import { publishContent, contentCacheTag } from './publish-content.ts'
 import { PublicationRequestError } from './publication-signatures.ts'
@@ -45,15 +45,6 @@ export default {
           )
         }
         const page = await content.readPage(new URL(request.url).pathname)
-        if (!page && bootstrapPublication) {
-          const documents = bootstrapPublication as PublishedDocuments
-          return contentPage(
-            new URL(request.url).pathname,
-            validatePublication(documents),
-            (key) => documents[key],
-            'bootstrap',
-          )
-        }
         if (!page) throw new PublicationRequestError('Content has not been published yet.', 503)
         return page
       }

@@ -1,11 +1,19 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
 
 // Production builds are prepared by Actions; this hook owns local development.
 if (process.env.WRANGLER_COMMAND === 'dev') {
   const started = performance.now()
   const run = (script: string) => execFileSync('npm', ['run', script], { stdio: 'inherit' })
 
+  if (process.env.WEBSITE_TEST === 'true') {
+    run('build:app')
+    writeFileSync(
+      '.generated/local-content.ts',
+      "export { documents as localPublication } from '../tests/host-fixture.ts'\n",
+    )
+    process.exit(0)
+  }
   run('cmx:build')
   if (
     [
