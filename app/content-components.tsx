@@ -15,7 +15,8 @@ import type {
   SongProps,
   LinkTreeProps,
 } from '@hannesdiem/content-components'
-import { getMedia } from './media.ts'
+import { getMedia, type MediaImage } from './media.ts'
+import { SiteContent } from './site-content.ts'
 import { ServiceLogo } from './icons.tsx'
 import { LocalDate as DateComponent } from './date.tsx'
 import assets from '../.generated/assets.json' with { type: 'json' }
@@ -626,6 +627,7 @@ function lines(text?: string): RemixNode {
   ))
 }
 function imageElement(
+  media: Record<string, MediaImage>,
   image: string,
   options: {
     alt?: string
@@ -636,7 +638,7 @@ function imageElement(
     style?: CSS
   } = {},
 ) {
-  const item = getMedia(image)
+  const item = getMedia(media, image)
   return (
     <img
       src={item.src}
@@ -666,7 +668,8 @@ function imageElement(
   )
 }
 export function Image(handle: Handle<ImageProps>) {
-  return () => imageElement(handle.props.image, handle.props)
+  const media = handle.context.get(SiteContent).media
+  return () => imageElement(media, handle.props.image, handle.props)
 }
 export function Page(handle: Handle<PageProps>) {
   return () => (
@@ -687,6 +690,7 @@ const heroStyle = css({
 const heroPull = css({ [sm]: { marginTop: '-3rem' }, [md]: { marginTop: '-6rem' } })
 const grow = css({ flexGrow: 1 })
 export function Hero(handle: Handle<HeroProps>) {
+  const media = handle.context.get(SiteContent).media
   return () => {
     const { title, subtitle, image, first, pullUp, textColor } = handle.props
     const Comp = first ? 'header' : 'div',
@@ -695,7 +699,7 @@ export function Hero(handle: Handle<HeroProps>) {
     return (
       <Comp mix={[heroStyle, !first && pullUp && heroPull]}>
         {image
-          ? imageElement(image, {
+          ? imageElement(media, image, {
               fill: true,
               priority: first,
               sizes: '(max-width: 639px) 200vw, 100vw',
@@ -774,6 +778,7 @@ const textBox: CSS = {
 const textBlock = css(mergeCss(proseBase, textBox))
 const largeTextBlock = css(mergeCss(proseBase, { [lg]: proseSizes.xl }, textBox))
 export function TextBlock(handle: Handle<TextBlockProps>) {
+  const media = handle.context.get(SiteContent).media
   return () => {
     const {
       title,
@@ -798,7 +803,7 @@ export function TextBlock(handle: Handle<TextBlockProps>) {
             })}
           >
             <div mix={css({ borderRadius: '50%', overflow: 'hidden' })}>
-              {imageElement(portrait, { sizes: '320px' })}
+              {imageElement(media, portrait, { sizes: '320px' })}
             </div>
           </div>
         ) : null}
@@ -875,15 +880,16 @@ export function Prose(handle: Handle<ProseProps>) {
   }
 }
 export function ImageBand(handle: Handle<ImageBandProps>) {
+  const media = handle.context.get(SiteContent).media
   return () => {
     const { title, smallTitle, images, pullUp, breakPoint = 'sm' } = handle.props
     const breakpoint = { none: '', sm, md, lg }[breakPoint]
     const parallel = images.reduce((sum, item) => {
-      const image = getMedia(item.image)
+      const image = getMedia(media, item.image)
       return sum + image.width / image.height
     }, 0)
     const stacked = images.reduce((sum, item) => {
-      const image = getMedia(item.image)
+      const image = getMedia(media, item.image)
       return sum + (item.includeStacked === false ? 0 : image.height / image.width)
     }, 0)
     const layout = {
@@ -901,7 +907,7 @@ export function ImageBand(handle: Handle<ImageBandProps>) {
           <div mix={css({ height: 0 })}>
             <div mix={css(layout)}>
               {images.map((item) => {
-                const image = getMedia(item.image),
+                const image = getMedia(media, item.image),
                   percent = Math.round((image.width / image.height / parallel) * 10000) / 100
                 return (
                   <div
@@ -915,7 +921,7 @@ export function ImageBand(handle: Handle<ImageBandProps>) {
                       ...(breakpoint ? { [breakpoint]: { display: 'block' } } : {}),
                     })}
                   >
-                    {imageElement(item.image, {
+                    {imageElement(media, item.image, {
                       title: item.title,
                       fill: true,
                       sizes:
@@ -1490,13 +1496,14 @@ const srOnly = css({
 const lyricsLabelQuery = '@container release-details (width >= 440px)'
 
 export function Release(handle: Handle<ReleaseProps>) {
+  const media = handle.context.get(SiteContent).media
   return () => {
     const release = handle.props
     const tracks = release.tracks.map((track) => ({
       ...track,
       title: track.title ?? track.song!.title,
     }))
-    const cover = release.cover ? getMedia(release.cover) : undefined
+    const cover = release.cover ? getMedia(media, release.cover) : undefined
     const released = new Date(release.releaseDate ?? 0).getTime() <= Date.now()
     const shops = Object.keys(shopNames).flatMap((type) =>
       release.shops?.[type] ? [{ type, url: release.shops[type]! }] : [],
@@ -1539,7 +1546,7 @@ export function Release(handle: Handle<ReleaseProps>) {
                   },
                 })}
               >
-                {imageElement(release.cover, {
+                {imageElement(media, release.cover, {
                   priority: true,
                   sizes: '(max-width: 768px) 100vw, 50vw',
                 })}
@@ -1954,6 +1961,7 @@ const linkTreeRow = css({
 })
 const linkTreeContainer = css({ width: '100%', marginInline: 'auto', maxWidth: '32rem' })
 export function LinkTree(handle: Handle<LinkTreeProps>) {
+  const media = handle.context.get(SiteContent).media
   return () => (
     <div>
       <div
@@ -1987,7 +1995,7 @@ export function LinkTree(handle: Handle<LinkTreeProps>) {
                   [md]: { marginLeft: '-2.5rem', width: '7rem', height: '7rem' },
                 })}
               >
-                {imageElement(handle.props.portrait, {
+                {imageElement(media, handle.props.portrait, {
                   alt: 'Portrait of Hannes',
                   sizes: '112px',
                   priority: true,

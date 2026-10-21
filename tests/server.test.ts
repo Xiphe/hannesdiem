@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { CmxNode } from '@cmx-tools/contracts'
-import { loadContent, contentRoutes } from '../app/content.ts'
-import { createApp, legacyRedirects } from '../app/router.tsx'
+import { loadContent, contentRoutes, legacyRedirects } from './content-fixture.ts'
+import { createApp as createRuntimeApp } from '../app/router.tsx'
+import type { ContentLoader } from '../app/content.ts'
+import type { NewsletterEnvironment } from '../app/newsletter.ts'
+const createApp = (loader: ContentLoader = loadContent, env: NewsletterEnvironment = {}) =>
+  createRuntimeApp(loader, env)
 
 async function publication(title: string, paragraph: string) {
   const page = structuredClone(await loadContent(new Request('https://example.com/linktree')))
@@ -28,7 +32,7 @@ test('content publications change without rebuilding or recreating the app', asy
     'public, max-age=60, stale-if-error=0',
   )
   assert.equal(first.headers.get('Cache-Control'), 'no-cache')
-  assert.equal(first.headers.get('Cache-Tag'), 'page:test-publication')
+  assert.equal(first.headers.get('Cache-Tag'), 'content,page:test-publication')
   assert.match(await first.text(), /First publication/)
   title = 'Updated publication'
   const second = await app.fetch('https://example.com/publication')
@@ -75,7 +79,7 @@ test('public rendering emits CMX styles and cache tags without personalizing res
   const response = await app.fetch('https://example.com/publication')
   assert.equal(response.status, 200)
   assert.equal(response.headers.get('Set-Cookie'), null)
-  assert.equal(response.headers.get('Cache-Tag'), 'page:test-publication')
+  assert.equal(response.headers.get('Cache-Tag'), 'content,page:test-publication')
   const html = await response.text()
   assert.match(html, /<style data-rmx-style/)
   assert.doesNotMatch(html, /\[object Object\]/)

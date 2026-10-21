@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
+const port = Number(process.env.PLAYWRIGHT_PORT ?? 8787)
+
 export default defineConfig({
   testDir: './tests',
   testMatch: '**/browser.spec.ts',
@@ -7,13 +9,13 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   use: {
-    baseURL: 'http://127.0.0.1:8787',
+    baseURL: `http://127.0.0.1:${port}`,
     browserName: 'chromium',
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'npx wrangler dev --ip 127.0.0.1 --port 8787',
-    url: 'http://127.0.0.1:8787',
+    command: `npx wrangler dev --ip 127.0.0.1 --port ${port}`,
+    url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

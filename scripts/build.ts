@@ -2,20 +2,16 @@ import { build } from 'esbuild'
 import { createHash } from 'node:crypto'
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
-import type { ContentRoute } from '../content/types.ts'
 
 await rm('dist', { recursive: true, force: true })
 await mkdir('.generated', { recursive: true })
-const routes: ContentRoute[] = JSON.parse(await readFile('.generated/routes.json', 'utf8'))
-const documents = [...new Set([...routes.map((route) => route.document), '404'])]
+const local = process.argv.includes('--local-content')
+const bootstrap = process.env.CMX_BOOTSTRAP_CONTENT === 'true'
 await writeFile(
-  '.generated/content.ts',
-  documents
-    .map((name, i) => `import doc${i} from '../.cmx/documents/${name}.json' with { type: 'json' }`)
-    .join('\n') +
-    '\nexport const documents = {\n' +
-    documents.map((name, i) => `${JSON.stringify(name)}: doc${i}`).join(',\n') +
-    '\n}\n',
+  '.generated/local-content.ts',
+  local || bootstrap
+    ? `import documents from './publication.json' with { type: 'json' }\nexport const localPublication = ${local ? 'documents' : 'null'}\nexport const bootstrapPublication = ${bootstrap && !local ? 'documents' : 'null'}\n`
+    : 'export const localPublication = null\nexport const bootstrapPublication = null\n',
 )
 const result = await build({
   entryPoints: {
@@ -82,14 +78,15 @@ await writeFile(`dist${entries.mark}`, mark)
 await mkdir('dist/font', { recursive: true })
 await cp('app/assets/fuggles.woff2', 'dist/font/fuggles-v12-latin-regular.woff2')
 await cp('app/assets/googlef6f5b9a886cf5949.html', 'dist/googlef6f5b9a886cf5949.html')
-const media = JSON.parse(await readFile('.generated/media.json', 'utf8'))
 let mediaHeaders = ''
-const firstImage = Object.values(media)[0] as { src: string }
-if (firstImage.src.startsWith('/')) {
-  const files = JSON.parse(await readFile('.generated/media-files.json', 'utf8'))
-  const prefix = firstImage.src.slice(0, firstImage.src.indexOf('/images/') + 1)
-  await cp('.generated/media', `dist${prefix}`, { recursive: true })
-  mediaHeaders = `${prefix}*\n  Cache-Control: public, max-age=31536000, immutable\n`
+if (local) {
+  const media = JSON.parse(await readFile('.generated/media.json', 'utf8'))
+  const firstImage = Object.values(media)[0] as { src: string }
+  if (firstImage.src.startsWith('/')) {
+    const prefix = firstImage.src.slice(0, firstImage.src.indexOf('/images/') + 1)
+    await cp('.generated/media', `dist${prefix}`, { recursive: true })
+    mediaHeaders = `${prefix}*\n  Cache-Control: public, max-age=31536000, immutable\n`
+  }
 }
 await writeFile('.generated/assets.json', JSON.stringify(entries, null, 2) + '\n')
 await writeFile(

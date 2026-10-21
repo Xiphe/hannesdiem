@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import mediaFiles from '../.generated/media-files.json' with { type: 'json' }
 
 const origin = new URL(process.argv[2])
 const mediaBase = process.env.MEDIA_BASE_URL ?? '/media'
+const publication = process.argv.includes('--publication')
+  ? (JSON.parse(await readFile('.generated/publication-result.json', 'utf8')) as {
+      contentHash: string
+    })
+  : undefined
 async function get(path: string, redirect: RequestRedirect = 'follow') {
   return fetch(new URL(path, origin), { redirect, signal: AbortSignal.timeout(20_000) })
 }
@@ -25,6 +31,7 @@ for (let attempt = 0; attempt < 5; attempt++) {
     assert.ok(location)
     const page = await get(location)
     assert.equal(page.status, 200)
+    if (publication) assert.equal(page.headers.get('X-Content-Revision'), publication.contentHash)
     assert.equal(page.headers.get('Set-Cookie'), null)
     const html = await page.text()
     assert.match(html, /<style data-rmx-style/)

@@ -3,40 +3,17 @@ import { render } from 'remix/middleware/render'
 import { css } from 'remix/component'
 import { XMarkIcon, ArrowLeftIcon } from './heroicons.tsx'
 import { redirect } from 'remix/response/redirect'
-import { loadContent, renderContent, contentRoutes, type ContentLoader } from './content.ts'
+import { renderContent, type ContentLoader } from './content.ts'
 import { Page } from './page.tsx'
 import type { NewsletterEnvironment } from './newsletter.ts'
 import { routes } from './routes.ts'
-import shareImages from '../.generated/og.json' with { type: 'json' }
+import { SiteContent } from './site-content.ts'
+import { contentCacheTag } from './publication.ts'
 
-export const legacyRedirects = new Map<string, { to: string; status: 307 | 308 }>([
-  ['/', { to: '/linktree', status: 307 }],
-  ['/owa', { to: '/one-week-album', status: 308 }],
-  ['/one-week-album-retreat', { to: '/one-week-album', status: 308 }],
-  [
-    '/owa/form',
-    {
-      to: 'https://docs.google.com/forms/d/e/1FAIpQLSfOWkJ_24G5sPa694SbLp6jv7JmtDulCLJOwUwtGC5UcDSxJQ/viewform?usp=dialog',
-      status: 307,
-    },
-  ],
-  [
-    '/owa/summer-2025',
-    {
-      to: 'https://e.pcloud.link/publink/show?code=kZlBJOZQvIgTgpy8TLDaBAVWSJKPmWo2jv7',
-      status: 307,
-    },
-  ],
-  [
-    '/cv',
-    {
-      to: 'https://docs.google.com/document/d/1LEo6Z-sLCULuJikA1JjbfcQTfP6UavQyjM7DehcMZeQ/edit?usp=sharing',
-      status: 307,
-    },
-  ],
-])
 const privateHeaders = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
-export function createApp(content: ContentLoader = loadContent, env: NewsletterEnvironment = {}) {
+const xml = (value: string) =>
+  value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+export function createApp(content: ContentLoader, env: NewsletterEnvironment = {}) {
   const router = createRouter({
     middleware: [render()],
     defaultHandler: () => new Response('Not found', { status: 404, headers: privateHeaders }),
@@ -56,95 +33,99 @@ export function createApp(content: ContentLoader = loadContent, env: NewsletterE
       return new Response('Not found', { status: 404, headers: privateHeaders })
     if (request.headers.get('X-Remix-Target') !== 'overlay') return redirect(path, 307)
     return render(
-      <div
-        mix={css({
-          display: 'flex',
-          minHeight: '100dvh',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem',
-        })}
-      >
+      <SiteContent site={page.site}>
         <div
-          data-overlay-panel
-          class="lyrics-sheet"
           mix={css({
-            position: 'relative',
-            '--letter-bg': 'var(--theme-bg)',
-            '--letter-fg': 'var(--theme-fg)',
-            '--letter-heading': 'var(--theme-fg)',
+            display: 'flex',
+            minHeight: '100dvh',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
           })}
         >
-          <button
-            type="button"
-            data-close-overlay
-            aria-label="Close lyrics"
+          <div
+            data-overlay-panel
+            class="lyrics-sheet"
             mix={css({
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              zIndex: 10,
-              padding: '.25rem',
-              borderRadius: '.375rem',
-              opacity: 0.5,
+              position: 'relative',
+              '--letter-bg': 'var(--theme-bg)',
+              '--letter-fg': 'var(--theme-fg)',
+              '--letter-heading': 'var(--theme-fg)',
             })}
           >
-            <XMarkIcon
-              width={24}
-              height={24}
-            />
-          </button>
-          {renderContent(page.document).body}
-          <button
-            type="button"
-            data-close-overlay
-            mix={css({
-              display: 'flex',
-              alignItems: 'center',
-              gap: '.5rem',
-              position: 'absolute',
-              bottom: '1.5rem',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'color-mix(in oklab,var(--theme-fg) 5%,transparent)',
-              borderRadius: 4,
-              padding: '.25rem .75rem',
-              '@media (width >= 48rem)': { display: 'none' },
-            })}
-          >
-            <ArrowLeftIcon
-              width={16}
-              height={16}
-            />
-            Back
-          </button>
+            <button
+              type="button"
+              data-close-overlay
+              aria-label="Close lyrics"
+              mix={css({
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                zIndex: 10,
+                padding: '.25rem',
+                borderRadius: '.375rem',
+                opacity: 0.5,
+              })}
+            >
+              <XMarkIcon
+                width={24}
+                height={24}
+              />
+            </button>
+            {renderContent(page.document).body}
+            <button
+              type="button"
+              data-close-overlay
+              mix={css({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '.5rem',
+                position: 'absolute',
+                bottom: '1.5rem',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'color-mix(in oklab,var(--theme-fg) 5%,transparent)',
+                borderRadius: 4,
+                padding: '.25rem .75rem',
+                '@media (width >= 48rem)': { display: 'none' },
+              })}
+            >
+              <ArrowLeftIcon
+                width={16}
+                height={16}
+              />
+              Back
+            </button>
+          </div>
         </div>
-      </div>,
+      </SiteContent>,
       { headers: privateHeaders },
     )
   })
-  router.get(
-    routes.sitemap,
-    () =>
-      new Response(
-        '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
-          contentRoutes
-            .filter((route) => !route.noindex && route.path !== '/about')
-            .map(
-              (route) =>
-                `<url><loc>https://hannesdiem.de${route.path}</loc>${route.updatedAt ? `<lastmod>${new Date(route.updatedAt).toISOString()}</lastmod>` : ''}<changefreq>monthly</changefreq><priority>0.8</priority></url>`,
-            )
-            .join('') +
-          '</urlset>',
-        {
-          headers: {
-            'Content-Type': 'application/xml; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600',
-          },
+  router.get(routes.sitemap, async ({ request }) => {
+    const { site } = await content(request)
+    return new Response(
+      '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+        site.routes
+          .filter((route) => !route.noindex && route.path !== '/about')
+          .map(
+            (route) =>
+              `<url><loc>https://hannesdiem.de${xml(route.path)}</loc>${route.updatedAt ? `<lastmod>${new Date(route.updatedAt).toISOString()}</lastmod>` : ''}<changefreq>monthly</changefreq><priority>0.8</priority></url>`,
+          )
+          .join('') +
+        '</urlset>',
+      {
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'no-cache',
+          'Cloudflare-CDN-Cache-Control': 'public, max-age=60, stale-if-error=0',
+          'Cache-Tag': contentCacheTag,
         },
-      ),
-  )
-  router.get(routes.legacyShareImage, ({ params }) => {
+      },
+    )
+  })
+  router.get(routes.legacyShareImage, async ({ request, params }) => {
+    const { site } = await content(request)
     const kind =
       params.collection === 'hdm-pages'
         ? 'page'
@@ -153,12 +134,15 @@ export function createApp(content: ContentLoader = loadContent, env: NewsletterE
           : undefined
     const page =
       kind &&
-      contentRoutes.find(
+      site.routes.find(
         (route) => route.kind === kind && route.sourceId === params.file.replace(/\.png$/, ''),
       )
-    const image = page && shareImages[page.path as keyof typeof shareImages]
+    const image = page && site.shareImages[page.path]
     return image
-      ? redirect(image.src, 307)
+      ? redirect(image.src, {
+          status: 307,
+          headers: { 'Cache-Tag': contentCacheTag, 'Cache-Control': 'no-cache' },
+        })
       : new Response('Not found', { status: 404, headers: privateHeaders })
   })
   router.get(
@@ -176,22 +160,31 @@ export function createApp(content: ContentLoader = loadContent, env: NewsletterE
   )
   router.get(routes.content, async ({ request, render }) => {
     const path = new URL(request.url).pathname
-    const destination = legacyRedirects.get(path)
+    const page = await content(request)
+    const destination = page.site.redirects.find((redirect) => redirect.path === path)
     if (destination)
       return redirect(
-        destination.to + (path === '/' ? new URL(request.url).search : ''),
-        destination.status,
+        destination.to + (destination.preserveSearch ? new URL(request.url).search : ''),
+        {
+          status: destination.status,
+          headers: {
+            'Cache-Tag': contentCacheTag,
+            'Cache-Control': 'no-cache',
+            'Cloudflare-CDN-Cache-Control': 'public, max-age=60, stale-if-error=0',
+          },
+        },
       )
     if (path.endsWith('/') && path !== '/')
       return redirect(path.slice(0, -1) + new URL(request.url).search, 308)
-    const page = await content(request)
     return render(
-      <Page
-        {...renderContent(page.document)}
-        route={page.route}
-        path={path}
-        noindex={page.status === 404}
-      />,
+      <SiteContent site={page.site}>
+        <Page
+          {...renderContent(page.document)}
+          route={page.route}
+          path={path}
+          noindex={page.status === 404}
+        />
+      </SiteContent>,
       {
         status: page.status,
         headers:
@@ -200,7 +193,8 @@ export function createApp(content: ContentLoader = loadContent, env: NewsletterE
             : {
                 'Cache-Control': 'no-cache',
                 'Cloudflare-CDN-Cache-Control': 'public, max-age=60, stale-if-error=0',
-                'Cache-Tag': `page:${page.key}`,
+                'Cache-Tag': `content,page:${page.key}`,
+                'X-Content-Revision': page.contentHash,
               },
       },
     )

@@ -1,0 +1,46 @@
+name: Publish content
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    environment: Production
+    timeout-minutes: 20
+    env:
+      MEDIA_BASE_URL: https://media.hannesdiem.de
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          lfs: true
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: ./.github/actions/prepare-content
+      - name: Check authored content
+        run: |
+          npx prettier content cmx.config.ts --check
+          npx tsc --noEmit -p content/tsconfig.json
+      - name: Upload immutable media before publishing references
+        env:
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: npm run media:upload
+      - name: Publish signed CMX documents
+        env:
+          CMX_PUBLISH_PRIVATE_KEY: ${{ secrets.CMX_PUBLISH_PRIVATE_KEY }}
+          CMX_PUBLISH_KEY_ID: ${{ vars.CMX_PUBLISH_KEY_ID }}
+          CMX_PUBLISH_URL: ${{ vars.SITE_URL }}/_cmx/publication
+        run: npx --no-install cmx-publish .generated/publication.json "$CMX_PUBLISH_URL" --config cmx.config.ts > .generated/publication-result.json
+      - name: Verify published site and media
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: node scripts/smoke.ts "$SITE_URL" --publication
