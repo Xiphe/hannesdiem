@@ -5,7 +5,7 @@ import { Footer, NavigationDialog } from './navigation.tsx'
 import { contentTheme, type ContentRoute } from './content.ts'
 import { getMedia } from './media.ts'
 import { themeCss } from './theme.ts'
-import shareImages from '../.generated/og.json' with { type: 'json' }
+import { SiteContent } from './site-content.ts'
 const Chrome = clientEntry(assets.chrome + '#Chrome', ChromeComponent)
 export function Page(
   handle: Handle<{
@@ -17,12 +17,12 @@ export function Page(
     plain?: boolean
   }>,
 ) {
+  const site = handle.context.get(SiteContent)
   return () => {
     const { title, body, route, path = '/', noindex, plain } = handle.props
     const canonical = `https://hannesdiem.de${path}`
     const image =
-      shareImages[path as keyof typeof shareImages] ??
-      (route?.image ? getMedia(route.image) : undefined)
+      site.shareImages[path] ?? (route?.image ? getMedia(site.media, route.image) : undefined)
     const pageTitle = route?.title ?? title
     const documentTitle = pageTitle === 'Hannes Diem' ? pageTitle : `${pageTitle} • Hannes Diem`
     return (
@@ -129,7 +129,7 @@ export function Page(
             rel="stylesheet"
             href={assets.style}
           />
-          <style>{themeCss(contentTheme(route))}</style>
+          <style>{themeCss(contentTheme(site, route))}</style>
           <script
             type="module"
             src={assets.entry}

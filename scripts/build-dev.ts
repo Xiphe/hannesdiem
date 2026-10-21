@@ -17,6 +17,7 @@ if (process.env.WRANGLER_COMMAND === 'dev') {
   ) {
     run('media:build')
   }
-  execFileSync(process.execPath, ['scripts/build.ts'], { stdio: 'inherit' })
+  execFileSync(process.execPath, ['scripts/build-publication.ts'], { stdio: 'inherit' })
+  execFileSync(process.execPath, ['scripts/build.ts', '--local-content'], { stdio: 'inherit' })
   console.log(`Local build ready in ${((performance.now() - started) / 1000).toFixed(1)}s`)
 }

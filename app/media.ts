@@ -1,4 +1,3 @@
-import manifest from '../.generated/media.json' with { type: 'json' }
 import type { PaletteColor } from './theme.ts'
 
 export interface MediaImage {
@@ -12,9 +11,7 @@ export interface MediaImage {
   color?: string
   palette?: PaletteColor[]
 }
-const images = manifest as Record<string, MediaImage>
-
-export function getMedia(image: string): MediaImage {
+export function getMedia(images: Record<string, MediaImage>, image: string): MediaImage {
   const result = images[image]
   if (!result) throw new Error(`Unknown content image: ${image}`)
   return result

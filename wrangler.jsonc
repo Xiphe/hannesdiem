@@ -8,9 +8,16 @@
   },
   "compatibility_date": "2026-10-18",
   "workers_dev": true,
-  "exports": { "NewsletterState": { "type": "durable-object", "storage": "sqlite" } },
+  "exports": {
+    "NewsletterState": { "type": "durable-object", "storage": "sqlite" },
+    "ContentState": { "type": "durable-object", "storage": "sqlite" },
+  },
+  "vars": { "CMX_PUBLISH_PUBLIC_KEYS": "{}" },
   "durable_objects": {
-    "bindings": [{ "name": "NEWSLETTER_STATE", "class_name": "NewsletterState" }],
+    "bindings": [
+      { "name": "NEWSLETTER_STATE", "class_name": "NewsletterState" },
+      { "name": "CONTENT_STATE", "class_name": "ContentState" },
+    ],
   },
   "preview_urls": false,
   "assets": { "directory": "dist" },

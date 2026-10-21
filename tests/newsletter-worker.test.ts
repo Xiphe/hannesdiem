@@ -24,6 +24,7 @@ test('newsletter sends in Workers and rejects provider redirects without followi
       compatibilityDate: '2026-10-18',
       durableObjects: {
         NEWSLETTER_STATE: { className: 'NewsletterState', useSQLite: true },
+        CONTENT_STATE: { className: 'ContentState', useSQLite: true },
       },
       unsafeEphemeralDurableObjects: true,
       bindings: {

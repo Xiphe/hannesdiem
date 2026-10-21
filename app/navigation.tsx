@@ -1,54 +1,11 @@
 import { css, type Handle } from 'remix/component'
 import assets from '../.generated/assets.json' with { type: 'json' }
-import routeData from '../.generated/routes.json' with { type: 'json' }
+import { SiteContent } from './site-content.ts'
 import { ServiceLogo } from './icons.tsx'
 import { ChevronDownIcon, XMarkIcon } from './heroicons.tsx'
 import { NewsletterArea } from './newsletter-view.tsx'
 import type { NewsletterState } from './newsletter.ts'
 
-export const socialLinks = [
-  { title: 'Twitch', href: 'https://www.twitch.tv/hannes_diem', name: 'twitch' },
-  { title: 'YouTube', href: 'https://www.youtube.com/@hannes_diem', name: 'youtube' },
-  { title: 'Instagram', href: 'https://www.instagram.com/hannes.diem/', name: 'instagram' },
-  { title: 'TikTok', href: 'https://www.tiktok.com/@hannes.diem', name: 'tiktok' },
-]
-export const listenLinks = [
-  {
-    title: 'Spotify',
-    href: 'https://open.spotify.com/artist/2eaXfpAkFuTlmu5IsLhxMl',
-    name: 'spotify',
-  },
-  {
-    title: 'Apple Music',
-    href: 'https://music.apple.com/us/artist/hannes-diem/377388675',
-    name: 'applemusic',
-  },
-  { title: 'Deezer', href: 'https://www.deezer.com/us/artist/533043', name: 'deezer' },
-  { title: 'Amazon Music', href: 'https://www.amazon.com/s?k=Hannes+Diem', name: 'amazonmusic' },
-  { title: 'Tidal', href: 'https://tidal.com/browse/artist/3711015', name: 'tidal' },
-  { title: 'SoundCloud', href: 'https://soundcloud.com/hannesdiem', name: 'soundcloud' },
-]
-export const sections = [
-  {
-    name: 'Work',
-    items: routeData
-      .filter((route) => route.kind === 'release')
-      .sort((a, b) =>
-        ('releaseDate' in b ? (b.releaseDate ?? '') : '').localeCompare(
-          'releaseDate' in a ? (a.releaseDate ?? '') : '',
-        ),
-      )
-      .map((route) => ({ name: route.title, href: route.path })),
-  },
-  {
-    name: 'One Week Album',
-    items: [
-      { name: 'About', href: '/one-week-album' },
-      { name: 'California 2024 Recap', href: '/one-week-album/california-2024' },
-      { name: 'Løkken 2024 Recap', href: '/one-week-album/lokken-2024' },
-    ],
-  },
-]
 const quietLink = css({ opacity: 0.6, '&:hover': { opacity: 1 } })
 export function Brand(handle: Handle<{ footer?: boolean }>) {
   return () => (
@@ -86,6 +43,7 @@ export function Brand(handle: Handle<{ footer?: boolean }>) {
   )
 }
 export function SocialLinks(handle: Handle<{ listen?: boolean; footer?: boolean }>) {
+  const { social: socialLinks, listen: listenLinks } = handle.context.get(SiteContent).navigation
   return () => (
     <ul
       aria-label={handle.props.listen ? 'Find my music' : 'Connect on social media'}
@@ -191,6 +149,7 @@ const navStyle = css({
 export function Navigation(
   handle: Handle<{ pathname: string; state: NewsletterState; lazy?: boolean }>,
 ) {
+  const { sections } = handle.context.get(SiteContent).navigation
   return () => (
     <div mix={css({ display: 'flex', minHeight: '100dvh', justifyContent: 'end' })}>
       <div
@@ -307,7 +266,8 @@ export function NavigationDialog(handle: Handle<{ pathname: string }>) {
     </dialog>
   )
 }
-export function Footer() {
+export function Footer(handle: Handle) {
+  const { sections, legal } = handle.context.get(SiteContent).navigation
   return () => (
     <footer mix={css({ maxWidth: '80rem', marginInline: 'auto', padding: '4rem 1.5rem 2rem' })}>
       <div
@@ -319,16 +279,7 @@ export function Footer() {
           mix={css({ marginBottom: '2.5rem' })}
         >
           <div mix={css({ display: 'flex', flexWrap: 'wrap', gap: '2rem 4rem' })}>
-            {[
-              ...sections,
-              {
-                name: 'Legal',
-                items: [
-                  { name: 'Imprint', href: '/imprint' },
-                  { name: 'Privacy', href: '/privacy' },
-                ],
-              },
-            ].map((section) => (
+            {[...sections, legal].map((section) => (
               <div>
                 <h3
                   mix={css({
