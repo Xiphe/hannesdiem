@@ -8,9 +8,10 @@ import {
 
 export const signatureLifetime = 60
 const signatureTag = 'cmx-publication'
+export const manifestConditionHeader = 'cmx-if-none-match'
 const baseComponents = ['@method', '@target-uri', 'content-type', 'content-digest']
 const components = (method: string) =>
-  method === 'GET' ? [...baseComponents, 'if-none-match'] : baseComponents
+  method === 'GET' ? [...baseComponents, manifestConditionHeader] : baseComponents
 
 export class PublicationRequestError extends Error {
   readonly status: number
@@ -64,7 +65,12 @@ export async function signPublicationRequest(
   const headers = new Headers(request.headers)
   headers.set('Content-Type', 'application/json')
   headers.set('Content-Digest', await digest(body))
-  if (request.method === 'GET' && !headers.has('If-None-Match')) headers.set('If-None-Match', '""')
+  if (request.method === 'GET') {
+    // The public edge can remove HTTP cache validators before invoking Workers.
+    // Carry the authenticated CMX condition in an application header instead.
+    headers.set(manifestConditionHeader, headers.get('If-None-Match') ?? '""')
+    headers.delete('If-None-Match')
+  }
   const signed = new Request(request.url, {
     method: request.method,
     headers,

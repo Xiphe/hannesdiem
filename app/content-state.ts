@@ -9,7 +9,11 @@ import { cmx } from '@cmx-tools/remix'
 import { environment } from '../.cmx/environment.ts'
 import { contentPage } from './content.ts'
 import { siteEntry, readSite, validatePublication, type PublishedDocuments } from './publication.ts'
-import { PublicationRequestError, verifyPublicationRequest } from './publication-signatures.ts'
+import {
+  PublicationRequestError,
+  verifyPublicationRequest,
+  manifestConditionHeader,
+} from './publication-signatures.ts'
 
 const emptyState = {
   contentHash: 'sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',
@@ -187,10 +191,14 @@ export class ContentState extends DurableObject<Env> {
         store,
         verifyIncomingDocument: (document) => verifyCmxDocumentEnvironment(document, environment),
       })
+      const publicationHeaders = new Headers(request.headers)
+      if (request.method === 'GET') {
+        publicationHeaders.set('If-None-Match', request.headers.get(manifestConditionHeader)!)
+      }
       const response = await host.handlePublication(
         new Request(request.url, {
           method: request.method,
-          headers: request.headers,
+          headers: publicationHeaders,
           body: request.method === 'GET' ? undefined : body,
         }),
       )
