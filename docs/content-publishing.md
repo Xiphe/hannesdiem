@@ -7,14 +7,18 @@ website deployment. Content remains in this repository.
 
 ## Release flow
 
-`deploy.yml` serializes releases on `main`. Each revision is compared with the
-last successful release, so superseded pending runs and failed releases do not
-lose changes. Content-only changes call `content.yml`. Mixed changes first prepare and validate
-content in that workflow, deploy compatible website code, then activate the saved
-publication. Website-only changes skip content preparation and publication. Documentation-only changes
-need neither deployment. There is no manual trigger or hosted draft collection.
+There are two independent, single-job workflows triggered by pushes to `main`:
 
-The content workflow compiles and typechecks CMX, reuses processed media, uploads
+- `deploy.yml` builds, checks, and deploys website code. Path filters exclude authored content and media processing.
+- `content.yml` compiles content, extracts image metadata, checks the rendered site, uploads media, and publishes directly to the host. Content changes do not deploy website code.
+
+Both use the same Production concurrency group without cancelling running jobs.
+There is no release planner, reusable workflow, artifact handoff, manual trigger,
+or hosted draft collection. Workflow order is unspecified. When introducing a
+component, deploy a compatible implementation first, then merge content using it
+in a separate change, just as with a CMS.
+
+The content workflow compiles and typechecks CMX, processes media, uploads
 missing immutable R2 objects, and publishes the complete document map. Rendering
 uses `--complete-only` to prevent failed entries from becoming deletions. The
 reserved `_site` entry carries routes, navigation, media, and share-card metadata.
@@ -35,21 +39,20 @@ manifest GET, completes that refresh. CI only sees publishing success or failure
 Success means the purge was accepted; global propagation takes a short time. The
 60-second edge TTL remains a fallback. Private responses remain uncached.
 
-The initial migration has no bundled fallback. Content is prepared, tested, and
-uploaded before code deployment; the saved publication activates immediately
-after the new host is deployed. Until the first publication succeeds, content
-requests return 503. Later website deployments keep serving the stored collection.
-Configure credentials before merging.
+An empty host returns 503 until its first publication. Production is initialized;
+website deployments keep serving its stored collection.
 Before deploying code, CI checks published CMX versions, dependency contracts,
 and named imports against the new implementation environment. A release that
-would reject the current collection stops before deployment. Mixed releases must
-also preserve existing component prop behavior during the transition.
+would reject the current collection stops before deployment. Implementation changes must
+preserve the component prop behavior used by the currently published collection.
 
 ## Signing and setup
 
 CI signs GET and PUT requests with Ed25519 HTTP Message Signatures (RFC 9421).
 The Worker stores public keys only. Signatures cover the destination URI, method,
-content type, SHA-256 content digest, and conditional manifest header on GET.
+content type, SHA-256 content digest, and `CMX-If-None-Match` on GET. The host
+restores the standard conditional header only after verifying the signature; this
+keeps edge cache handling from stripping the authenticated manifest condition.
 Each proof expires after 60 seconds with five seconds of clock tolerance. SQLite
 consumes each nonce once, preserving replay records across restarts. Retries use
 fresh signatures. The transport pins its endpoint and refuses redirects.
@@ -64,8 +67,8 @@ The Production GitHub environment needs:
 | Variable | `SITE_URL`                | Stable website origin without a trailing slash.      |
 
 Existing R2 credentials upload media. Cloudflare deployment credentials are used
-only by the website job. The coordinator checks the publishing key pair and
-destination before changing the live site.
+only by the website job. The setup script configures the publishing key pair and
+destination before the first publication.
 
 Configure without printing a private key:
 
