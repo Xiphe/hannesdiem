@@ -10,6 +10,9 @@ test('ordinary CMS changes never select website deployment', () => {
       'content/navigation.ts',
       'content/media/cover.jpg',
       'scripts/build-og.ts',
+      'scripts/extract-palettes.ts',
+      'scripts/smoke.ts',
+      '.github/workflows/content.yml',
     ]),
     { website: false, content: true },
   )
@@ -23,7 +26,14 @@ test('mixed changes and shared contracts release code and content', () => {
   ]) {
     assert.deepEqual(releaseChanges(paths), { website: true, content: true })
   }
-  assert.deepEqual(releaseChanges(['app/style.css']), { website: true, content: false })
+  for (const path of [
+    'app/style.css',
+    'app/content-route.ts',
+    'tests/publication-worker.test.ts',
+    'playwright.website.config.ts',
+  ]) {
+    assert.deepEqual(releaseChanges([path]), { website: true, content: false })
+  }
   assert.deepEqual(releaseChanges(['README.md', 'docs/content-publishing.md']), {
     website: false,
     content: false,

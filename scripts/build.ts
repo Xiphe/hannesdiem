@@ -6,12 +6,11 @@ import { gzipSync } from 'node:zlib'
 await rm('dist', { recursive: true, force: true })
 await mkdir('.generated', { recursive: true })
 const local = process.argv.includes('--local-content')
-const bootstrap = process.env.CMX_BOOTSTRAP_CONTENT === 'true'
 await writeFile(
   '.generated/local-content.ts',
-  local || bootstrap
-    ? `import documents from './publication.json' with { type: 'json' }\nexport const localPublication = ${local ? 'documents' : 'null'}\nexport const bootstrapPublication = ${bootstrap && !local ? 'documents' : 'null'}\n`
-    : 'export const localPublication = null\nexport const bootstrapPublication = null\n',
+  local
+    ? `import documents from './publication.json' with { type: 'json' }\nexport const localPublication = documents\n`
+    : 'export const localPublication = null\n',
 )
 const result = await build({
   entryPoints: {

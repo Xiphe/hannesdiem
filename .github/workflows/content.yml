@@ -2,12 +2,17 @@ name: Publish content
 
 on:
   workflow_call:
+    inputs:
+      phase:
+        type: string
+        required: true
 
 permissions:
   contents: read
 
 jobs:
-  publish:
+  prepare:
+    if: inputs.phase == 'prepare'
     runs-on: ubuntu-24.04
     environment: Production
     timeout-minutes: 20
@@ -34,6 +39,39 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: npm run media:upload
+      - run: npx playwright install --with-deps --only-shell chromium
+      - run: node scripts/build.ts --local-content
+      - run: npm run check
+      - name: Save validated publication for activation after website deployment
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: content-publication
+          include-hidden-files: true
+          retention-days: 1
+          path: |
+            .generated/publication.json
+            .generated/media-files.json
+
+  publish:
+    if: inputs.phase == 'publish'
+    runs-on: ubuntu-24.04
+    environment: Production
+    timeout-minutes: 10
+    env:
+      MEDIA_BASE_URL: https://media.hannesdiem.de
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: content-publication
+          path: .generated
       - name: Publish signed CMX documents
         env:
           CMX_PUBLISH_PRIVATE_KEY: ${{ secrets.CMX_PUBLISH_PRIVATE_KEY }}

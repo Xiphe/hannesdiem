@@ -1,4 +1,3 @@
-import { appendFile } from 'node:fs/promises'
 import {
   CMX_DOCUMENT_SCHEMA,
   verifyCmxDocumentEnvironment,
@@ -14,10 +13,9 @@ const response = await fetch(new URL('/_cmx/status', origin), {
   redirect: 'error',
   signal: AbortSignal.timeout(20_000),
 })
-let bootstrap: boolean
-if (response.status === 404)
-  bootstrap = true // Existing bundled-content website.
-else {
+if (response.status === 404) {
+  console.log('Content host will be introduced by this website deployment.')
+} else {
   if (!response.ok) throw new Error(`Cannot check content host (${response.status}).`)
   const status = (await response.json()) as {
     ready?: boolean
@@ -53,12 +51,5 @@ else {
       }
     }
   }
-  bootstrap = !status.ready
 }
-if (process.env.GITHUB_OUTPUT)
-  await appendFile(process.env.GITHUB_OUTPUT, `required=${bootstrap}\n`)
-console.log(
-  bootstrap
-    ? 'Initial deployment will retain a content fallback until publication.'
-    : 'Persistent content is initialized; no content will be bundled.',
-)
+console.log('Published content is compatible with the website implementation.')

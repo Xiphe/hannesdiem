@@ -9,8 +9,9 @@ website deployment. Content remains in this repository.
 
 `deploy.yml` serializes releases on `main`. Each revision is compared with the
 last successful release, so superseded pending runs and failed releases do not
-lose changes. Content-only changes call `content.yml`. Mixed changes deploy
-compatible website code before publishing content. Documentation-only changes
+lose changes. Content-only changes call `content.yml`. Mixed changes first prepare and validate
+content in that workflow, deploy compatible website code, then activate the saved
+publication. Website-only changes skip content preparation and publication. Documentation-only changes
 need neither deployment. There is no manual trigger or hosted draft collection.
 
 The content workflow compiles and typechecks CMX, reuses processed media, uploads
@@ -22,7 +23,10 @@ The embedded host stores documents in the `CONTENT_STATE` SQLite Durable Object.
 It checks the complete candidate against the deployed component environment and
 commits documents and metadata in one transaction. Page reads materialize a
 consistent snapshot. Website deployments preserve that storage. Production
-bundles normally contain no authored documents or generated content/media manifests.
+bundles contain no authored documents or generated content/media manifests.
+The website job uses synthetic CMS documents for server and browser checks; it
+never compiles authored content, checks out LFS media, or receives R2 credentials.
+The content workflow owns the full site integration suite and media processing.
 
 The Worker owns cache refresh: after accepting content it purges the shared
 `content` tag through Workers Cache. If purging fails, accepted content remains
@@ -31,12 +35,11 @@ manifest GET, completes that refresh. CI only sees publishing success or failure
 Success means the purge was accepted; global propagation takes a short time. The
 60-second edge TTL remains a fallback. Private responses remain uncached.
 
-The first release checks `/_cmx/status`, uploads bootstrap media, and carries a
-temporary compiled-content fallback while the new store is empty. The first
-signed publication takes precedence immediately; later content changes continue
-using persistent storage without rebuilding that fallback. The next website
-deployment sees an initialized store and omits the fallback. This also keeps the
-site available if initial publication fails. Configure credentials before merging.
+The initial migration has no bundled fallback. Content is prepared, tested, and
+uploaded before code deployment; the saved publication activates immediately
+after the new host is deployed. Until the first publication succeeds, content
+requests return 503. Later website deployments keep serving the stored collection.
+Configure credentials before merging.
 Before deploying code, CI checks published CMX versions, dependency contracts,
 and named imports against the new implementation environment. A release that
 would reject the current collection stops before deployment. Mixed releases must

@@ -1,12 +1,12 @@
 import { isCmxDocument, type CmxDocument, type CmxNode } from '@cmx-tools/contracts'
 import { cmx } from '@cmx-tools/remix'
 import { environment } from '../.cmx/environment.ts'
-import type { ContentRoute } from '../content/types.ts'
+import type { ContentRoute } from './content-route.ts'
 import type { SiteMetadata } from './publication.ts'
 import { getMedia } from './media.ts'
 import { beachTheme, defaultTheme, paletteToTheme, type Theme } from './theme.ts'
 
-export type { ContentRoute } from '../content/types.ts'
+export type { ContentRoute } from './content-route.ts'
 
 export interface ContentPage {
   document: CmxDocument

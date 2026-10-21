@@ -24,7 +24,10 @@
     "deploy": "wrangler deploy",
     "content:build": "npm run cmx:build && npm run media:build && node scripts/build-publication.ts",
     "content:publish": "cmx-publish .generated/publication.json \"$CMX_PUBLISH_URL\" --config cmx.config.ts",
-    "predeploy": "npm run build:app"
+    "predeploy": "npm run build:app",
+    "typecheck:website": "wrangler types && tsc --noEmit -p tsconfig.website.json",
+    "test:website": "node --import remix/node-tsx --test tests/newsletter.test.ts tests/newsletter-worker.test.ts tests/publication-worker.test.ts tests/release-plan.test.ts && playwright test --config playwright.website.config.ts",
+    "check:website": "prettier app scripts/build.ts scripts/build-dev.ts scripts/check-content-host.ts scripts/release-plan.ts playwright*.config.ts tests/website.spec.ts tests/host-fixture.ts tests/publication-worker.test.ts tests/newsletter*.ts tests/release-plan.test.ts cmx.config.ts tsconfig.website.json package.json wrangler.jsonc .github/workflows/deploy.yml --check && npm run typecheck:website && npm run test:website"
   },
   "dependencies": {
     "@cmx-tools/contracts": "0.3.0",

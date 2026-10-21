@@ -11,10 +11,13 @@ export function releaseChanges(paths: string[]) {
       continue
     }
     if (
-      /^scripts\/(?:build-media|build-og|extract-palettes|upload-media|compile-cmx|build-routes|build-publication|publish-transport)\.ts$/.test(
+      /^scripts\/(?:build-media|build-og|extract-palettes|upload-media|compile-cmx|build-routes|build-publication|publish-transport|smoke|check-publishing-config|configure-content-publishing)\.ts$/.test(
         path,
       ) ||
       path.startsWith('tools/palette/') ||
+      ['tests/browser.spec.ts', 'tests/server.test.ts', 'tests/content-fixture.ts'].includes(
+        path,
+      ) ||
       path === '.github/workflows/content.yml' ||
       path.startsWith('.github/actions/prepare-content/')
     ) {
@@ -25,6 +28,11 @@ export function releaseChanges(paths: string[]) {
       path.startsWith('app/') ||
       path === 'scripts/build.ts' ||
       path === 'scripts/build-dev.ts' ||
+      path === 'scripts/check-content-host.ts' ||
+      path === 'scripts/verify-newsletter.ts' ||
+      path === 'tsconfig.website.json' ||
+      path === 'playwright.website.config.ts' ||
+      path.startsWith('tests/') ||
       path === 'wrangler.jsonc'
     ) {
       website = true
