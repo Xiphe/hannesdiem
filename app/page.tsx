@@ -2,7 +2,7 @@ import { clientEntry, type Handle, type RemixNode } from 'remix/component'
 import assets from '../.generated/assets.json' with { type: 'json' }
 import { Chrome as ChromeComponent } from './chrome.tsx'
 import { Footer, NavigationDialog } from './navigation.tsx'
-import { contentTheme, SiteContent } from './content-presentation/index.ts'
+import { contentTheme, SiteContent } from './ui-library/index.ts'
 import type { ContentRoute } from '../contracts/content.ts'
 import { getMedia } from './media.ts'
 import { themeCss } from './theme.ts'

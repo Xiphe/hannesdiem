@@ -12,7 +12,7 @@ export default {
   externals: [
     {
       contract: '@hannesdiem/content-components',
-      implementation: { '.': '../app/content-presentation/components.ts' },
+      implementation: { '.': '../app/ui-library/components.ts' },
     },
   ],
 } satisfies CmxConfig

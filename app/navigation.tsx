@@ -1,6 +1,6 @@
 import { css, type Handle } from 'remix/component'
 import assets from '../.generated/assets.json' with { type: 'json' }
-import { SiteContent } from './content-presentation/index.ts'
+import { SiteContent } from './ui-library/index.ts'
 import { ServiceLogo } from './icons.tsx'
 import { ChevronDownIcon, XMarkIcon } from './heroicons.tsx'
 import { NewsletterArea } from './newsletter-view.tsx'
