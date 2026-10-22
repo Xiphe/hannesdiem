@@ -15,6 +15,4 @@ npm run check
 npm run dev
 ```
 
-`sand tunnel 8787` forwards the preview.
-
 [Content](content/README.md) · [Website workflow](.github/workflows/deploy.yml) · [Content workflow](.github/workflows/content.yml) · [Publishing setup](scripts/configure-content-publishing.ts)
