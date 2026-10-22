@@ -5,7 +5,7 @@ const { CMX_PUBLISH_PRIVATE_KEY, CMX_PUBLISH_KEY_ID, CMX_PUBLISH_PUBLIC_KEYS, SI
   process.env
 if (!CMX_PUBLISH_PRIVATE_KEY || !CMX_PUBLISH_KEY_ID || !CMX_PUBLISH_PUBLIC_KEYS || !SITE_URL) {
   throw new Error(
-    'Configure Production CMX_PUBLISH_PRIVATE_KEY secret and CMX_PUBLISH_KEY_ID, CMX_PUBLISH_PUBLIC_KEYS, SITE_URL variables; see docs/content-publishing.md.',
+    'Configure Production CMX_PUBLISH_PRIVATE_KEY secret and CMX_PUBLISH_KEY_ID, CMX_PUBLISH_PUBLIC_KEYS, SITE_URL variables; see scripts/configure-content-publishing.ts.',
   )
 }
 try {

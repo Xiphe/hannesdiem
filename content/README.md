@@ -20,4 +20,4 @@ CMX bundles `pages/**/*.tsx`, resolving page imports and serializing optional `s
 
 `npx tsc --noEmit -p content/tsconfig.json`: authoring types on demand. `npm run content:build`: complete publication and media. `npm run build:app`: production implementation environment and app assets, without content or media preprocessing. `npm run build`: local fixture and app assets for tests. `npm run check`: app functionality, no editorial inventories or snapshots.
 
-Merging content to `main` publishes automatically; see [publishing](../docs/content-publishing.md).
+[Publishing workflow](../.github/workflows/deploy.yml).
