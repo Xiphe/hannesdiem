@@ -1,3 +1,4 @@
+import { PublicationRequestError } from './PublicationRequestError.ts'
 import { DurableObject } from 'cloudflare:workers'
 import {
   createCmxDocumentHost,
@@ -6,14 +7,10 @@ import {
 } from '@cmx-tools/document-host'
 import { verifyCmxDocumentEnvironment, type CmxDocument } from '@cmx-tools/contracts'
 import { cmx } from '@cmx-tools/remix'
-import { environment } from '../.cmx/environment.ts'
-import { contentPage } from './content.ts'
-import { siteEntry, readSite, validatePublication, type PublishedDocuments } from './publication.ts'
-import {
-  PublicationRequestError,
-  verifyPublicationRequest,
-  manifestConditionHeader,
-} from './publication-signatures.ts'
+import { environment } from '../../.cmx/environment.ts'
+import { contentPage } from './source.ts'
+import { siteEntry, readSite, validatePublication, type PublishedDocuments } from './collection.ts'
+import { verifyPublicationRequest, manifestConditionHeader } from './signatures.ts'
 
 const emptyState = {
   contentHash: 'sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',

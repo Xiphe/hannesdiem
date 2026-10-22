@@ -7,7 +7,7 @@ import {
   validatePublication,
   type PublishedDocuments,
   type SiteMetadata,
-} from '../app/publication.ts'
+} from '../app/publication/index.ts'
 
 const read = async (file: string) => JSON.parse(await readFile(file, 'utf8'))
 const routes: SiteMetadata['routes'] = await read('.generated/routes.json')

@@ -3,12 +3,13 @@ import { render } from 'remix/middleware/render'
 import { css } from 'remix/component'
 import { XMarkIcon, ArrowLeftIcon } from './heroicons.tsx'
 import { redirect } from 'remix/response/redirect'
-import { renderContent, type ContentLoader } from './content.ts'
+import { renderContent } from './content-rendering.ts'
+import type { ContentLoader } from './publication/index.ts'
 import { Page } from './page.tsx'
 import type { NewsletterEnvironment } from './newsletter.ts'
 import { routes } from './routes.ts'
 import { SiteContent } from './site-content.ts'
-import { contentCacheTag } from './publication.ts'
+import { contentCacheTag } from './publication/index.ts'
 
 const privateHeaders = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
 const xml = (value: string) =>

@@ -5,13 +5,7 @@ import { gzipSync } from 'node:zlib'
 
 await rm('dist', { recursive: true, force: true })
 await mkdir('.generated', { recursive: true })
-const local = process.argv.includes('--local-content')
-await writeFile(
-  '.generated/local-content.ts',
-  local
-    ? `import documents from './publication.json' with { type: 'json' }\nexport const localPublication = documents\n`
-    : 'export const localPublication = null\n',
-)
+const local = process.argv.includes('--local-media')
 const result = await build({
   entryPoints: {
     entry: 'app/browser.ts',
@@ -37,7 +31,7 @@ const result = await build({
 
 const serverModules = [
   'app/page.tsx',
-  'app/content.ts',
+  'app/content-rendering.ts',
   'app/content-components.tsx',
   'app/cmx-components.ts',
   'app/media.ts',

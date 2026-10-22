@@ -18,7 +18,7 @@ on:
       - 'scripts/verify-newsletter.ts'
       - 'scripts/publish-transport.ts'
       - 'tests/host-fixture.ts'
-      - 'tests/publication-worker.test.ts'
+      - 'tests/website-worker.ts'
       - 'tests/newsletter*.ts'
       - 'tests/website.spec.ts'
       - '.github/workflows/deploy.yml'

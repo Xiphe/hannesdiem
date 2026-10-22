@@ -67,7 +67,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: npm run media:upload
       - run: npx playwright install --with-deps --only-shell chromium
-      - run: node scripts/build.ts --local-content
+      - run: node scripts/build.ts --local-media
       - run: npm run check
       - name: Publish signed CMX documents
         env:

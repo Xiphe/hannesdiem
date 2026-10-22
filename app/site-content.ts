@@ -1,5 +1,5 @@
 import type { Handle, RemixNode } from 'remix/component'
-import type { SiteMetadata } from './publication.ts'
+import type { SiteMetadata } from './publication/index.ts'
 
 // Component context keeps each streamed response on its own publication snapshot.
 export function SiteContent(

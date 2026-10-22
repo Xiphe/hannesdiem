@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import type { CmxNode } from '@cmx-tools/contracts'
 import { loadContent, contentRoutes, legacyRedirects } from './content-fixture.ts'
 import { createApp as createRuntimeApp } from '../app/router.tsx'
-import type { ContentLoader } from '../app/content.ts'
+import type { ContentLoader } from '../app/publication/index.ts'
 import type { NewsletterEnvironment } from '../app/newsletter.ts'
 const createApp = (loader: ContentLoader = loadContent, env: NewsletterEnvironment = {}) =>
   createRuntimeApp(loader, env)

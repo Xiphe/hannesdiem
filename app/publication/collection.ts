@@ -1,6 +1,6 @@
 import { isCmxDocument, type CmxDocument } from '@cmx-tools/contracts'
-import type { ContentRoute } from './content-route.ts'
-import type { MediaImage } from './media.ts'
+import type { ContentRoute } from './ContentRoute.ts'
+import type { MediaImage } from '../media.ts'
 
 export const siteEntry = '_site'
 export const publicationPath = '/_cmx/publication'

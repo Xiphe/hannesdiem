@@ -1,5 +1,4 @@
-import { publicationPath } from '../app/publication.ts'
-import { signPublicationRequest } from '../app/publication-signatures.ts'
+import { publicationPath, signPublicationRequest } from '../app/publication/index.ts'
 
 // Read in the publishing process only. Other CMX commands need no credentials.
 const privateKey = process.env.CMX_PUBLISH_PRIVATE_KEY

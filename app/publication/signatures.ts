@@ -1,3 +1,4 @@
+import { PublicationRequestError } from './PublicationRequestError.ts'
 import {
   appendSignature,
   createSignature,
@@ -12,14 +13,6 @@ export const manifestConditionHeader = 'cmx-if-none-match'
 const baseComponents = ['@method', '@target-uri', 'content-type', 'content-digest']
 const components = (method: string) =>
   method === 'GET' ? [...baseComponents, manifestConditionHeader] : baseComponents
-
-export class PublicationRequestError extends Error {
-  readonly status: number
-  constructor(message: string, status: number) {
-    super(message)
-    this.status = status
-  }
-}
 
 export async function publicationBody(request: Request): Promise<Uint8Array<ArrayBuffer>> {
   const maxBytes = 8 * 1024 * 1024
