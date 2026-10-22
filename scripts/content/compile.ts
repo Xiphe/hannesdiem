@@ -2,7 +2,7 @@ import { cmx } from '@cmx-tools/bundle'
 import { globSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
 import { rolldown } from 'rolldown'
-import config from '../cmx.config.ts'
+import config from '../../cmx.config.ts'
 
 const cwd = process.cwd()
 const pages = resolve(cwd, 'content/pages')
@@ -17,8 +17,8 @@ const bundle = await rolldown({
   cwd,
   input: entries,
   plugins: [cmx({ ...config, cwd })],
-  // Strict entry signatures create re-export facades without sourcemaps when
-  // pages import one another. CMX 0.1.1 requires a sourcemap for every chunk.
+  // Page imports can create entry facades without sourcemaps.
+  // https://github.com/cmx-tools/packages/issues/208
   preserveEntrySignatures: 'allow-extension',
 })
 try {

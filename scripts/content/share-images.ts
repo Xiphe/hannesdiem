@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import sharp, { type OverlayOptions } from 'sharp'
-import type { ContentRoute } from '../content/types.ts'
+import type { ContentRoute } from '../../content/types.ts'
 
 interface Media {
   src: string

@@ -11,12 +11,7 @@ on:
       - 'contracts/**'
       - 'cmx.config.ts'
       - 'tsconfig.json'
-      - 'scripts/compile-cmx.ts'
-      - 'scripts/build-routes.ts'
-      - 'scripts/build-media.ts'
-      - 'scripts/build-og.ts'
-      - 'scripts/extract-palettes.ts'
-      - 'scripts/build-publication.ts'
+      - 'scripts/content/**'
       - 'scripts/upload-media.ts'
       - 'scripts/publishing/**'
       - 'scripts/check-publishing-config.ts'
@@ -53,10 +48,7 @@ jobs:
       - name: Prepare content and image metadata
         run: |
           npm ci --prefix tools/palette
-          npm run cmx:build
-          node scripts/extract-palettes.ts
-          npm run media:build
-          node scripts/build-publication.ts
+          npm run content:build -- --extract-palettes
       - name: Check authored content
         run: |
           npx prettier content cmx.config.ts --check
@@ -68,7 +60,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: npm run media:upload
       - run: npx playwright install --with-deps --only-shell chromium
-      - run: node scripts/build.ts --local-media
+      - run: npm run build:app -- --local-media
       - run: npm run check
       - name: Publish signed CMX documents
         env:

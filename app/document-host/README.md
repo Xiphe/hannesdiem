@@ -9,7 +9,7 @@ publication/status requests and `load` for rendering. It owns persistent storage
 signature verification, replay protection, and revision-specific cache refresh.
 `ContentState` remains the Worker export for the existing persistent binding.
 
-CI owns publishing: content and media preparation run through `scripts/build-*.ts`,
+CI owns publishing: content and media preparation run through `scripts/content/prepare.ts`,
 media upload through `scripts/upload-media.ts`, and the CMX publishing command uses
 [`scripts/publishing/transport.ts`](../../scripts/publishing/transport.ts) to sign
 outgoing requests with the private key. The application only verifies them.
