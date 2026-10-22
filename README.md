@@ -1,39 +1,82 @@
 # hannesdiem.de
 
-Remix 3 SSR + CMX on Cloudflare Workers. Node 24 + npm; Git LFS for `content/media/**`.
+A production Remix 3 site on Cloudflare Workers, with content published through
+CMX. This codebase also serves as a reference for similar projects and research
+for CMX's alpha APIs.
+
+## Start locally
+
+Use Node 24, npm, and Git LFS. From a fresh checkout:
 
 ```sh
 git lfs install
 git lfs pull
 npm ci
-npx playwright install --with-deps chromium
-npm run dev
+npx playwright install --with-deps --only-shell chromium
+npm run build
 npm run check
 ```
 
-`npm run format` applies Prettier to authored files, including CMX. After `build` (or `dev`), `check` enforces formatting, app types, and server/browser functionality; it does not rebuild or assert editorial content, route counts, or a migration inventory. `npm test` also uses existing build artifacts. Local development needs no cloud credentials.
+Then run `npm run dev` to serve the site on port 8787. From your computer,
+`sand tunnel 8787` forwards the preview. Local development needs no cloud credentials.
 
-`npm run dev`: port 8787; watches `content/`, `app/`, `cmx.config.ts`, and `scripts/`, rebuilds CMX/app assets, and reloads the browser. Existing processed media is reused; run `npm run build` after media changes. `sand tunnel 8787` forwards the preview. The custom build hook runs only for `wrangler dev`; Actions owns production builds.
+Development watches content, app code, CMX configuration, and build scripts; it
+rebuilds and reloads the browser. Existing processed media is reused. Run
+`npm run build` after changing media. `npm run check` uses existing build artifacts;
+run the build first in a fresh checkout. `PLAYWRIGHT_PORT` selects a separate test
+server port when working in parallel worktrees.
 
-## Content
+## Find the owner
 
-`content/pages/` groups authored CMX into releases, songs, and One Week Album pages. Each song/release owns its typed metadata and body in one CMX file; people are shared. [content/README.md](content/README.md) maps ownership. `content/routes.ts` declares publication paths and SEO overrides; the build combines these with CMX exports into `.generated/routes.json`. `/` redirects to `/linktree`; legacy aliases and direct lyric URLs remain supported. `app/content-components.tsx` owns native Remix styling/markup; `app/media.ts` resolves image identities. Ordinary rich-text HTML and intentional one-offs are allowed. No Payload/Next/React runtime.
+[Architecture](docs/architecture.md) maps hosting, publishing, shared contracts,
+rendering, and the local/test entrypoints. The app owns the document host; CI owns
+publishing; shared contracts live outside the app.
 
-`npm run build`: `content:build` (CMX, route metadata, media, and complete publication) → local fixture + app assets. `build:app` generates only the implementation environment and app assets for production. Generated files: `.generated/`, `.cmx/`, `dist/`. `cmx.config.ts` implementation paths are relative to `.cmx/environment.ts`. Production Workers read published content from persistent storage; production builds keep authored content outside website and browser bundles. Website CI uses synthetic CMS input; compilation, image metadata extraction, and site integration checks belong to the content pipeline. [Content publishing](docs/content-publishing.md) covers the pipeline and signing setup.
+- [Content authoring](content/README.md): pages, Song and Release metadata, navigation, and public paths.
+- [Content publishing](docs/content-publishing.md): the two workflows, signing setup, cache refresh, and rollback.
+- [Newsletter](docs/newsletter.md): sessions, confirmation, and optional delivery configuration.
+- [CMX research](docs/research/cmx-publication-candidates.md): concrete upstream ownership candidates.
 
-Native Remix `css`/`mix` emits server-rendered styles. Only menu/dialog controls, newsletter state/forms, and localized dates hydrate. Navigation is cached page HTML and opens locally; its island loads private state after opening. Lyric links use canonical `/song/*` URLs; `data-rmx-src` fetches private `/m/song/*` Frame fragments. Public content DOM remains static. Decisions: `docs/adr/0003-*` through `0006-*`.
+`npm run build` prepares local content, media, and app assets. `npm run build:app`
+prepares the implementation environment and app assets for website deployment.
+Generated output lives in `.cmx/`, `.generated/`, and `dist/`.
 
-## Media
+## Content and media
 
-51 originals in LFS; `content/media.json` preserves alt text, dimensions, focal points, and source IDs. Sharp emits immutable WebP variants (320/480/960/1440/1920/up to 2560px; no upscaling). Share cards retain the legacy 1052×550 canvas/fonts; releases share cover images. The content publication includes generated image URLs/srcSets.
+Pages live in `content/pages/`; public paths come from `content/routes.ts`.
+The publication includes pages, navigation, redirects, SEO, and media metadata.
+Remix implementations own presentation; only interactive controls, newsletter
+forms, and localized dates hydrate. See [architecture](docs/architecture.md).
 
-Actions alone installs `tools/palette` and runs `scripts/extract-palettes.ts` using legacy `node-vibrant@4.0.4`. `content/palettes.json` is a saved Actions output for local previews; SHA mismatches fall back to the default theme until preprocessing. Refresh it from the `media-palettes-*` workflow artifact after changing originals. Do not install the palette tool locally.
+Original media is stored in Git LFS. Sharp produces immutable WebP variants and
+share cards. Actions extracts palettes using `tools/palette`; local builds use
+matching entries from `content/palettes.json` and fall back to the default theme
+for new or changed images. CI uses freshly extracted `.generated/palettes.json`.
+The palette tool is unnecessary for local development.
 
-Local `MEDIA_BASE_URL` defaults to `/media`; production uses `https://media.hannesdiem.de`. CI builds CMX before restoring media; its cache hashes generated route metadata rather than CMX source, so lyric/prose/release-credit edits retain the cache. An exact hit skips palette-tool installation and all image processing. A single R2 listing finds missing immutable keys; only those upload, and old objects remain. Cache eviction rebuilds locally without re-uploading existing objects. `sharp` is build-only. Browser tests substitute local files for remote media; deployment smoke checks actual hosting. App logo/font stay in Workers Static Assets. The dedicated content workflow owns media upload before publishing references.
+Local media defaults to `/media`; the content workflow sets `MEDIA_BASE_URL` to
+`https://media.hannesdiem.de`. Every content run processes images and share cards.
+Upload lists existing R2 keys and sends only missing immutable objects, retaining
+old files for rollback. Browser tests substitute local files for remote media;
+the publication smoke check verifies hosting.
 
 ## Deployment
 
-Pushes to `main` enter one serialized release queue. Content-only changes run the dedicated publishing workflow; website changes run app checks and deploy Worker `hannesdiem`. Mixed changes deploy code before publishing content. Comparing against the last successful release covers failed or superseded runs. Content smoke checks app endpoints/assets, the active publication revision, and representative R2 files. Configure the publishing key and site URL through [content publishing](docs/content-publishing.md), alongside the existing [Production environment](https://github.com/Xiphe/hannesdiem/settings/environments/24638962215/edit) settings:
+Two independent, single-job workflows run on matching pushes to `main`:
+[`deploy.yml`](.github/workflows/deploy.yml) deploys the website;
+[`content.yml`](.github/workflows/content.yml) publishes content. Both share a
+concurrency group, so production jobs run serially without cancelling active jobs.
+Their order is unspecified. Deploy a compatible implementation before merging
+content that requires it. Each workflow selects changes using its push path filters.
+
+The website job uses synthetic documents and builds without authored pages or
+media. The content job prepares the complete publication, uploads media, checks
+the site, and publishes signed documents to the embedded host. The app completes
+cache refresh. Setup and rollback: [content publishing](docs/content-publishing.md).
+
+Configure the publishing key and site URL there, alongside these existing
+[Production environment](https://github.com/Xiphe/hannesdiem/settings/environments/24638962215/edit)
+settings:
 
 | Kind     | Name                              | Value                                                         |
 | -------- | --------------------------------- | ------------------------------------------------------------- |
@@ -46,7 +89,7 @@ Pushes to `main` enter one serialized release queue. Content-only changes run th
 | Secret   | `RESEND_HANNESDIEM_DE_API_KEY`    | Existing Resend key with sending and contact access.          |
 | Variable | `RESEND_HANNESDIEM_DE_SEGMENT_ID` | Existing site's segment ID.                                   |
 
-R2 custom domain: `media.hannesdiem.de`; `r2.dev` disabled. No Worker media proxy or plain-image CORS setup. Worker deploy declares its SQLite Durable Object; no account-wide permission needed. Actions deploys newsletter secrets/variable when all three are present; otherwise content deploys with signup unavailable. Details: [newsletter](docs/newsletter.md).
+R2 custom domain: `media.hannesdiem.de`; `r2.dev` disabled. No Worker media proxy or plain-image CORS setup. Worker deploy declares its SQLite Durable Object; no account-wide permission needed. Actions deploys newsletter secrets/variable when all three are present; otherwise the website deploys with signup unavailable. Details: [newsletter](docs/newsletter.md).
 
 SSR HTML: browser revalidation, 60-second edge TTL, shared content and per-page cache tags. The Worker purges content-derived responses after publication. Missing pages, menu/account/forms, and publishing/auth responses: `no-store`. Public pages never set session cookies. CMX documents and metadata persist in a dedicated SQLite Durable Object, separately from newsletter state.
 
