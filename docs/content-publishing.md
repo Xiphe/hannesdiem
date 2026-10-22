@@ -3,8 +3,7 @@
 Merging to `main` publishes content without deploying website code. Pages, public
 paths, redirects, navigation/social links, SEO, media metadata, and share cards publish as
 one collection. Remix implementations, styles, and component contracts belong to
-website deployment. Content remains in this repository. [Architecture](architecture.md) maps the
-code owners and entrypoints.
+website deployment. Content remains in this repository.
 
 ## Release flow
 
@@ -95,9 +94,7 @@ publisher. Compromised CI or a stolen private key can still authorize publicatio
 
 `npm run dev` retains local content previews and browser reloads without cloud
 credentials. `npm run build` creates a local fixture for tests. `npm run build:app`
-generates only the implementation environment and app assets. Production always
-uses the persistent host; the local Worker supplies the prepared content source.
-Use `PLAYWRIGHT_PORT` to isolate tests across worktrees.
+generates only the implementation environment and app assets. Use `PLAYWRIGHT_PORT` to isolate tests across worktrees.
 
 Revert the content change on `main` to roll back through the same pipeline. Old
 immutable R2 files remain available. There is no separate rollback endpoint or
