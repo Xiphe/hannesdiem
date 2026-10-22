@@ -1,32 +1,10 @@
 name: Publish content
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'content/**'
-      - 'tools/palette/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'contracts/**'
-      - 'cmx.config.ts'
-      - 'tsconfig.json'
-      - 'scripts/content/**'
-      - 'scripts/upload-media.ts'
-      - 'scripts/publishing/**'
-      - 'scripts/check-publishing-config.ts'
-      - 'scripts/smoke.ts'
-      - 'tests/browser.spec.ts'
-      - 'tests/server.test.ts'
-      - 'tests/content-fixture.ts'
-      - '.github/workflows/content.yml'
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: production-main
-  cancel-in-progress: false
 
 jobs:
   publish:

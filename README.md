@@ -33,7 +33,7 @@ Local `MEDIA_BASE_URL` defaults to `/media`; production uses `https://media.hann
 
 ## Deployment
 
-`deploy.yml` deploys website code; `content.yml` publishes content. Both run on matching pushes to `main` and share a concurrency group. Their execution order is unspecified. Content smoke checks app endpoints/assets, the active publication revision, and representative R2 files. Configure the publishing key and site URL through [content publishing](docs/content-publishing.md), alongside the existing [Production environment](https://github.com/Xiphe/hannesdiem/settings/environments/24638962215/edit) settings:
+`deploy.yml` checks changes on pushes to `main`, deploys website code when needed, then calls `content.yml` to publish changed content. Content-only changes skip website deployment. The concurrency group covers the whole sequence; a failed website deployment blocks publishing. Content smoke checks app endpoints/assets, the active publication revision, and representative R2 files. Configure the publishing key and site URL through [content publishing](docs/content-publishing.md), alongside the existing [Production environment](https://github.com/Xiphe/hannesdiem/settings/environments/24638962215/edit) settings:
 
 | Kind     | Name                              | Value                                                         |
 | -------- | --------------------------------- | ------------------------------------------------------------- |

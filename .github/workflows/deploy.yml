@@ -1,26 +1,8 @@
-name: Deploy website
+name: Deploy
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'app/**'
-      - 'content/contract/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'contracts/**'
-      - 'cmx.config.ts'
-      - 'tsconfig*.json'
-      - 'wrangler.jsonc'
-      - 'playwright*.config.ts'
-      - 'scripts/build.ts'
-      - 'scripts/build-dev.ts'
-      - 'scripts/check-content-host.ts'
-      - 'scripts/verify-newsletter.ts'
-      - 'tests/host-fixture.ts'
-      - 'tests/website-worker.ts'
-      - 'tests/website.spec.ts'
-      - '.github/workflows/deploy.yml'
 
 permissions:
   contents: read
@@ -30,7 +12,65 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      website: ${{ steps.paths.outputs.website }}
+      content: ${{ steps.paths.outputs.content }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          sparse-checkout: .github
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
+        id: paths
+        with:
+          base: ${{ github.event.before }}
+          ref: ${{ github.sha }}
+          filters: |
+            website:
+              - 'app/**'
+              - 'content/contract/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'contracts/**'
+              - 'cmx.config.ts'
+              - 'tsconfig*.json'
+              - 'wrangler.jsonc'
+              - 'playwright*.config.ts'
+              - 'scripts/build.ts'
+              - 'scripts/build-dev.ts'
+              - 'scripts/check-content-host.ts'
+              - 'scripts/verify-newsletter.ts'
+              - 'tests/host-fixture.ts'
+              - 'tests/website-worker.ts'
+              - 'tests/website.spec.ts'
+              - '.github/workflows/deploy.yml'
+              - '.github/workflows/content.yml'
+            content:
+              - 'content/**'
+              - 'tools/palette/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'contracts/**'
+              - 'cmx.config.ts'
+              - 'tsconfig.json'
+              - 'scripts/content/**'
+              - 'scripts/upload-media.ts'
+              - 'scripts/publishing/**'
+              - 'scripts/check-publishing-config.ts'
+              - 'scripts/smoke.ts'
+              - 'tests/browser.spec.ts'
+              - 'tests/server.test.ts'
+              - 'tests/content-fixture.ts'
+              - '.github/workflows/content.yml'
+              - '.github/workflows/deploy.yml'
+
   website:
+    name: Deploy website
+    needs: changes
+    if: needs.changes.outputs.website == 'true'
     runs-on: ubuntu-24.04
     environment: Production
     timeout-minutes: 20
@@ -94,3 +134,13 @@ jobs:
         env:
           DEPLOYMENT_URL: ${{ steps.deployment.outputs.url }}
         run: node --input-type=module -e 'const r = await fetch(new URL("/health", process.env.DEPLOYMENT_URL), {signal:AbortSignal.timeout(20000)}); if (!r.ok || !(await r.json()).ok) process.exit(1)'
+
+  content:
+    name: Publish content
+    needs: [changes, website]
+    if: >-
+      ${{ !cancelled() && needs.changes.result == 'success' &&
+          needs.changes.outputs.content == 'true' &&
+          (needs.website.result == 'success' || needs.website.result == 'skipped') }}
+    uses: ./.github/workflows/content.yml
+    secrets: inherit

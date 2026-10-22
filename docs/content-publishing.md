@@ -7,16 +7,15 @@ website deployment. Content remains in this repository.
 
 ## Release flow
 
-There are two independent, single-job workflows triggered by pushes to `main`:
+Pushes to `main` run `deploy.yml`:
 
-- `deploy.yml` builds, checks, and deploys website code. Path filters exclude authored content and media processing.
-- `content.yml` compiles content, extracts image metadata, checks the rendered site, uploads media, and publishes directly to the host. Content changes do not deploy website code.
+1. Detect website and content changes.
+2. Build, check, and deploy website code when needed.
+3. Call `content.yml` to prepare and publish changed content after website deployment succeeds. Content-only changes skip website deployment.
 
-Both use the same Production concurrency group without cancelling running jobs.
-There is no release planner, reusable workflow, artifact handoff, manual trigger,
-or hosted draft collection. Workflow order is unspecified. When introducing a
-component, deploy a compatible implementation first, then merge content using it
-in a separate change, just as with a CMS.
+The Production concurrency group covers the whole sequence without cancelling
+running jobs. A failed website deployment blocks publishing. Both jobs check out
+the same commit; no build artifacts pass between them.
 
 The content workflow compiles and typechecks CMX, processes media, uploads
 missing immutable R2 objects, and publishes the complete document map. Rendering
