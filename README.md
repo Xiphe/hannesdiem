@@ -15,4 +15,4 @@ npm run check
 npm run dev
 ```
 
-[Content](content/README.md) · [Website workflow](.github/workflows/deploy.yml) · [Content workflow](.github/workflows/content.yml) · [Publishing setup](scripts/configure-content-publishing.ts)
+[Content](content/README.md) · [Website workflow](.github/workflows/deploy.yml) · [Content workflow](.github/workflows/content.yml) · [Publishing setup](content/publishing/configure.ts)

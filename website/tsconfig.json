@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "app",
+    "build",
+    "tests",
+    "cmx.config.ts",
+    "playwright.config.ts",
+    "../contracts",
+    "../worker-configuration.d.ts"
+  ]
+}

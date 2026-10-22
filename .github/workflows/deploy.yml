@@ -15,8 +15,8 @@ jobs:
   changes:
     runs-on: ubuntu-24.04
     outputs:
-      website: ${{ steps.paths.outputs.website }}
-      content: ${{ steps.paths.outputs.content }}
+      website: ${{ steps.paths.outputs.website == 'true' || steps.paths.outputs.shared == 'true' }}
+      content: ${{ steps.paths.outputs.content == 'true' || steps.paths.outputs.shared == 'true' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -30,42 +30,17 @@ jobs:
           ref: ${{ github.sha }}
           filters: |
             website:
-              - 'app/**'
-              - 'content/contract/**'
-              - 'package.json'
-              - 'package-lock.json'
-              - 'contracts/**'
-              - 'cmx.config.ts'
-              - 'tsconfig*.json'
-              - 'wrangler.jsonc'
-              - 'playwright*.config.ts'
-              - 'scripts/build.ts'
-              - 'scripts/build-dev.ts'
-              - 'scripts/check-content-host.ts'
-              - 'scripts/verify-newsletter.ts'
-              - 'tests/host-fixture.ts'
-              - 'tests/website-worker.ts'
-              - 'tests/website.spec.ts'
-              - '.github/workflows/deploy.yml'
-              - '.github/workflows/content.yml'
+              - 'website/**'
             content:
               - 'content/**'
-              - 'tools/palette/**'
-              - 'package.json'
-              - 'package-lock.json'
+              - '.gitattributes'
+            shared:
               - 'contracts/**'
-              - 'cmx.config.ts'
+              - 'package*.json'
               - 'tsconfig.json'
-              - 'scripts/content/**'
-              - 'scripts/upload-media.ts'
-              - 'scripts/publishing/**'
-              - 'scripts/check-publishing-config.ts'
-              - 'scripts/smoke.ts'
-              - 'tests/browser.spec.ts'
-              - 'tests/server.test.ts'
-              - 'tests/content-fixture.ts'
-              - '.github/workflows/content.yml'
-              - '.github/workflows/deploy.yml'
+              - 'dev.ts'
+              - '.prettier*'
+              - '.github/workflows/**'
 
   website:
     name: Deploy website
@@ -80,11 +55,8 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             .github
-            app
+            website
             contracts
-            scripts
-            tests
-            content/contract
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
@@ -96,14 +68,14 @@ jobs:
       - name: Check compatibility with the published CMS interface
         env:
           SITE_URL: ${{ vars.SITE_URL }}
-        run: node --import remix/node-tsx scripts/check-content-host.ts
+        run: node --import remix/node-tsx website/build/check-content-host.ts
       - name: Check deployment credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
-            echo "::error::Configure Production environment secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID; see README.md. Checks passed; deployment has not run."
+            echo "::error::Configure Production environment secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID. Checks passed; deployment has not run."
             exit 1
           fi
       - name: Deploy
@@ -118,7 +90,7 @@ jobs:
           RESEND_HANNESDIEM_DE_SEGMENT_ID: ${{ vars.RESEND_HANNESDIEM_DE_SEGMENT_ID }}
         run: |
           if [[ -n "$NEWSLETTER_SESSION_SECRET" && -n "$RESEND_HANNESDIEM_DE_API_KEY" && -n "$RESEND_HANNESDIEM_DE_SEGMENT_ID" ]]; then
-            node scripts/verify-newsletter.ts
+            node website/build/verify-newsletter.ts
             secrets_file="$RUNNER_TEMP/newsletter-secrets.json"
             node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({NEWSLETTER_SESSION_SECRET:process.env.NEWSLETTER_SESSION_SECRET,RESEND_HANNESDIEM_DE_API_KEY:process.env.RESEND_HANNESDIEM_DE_API_KEY}), {mode:0o600})' "$secrets_file"
             trap 'rm -f "$secrets_file"' EXIT
