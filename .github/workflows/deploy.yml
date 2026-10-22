@@ -19,7 +19,6 @@ on:
       - 'scripts/verify-newsletter.ts'
       - 'tests/host-fixture.ts'
       - 'tests/website-worker.ts'
-      - 'tests/newsletter*.ts'
       - 'tests/website.spec.ts'
       - '.github/workflows/deploy.yml'
 

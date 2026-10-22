@@ -4,9 +4,7 @@ import type { CmxNode } from '@cmx-tools/contracts'
 import { loadContent, contentRoutes, legacyRedirects } from './content-fixture.ts'
 import { createApp as createRuntimeApp } from '../app/router.tsx'
 import type { ContentLoader } from '../app/document-host/index.ts'
-import type { NewsletterEnvironment } from '../app/newsletter.ts'
-const createApp = (loader: ContentLoader = loadContent, env: NewsletterEnvironment = {}) =>
-  createRuntimeApp(loader, env)
+const createApp = (loader: ContentLoader = loadContent) => createRuntimeApp(loader)
 
 async function publication(title: string, paragraph: string) {
   const page = structuredClone(await loadContent(new Request('https://example.com/linktree')))
@@ -97,17 +95,8 @@ test('missing routes, removed navigation endpoint, and health are uncached', asy
     if (path === '/health') assert.deepEqual(await response.json(), { ok: true })
   }
 })
-test('public pages include a local navigation dialog without accessing newsletter sessions', async () => {
-  const app = createApp(loadContent, {
-    NEWSLETTER_SESSION_SECRET: 'test-only-secret-with-at-least-thirty-two-bytes',
-    RESEND_HANNESDIEM_DE_API_KEY: 'test-only-resend-key',
-    RESEND_HANNESDIEM_DE_SEGMENT_ID: 'test-newsletter-segment',
-    NEWSLETTER_STATE: {
-      getByName() {
-        throw new Error('Public rendering must not access subscriber state')
-      },
-    },
-  })
+test('public pages include a cacheable local navigation dialog', async () => {
+  const app = createApp(loadContent)
   for (const cookie of [undefined, 'hdm_user_session=existing-browser-session']) {
     const response = await app.fetch(
       new Request('https://example.com/hoffnung', {

@@ -6,14 +6,13 @@ import { redirect } from 'remix/response/redirect'
 import { renderContent, SiteContent } from './ui-library/index.ts'
 import type { ContentLoader } from './document-host/index.ts'
 import { Page } from './page.tsx'
-import type { NewsletterEnvironment } from './newsletter.ts'
 import { routes } from './routes.ts'
 import { contentCacheTag } from './document-host/index.ts'
 
 const privateHeaders = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
 const xml = (value: string) =>
   value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-export function createApp(content: ContentLoader, env: NewsletterEnvironment = {}) {
+export function createApp(content: ContentLoader) {
   const router = createRouter({
     middleware: [render()],
     defaultHandler: () => new Response('Not found', { status: 404, headers: privateHeaders }),

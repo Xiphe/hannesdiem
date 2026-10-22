@@ -1,4 +1,4 @@
-import { audienceSegment } from '../app/newsletter-config.ts'
+import { audienceSegment } from '../app/newsletter/config.ts'
 
 const key = process.env.RESEND_HANNESDIEM_DE_API_KEY
 const siteSegment = process.env.RESEND_HANNESDIEM_DE_SEGMENT_ID

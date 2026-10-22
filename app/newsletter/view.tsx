@@ -1,12 +1,8 @@
 import { clientEntry } from 'remix/component'
-import assets from '../.generated/assets.json' with { type: 'json' }
-import type { NewsletterState } from './newsletter.ts'
-import type { NewsletterResult } from './newsletter-contract.ts'
-import {
-  NewsletterArea as NewsletterAreaComponent,
-  StandaloneNewsletterForm,
-} from './newsletter-form.tsx'
-import { defaultTheme, themeCss } from './theme.ts'
+import assets from '../../.generated/assets.json' with { type: 'json' }
+import type { NewsletterState, NewsletterResult } from './contract.ts'
+import { NewsletterArea as NewsletterAreaComponent, StandaloneNewsletterForm } from './form.tsx'
+import { defaultTheme, themeCss } from '../theme.ts'
 
 export const NewsletterArea = clientEntry(
   assets.newsletter + '#NewsletterArea',

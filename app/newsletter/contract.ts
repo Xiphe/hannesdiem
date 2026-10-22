@@ -1,3 +1,9 @@
+export interface NewsletterState {
+  ready: boolean
+  email?: string
+  csrfToken?: string
+}
+
 /** Public response contract shared by the newsletter island and its form endpoints. */
 export type NewsletterResult = (
   | { type: 'success'; message: string }
