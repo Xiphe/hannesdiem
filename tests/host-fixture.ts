@@ -1,5 +1,5 @@
 import { CMX_DOCUMENT_SCHEMA, type CmxDocument } from '@cmx-tools/contracts'
-import type { PublishedDocuments, SiteMetadata } from '../app/publication.ts'
+import type { PublishedDocuments, SiteMetadata } from '../contracts/content.ts'
 
 // Synthetic CMS input: website checks never compile or read authored content.
 const page: CmxDocument = {

@@ -1,10 +1,50 @@
 import { isCmxDocument, type CmxDocument } from '@cmx-tools/contracts'
-import type { ContentRoute } from './content-route.ts'
-import type { MediaImage } from './media.ts'
+import type { Identity } from '@hannesdiem/content-components'
+
+export interface ContentRoute {
+  path: string
+  document: string
+  title: string
+  kind: string
+  description?: string
+  image?: string
+  theme?: string
+  releaseDate?: string
+  creationDate?: string
+  noindex?: boolean
+  nofollow?: boolean
+  ogTitle?: string
+  ogType?: string
+  ogImageTitle?: string
+  ogSubtitle?: string
+  ogTextColor?: 'light' | 'dark'
+  shareImage?: boolean
+  updatedAt?: string
+  musicians?: string[]
+  songs?: string[]
+  authors?: (Identity & { ogProfile?: string })[]
+  profile?: { firstName: string; lastName: string }
+  sourceId?: string
+}
+
+export interface PaletteColor {
+  name: string
+  hsl: number[]
+}
+
+export interface MediaImage {
+  src: string
+  srcSet?: string
+  width: number
+  height: number
+  alt?: string
+  focalX?: number
+  focalY?: number
+  color?: string
+  palette?: PaletteColor[]
+}
 
 export const siteEntry = '_site'
-export const publicationPath = '/_cmx/publication'
-export const contentCacheTag = 'content'
 
 export interface NavigationLink {
   name: string
@@ -138,7 +178,7 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
   return site as unknown as SiteMetadata
 }
 
-// Run against the complete candidate collection inside the storage transaction.
+// Validate the complete collection before publishing and before accepting it.
 export function validatePublication(documents: PublishedDocuments): SiteMetadata {
   const site = readSite(documents[siteEntry])
   for (const key of ['404', ...site.routes.map((route) => route.document)]) {

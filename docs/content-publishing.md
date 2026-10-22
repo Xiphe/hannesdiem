@@ -49,6 +49,9 @@ preserve the component prop behavior used by the currently published collection.
 ## Signing and setup
 
 CI signs GET and PUT requests with Ed25519 HTTP Message Signatures (RFC 9421).
+`npm run content:publish` uses `scripts/publishing/config.ts` and the signer in
+`scripts/publishing/`. The app's `document-host` module verifies incoming requests;
+shared document and request contracts live in `contracts/`.
 The Worker stores public keys only. Signatures cover the destination URI, method,
 content type, SHA-256 content digest, and `CMX-If-None-Match` on GET. The host
 restores the standard conditional header only after verifying the signature; this

@@ -8,6 +8,7 @@ on:
       - 'tools/palette/**'
       - 'package.json'
       - 'package-lock.json'
+      - 'contracts/**'
       - 'cmx.config.ts'
       - 'tsconfig.json'
       - 'scripts/compile-cmx.ts'
@@ -17,7 +18,7 @@ on:
       - 'scripts/extract-palettes.ts'
       - 'scripts/build-publication.ts'
       - 'scripts/upload-media.ts'
-      - 'scripts/publish-transport.ts'
+      - 'scripts/publishing/**'
       - 'scripts/check-publishing-config.ts'
       - 'scripts/smoke.ts'
       - 'tests/browser.spec.ts'
@@ -67,14 +68,14 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: npm run media:upload
       - run: npx playwright install --with-deps --only-shell chromium
-      - run: node scripts/build.ts --local-content
+      - run: node scripts/build.ts --local-media
       - run: npm run check
       - name: Publish signed CMX documents
         env:
           CMX_PUBLISH_PRIVATE_KEY: ${{ secrets.CMX_PUBLISH_PRIVATE_KEY }}
           CMX_PUBLISH_KEY_ID: ${{ vars.CMX_PUBLISH_KEY_ID }}
           CMX_PUBLISH_URL: ${{ vars.SITE_URL }}/_cmx/publication
-        run: npx --no-install cmx-publish .generated/publication.json "$CMX_PUBLISH_URL" --config cmx.config.ts > .generated/publication-result.json
+        run: npm run --silent content:publish > .generated/publication-result.json
       - name: Verify published site and media
         env:
           SITE_URL: ${{ vars.SITE_URL }}

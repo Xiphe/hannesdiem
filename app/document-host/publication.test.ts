@@ -8,9 +8,10 @@ import { promisify } from 'node:util'
 import { build } from 'esbuild'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { publishCmxDocuments, createCmxPublicationState } from '@cmx-tools/publish'
-import { documents as fixture } from './host-fixture.ts'
-import { siteEntry, publicationPath } from '../app/publication.ts'
-import { signPublicationRequest } from '../app/publication-signatures.ts'
+import { documents as fixture } from '../../tests/host-fixture.ts'
+import { siteEntry, type SiteMetadata } from '../../contracts/content.ts'
+import { publicationPath } from '../../contracts/publication.ts'
+import { signPublicationRequest } from '../../scripts/publishing/sign-request.ts'
 
 test('signed publications persist, update the complete site and reject replay or partial activation', async (t) => {
   const keys = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify'])
@@ -20,32 +21,20 @@ test('signed publications persist, update the complete site and reject replay or
     stdin: {
       resolveDir: process.cwd(),
       contents: `
-        import worker, { ContentState, NewsletterState } from './app/worker.ts';
-        import { publishContent } from './app/publish-content.ts';
+        import { createWorker, ContentState, NewsletterState } from './app/worker.ts';
         export { ContentState, NewsletterState };
         let purges = 0, success = true;
+        const worker = createWorker({ purge: async () => {purges++; return {success}} });
         export default { async fetch(request, env, ctx) {
           const url = new URL(request.url);
           if (url.pathname === '/test-purge') {
             if (url.searchParams.has('success')) success = url.searchParams.get('success') === 'true';
             return Response.json({purges});
           }
-          if (url.pathname === '/_cmx/publication') return publishContent(request, env.CONTENT_STATE.getByName('published'), async () => {purges++; return {success}});
           return worker.fetch(request, env, ctx);
         }};
       `,
     },
-    plugins: [
-      {
-        name: 'hosted-content',
-        setup(builder) {
-          builder.onLoad({ filter: /\.generated\/local-content\.ts$/ }, () => ({
-            contents: 'export const localPublication = null;',
-            loader: 'ts',
-          }))
-        },
-      },
-    ],
     bundle: true,
     write: false,
     format: 'esm',
@@ -146,7 +135,7 @@ test('signed publications persist, update the complete site and reject replay or
 
   const documents = structuredClone(fixture)
   documents.fixture.content.default = 'Hosted content is published independently.'
-  const site = documents[siteEntry].content.site as import('../app/publication.ts').SiteMetadata
+  const site = documents[siteEntry].content.site as SiteMetadata
   const page = structuredClone(documents['404'])
   page.content.title = 'Independent publication'
   page.content.default = {
@@ -331,7 +320,7 @@ test('signed publications persist, update the complete site and reject replay or
           publicationFile,
           endpoint,
           '--config',
-          'cmx.config.ts',
+          'scripts/publishing/config.ts',
         ],
         {
           env: {

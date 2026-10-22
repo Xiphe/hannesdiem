@@ -8,10 +8,11 @@
     "tests/host-fixture.ts",
     "tests/newsletter.test.ts",
     "tests/newsletter-worker.test.ts",
-    "tests/publication-worker.test.ts",
     "cmx.config.ts",
     "worker-configuration.d.ts",
     "playwright.website.config.ts",
-    "tests/website.spec.ts"
-  ]
+    "tests/website.spec.ts",
+    "tests/website-worker.ts"
+  ],
+  "exclude": ["app/local-worker.ts"]
 }

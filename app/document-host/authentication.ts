@@ -1,28 +1,14 @@
+import { PublicationRequestError } from './PublicationRequestError.ts'
+import { verifySignature, webcrypto, isSignatureError } from 'http-message-sig'
 import {
-  appendSignature,
-  createSignature,
-  verifySignature,
-  webcrypto,
-  isSignatureError,
-} from 'http-message-sig'
+  signatureLifetime,
+  signatureTag,
+  signatureComponents,
+  maxPublicationBytes,
+  publicationDigest,
+} from '../../contracts/publication.ts'
 
-export const signatureLifetime = 60
-const signatureTag = 'cmx-publication'
-export const manifestConditionHeader = 'cmx-if-none-match'
-const baseComponents = ['@method', '@target-uri', 'content-type', 'content-digest']
-const components = (method: string) =>
-  method === 'GET' ? [...baseComponents, manifestConditionHeader] : baseComponents
-
-export class PublicationRequestError extends Error {
-  readonly status: number
-  constructor(message: string, status: number) {
-    super(message)
-    this.status = status
-  }
-}
-
-export async function publicationBody(request: Request): Promise<Uint8Array<ArrayBuffer>> {
-  const maxBytes = 8 * 1024 * 1024
+async function publicationBody(request: Request): Promise<Uint8Array<ArrayBuffer>> {
   if (!request.body) return new Uint8Array()
   const reader = request.body.getReader()
   const chunks: Uint8Array[] = []
@@ -32,7 +18,7 @@ export async function publicationBody(request: Request): Promise<Uint8Array<Arra
       const { value, done } = await reader.read()
       if (done) break
       length += value.byteLength
-      if (length > maxBytes) {
+      if (length > maxPublicationBytes) {
         await reader.cancel()
         throw new PublicationRequestError('Publication exceeds 8 MiB.', 413)
       }
@@ -50,50 +36,6 @@ export async function publicationBody(request: Request): Promise<Uint8Array<Arra
   return bytes
 }
 
-async function digest(body: Uint8Array<ArrayBuffer>): Promise<string> {
-  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', body))
-  return `sha-256=:${btoa(String.fromCharCode(...hash))}:`
-}
-
-export async function signPublicationRequest(
-  request: Request,
-  key: CryptoKey,
-  keyId: string,
-  now = Math.floor(Date.now() / 1000),
-): Promise<Request> {
-  const body = await publicationBody(request)
-  const headers = new Headers(request.headers)
-  headers.set('Content-Type', 'application/json')
-  headers.set('Content-Digest', await digest(body))
-  if (request.method === 'GET') {
-    // The public edge can remove HTTP cache validators before invoking Workers.
-    // Carry the authenticated CMX condition in an application header instead.
-    headers.set(manifestConditionHeader, headers.get('If-None-Match') ?? '""')
-    headers.delete('If-None-Match')
-  }
-  const signed = new Request(request.url, {
-    method: request.method,
-    headers,
-    signal: request.signal,
-    body: request.method === 'GET' ? undefined : body,
-    redirect: 'error',
-  })
-  const fields = await createSignature(signed, {
-    label: 'cmx',
-    components: components(request.method),
-    parameters: {
-      alg: 'ed25519',
-      keyid: keyId,
-      tag: signatureTag,
-      created: now,
-      expires: now + signatureLifetime,
-      nonce: crypto.randomUUID(),
-    },
-    signer: webcrypto.signer(key),
-  })
-  return new Request(signed, { headers: appendSignature(signed.headers, fields) })
-}
-
 export async function verifyPublicationRequest(request: Request, publicKeys: string) {
   const keys: Record<string, JsonWebKey> = JSON.parse(publicKeys)
   if (!keys || typeof keys !== 'object' || !Object.keys(keys).length) {
@@ -109,7 +51,7 @@ export async function verifyPublicationRequest(request: Request, publicKeys: str
       label: 'cmx',
       policy: {
         algorithms: ['ed25519'],
-        requiredComponents: components(request.method),
+        requiredComponents: signatureComponents(request.method),
         requiredParameters: ['created', 'expires', 'nonce', 'keyid', 'alg', 'tag'],
         maxAge: signatureLifetime,
         clockSkew: 5,
@@ -145,7 +87,7 @@ export async function verifyPublicationRequest(request: Request, publicKeys: str
     })
     const body = await publicationBody(request)
     if (
-      request.headers.get('Content-Digest') !== (await digest(body)) ||
+      request.headers.get('Content-Digest') !== (await publicationDigest(body)) ||
       request.headers.get('Content-Type') !== 'application/json'
     )
       throw new Error('Invalid content digest')
