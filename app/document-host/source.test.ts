@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { createContentSource, type SiteMetadata } from './index.ts'
+import { createContentSource } from './index.ts'
+import type { SiteMetadata } from '../../contracts/content.ts'
 import { documents as fixture } from '../../tests/host-fixture.ts'
 
 test('prepared sources keep page content, metadata and revision in one snapshot', async () => {

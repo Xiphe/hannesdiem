@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
-import { createContentSource } from '../app/publication/index.ts'
-import { validatePublication, type PublishedDocuments } from '../app/publication/index.ts'
+import { createContentSource } from '../app/document-host/index.ts'
+import { validatePublication, type PublishedDocuments } from '../contracts/content.ts'
 
 export const documents: PublishedDocuments = JSON.parse(
   await readFile('.generated/publication.json', 'utf8'),

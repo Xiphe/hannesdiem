@@ -9,7 +9,9 @@ import { build } from 'esbuild'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { publishCmxDocuments, createCmxPublicationState } from '@cmx-tools/publish'
 import { documents as fixture } from '../../tests/host-fixture.ts'
-import { siteEntry, publicationPath, signPublicationRequest } from './index.ts'
+import { siteEntry, type SiteMetadata } from '../../contracts/content.ts'
+import { publicationPath } from '../../contracts/publication.ts'
+import { signPublicationRequest } from '../../scripts/publishing/sign-request.ts'
 
 test('signed publications persist, update the complete site and reject replay or partial activation', async (t) => {
   const keys = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify'])
@@ -133,7 +135,7 @@ test('signed publications persist, update the complete site and reject replay or
 
   const documents = structuredClone(fixture)
   documents.fixture.content.default = 'Hosted content is published independently.'
-  const site = documents[siteEntry].content.site as import('./index.ts').SiteMetadata
+  const site = documents[siteEntry].content.site as SiteMetadata
   const page = structuredClone(documents['404'])
   page.content.title = 'Independent publication'
   page.content.default = {
@@ -318,7 +320,7 @@ test('signed publications persist, update the complete site and reject replay or
           publicationFile,
           endpoint,
           '--config',
-          'cmx.config.ts',
+          'scripts/publishing/config.ts',
         ],
         {
           env: {

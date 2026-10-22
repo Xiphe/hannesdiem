@@ -1,6 +1,10 @@
 import { isCmxDocument, type CmxDocument } from '@cmx-tools/contracts'
-import type { ContentRoute } from './ContentRoute.ts'
-import { validatePublication, type SiteMetadata, type PublishedDocuments } from './collection.ts'
+import {
+  validatePublication,
+  type ContentRoute,
+  type SiteMetadata,
+  type PublishedDocuments,
+} from '../../contracts/content.ts'
 
 export interface ContentPage {
   document: CmxDocument

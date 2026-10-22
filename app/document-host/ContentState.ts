@@ -9,8 +9,14 @@ import { verifyCmxDocumentEnvironment, type CmxDocument } from '@cmx-tools/contr
 import { cmx } from '@cmx-tools/remix'
 import { environment } from '../../.cmx/environment.ts'
 import { contentPage } from './source.ts'
-import { siteEntry, readSite, validatePublication, type PublishedDocuments } from './collection.ts'
-import { verifyPublicationRequest, manifestConditionHeader } from './signatures.ts'
+import {
+  siteEntry,
+  readSite,
+  validatePublication,
+  type PublishedDocuments,
+} from '../../contracts/content.ts'
+import { verifyPublicationRequest } from './authentication.ts'
+import { manifestConditionHeader } from '../../contracts/publication.ts'
 
 const emptyState = {
   contentHash: 'sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',

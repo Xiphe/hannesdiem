@@ -3,7 +3,7 @@ import assets from '../.generated/assets.json' with { type: 'json' }
 import { Chrome as ChromeComponent } from './chrome.tsx'
 import { Footer, NavigationDialog } from './navigation.tsx'
 import { contentTheme } from './content-rendering.ts'
-import type { ContentRoute } from './publication/index.ts'
+import type { ContentRoute } from '../contracts/content.ts'
 import { getMedia } from './media.ts'
 import { themeCss } from './theme.ts'
 import { SiteContent } from './site-content.ts'

@@ -1,5 +1,5 @@
 import { createPrivateKey, createPublicKey } from 'node:crypto'
-import { publicationPath } from '../app/publication/index.ts'
+import { publicationPath } from '../contracts/publication.ts'
 
 const { CMX_PUBLISH_PRIVATE_KEY, CMX_PUBLISH_KEY_ID, CMX_PUBLISH_PUBLIC_KEYS, SITE_URL } =
   process.env

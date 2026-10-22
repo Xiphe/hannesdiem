@@ -1,14 +1,14 @@
 import { DurableObject } from 'cloudflare:workers'
 import { createApp } from './router.tsx'
-import { PublicationRequestError } from './publication/index.ts'
-import { createPublication, type PublicationOptions } from './publication/cloudflare.ts'
+import { PublicationRequestError } from './document-host/index.ts'
+import { createDocumentHost, type DocumentHostOptions } from './document-host/cloudflare.ts'
 import {
   handleNewsletter,
   handleNewsletterStorage,
   cleanupNewsletterStorage,
 } from './newsletter.ts'
 
-export { ContentState } from './publication/cloudflare.ts'
+export { ContentState } from './document-host/cloudflare.ts'
 
 export class NewsletterState extends DurableObject<Env> {
   fetch(request: Request) {
@@ -19,15 +19,15 @@ export class NewsletterState extends DurableObject<Env> {
   }
 }
 
-export function createWorker(options: PublicationOptions = {}): ExportedHandler<Env> {
+export function createWorker(options: DocumentHostOptions = {}): ExportedHandler<Env> {
   return {
     async fetch(request, env, ctx) {
       try {
-        const publication = createPublication(env, ctx, options)
+        const documentHost = createDocumentHost(env, ctx, options)
         return (
-          (await publication.handle(request)) ??
+          (await documentHost.handle(request)) ??
           (await handleNewsletter(request, env)) ??
-          (await createApp(publication.load, env).fetch(request))
+          (await createApp(documentHost.load, env).fetch(request))
         )
       } catch (error) {
         if (error instanceof PublicationRequestError)

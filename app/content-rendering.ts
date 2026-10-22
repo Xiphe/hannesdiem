@@ -1,7 +1,7 @@
 import type { CmxDocument, CmxNode } from '@cmx-tools/contracts'
 import { cmx } from '@cmx-tools/remix'
 import { environment } from '../.cmx/environment.ts'
-import type { ContentRoute, SiteMetadata } from './publication/index.ts'
+import type { ContentRoute, SiteMetadata } from '../contracts/content.ts'
 import { getMedia } from './media.ts'
 import { beachTheme, defaultTheme, paletteToTheme, type Theme } from './theme.ts'
 

@@ -1,4 +1,4 @@
-import { createContentSource } from '../app/publication/index.ts'
+import { createContentSource } from '../app/document-host/index.ts'
 import { createWorker } from '../app/worker.ts'
 import { documents } from './host-fixture.ts'
 

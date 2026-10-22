@@ -1,6 +1,6 @@
 # CMX ownership candidates from publication
 
-These candidates come from the production publication module. They are open for
+These candidates come from production document hosting and CI publishing. They are open for
 grilling in `cmx-tools/packages`; the application retains the working behavior
 until a CMX decision and a suitable replacement exist.
 
@@ -11,10 +11,11 @@ until a CMX decision and a suitable replacement exist.
 | Publication completion outcomes                             | The host integration identifies accepted or unchanged publications, finishes revision-specific cache refresh, and retries pending work after failure.              | [#205](https://github.com/cmx-tools/packages/issues/205) |
 | Supported signed-publishing integration                     | Client and host share expiring request proofs, replay protection, cross-runtime key handling, and an edge-safe conditional header.                                 | [#206](https://github.com/cmx-tools/packages/issues/206) |
 
-The [Publication module](../../app/publication/README.md) isolates these behaviors.
-Its public entries keep the portable document/source contract separate from the
-Cloudflare adapter. Module tests exercise the production route, real SQLite
-persistence, and the varying cache-refresh adapter.
+The [document host](../../app/document-host/README.md) owns reception, persistence,
+coherent reads, and cache refresh. CI owns preparation and sending, including the
+signer in `scripts/publishing/`. Shared document and signed-request contracts live
+in `contracts/`, outside the app. Module tests exercise the CI signer against the
+production route, real SQLite persistence, and the varying cache-refresh adapter.
 
 Application-owned decisions include public routes, the site metadata shape,
 navigation, image processing, presentation, and Cloudflare cache tags. The issues

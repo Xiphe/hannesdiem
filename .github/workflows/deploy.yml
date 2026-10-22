@@ -8,6 +8,7 @@ on:
       - 'content/contract/**'
       - 'package.json'
       - 'package-lock.json'
+      - 'contracts/**'
       - 'cmx.config.ts'
       - 'tsconfig*.json'
       - 'wrangler.jsonc'
@@ -16,7 +17,6 @@ on:
       - 'scripts/build-dev.ts'
       - 'scripts/check-content-host.ts'
       - 'scripts/verify-newsletter.ts'
-      - 'scripts/publish-transport.ts'
       - 'tests/host-fixture.ts'
       - 'tests/website-worker.ts'
       - 'tests/newsletter*.ts'
@@ -42,6 +42,7 @@ jobs:
           sparse-checkout: |
             .github
             app
+            contracts
             scripts
             tests
             content/contract

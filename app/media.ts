@@ -1,16 +1,7 @@
-import type { PaletteColor } from './theme.ts'
+import type { MediaImage } from '../contracts/content.ts'
 
-export interface MediaImage {
-  src: string
-  srcSet?: string
-  width: number
-  height: number
-  alt?: string
-  focalX?: number
-  focalY?: number
-  color?: string
-  palette?: PaletteColor[]
-}
+export type { MediaImage } from '../contracts/content.ts'
+
 export function getMedia(images: Record<string, MediaImage>, image: string): MediaImage {
   const result = images[image]
   if (!result) throw new Error(`Unknown content image: ${image}`)

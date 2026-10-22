@@ -1,3 +1,7 @@
+import type { PaletteColor } from '../contracts/content.ts'
+
+export type { PaletteColor } from '../contracts/content.ts'
+
 export type ThemeVariables = {
   bg: string
   bgVia: string
@@ -8,10 +12,6 @@ export type ThemeVariables = {
   primary: string
 }
 export type Theme = { light: ThemeVariables; dark: ThemeVariables }
-export interface PaletteColor {
-  name: string
-  hsl: number[]
-}
 
 export const defaultTheme: Theme = {
   dark: {

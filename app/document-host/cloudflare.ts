@@ -1,19 +1,20 @@
 import { ContentState } from './ContentState.ts'
-import { contentCacheTag, publicationPath } from './collection.ts'
+import { contentCacheTag } from './index.ts'
+import { publicationPath } from '../../contracts/publication.ts'
 import type { ContentLoader } from './source.ts'
 import { PublicationRequestError } from './PublicationRequestError.ts'
 
 export { ContentState }
 
-export interface PublicationOptions {
+export interface DocumentHostOptions {
   source?: ContentLoader
   purge?: () => Promise<{ success: boolean }>
 }
 
-export function createPublication(
+export function createDocumentHost(
   env: Pick<Env, 'CONTENT_STATE'>,
   ctx: ExecutionContext,
-  options: PublicationOptions = {},
+  options: DocumentHostOptions = {},
 ) {
   const storage = env.CONTENT_STATE.getByName('published')
   const load: ContentLoader =
