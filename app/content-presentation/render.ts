@@ -1,9 +1,9 @@
 import type { CmxDocument, CmxNode } from '@cmx-tools/contracts'
 import { cmx } from '@cmx-tools/remix'
-import { environment } from '../.cmx/environment.ts'
-import type { ContentRoute, SiteMetadata } from '../contracts/content.ts'
-import { getMedia } from './media.ts'
-import { beachTheme, defaultTheme, paletteToTheme, type Theme } from './theme.ts'
+import { environment } from '../../.cmx/environment.ts'
+import type { ContentRoute, SiteMetadata } from '../../contracts/content.ts'
+import { getMedia } from '../media.ts'
+import { beachTheme, defaultTheme, paletteToTheme, type Theme } from '../theme.ts'
 
 export function renderContent(document: CmxDocument) {
   const page = cmx<{ title: CmxNode; default: CmxNode }>(document, environment)
