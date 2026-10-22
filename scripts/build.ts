@@ -31,9 +31,9 @@ const result = await build({
 
 const serverModules = [
   'app/page.tsx',
-  'app/content-presentation/index.ts',
-  'app/content-presentation/render.ts',
-  'app/content-presentation/components.ts',
+  'app/ui-library/index.ts',
+  'app/ui-library/render.ts',
+  'app/ui-library/components.ts',
   'app/media.ts',
   'app/theme.ts',
   'app/navigation.tsx',
