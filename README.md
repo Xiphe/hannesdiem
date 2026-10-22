@@ -27,7 +27,7 @@ Native Remix `css`/`mix` emits server-rendered styles. Only menu/dialog controls
 
 51 originals in LFS; `content/media.json` preserves alt text, dimensions, focal points, and source IDs. Sharp emits immutable WebP variants (320/480/960/1440/1920/up to 2560px; no upscaling). Share cards retain the legacy 1052×550 canvas/fonts; releases share cover images. The content publication includes generated image URLs/srcSets.
 
-Actions alone installs `tools/palette` and runs `scripts/extract-palettes.ts` using legacy `node-vibrant@4.0.4`. `content/palettes.json` is a saved Actions output for local previews; SHA mismatches fall back to the default theme until preprocessing. Do not install the palette tool locally.
+Actions alone installs `tools/palette` and runs `scripts/content/palettes.ts` using legacy `node-vibrant@4.0.4`. `content/palettes.json` is a saved Actions output for local previews; SHA mismatches fall back to the default theme until preprocessing. Do not install the palette tool locally.
 
 Local `MEDIA_BASE_URL` defaults to `/media`; production uses `https://media.hannesdiem.de`. Content CI processes media on every run. A single R2 listing finds missing immutable keys; only those upload, and old objects remain. `sharp` is build-only. Browser tests substitute local files for remote media; deployment smoke checks actual hosting. App logo/font stay in Workers Static Assets. The dedicated content workflow owns media upload before publishing references.
 

@@ -1,13 +1,13 @@
 import { CMX_DOCUMENT_SCHEMA, CMX_DOCUMENT_VERSION, type CmxDocument } from '@cmx-tools/contracts'
 import { readFile, writeFile } from 'node:fs/promises'
-import { navigation } from '../content/navigation.ts'
-import { redirects } from '../content/redirects.ts'
+import { navigation } from '../../content/navigation.ts'
+import { redirects } from '../../content/redirects.ts'
 import {
   siteEntry,
   validatePublication,
   type PublishedDocuments,
   type SiteMetadata,
-} from '../contracts/content.ts'
+} from '../../contracts/content.ts'
 
 const read = async (file: string) => JSON.parse(await readFile(file, 'utf8'))
 const routes: SiteMetadata['routes'] = await read('.generated/routes.json')

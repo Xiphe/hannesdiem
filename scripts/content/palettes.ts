@@ -7,7 +7,7 @@ if (!process.env.GITHUB_ACTIONS)
   throw new Error(
     'Palette extraction runs in GitHub Actions only; local builds use saved metadata.',
   )
-const require = createRequire(new URL('../tools/palette/package.json', import.meta.url))
+const require = createRequire(new URL('../../tools/palette/package.json', import.meta.url))
 const { Vibrant } = require('node-vibrant/node')
 const results: Record<string, unknown> = {}
 for (const filename of (await readdir('content/media')).sort()) {

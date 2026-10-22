@@ -1,8 +1,8 @@
 import { isCmxDocument } from '@cmx-tools/contracts'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import publications from '../content/routes.ts'
-import { people } from '../content/people.ts'
-import type { ContentRoute, ReleaseMetadata, SongDefinition } from '../content/types.ts'
+import publications from '../../content/routes.ts'
+import { people } from '../../content/people.ts'
+import type { ContentRoute, ReleaseMetadata, SongDefinition } from '../../content/types.ts'
 
 const routes: ContentRoute[] = []
 for (const publication of publications) {
