@@ -1,6 +1,5 @@
 import { on, ref, type Handle } from 'remix/component'
-import type { NewsletterState } from './newsletter.ts'
-import type { NewsletterResult } from './newsletter-contract.ts'
+import type { NewsletterState, NewsletterResult } from './contract.ts'
 import {
   BellIcon,
   CalendarDaysIcon,
@@ -10,7 +9,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   InformationCircleIcon,
-} from './heroicons.tsx'
+} from '../heroicons.tsx'
 
 export interface NewsletterFormProps {
   state: NewsletterState

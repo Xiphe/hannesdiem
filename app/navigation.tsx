@@ -3,8 +3,7 @@ import assets from '../.generated/assets.json' with { type: 'json' }
 import { SiteContent } from './ui-library/index.ts'
 import { ServiceLogo } from './icons.tsx'
 import { ChevronDownIcon, XMarkIcon } from './heroicons.tsx'
-import { NewsletterArea } from './newsletter-view.tsx'
-import type { NewsletterState } from './newsletter.ts'
+import { NewsletterArea, type NewsletterState } from './newsletter/index.ts'
 
 const quietLink = css({ opacity: 0.6, '&:hover': { opacity: 1 } })
 export function Brand(handle: Handle<{ footer?: boolean }>) {

@@ -1,15 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createCookie } from 'remix/cookie'
+import { handleNewsletter, type NewsletterEnvironment, type NewsletterState } from './index.ts'
 import {
   cleanupNewsletterStorage,
-  handleNewsletter,
   handleNewsletterStorage,
-  type NewsletterEnvironment,
-  type NewsletterState,
   type NewsletterStorage,
   type NewsletterTransaction,
-} from '../app/newsletter.ts'
+} from './storage.ts'
 
 class MemoryStorage implements NewsletterStorage {
   entries = new Map<string, unknown>()

@@ -1,23 +1,11 @@
-import { DurableObject } from 'cloudflare:workers'
 import { createApp } from './router.tsx'
 import { PublicationRequestError } from './document-host/index.ts'
 import { createDocumentHost, type DocumentHostOptions } from './document-host/cloudflare.ts'
-import {
-  handleNewsletter,
-  handleNewsletterStorage,
-  cleanupNewsletterStorage,
-} from './newsletter.ts'
+import { handleNewsletter } from './newsletter/index.ts'
 
 export { ContentState } from './document-host/cloudflare.ts'
 
-export class NewsletterState extends DurableObject<Env> {
-  fetch(request: Request) {
-    return handleNewsletterStorage(request, this.ctx.storage)
-  }
-  alarm() {
-    return cleanupNewsletterStorage(this.ctx.storage)
-  }
-}
+export { NewsletterState } from './newsletter/cloudflare.ts'
 
 export function createWorker(options: DocumentHostOptions = {}): ExportedHandler<Env> {
   return {
@@ -27,7 +15,7 @@ export function createWorker(options: DocumentHostOptions = {}): ExportedHandler
         return (
           (await documentHost.handle(request)) ??
           (await handleNewsletter(request, env)) ??
-          (await createApp(documentHost.load, env).fetch(request))
+          (await createApp(documentHost.load).fetch(request))
         )
       } catch (error) {
         if (error instanceof PublicationRequestError)
