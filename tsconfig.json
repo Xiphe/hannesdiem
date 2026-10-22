@@ -13,12 +13,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": [
-    "app",
-    "scripts",
-    "tests",
-    "cmx.config.ts",
-    "playwright.config.ts",
-    "worker-configuration.d.ts"
-  ]
+  "include": ["website", "content", "contracts", "dev.ts", "worker-configuration.d.ts"]
 }

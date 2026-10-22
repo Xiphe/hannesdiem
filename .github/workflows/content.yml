@@ -1,32 +1,10 @@
 name: Publish content
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'content/**'
-      - 'tools/palette/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'contracts/**'
-      - 'cmx.config.ts'
-      - 'tsconfig.json'
-      - 'scripts/content/**'
-      - 'scripts/upload-media.ts'
-      - 'scripts/publishing/**'
-      - 'scripts/check-publishing-config.ts'
-      - 'scripts/smoke.ts'
-      - 'tests/browser.spec.ts'
-      - 'tests/server.test.ts'
-      - 'tests/content-fixture.ts'
-      - '.github/workflows/content.yml'
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: production-main
-  cancel-in-progress: false
 
 jobs:
   publish:
@@ -47,11 +25,11 @@ jobs:
       - run: npm ci
       - name: Prepare content and image metadata
         run: |
-          npm ci --prefix tools/palette
+          npm ci --prefix content/preparation/palette
           npm run content:build -- --extract-palettes
       - name: Check authored content
         run: |
-          npx prettier content cmx.config.ts --check
+          npx prettier content contracts/cmx.ts --check
           npx tsc --noEmit -p content/tsconfig.json
       - name: Upload immutable media before publishing references
         env:
@@ -71,4 +49,4 @@ jobs:
       - name: Verify published site and media
         env:
           SITE_URL: ${{ vars.SITE_URL }}
-        run: node scripts/smoke.ts "$SITE_URL" --publication
+        run: node content/publishing/smoke.ts "$SITE_URL" --publication
