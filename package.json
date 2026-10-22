@@ -11,7 +11,7 @@
     "media:upload": "node content/publishing/upload-media.ts",
     "build:app": "node website/build/assets.ts",
     "build": "npm run content:build && npm run build:app -- --local-media",
-    "dev": "wrangler dev content/local-worker.ts --config website/wrangler.jsonc --ip 0.0.0.0 --port 8787 --live-reload",
+    "dev": "wrangler dev content/development/worker.ts --config website/wrangler.jsonc --ip 0.0.0.0 --port 8787 --live-reload",
     "typecheck": "wrangler types --config website/wrangler.jsonc worker-configuration.d.ts && tsc --noEmit",
     "test": "node --import remix/node-tsx --test content/tests/*.test.ts website/app/document-host/*.test.ts website/app/newsletter/*.test.ts && playwright test --config content/playwright.config.ts",
     "check": "npm run format:check && npm run typecheck && npm test",
