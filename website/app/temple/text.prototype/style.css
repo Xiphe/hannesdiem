@@ -3,7 +3,30 @@
   src: url('/fonts/bricolage.ttf');
   font-weight: 200 800;
   font-display: block;
-  font-variation-settings: 'opsz' 48;
+}
+@font-face {
+  font-family: Recursive;
+  src: url('/fonts/recursive.ttf');
+  font-weight: 300 1000;
+  font-display: block;
+}
+@font-face {
+  font-family: AlegreyaSans;
+  src: url('/fonts/alegreyasans.ttf');
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: Alegreya;
+  src: url('/fonts/alegreya.ttf');
+  font-weight: 400 900;
+  font-display: block;
+}
+@font-face {
+  font-family: Grandstander;
+  src: url('/fonts/grandstander.ttf');
+  font-weight: 100 900;
+  font-display: block;
 }
 * {
   box-sizing: border-box;
@@ -22,65 +45,103 @@ p {
 .study-surface {
   width: 100%;
   container-type: inline-size;
-}
-.light-space {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  background: #030503;
 }
 .poem {
-  position: relative;
-  min-height: 1000px;
-  font-family: Bricolage, sans-serif;
-  font-weight: 550;
-  font-size: clamp(26px, 3.4cqw, 50px);
-  line-height: 1.2;
-  letter-spacing: -0.018em;
-  padding: 8cqw 18cqw 12cqw;
+  font-weight: 600;
+  font-size: clamp(28px, 3.25cqw, 46px);
+  /* Native x-height normalization; layout dimensions don't depend on the face. */
+  font-size-adjust: 0.52;
+  line-height: clamp(42px, 4.5cqw, 64px);
+  letter-spacing: 0;
+  padding: clamp(36px, 6cqw, 90px) clamp(24px, 9cqw, 130px);
+  margin: 0;
   font-synthesis: none;
-  text-wrap: pretty;
+  font-optical-sizing: none;
+  font-kerning: normal;
 }
 .poem p {
-  margin-bottom: 0.9em;
+  margin-bottom: clamp(32px, 3.75cqw, 54px);
 }
 .poem p:last-child {
-  margin-top: 1.35em;
   margin-bottom: 0;
 }
-.word {
-  display: inline-block;
+[data-face='A'] .poem {
+  font-family: Bricolage, sans-serif;
+  font-variation-settings:
+    'opsz' 48,
+    'wdth' 100;
 }
-body[data-material-ready] .poem {
-  color: transparent;
+[data-face='B'] .poem {
+  font-family: Recursive, sans-serif;
+  font-variation-settings:
+    'MONO' 0,
+    'CASL' 1,
+    'CRSV' 0,
+    'slnt' 0;
 }
-/* Review chrome lives outside the artist's text. */
-.overview {
-  min-height: 100svh;
+[data-face='C'] .poem {
+  font-family: AlegreyaSans, sans-serif;
+  font-weight: 700;
+}
+[data-face='D'] .poem {
+  font-family: Alegreya, serif;
+  font-weight: 700;
+}
+[data-face='E'] .poem {
+  font-family: Grandstander, sans-serif;
+}
+
+/* Everything below is review chrome, outside the artist's specimen. */
+.overview,
+.single-header {
   background: #d5d6ce;
   color: #222720;
-  font-family: system-ui, sans-serif;
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
 }
 .review-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 28px 32px 22px;
+  max-width: 1080px;
+  padding: 36px 32px 30px;
 }
 .review-header h1 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
+  font-size: 32px;
+  line-height: 1.15;
+  margin: 12px 0;
 }
-.review-header p {
+.review-header p + p {
+  margin-top: 10px;
+}
+.review-header .question {
+  font-size: 21px;
+  line-height: 1.4;
+  margin-bottom: 18px;
+}
+.context,
+.boundary {
   font-size: 13px;
+}
+.rounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 30px;
+  padding: 0 0 0 18px;
+  margin: 18px 0;
+  font-size: 13px;
+}
+.rounds li {
+  padding-right: 8px;
+  opacity: 0.6;
+}
+.rounds [aria-current] {
+  font-weight: 700;
+  opacity: 1;
 }
 .comparison {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px 24px;
   padding: 0 28px 130px;
   align-items: start;
 }
@@ -88,30 +149,59 @@ body[data-material-ready] .poem {
   min-width: 0;
 }
 .specimen-caption {
+  min-height: 260px;
+  padding-bottom: 18px;
+}
+.specimen-title {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
   color: inherit;
   text-decoration: none;
-  padding: 12px 0;
+  margin-bottom: 14px;
 }
-.specimen-caption > strong {
+.specimen-title > strong {
+  font-size: 28px;
   font-weight: 500;
-  font-size: 30px;
-  width: 28px;
 }
-.specimen-caption b {
-  font-size: 15px;
+.specimen-title b {
+  display: block;
+  font-size: 18px;
   font-weight: 600;
 }
-.specimen-caption small {
+.specimen-title small {
   display: block;
-  margin-top: 3px;
   font-size: 12px;
 }
 .open-label {
   margin-left: auto;
   font-size: 12px;
+  white-space: nowrap;
+}
+.notes {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.notes div {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.notes dt {
+  font-weight: 600;
+}
+.notes dd {
+  margin: 0;
+  max-width: 70ch;
+}
+.source {
+  display: inline-block;
+  color: inherit;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 74px;
 }
 .preview {
   position: relative;
@@ -121,17 +211,32 @@ body[data-material-ready] .poem {
 }
 .preview iframe {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0 auto auto 0;
   width: 1280px;
   height: 1000px;
   border: none;
   transform-origin: 0 0;
-  pointer-events: auto;
+  pointer-events: none;
   color-scheme: dark;
 }
 .single {
-  padding-bottom: 110px;
+  padding-bottom: 90px;
+}
+.single-header {
+  padding: 22px 32px;
+}
+.single-header > a {
+  color: inherit;
+  font-size: 13px;
+}
+.single-header h1 {
+  font-size: 22px;
+  margin: 12px 0;
+}
+.single-header h1 small {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
 }
 .embedded .poem {
   min-height: 1000px;
@@ -174,7 +279,8 @@ body[data-material-ready] .poem {
   outline: 1px solid currentColor;
   outline-offset: -2px;
 }
-a:focus-visible {
+a:focus-visible,
+button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 3px;
 }
@@ -182,45 +288,6 @@ a:focus-visible {
   white-space: nowrap;
   padding: 0 12px;
 }
-.current-setting small {
-  display: block;
-  font-size: 10px;
-  margin-top: 2px;
-  opacity: 0.65;
-}
-@media (max-width: 700px) {
-  .review-header {
-    display: block;
-    padding: 22px 16px 12px;
-  }
-  .review-header p {
-    margin-top: 8px;
-  }
-  .comparison {
-    grid-template-columns: 1fr;
-    padding-inline: 12px;
-    gap: 18px;
-  }
-  .switcher {
-    bottom: 12px;
-    gap: 0;
-    padding: 5px;
-  }
-  .switcher a {
-    min-width: 31px;
-    height: 34px;
-  }
-  .current-setting {
-    display: none;
-  }
-  .single .poem {
-    min-height: calc(100svh - 90px);
-  }
-  .poem {
-    padding: 16cqw 8cqw 20cqw;
-  }
-}
-
 .switcher button {
   border: 0;
   color: inherit;
@@ -230,14 +297,6 @@ a:focus-visible {
   width: 28px;
   height: 32px;
 }
-body[data-ui='hidden'] .switcher {
-  visibility: hidden;
-}
-button:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
-
 .restore-controls {
   display: none;
   position: fixed;
@@ -253,30 +312,50 @@ button:focus-visible {
     sans-serif;
   cursor: pointer;
 }
+body[data-ui='hidden'] .switcher {
+  visibility: hidden;
+}
+body[data-ui='hidden'] .single-header {
+  display: none;
+}
 body[data-ui='hidden'] .restore-controls {
   display: block;
 }
-
-.specimen-caption {
-  min-height: 120px;
-  align-items: flex-start;
-}
-.specimen-caption small {
-  line-height: 1.4;
-  max-width: 46ch;
-}
-.specimen-caption b {
-  display: block;
-  margin-bottom: 5px;
-}
-.current-setting small {
-  max-width: 38ch;
-  white-space: normal;
-}
-@media (min-width: 701px) and (max-width: 1150px) {
+@media (max-width: 760px) {
+  .review-header {
+    padding: 24px 16px;
+  }
+  .review-header h1 {
+    font-size: 28px;
+  }
+  .review-header .question {
+    font-size: 18px;
+  }
   .comparison {
     grid-template-columns: 1fr;
-    max-width: 900px;
-    margin: auto;
+    padding-inline: 12px;
+    gap: 32px;
+  }
+  .specimen-caption {
+    min-height: 0;
+    padding-inline: 4px;
+  }
+  .specimen-title b {
+    font-size: 17px;
+  }
+  .switcher {
+    bottom: 12px;
+    gap: 0;
+    padding: 5px;
+  }
+  .switcher a {
+    min-width: 31px;
+    height: 34px;
+  }
+  .current-setting {
+    display: none;
+  }
+  .single-header {
+    padding: 20px 24px;
   }
 }

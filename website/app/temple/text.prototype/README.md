@@ -1,35 +1,47 @@
-# First pair — words in the sunlight space (unapproved)
+# First pair — type character (exploring; no verdict)
 
-`npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound`.
-`?variant=all` compares A–C; open each for the actual viewport and pointer/touch interaction. Arrows switch; H hides/restores controls. `sand tunnel 8790`.
+`npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound?variant=all`.
+A–E open individual specimens; arrows switch; H hides/restores review chrome. `sand tunnel 8790`.
 
-Local experimental branch `codex/temple-first-text-studies`. No Worker route, production build entry or CMX publication. Live remains opener-only. Prose, order and the paired verse/refrain come directly from the unchanged draft.
+Branch `codex/temple-first-text-studies`; standalone port 8790. No Worker route, production entry or CMX publication. Live remains opener-only. Artist text comes directly from `content/drafts/temple-of-sound.tsx`; preserve punctuation, order, explicit breaks and the verse/refrain pair.
 
-## Rejection of the first six studies
+## Agreed sequence
 
-Checkpoint `a43d68a` preserves the discarded font survey. The artist found its relationship to the creative direction random and asked to discard unsupported proposals. The survey optimized font contrast while removing the imagery, light, interaction and shared depth that gave this project its direction.
+1. **Type character now:** which faces could carry these words; which feel alien?
+2. Setting: measure, size, alignment, leading, density.
+3. Reading movement.
+4. Interweaving with image, light, glimmers and input.
 
-| Old study     | Actual basis; insufficient artistic grounding                                               |
-| ------------- | ------------------------------------------------------------------------------------------- |
-| A / Fraunces  | Generic serif / short measure; no established connection to the artist's expression         |
-| B / Bricolage | Accepted opener's face and ink density; no demonstrated opening, connection or shared space |
-| C / Kalam     | Handwriting / tilt had no basis in the artist's statements                                  |
-| D / Barlow    | Stepped indentation was a formal contrast, not a demonstrated rising energy                 |
-| E / Unbounded | Face came from prior exploration; alternating alignment lacked a reason                     |
-| F / Cormorant | Generic italic poem setting; no established connection                                      |
+No skipping to the next question. No preferred candidate or narrowing until the artist explicitly approves. Positive feedback is exploration evidence, not approval. A face cannot prove vulnerability, connection, gratitude or faith; the artist judges its relationship to their words.
 
-All six withdrawn as proposals for the passage. Their new fonts and layouts are removed from the active viewer. No retrospective emotional meaning assigned.
+## Controlled comparison
 
-## One bounded question
+Same physical measure, left alignment, padding, paragraph spacing, line height, `#e4e0d4` ink and `#030503` background. Browser `font-size-adjust: 0.52` equalizes lowercase x-height; natural widths and wraps remain native. Upright, proportional, unmodified fonts. No per-face tracking, placement, effects, new prose, masks, motion or imagery. The neutral setting is a comparison fixture, not a proposed scene composition.
 
-How can words inhabit the existing sunlight space? Same first pair, working Bricolage 550, measure and arrangement throughout; this does not select the poem's typeface. Keep the artist's original IMG_6257.JPG, source point 53.24%/54.07%, and the opener's uneven, edge-fading glimmers. Local prototype copy of the particle painter adds a field input; production code stays untouched.
+Cuts are part of each candidate; weight numbers are not claimed to represent equal ink density. Notes precede specimens and explicitly distinguish visible traits, a prospective question and a possible mismatch.
 
-| New test                  | Evidence                                                                                                                     | New hypothesis and actual mechanism                                                                                                                                                        |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| A / Light within letters  | Artist accepted the opener's combined photo/glimmer mask                                                                     | Test whether the photographic ink can carry full sentences. Same world clipped to letter strokes; a working pale underprint supports smaller type.                                         |
-| B / Projected words       | Artist's sunlight, depth, and interwoven shared space                                                                        | Shadow projection is a new hypothesis, not an artist-approved symbol. Dark text projected with a shared affine depth transform, slight defocus, photograph exposed for shadow legibility.  |
-| C / Shared response field | Artist requested lingering invisible cursor trails; words, image and motion should feel interwoven; input belongs to visitor | The same decaying input trail displaces words gently, deflects/brightens particles, and opens the photograph locally. Text stays readable and resolves after the visitor leaves the point. |
+| Candidate                     | Reason for this test                                                                                                          | Possible mismatch                                                                |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| A / Bricolage Grotesque 600   | Opener reference: broad curves, dense joins, uneven proportions. Does its presence support or overtake this personal address? | Title/poster voice. Re-testing the face does not reinstate the withdrawn layout. |
+| B / Recursive Sans Casual 600 | Bent stems and chiseled ends: test an unpolished contour without artificial distress. `MONO 0`, `CASL 1`, `CRSV 0`, `slnt 0`. | Quirks distract from the direct address.                                         |
+| C / Alegreya Sans 700         | Open forms and stroke modulation: test a less closed, moving contour without a thin weight.                                   | Too casual or friendly.                                                          |
+| D / Alegreya 700              | Related to C, with substantial serifs and stroke contrast: test additional visual anchoring.                                  | Book/tradition associations create distance.                                     |
+| E / Grandstander 600          | Rounded irregular contours: test visible playfulness against the entire pair, including its serious lines.                    | Cute/illustrative rather than big and brave.                                     |
 
-A tests continuity of material; B tests a spatial hypothesis; C tests an observable relationship. None proves that vulnerability, gratitude, faith or connection has been expressed. Upward construction and the passage's dramaturgy remain separate open questions. Do not claim that reusing the photo alone satisfies the creative compass. The artist judges whether any mechanism belongs.
+These are hypotheses grounded in the artist's brief, not meanings assigned by font designers or validated emotional effects. Upward energy, construction/dissolution and shared depth remain untested here.
 
-No invented artwork copy. Explanations stay in review chrome. No audio, literal houses, unrelated sculptures, new fonts or independent whole-scene compositions. Reduced motion freezes ambient rendering and disables displacement; original text remains accessible in the DOM.
+## Font sources
+
+Local original font binaries from [Google Fonts](https://github.com/google/fonts/tree/main/ofl); OFL files alongside them. Alegreya Sans also includes its FONTLOG. No runtime font service or package dependency.
+
+- Bricolage: existing `website/app/assets/temple/bricolage.ttf`; [designer source](https://github.com/ateliertriay/bricolage).
+- Recursive: `ofl/recursive/Recursive[CASL,CRSV,MONO,slnt,wght].ttf`; [designer's process and visual traits](https://www.recursive.design/process/), [axis definitions](https://github.com/arrowtype/recursive#variable-axes).
+- Alegreya Sans: `ofl/alegreyasans/AlegreyaSans-Bold.ttf`; [designer source](https://github.com/huertatipografica/Alegreya-Sans).
+- Alegreya: `ofl/alegreya/Alegreya[wght].ttf`; [designer source](https://github.com/huertatipografica/Alegreya).
+- Grandstander: `ofl/grandstander/Grandstander[wght].ttf`; [designer source](https://github.com/Etcetera-Type-Co/Grandstander).
+
+## Recovery / previous attempts
+
+- `a43d68a`: six withdrawn font/layout bundles. Their connection to the brief was insufficient; they are not an approved foundation. No retrospective symbolism.
+- `dc20cdc`: three material tests (photographic ink, projected shadow, shared input trail). **Parked, unjudged.** The assistant changed the question from typography to material without agreeing the change. Recover their server, painter and scene from that commit if this question is reopened.
+- Only the accepted opener is published. This comparison is an experimental artifact, not approved poem artwork.

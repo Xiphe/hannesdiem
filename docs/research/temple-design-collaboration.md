@@ -21,7 +21,11 @@ The artist explicitly accepted the completed opener: “lass uns das bitte als o
 
 The six detached font/layout studies at `a43d68a` are withdrawn: their formal variety had no sufficient connection to the artist's values/energy. Existing Bricolage/Unbounded references alone did not justify them. Do not retrofit symbolism to arbitrary choices. Explain an experiment's source, hypothesis and actual mechanism before judging it.
 
-Current bounded question: how can words inhabit the existing sunlight space? Three unapproved material tests share the original first pair, one working type setting and the accepted photo/glimmer material: light within letters; projected shadow (new hypothesis); shared input trail affecting words and glimmers. These test particular relationships, not the full emotional brief or a finished scene. Upward construction and the pair's dramaturgy remain open. Local branch `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`.
+The three material tests at `dc20cdc` are **parked and unjudged**. The assistant switched from typography to light/material without agreeing the question. They are not a selected direction.
+
+Agreed order: **type character → setting → reading movement → image/light/input**. Current question: which font characters could carry the original first verse/refrain pair, and which feel alien? Compare native faces at equal lowercase x-height with identical measure, alignment, physical spacing, ink and background. Natural widths/wraps remain. Explicitly connect visible traits to a prospective test against the artist's brief; include the possible mismatch. Do not claim fonts encode emotions or prove the full creative compass. No winner required; no adjacent scene work.
+
+Active local viewer: `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`, port 8790. Five unapproved candidates: Bricolage (opener reference), Recursive Sans Casual, Alegreya Sans, Alegreya, Grandstander. The original pair remains unchanged. No scene/layout decision or publication follows from this comparison.
 
 ## Evidence from this project
 
