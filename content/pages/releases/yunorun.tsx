@@ -1,3 +1,4 @@
+import hannesDiemYunorun from '../../media/hannes_diem_yunorun.jpg'
 import { Release } from '@hannesdiem/content-components'
 import type { ReleaseMetadata } from '../../types.ts'
 import { people } from '../../people.ts'
@@ -5,7 +6,7 @@ import { song as yunorun } from '../songs/yunorun.tsx'
 
 export const release = {
   title: 'Y U NO RUN?',
-  cover: 'hannes_diem_yunorun.jpg',
+  cover: hannesDiemYunorun,
   releaseDate: '2023-09-22T12:00:00+00:00',
   hideReleaseDay: true,
   genres: ['Industrial', 'EBM', 'Electro'],

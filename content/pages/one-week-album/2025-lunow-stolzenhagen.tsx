@@ -1,3 +1,4 @@
+import photo20250415191136 from '../../media/PHOTO-2025-04-15-19-11-36.jpg'
 import { Button, Hero, Page, TextBlock } from '@hannesdiem/content-components'
 
 export const title = 'Lunow-Stolzenhagen 2025'
@@ -9,7 +10,7 @@ export default function Content() {
         <Hero
           title={'One Week Album 2025'}
           subtitle={'August 16. - 23.\\nLunow-Stolzenhagen'}
-          image={'PHOTO-2025-04-15-19-11-36.jpg'}
+          image={photo20250415191136}
           first={true}
           pullUp={false}
           textColor={'light'}

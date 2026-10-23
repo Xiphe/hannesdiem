@@ -1,3 +1,4 @@
+import unbeschriebenCover from '../../media/unbeschrieben-cover.jpg'
 import { Release } from '@hannesdiem/content-components'
 import type { ReleaseMetadata } from '../../types.ts'
 import { people } from '../../people.ts'
@@ -10,7 +11,7 @@ import { song as dasVersprechen } from '../songs/das-versprechen.tsx'
 export const release = {
   title: 'unbeschrieben',
   artist: 'Kaleidos Chaos',
-  cover: 'unbeschrieben-cover.jpg',
+  cover: unbeschriebenCover,
   releaseDate: '2016-01-31T23:00:00+00:00',
   genres: ['Rock', 'Metal', 'Alternative'],
   languages: ['German'],

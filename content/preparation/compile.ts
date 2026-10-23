@@ -1,8 +1,9 @@
 import { cmx } from '@cmx-tools/bundle'
+import { createCmxAssetPipeline } from '@cmx-tools/assets'
 import { globSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
 import { rolldown } from 'rolldown'
-import config from '../../contracts/cmx.ts'
+import config from '../cmx.config.ts'
 
 const cwd = process.cwd()
 const pages = resolve(cwd, 'content/pages')
@@ -12,6 +13,12 @@ const entries = Object.fromEntries(
     .map((file) => [file.slice(0, -4).split(sep).join('/'), resolve(pages, file)]),
 )
 if (Object.keys(entries).length === 0) throw new Error('No CMX pages found')
+entries._routes = resolve(cwd, 'content/routes.ts')
+
+await createCmxAssetPipeline({ cwd, assets: config.assets }).prepare({
+  entries,
+  configPath: 'content/cmx.config.ts',
+})
 
 const bundle = await rolldown({
   cwd,

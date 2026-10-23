@@ -1,3 +1,4 @@
+import hannesDiemHoffnung from '../../media/hannes_diem_hoffnung.jpg'
 import { Release } from '@hannesdiem/content-components'
 import type { ReleaseMetadata } from '../../types.ts'
 import { people } from '../../people.ts'
@@ -15,7 +16,7 @@ import { song as irgendwannReprise } from '../songs/irgendwann/reprise.tsx'
 export const release = {
   title: 'Hoffnung',
   artist: '',
-  cover: 'hannes_diem_hoffnung.jpg',
+  cover: hannesDiemHoffnung,
   releaseDate: '2025-02-28T23:00:00+00:00',
   genres: ['Singer Songwriter'],
   languages: ['German'],

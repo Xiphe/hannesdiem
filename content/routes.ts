@@ -1,13 +1,18 @@
+import photo20250415191136 from './media/PHOTO-2025-04-15-19-11-36.jpg'
+import photo29PalmsRainbow from './media/29_palms_rainbow.jpg'
+import fire from './media/fire.jpg'
+import ogImageOnly from './media/og_image_only.jpg'
+import portrait from './media/portrait.png'
 import type { ContentPublication } from './types.ts'
 
-export default [
+export const routes = [
   {
     path: '/one-week-album/2025-lunow-stolzenhagen',
     document: 'one-week-album/2025-lunow-stolzenhagen',
     kind: 'page',
     description:
       'Join 7 artists and spend 7 days expanding ourselves into a band, then settle on an album of songs',
-    image: 'PHOTO-2025-04-15-19-11-36.jpg',
+    image: photo20250415191136,
     ogType: 'website',
     ogTitle: 'Lunow-Stolzenhagen 2025',
     updatedAt: '2025-05-16T13:17:20.824+00:00',
@@ -23,7 +28,7 @@ export default [
     kind: 'page',
     description:
       'Two musicians. Two weeks. A journey through creativity, tension, and trust, capturing raw music, deep connection, and the space we choose to hold. This is One Week Album.',
-    image: '29_palms_rainbow.jpg',
+    image: photo29PalmsRainbow,
     theme: 'beach',
     ogType: 'website',
     ogTitle: 'California 2024 Recap',
@@ -40,7 +45,7 @@ export default [
     kind: 'page',
     description:
       'A creative retreat in Denmark, a house meant for ten, and two artists diving deep into music, food, and creativity. One Week Album is just getting started.',
-    image: 'fire.jpg',
+    image: fire,
     theme: 'beach',
     ogType: 'website',
     ogTitle: 'Løkken 2024 Recap',
@@ -56,7 +61,7 @@ export default [
     document: 'one-week-album/index',
     kind: 'page',
     description: 'Join 7 artists for 7 days of music, food, community and creation',
-    image: 'og_image_only.jpg',
+    image: ogImageOnly,
     theme: 'beach',
     ogType: 'website',
     ogTitle: 'One Week Album Retreat',
@@ -290,7 +295,7 @@ export default [
     path: '/linktree',
     document: 'linktree',
     kind: 'linktree',
-    image: 'portrait.png',
+    image: portrait,
     theme: 'electrocute',
     description: '...about Music, Life, and Everything',
     ogType: 'website',
@@ -333,3 +338,7 @@ export default [
     nofollow: true,
   },
 ] satisfies ContentPublication[]
+
+// Build-only CMX entry for route metadata and its imported images.
+export const title = ''
+export default null

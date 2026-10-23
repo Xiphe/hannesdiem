@@ -24,14 +24,15 @@
     "check:website": "prettier website contracts dev.ts tsconfig.json package.json .github/workflows --check && npm run typecheck:website && npm run test:website"
   },
   "dependencies": {
-    "@cmx-tools/contracts": "0.3.0",
+    "@cmx-tools/contracts": "0.4.0",
     "@cmx-tools/document-host": "0.1.1",
     "@cmx-tools/remix": "0.2.0",
     "http-message-sig": "0.3.0",
     "remix": "3.0.0"
   },
   "devDependencies": {
-    "@cmx-tools/bundle": "0.1.2",
+    "@cmx-tools/assets": "0.1.0",
+    "@cmx-tools/bundle": "0.2.0",
     "@cmx-tools/cli": "0.2.0",
     "@cmx-tools/document": "0.3.0",
     "@cmx-tools/environment": "0.1.2",

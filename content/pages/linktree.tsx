@@ -1,3 +1,4 @@
+import portrait from '../media/portrait.png'
 import { LinkTree } from '@hannesdiem/content-components'
 
 export const title = 'Hannes Diem'
@@ -6,7 +7,7 @@ export default function Content() {
   return (
     <>
       <LinkTree
-        portrait={'portrait.png'}
+        portrait={portrait}
         links={[
           {
             title: 'Twitch',

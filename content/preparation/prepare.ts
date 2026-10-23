@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, rmSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const run = (script: string) =>
@@ -9,6 +9,14 @@ const run = (script: string) =>
 
 for (const path of ['.cmx/bundle', '.cmx/documents']) rmSync(path, { recursive: true, force: true })
 
+// A CMX cache hit skips storage. Rebuild if its companion output was removed.
+const files = existsSync('.generated/media-files.json')
+  ? (JSON.parse(readFileSync('.generated/media-files.json', 'utf8')) as { path: string }[])
+  : undefined
+if (!files || files.some((file) => !existsSync(file.path))) {
+  rmSync('.cmx/assets', { recursive: true, force: true })
+}
+if (process.argv.includes('--extract-palettes')) run('palettes.ts')
 run('compile.ts')
 execFileSync(
   'npx',
@@ -24,19 +32,7 @@ execFileSync(
   { stdio: 'inherit' },
 )
 run('routes.ts')
-if (process.argv.includes('--extract-palettes')) run('palettes.ts')
-
-if (
-  !process.argv.includes('--reuse-media') ||
-  [
-    '.generated/media.json',
-    '.generated/media-files.json',
-    '.generated/og.json',
-    '.generated/media',
-  ].some((path) => !existsSync(path))
-) {
-  run('media.ts')
-  run('share-images.ts')
-}
+run('media.ts')
+run('share-images.ts')
 
 run('publication.ts')

@@ -5,6 +5,7 @@ import sharp, { type OverlayOptions } from 'sharp'
 import type { ContentRoute } from '../types.ts'
 
 interface Media {
+  filename: string
   src: string
   srcSet: string
   width: number
@@ -87,7 +88,8 @@ async function shadow(
 }
 for (const route of routes) {
   if (route.kind === 'release' && route.image) {
-    const cover = media[route.image]!
+    const cover = typeof route.image === 'string' ? media[route.image]! : route.image
+    if (!cover.srcSet) throw new Error(`Missing cover variants: ${route.path}`)
     const variants = cover.srcSet.split(', ').map((item) => {
       const match = /^(.*) (\d+)w$/.exec(item)
       if (!match) throw new Error(`Invalid cover variant: ${item}`)
@@ -118,8 +120,13 @@ for (const route of routes) {
     : await textImage(route.ogSubtitle, 'Noto Sans Light', 'NotoSans-Light.ttf', 35, foreground)
   let background: Buffer
   if (!song && route.image) {
-    if (!media[route.image]) throw new Error(`Unknown share image: ${route.image}`)
-    background = await sharp(`content/media/${route.image}`)
+    const routeImage = route.image
+    const image =
+      typeof routeImage === 'string'
+        ? media[routeImage]
+        : Object.values(media).find((image) => image.src === routeImage.src)
+    if (!image) throw new Error(`Unknown share image: ${route.path}`)
+    background = await sharp(`content/media/${image.filename}`)
       .rotate()
       .resize(width, height, { fit: 'cover', position: 'centre' })
       .png()

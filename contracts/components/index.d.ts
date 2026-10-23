@@ -2,8 +2,28 @@ import type { Handle, RemixNode } from 'remix/component'
 
 type Component<Props> = (handle: Handle<Props>) => () => RemixNode
 
+export interface PaletteColor {
+  name: string
+  hsl: number[]
+}
+
+export interface MediaImage {
+  src: string
+  srcSet?: string
+  width: number
+  height: number
+  alt?: string
+  focalX?: number
+  focalY?: number
+  color?: string
+  palette?: PaletteColor[]
+}
+
+// String identities keep existing published CMX documents readable.
+export type ImageSource = string | MediaImage
+
 export interface ImageProps {
-  image: string
+  image: ImageSource
   alt?: string
   sizes?: string
   priority?: boolean
@@ -16,14 +36,14 @@ export interface PageProps {
 export interface HeroProps {
   title?: string
   subtitle?: string
-  image?: string
+  image?: ImageSource
   first?: boolean
   pullUp?: boolean
   textColor?: 'light' | 'dark'
 }
 export interface TextBlockProps {
   title?: string
-  portrait?: string
+  portrait?: ImageSource
   pullUp?: boolean
   bigOnLg?: boolean
   as?: 'section' | 'div'
@@ -34,7 +54,7 @@ export interface ImageBandProps {
   smallTitle?: string
   pullUp?: boolean
   breakPoint?: 'none' | 'sm' | 'md' | 'lg'
-  images: { image: string; includeStacked?: boolean; title?: string }[]
+  images: { image: ImageSource; includeStacked?: boolean; title?: string }[]
 }
 export interface TwoColumnTextProps {
   headline?: string
@@ -87,7 +107,7 @@ export interface ReleaseProps {
   title: string
   subtitle?: string
   artist?: string
-  cover?: string
+  cover?: ImageSource
   releaseDate?: string
   hideReleaseDay?: boolean
   genres?: string[]
@@ -106,7 +126,7 @@ export interface SongProps {
   children?: RemixNode
 }
 export interface LinkTreeProps {
-  portrait: string
+  portrait: ImageSource
   links: { title: string; href: string; description?: string; icon: string }[]
   music: { title: string; href: string; icon: string }[]
   otherLinks: { title: string; href: string; description?: string; icon: string }[]

@@ -1,3 +1,12 @@
+import photo67bfc27bE033470B9B6F77A800385A70 from '../../media/67BFC27B-E033-470B-9B6F-77A800385A70.jpeg'
+import portraitHannes from '../../media/portrait_hannes.png'
+import portraitRoxy from '../../media/portrait_roxy.png'
+import hannesDiemOnGrandPianoOneWeekAlbum from '../../media/hannes-diem-on-grand-piano-one-week-album.jpg'
+import mixingSceneOneWeekRetreat from '../../media/mixing-scene-one-week-retreat.jpg'
+import moodStudioPic from '../../media/mood_studio_pic.jpeg'
+import campFire from '../../media/camp_fire.jpg'
+import moodAmp from '../../media/mood_amp.jpeg'
+import hannesDiemOnGuitarOneWeekAlbum from '../../media/hannes-diem-on-guitar-one-week-album.jpg'
 import {
   Button,
   Hero,
@@ -19,7 +28,7 @@ export default function Content() {
         <Hero
           title={'One Week Album'}
           subtitle={'Join 7 artists for 7 days of music, food, community and creation'}
-          image={'67BFC27B-E033-470B-9B6F-77A800385A70.jpeg'}
+          image={photo67bfc27bE033470B9B6F77A800385A70}
           first={true}
           pullUp={false}
           textColor={'light'}
@@ -62,11 +71,11 @@ export default function Content() {
           breakPoint={'md'}
           images={[
             {
-              image: 'hannes-diem-on-grand-piano-one-week-album.jpg',
+              image: hannesDiemOnGrandPianoOneWeekAlbum,
               includeStacked: true,
               title: '',
             },
-            { image: 'mixing-scene-one-week-retreat.jpg', includeStacked: false },
+            { image: mixingSceneOneWeekRetreat, includeStacked: false },
           ]}
         />
         <a
@@ -101,8 +110,8 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'mood_studio_pic.jpeg', includeStacked: false },
-            { image: 'camp_fire.jpg', includeStacked: false },
+            { image: moodStudioPic, includeStacked: false },
+            { image: campFire, includeStacked: false },
           ]}
         />
         <a
@@ -195,7 +204,7 @@ export default function Content() {
             />
             <TextBlock
               title={'Hannes'}
-              portrait={'portrait_hannes.png'}
+              portrait={portraitHannes}
               pullUp={false}
               bigOnLg={false}
               as={'div'}
@@ -243,7 +252,7 @@ export default function Content() {
             />
             <TextBlock
               title={'Roxanna'}
-              portrait={'portrait_roxy.png'}
+              portrait={portraitRoxy}
               pullUp={false}
               bigOnLg={false}
               as={'div'}
@@ -279,8 +288,8 @@ export default function Content() {
           pullUp={false}
           breakPoint={'md'}
           images={[
-            { image: 'mood_amp.jpeg', includeStacked: false },
-            { image: 'hannes-diem-on-guitar-one-week-album.jpg', includeStacked: true },
+            { image: moodAmp, includeStacked: false },
+            { image: hannesDiemOnGuitarOneWeekAlbum, includeStacked: true },
           ]}
         />
         <a

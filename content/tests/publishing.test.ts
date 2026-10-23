@@ -10,6 +10,7 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { createCmxPublicationState } from '@cmx-tools/publish'
 import { documents as fixture } from '../../website/tests/host-fixture.ts'
 import { publicationPath } from '../../contracts/publication.ts'
+import { documents as prepared, site } from './fixture.ts'
 
 test('the released CMX CLI loads the signed config and publishes directly to the host', async (t) => {
   const keys = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify'])
@@ -87,4 +88,34 @@ test('the released CMX CLI loads the signed config and publishes directly to the
     },
   )
   assert.match(preflight.stdout, /Published content is compatible/)
+
+  // Exercise the authored publication, including inline image metadata, through
+  // the same signed CLI and host verification used in production.
+  await writeFile(publicationFile, JSON.stringify(prepared))
+  await promisify(execFile)(
+    process.execPath,
+    [
+      'node_modules/@cmx-tools/publish/dist/cli/cli.js',
+      publicationFile,
+      endpoint,
+      '--config',
+      'content/publishing/config.ts',
+    ],
+    {
+      env: {
+        ...process.env,
+        CMX_PUBLISH_URL: endpoint,
+        CMX_PUBLISH_KEY_ID: 'publisher',
+        CMX_PUBLISH_PRIVATE_KEY: JSON.stringify(
+          await crypto.subtle.exportKey('jwk', keys.privateKey),
+        ),
+      },
+      timeout: 20_000,
+    },
+  )
+  const route = site.routes.find((route) => route.image && typeof route.image !== 'string')!
+  const page = await get(route.path)
+  assert.equal(page.status, 200)
+  assert.ok(typeof route.image === 'object')
+  assert.ok((await page.text()).includes(`src="${route.image.src}"`))
 })
