@@ -1,23 +1,7 @@
-import { expect, test, type BrowserContext, type Locator } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 import sharp from 'sharp'
-import mediaFiles from '../../.generated/media-files.json' with { type: 'json' }
-import media from '../../.generated/media.json' with { type: 'json' }
 
-const mediaByKey = new Map(mediaFiles.map((file) => [file.key, file]))
-
-async function mockRemoteMedia(context: BrowserContext) {
-  const first = Object.values(media)[0]
-  if (!first.src.startsWith('https://')) return
-  const origin = new URL(first.src).origin
-  await context.route(`${origin}/**`, (route) => {
-    const file = mediaByKey.get(new URL(route.request().url()).pathname.slice(1))
-    return file
-      ? route.fulfill({ path: file.path, contentType: file.contentType })
-      : route.fallback()
-  })
-}
-test.beforeEach(async ({ context, page }) => {
-  await mockRemoteMedia(context)
+test.beforeEach(async ({ page }) => {
   await page.route('**/login', (route) =>
     route.request().method() === 'GET'
       ? route.fulfill({
@@ -26,49 +10,6 @@ test.beforeEach(async ({ context, page }) => {
         })
       : route.fallback(),
   )
-})
-test('server renders content and styles without JavaScript', async ({ browser, baseURL }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
-  await mockRemoteMedia(context)
-  try {
-    const page = await context.newPage()
-    const response = await page.goto('/halbkreis')
-    expect(response?.status()).toBe(200)
-    await expect(page.locator('main')).not.toBeEmpty()
-    expect(await page.locator('style[data-rmx-style]').count()).toBeGreaterThan(0)
-  } finally {
-    await context.close()
-  }
-})
-test('menu opens as a native dialog without changing static page DOM', async ({ page }) => {
-  const errors: string[] = []
-  page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/one-week-album', { waitUntil: 'networkidle' })
-  await page.evaluate(() => {
-    const root = document.querySelector('main')!
-    Object.assign(window, { staticRoot: root, mutations: 0 })
-    new MutationObserver((records) => {
-      ;(window as any).mutations += records.length
-    }).observe(root, { childList: true, subtree: true, attributes: true, characterData: true })
-  })
-  await page.getByRole('button', { name: 'Open menu', exact: true }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(
-    page.getByRole('dialog').getByRole('region', { name: 'Newsletter', exact: true }),
-  ).toBeVisible()
-  await page.getByRole('dialog').getByText('Work', { exact: true }).click()
-  await expect(
-    page.getByRole('dialog').locator('details').first().getByRole('link').first(),
-  ).toBeVisible()
-  expect(
-    await page.evaluate(() => ({
-      same: (window as any).staticRoot === document.querySelector('main'),
-      mutations: (window as any).mutations,
-    })),
-  ).toEqual({ same: true, mutations: 0 })
-  await page.getByRole('button', { name: 'Close navigation' }).click()
-  await expect(page.getByRole('dialog')).not.toBeVisible()
-  expect(errors).toEqual([])
 })
 
 for (const authenticated of [false, true]) {
@@ -92,10 +33,12 @@ for (const authenticated of [false, true]) {
         }),
       })
     })
-    await page.goto(authenticated ? '/linktree' : '/halbkreis', { waitUntil: 'networkidle' })
+    await page.goto(authenticated ? '/fixture-links' : '/fixture-release', {
+      waitUntil: 'networkidle',
+    })
     if (authenticated) {
-      await page.locator('footer a[href="/halbkreis"]').click()
-      await expect(page).toHaveURL(/\/halbkreis$/)
+      await page.locator('footer a[href="/fixture-release"]').click()
+      await expect(page).toHaveURL(/\/fixture-release$/)
     }
     expect(requests).toBe(0)
     const historyLength = await page.evaluate(() => history.length)
@@ -110,7 +53,7 @@ for (const authenticated of [false, true]) {
     await expect(newsletter.getByRole('heading')).toHaveCount(0)
     await expect(newsletter.getByRole('textbox', { name: 'Email address' })).toHaveCount(0)
     await expect(newsletter.getByRole('button', { name: 'Logout', exact: true })).toHaveCount(0)
-    await expect(page).toHaveURL(/\/halbkreis$/)
+    await expect(page).toHaveURL(/\/fixture-release$/)
     expect(await page.evaluate(() => history.length)).toBe(historyLength)
     await expect.poll(() => requests).toBe(1)
     finish()
@@ -146,7 +89,7 @@ test('newsletter skeleton ends on session failure and retry can resolve it', asy
       body: JSON.stringify({ ready: true, csrfToken: 'retry-csrf' }),
     })
   })
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const newsletter = page
     .getByRole('dialog', { name: 'Navigation', exact: true })
@@ -166,7 +109,7 @@ test('server-rendered navigation can open without JavaScript', async ({ browser,
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
   try {
     const page = await context.newPage()
-    await page.goto('/halbkreis')
+    await page.goto('/fixture-release')
     await page.getByRole('button', { name: 'Open menu', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
     await expect(dialog).toBeVisible()
@@ -182,7 +125,7 @@ test('server-rendered navigation can open without JavaScript', async ({ browser,
 test('release lyrics open over the release, close on Escape, and support direct URLs', async ({
   page,
 }) => {
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   const title = await page.locator('main h1').textContent()
   const link = page.locator('main a[data-rmx-target="overlay"]').first()
   const song = await link.getAttribute('href')
@@ -193,7 +136,7 @@ test('release lyrics open over the release, close on Escape, and support direct 
   await expect(page.locator('main h1')).toHaveText(title!)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).not.toBeVisible()
-  await expect(page).toHaveURL(/\/halbkreis$/)
+  await expect(page).toHaveURL(/\/fixture-release$/)
   await page.goto(`/m${song}`)
   await expect(page).toHaveURL((url) => url.pathname === song)
   await expect(page.locator('main h1')).not.toBeEmpty()
@@ -202,7 +145,7 @@ test('release lyrics open over the release, close on Escape, and support direct 
 for (const control of ['close button', 'Escape', 'outside click'] as const) {
   test(`lyrics sheet and backdrop animate out together through ${control}`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
-    await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+    await page.goto('/fixture-release', { waitUntil: 'networkidle' })
     const releaseEntry = await page.evaluate(() => navigation.currentEntry!.index)
     const link = page.locator('main a[data-rmx-target="overlay"]').first()
     const song = await link.getAttribute('href')
@@ -265,7 +208,7 @@ for (const control of ['close button', 'Escape', 'outside click'] as const) {
     expect(motion.opacity).toBeCloseTo(motion.backdropOpacity, 1)
     expect(motion.translateY).toBeGreaterThan(0)
     await expect(dialog).not.toBeVisible()
-    await expect(page).toHaveURL(/\/halbkreis$/)
+    await expect(page).toHaveURL(/\/fixture-release$/)
     expect(await page.evaluate(() => navigation.currentEntry!.index)).toBe(releaseEntry)
   })
 }
@@ -274,7 +217,7 @@ test('lyrics close without an exit animation when reduced motion is requested', 
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   await page.locator('main a[data-rmx-target="overlay"]').first().click()
   const dialog = page.getByRole('dialog', { name: 'Page dialog' })
   await expect(dialog.locator('h1')).not.toBeEmpty()
@@ -286,13 +229,13 @@ test('lyrics close without an exit animation when reduced motion is requested', 
     return { animations, open: dialog.open }
   })
   expect(closed).toEqual({ animations: 0, open: false })
-  await expect(page).toHaveURL(/\/halbkreis$/)
+  await expect(page).toHaveURL(/\/fixture-release$/)
 })
 
 for (const width of [320, 360, 768]) {
   test(`tracklist lyrics controls fit their container at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
-    await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+    await page.goto('/fixture-long-release', { waitUntil: 'networkidle' })
     const table = page.getByRole('table')
     const containerWidth = await table.locator('xpath=../..').evaluate((element) => {
       const style = getComputedStyle(element)
@@ -347,7 +290,7 @@ test('lyrics labels switch at a 440px container width without resizing the viewp
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-long-release', { waitUntil: 'networkidle' })
   const table = page.getByRole('table')
   const details = table.locator('xpath=../..')
   const link = table.getByRole('link').first()
@@ -382,7 +325,7 @@ for (const [width, height] of [
     page,
   }) => {
     await page.setViewportSize({ width, height })
-    await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+    await page.goto('/fixture-long-release', { waitUntil: 'networkidle' })
     const cover = page.locator('main img').first()
     await cover.evaluate((image: HTMLImageElement) => image.decode())
     const title = await page.locator('main h1').boundingBox()
@@ -414,7 +357,7 @@ for (const [width, height] of [
 
 test('short releases center both columns in the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
-  for (const path of ['/resolve-yourself', '/yunorun']) {
+  for (const path of ['/fixture-single', '/fixture-ep']) {
     await page.goto(path, { waitUntil: 'networkidle' })
     const cover = page.locator('main img').first()
     await cover.evaluate((image: HTMLImageElement) => image.decode())
@@ -431,7 +374,7 @@ test('short releases center both columns in the viewport', async ({ page }) => {
 
 test('stacked release cover scrolls in normal flow', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 900 })
-  await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-long-release', { waitUntil: 'networkidle' })
   const cover = page.locator('main img').first()
   await cover.evaluate((image: HTMLImageElement) => image.decode())
   const before = (await cover.boundingBox())!
@@ -446,7 +389,7 @@ for (const width of [360, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
-    await page.goto('/hoffnung', { waitUntil: 'networkidle' })
+    await page.goto('/fixture-long-release', { waitUntil: 'networkidle' })
     const title = await page.locator('main h1').textContent()
     const link = page.locator('main a[data-rmx-target="overlay"]').first()
     const song = await link.getAttribute('href')
@@ -468,7 +411,7 @@ for (const width of [360, 1280]) {
     expect(contained).toBe(true)
     await dialog.getByRole('button', { name: 'Close lyrics' }).click()
     await expect(dialog).not.toBeVisible()
-    await expect(page).toHaveURL(/\/hoffnung$/)
+    await expect(page).toHaveURL(/\/fixture-long-release$/)
     await page.goForward()
     await expect(dialog).toBeVisible()
     await expect(page).toHaveURL((url) => url.pathname === song)
@@ -480,7 +423,7 @@ for (const width of [360, 1280]) {
 for (const width of [360, 1280]) {
   test(`media decodes and pages fit ${width}px viewport`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 })
-    await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+    await page.goto('/fixture-release', { waitUntil: 'networkidle' })
     const image = page.locator('main img').first()
     if (await image.count()) {
       const result = await image.evaluate(async (img: HTMLImageElement) => {
@@ -513,7 +456,7 @@ test('newsletter signup stays in the sidebar with pending and success feedback',
       body: JSON.stringify({ type: 'success', message: 'Link sent! Please check your email.' }),
     })
   })
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   await page.evaluate(() => {
     ;(window as any).originalContent = document.querySelector('main')
   })
@@ -533,7 +476,7 @@ test('newsletter signup stays in the sidebar with pending and success feedback',
   await expect(dialog.getByText('Link sent! Please check your email.')).toBeVisible()
   await expect(dialog).toBeVisible()
   await expect(input).toHaveCount(0)
-  await expect(page).toHaveURL(/\/halbkreis$/)
+  await expect(page).toHaveURL(/\/fixture-release$/)
   expect(
     await page.evaluate(() => (window as any).originalContent === document.querySelector('main')),
   ).toBe(true)
@@ -569,7 +512,7 @@ test('newsletter cooldown and failures preserve the email and allow retry withou
       body: JSON.stringify({ type: 'success', message: 'Link sent! Please check your email.' }),
     })
   })
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog')
   const input = dialog.getByRole('textbox', { name: 'Email address' })
@@ -614,7 +557,7 @@ test('newsletter logout stays inline and refreshes the anonymous signup session'
       ),
     }),
   )
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByRole('button', { name: 'Logout' }).click()
@@ -627,7 +570,7 @@ test('newsletter logout stays inline and refreshes the anonymous signup session'
 test('email confirmation shows a welcome notice once after the home redirect', async ({ page }) => {
   await page.goto('/?login_success=true')
   await expect(page.getByRole('status')).toHaveText('Welcome! You are now logged in.')
-  await expect(page).toHaveURL(/\/linktree$/)
+  await expect(page).toHaveURL(/\/fixture-links$/)
   await page.reload()
   await expect(page.getByText('Welcome! You are now logged in.')).toHaveCount(0)
 })
@@ -635,7 +578,7 @@ test('navigation follows content links, renders 404, and serves app assets', asy
   page,
   request,
 }) => {
-  await page.goto('/linktree', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-links', { waitUntil: 'networkidle' })
   const mark = await page.locator('link[rel=icon]').getAttribute('href')
   const asset = await request.get(mark!)
   expect(asset.status()).toBe(200)
@@ -652,7 +595,7 @@ test('navigation follows content links, renders 404, and serves app assets', asy
 })
 
 test('Amazon Music logos preserve the open letter shapes with sizing styles', async ({ page }) => {
-  for (const path of ['/linktree', '/halbkreis']) {
+  for (const path of ['/fixture-links', '/fixture-release']) {
     await page.goto(path)
     const logo = page.locator('main svg[aria-label="Amazon Music"]')
     await expect(logo).toBeVisible()
@@ -667,7 +610,7 @@ test('Amazon Music logos preserve the open letter shapes with sizing styles', as
 test('SoundCloud artwork stays visible with repeated logos and a closed navigation dialog', async ({
   page,
 }) => {
-  await page.goto('/resolve-yourself')
+  await page.goto('/fixture-single')
 
   async function expectArtwork(logo: Locator) {
     await expect(logo).toBeVisible()
@@ -710,7 +653,7 @@ for (const width of [360, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 600 })
-    await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+    await page.goto('/fixture-release', { waitUntil: 'networkidle' })
     await page.getByRole('button', { name: 'Open menu', exact: true }).click()
     const dialog = page.getByRole('dialog')
     const newsletter = dialog.getByRole('region', { name: 'Newsletter', exact: true })
@@ -753,7 +696,7 @@ for (const width of [360, 1280]) {
 for (const width of [360, 1280, 2732]) {
   test(`portrait text blocks overlap their headlines at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
-    await page.goto('/one-week-album')
+    await page.goto('/fixture-portraits')
     const cards = page.locator('main div:has(> div > img) + :is(div, section):has(> h2)')
     expect(await cards.count()).toBeGreaterThan(0)
     for (const card of await cards.all()) {
@@ -775,13 +718,13 @@ for (const width of [360, 1280, 2732]) {
 test('outside clicks close overlays and local menu navigation adds no menu history entry', async ({
   page,
 }) => {
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   const title = await page.locator('main h1').textContent()
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.mouse.click(20, 400)
   await expect(page.getByRole('dialog')).not.toBeVisible()
-  await expect(page).toHaveURL(/\/halbkreis$/)
+  await expect(page).toHaveURL(/\/fixture-release$/)
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
@@ -791,7 +734,7 @@ test('outside clicks close overlays and local menu navigation adds no menu histo
   await expect(page).toHaveURL((url) => url.pathname === destination)
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.goBack()
-  await expect(page).toHaveURL(/\/halbkreis$/)
+  await expect(page).toHaveURL(/\/fixture-release$/)
   await expect(page.locator('main h1')).toHaveText(title!)
   expect((await page.goto('/nav'))?.status()).toBe(404)
 })
@@ -799,13 +742,13 @@ test('outside clicks close overlays and local menu navigation adds no menu histo
 test('sidebar keeps the original header and menu item spacing with SVG controls', async ({
   page,
 }) => {
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog')
   const close = dialog.getByRole('button', { name: 'Close navigation' })
   await expect(close.locator('svg')).toBeVisible()
   expect((await close.locator('..').boundingBox())!.height).toBe(32)
-  const work = dialog.locator('summary').filter({ hasText: 'Work' })
+  const work = dialog.locator('summary').filter({ hasText: 'Fixture' })
   await expect(work.locator('svg')).toBeVisible()
   const links = dialog.locator('details').first().getByRole('link')
   const first = await links.nth(0).boundingBox()
@@ -815,7 +758,7 @@ test('sidebar keeps the original header and menu item spacing with SVG controls'
 
 test('sidebar slide and backdrop share the opening timeline on every open', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
 
   for (let opening = 0; opening < 2; opening++) {
@@ -903,7 +846,7 @@ test('sidebar slide and backdrop share the opening timeline on every open', asyn
 
 test('sidebar sections animate open and closed', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog')
   const work = dialog.locator('details').first()
@@ -931,13 +874,13 @@ test('sidebar sections animate open and closed', async ({ page }) => {
 
 test('sidebar respects reduced motion and keyboard disclosure controls', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+  await page.goto('/fixture-release', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog')
   const panel = dialog.locator('[data-navigation-panel]')
   await expect(panel).toBeVisible()
   expect(await panel.evaluate((el) => el.getAnimations().length)).toBe(0)
-  const summary = dialog.locator('summary').filter({ hasText: 'Work' })
+  const summary = dialog.locator('summary').filter({ hasText: 'Fixture' })
   await summary.focus()
   await page.keyboard.press('Enter')
   await expect(dialog.locator('details').first().getByRole('link').first()).not.toBeVisible()
@@ -952,7 +895,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     page,
   }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' })
-    await page.goto('/halbkreis', { waitUntil: 'networkidle' })
+    await page.goto('/fixture-release', { waitUntil: 'networkidle' })
     await page.getByRole('button', { name: 'Open menu', exact: true }).click()
     const dialog = page.getByRole('dialog')
     const themeColor = await page.locator('body').evaluate((el) => getComputedStyle(el).color)
@@ -960,7 +903,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await page.keyboard.press('Tab')
     for (const control of [
       dialog.getByRole('button', { name: 'Close navigation' }),
-      dialog.locator('summary').filter({ hasText: 'Work' }),
+      dialog.locator('summary').filter({ hasText: 'Fixture' }),
       dialog.locator('details').first().getByRole('link').first(),
       dialog.getByRole('button', { name: 'Signup' }),
       dialog.getByRole('link', { name: 'Twitch', exact: true }),

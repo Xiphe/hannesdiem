@@ -10,7 +10,9 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { createCmxPublicationState } from '@cmx-tools/publish'
 import { documents as fixture } from '../../website/tests/host-fixture.ts'
 import { publicationPath } from '../../contracts/publication.ts'
-import { documents as prepared, site } from './fixture.ts'
+import sharp from 'sharp'
+import { imageLoader } from '../preparation/image-loader.ts'
+import type { SiteMetadata } from '../../contracts/content.ts'
 
 test('the released CMX CLI loads the signed config and publishes directly to the host', async (t) => {
   const keys = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify'])
@@ -92,6 +94,30 @@ test('the released CMX CLI loads the signed config and publishes directly to the
   )
   assert.match(preflight.stdout, /Published content is compatible/)
 
+  const bytes = await sharp({
+    create: { width: 40, height: 30, channels: 3, background: '#5874a8' },
+  })
+    .jpeg()
+    .toBuffer()
+  const image = await imageLoader.load({
+    bytes,
+    relativePath: 'fixture.jpg',
+    options: {
+      storage: { directory: join(directory, 'media'), base: '/fixture-media' },
+      sources: {},
+      palettes: {},
+      processedPalettes: {},
+    },
+  })
+  const prepared = structuredClone(fixture)
+  const site = prepared._site.content.site as SiteMetadata
+  site.routes[0].image = image
+  prepared.fixture.content.default = {
+    type: 'component',
+    from: '@hannesdiem/content-components',
+    import: 'Image',
+    props: { image },
+  }
   const revised = await publish(prepared)
   const route = site.routes.find((route) => route.image && typeof route.image !== 'string')!
   const page = await get(route.path)

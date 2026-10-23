@@ -7,17 +7,46 @@ permissions:
   contents: read
 
 jobs:
+  checks:
+    name: Check content tooling with synthetic input
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github
+            contracts
+            website
+            content/preparation
+            content/publishing
+            content/tests
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build:app
+      - run: npm run test:content
+
   publish:
+    needs: checks
     runs-on: ubuntu-24.04
     environment: Production
     timeout-minutes: 20
     env:
       MEDIA_BASE_URL: https://media.hannesdiem.de
+      MEDIA_STORAGE: r2
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           lfs: true
           persist-credentials: false
+          sparse-checkout: |
+            .github
+            contracts
+            content
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
@@ -32,40 +61,32 @@ jobs:
       - name: Cache prepared image assets
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
-          path: |
-            .cmx/assets
-            .generated/media
-            .generated/media-files.json
-          key: ${{ runner.os }}-${{ runner.arch }}-cmx-assets-v1-${{ hashFiles('package-lock.json', 'content/preparation/image-loader.ts') }}-${{ github.sha }}
+          path: .cmx/assets
+          key: ${{ runner.os }}-${{ runner.arch }}-cmx-assets-v2-${{ hashFiles('package-lock.json', 'content/preparation/image-loader.ts', 'content/preparation/media-storage.ts') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-cmx-assets-v1-${{ hashFiles('package-lock.json', 'content/preparation/image-loader.ts') }}-
+            ${{ runner.os }}-${{ runner.arch }}-cmx-assets-v2-${{ hashFiles('package-lock.json', 'content/preparation/image-loader.ts', 'content/preparation/media-storage.ts') }}-
       - name: Extract palettes for changed image inputs
         if: steps.palettes.outputs.cache-hit != 'true'
         run: |
           npm ci --prefix content/preparation/palette
           node content/preparation/palettes.ts
-      - name: Prepare content and image metadata
+      - name: Prepare content and store immutable media
+        env:
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: npm run content:build
       - name: Check authored content
         run: |
           npx prettier content contracts/cmx.ts --check
           npx tsc --noEmit -p content/tsconfig.json
-      - name: Upload immutable media before publishing references
-        env:
-          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        run: npm run media:upload
-      - run: npx playwright install --with-deps --only-shell chromium
-      - run: npm run build:app -- --local-media
-      - run: npm run check
       - name: Publish signed CMX documents
         env:
           CMX_PUBLISH_PRIVATE_KEY: ${{ secrets.CMX_PUBLISH_PRIVATE_KEY }}
           CMX_PUBLISH_KEY_ID: ${{ vars.CMX_PUBLISH_KEY_ID }}
           CMX_PUBLISH_URL: ${{ vars.SITE_URL }}/_cmx/publication
-        run: npm run --silent content:publish > .generated/publication-result.json
-      - name: Verify published site and media
+        run: npm run --silent content:publish
+      - name: Verify deployment health and content-host readiness
         env:
           SITE_URL: ${{ vars.SITE_URL }}
-        run: node content/publishing/smoke.ts "$SITE_URL" --publication
+        run: node content/publishing/smoke.ts "$SITE_URL"

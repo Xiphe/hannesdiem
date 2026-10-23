@@ -19,7 +19,6 @@ execFileSync(
 
 await rm('dist', { recursive: true, force: true })
 await mkdir('.generated', { recursive: true })
-const local = process.argv.includes('--local-media')
 const result = await build({
   entryPoints: {
     entry: 'website/app/browser.ts',
@@ -85,21 +84,10 @@ await writeFile(`dist${entries.mark}`, mark)
 await mkdir('dist/font', { recursive: true })
 await cp('website/app/assets/fuggles.woff2', 'dist/font/fuggles-v12-latin-regular.woff2')
 await cp('website/app/assets/googlef6f5b9a886cf5949.html', 'dist/googlef6f5b9a886cf5949.html')
-let mediaHeaders = ''
-if (local) {
-  const media = JSON.parse(await readFile('.generated/media.json', 'utf8'))
-  const firstImage = Object.values(media)[0] as { src: string }
-  if (firstImage.src.startsWith('/')) {
-    const prefix = firstImage.src.slice(0, firstImage.src.indexOf('/images/') + 1)
-    await cp('.generated/media', `dist${prefix}`, { recursive: true })
-    mediaHeaders = `${prefix}*\n  Cache-Control: public, max-age=31536000, immutable\n`
-  }
-}
 await writeFile('.generated/assets.json', JSON.stringify(entries, null, 2) + '\n')
 await writeFile(
   'dist/_headers',
-  '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/font/*\n  Cache-Control: public, max-age=31536000, immutable\n' +
-    mediaHeaders,
+  '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/font/*\n  Cache-Control: public, max-age=31536000, immutable\n',
 )
 await writeFile('.generated/browser-meta.json', JSON.stringify(result.metafile, null, 2) + '\n')
 

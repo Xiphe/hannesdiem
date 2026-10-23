@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
-import { basename, dirname, extname, join } from 'node:path'
+import { basename, extname } from 'node:path'
 import type { CmxAssetLoader } from '@cmx-tools/contracts'
 import sharp from 'sharp'
+import { storeMedia, type MediaStorage } from './media-storage.ts'
 
 type Source = {
   alt: string
@@ -34,7 +34,7 @@ export function mediaBase(value: string): string {
 }
 
 export const imageLoader = {
-  version: `1:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
+  version: `2:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
   extensions: ['.jpg', '.jpeg', '.png', '.webp', '.avif'],
   async load({ bytes, relativePath, options }) {
     const filename = basename(relativePath)
@@ -62,10 +62,8 @@ export const imageLoader = {
         .toBuffer()
       const sha256 = createHash('sha256').update(image).digest('hex')
       const key = `images/${stem}-${variantWidth}-${sha256.slice(0, 16)}.webp`
-      const path = join(options.directory, key)
-      await mkdir(dirname(path), { recursive: true })
-      await writeFile(path, image)
-      variants.push({ src: `${options.base}/${key}`, width: variantWidth })
+      const src = await storeMedia(options.storage, key, image, 'image/webp')
+      variants.push({ src, width: variantWidth })
     }
     const source: Partial<Source> = options.sources[filename] ?? {}
     const palette = [options.processedPalettes[filename], options.palettes[filename]].find(
@@ -85,8 +83,7 @@ export const imageLoader = {
     }
   },
 } satisfies CmxAssetLoader<{
-  directory: string
-  base: string
+  storage: MediaStorage
   sources: Record<string, Source>
   palettes: Record<string, Palette>
   processedPalettes: Record<string, Palette>

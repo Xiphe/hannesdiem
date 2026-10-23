@@ -8,20 +8,20 @@
   "scripts": {
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "media:upload": "node content/publishing/upload-media.ts",
     "build:app": "node website/build/assets.ts",
-    "build": "npm run content:build && npm run build:app -- --local-media",
+    "build": "npm run content:build && npm run build:app && node content/development/media.ts",
     "dev": "wrangler dev content/development/worker.ts --config website/wrangler.jsonc --ip 0.0.0.0 --port 8787 --live-reload",
     "typecheck": "wrangler types --config website/wrangler.jsonc worker-configuration.d.ts && tsc --noEmit",
-    "test": "node --import remix/node-tsx --test content/tests/*.test.ts website/app/document-host/*.test.ts website/app/newsletter/*.test.ts && playwright test --config content/playwright.config.ts",
+    "test": "npm run test:content && npm run test:website",
     "check": "npm run format:check && npm run typecheck && npm test",
     "deploy": "wrangler deploy --config website/wrangler.jsonc",
     "content:build": "node content/preparation/prepare.ts",
     "content:publish": "cmx-publish .generated/publication.json \"$CMX_PUBLISH_URL\" --config content/publishing/config.ts",
     "predeploy": "npm run build:app",
     "typecheck:website": "wrangler types --config website/wrangler.jsonc worker-configuration.d.ts && tsc --noEmit -p website/tsconfig.json",
-    "test:website": "node --import remix/node-tsx --test website/app/newsletter/*.test.ts website/app/document-host/*.test.ts && playwright test --config website/playwright.config.ts",
-    "check:website": "prettier website contracts dev.ts tsconfig.json package.json .github/workflows --check && npm run typecheck:website && npm run test:website"
+    "test:website": "node --import remix/node-tsx --test website/tests/*.test.ts website/app/newsletter/*.test.ts website/app/document-host/*.test.ts && playwright test --config website/playwright.config.ts",
+    "check:website": "prettier website contracts dev.ts tsconfig.json package.json .github/workflows --check && npm run typecheck:website && npm run test:website",
+    "test:content": "node --import remix/node-tsx --test content/tests/*.test.ts"
   },
   "dependencies": {
     "@cmx-tools/contracts": "0.4.0",
@@ -40,6 +40,7 @@
     "@hannesdiem/content-components": "file:contracts/components",
     "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
+    "aws4fetch": "1.0.20",
     "esbuild": "0.28.2",
     "miniflare": "5.20261012.1-beta",
     "prettier": "3.9.10",

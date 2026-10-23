@@ -1,5 +1,9 @@
 # hannesdiem.de
 
+## Tests
+
+Use synthetic fixtures for all test assertions. Never assert against authored production content or use its generated Publications and media as fixtures. Keep website builds and checks runnable with `content/` absent to simulate the future repository split.
+
 ## Agent skills
 
 - Remix work: read `.agents/skills/remix/SKILL.md`; use installed docs via `node_modules/remix/INDEX.md`.

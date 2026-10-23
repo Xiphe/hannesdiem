@@ -28,7 +28,7 @@ documents[siteEntry] = {
     site: {
       version: 1,
       routes,
-      media: await read('.generated/media.json'),
+      media: {},
       shareImages: await read('.generated/og.json'),
       navigation: navigation(routes),
       redirects: [...redirects].map(([path, destination]) => ({

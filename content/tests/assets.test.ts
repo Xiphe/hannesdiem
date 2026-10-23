@@ -17,24 +17,23 @@ async function fixture(t: TestContext) {
     .withMetadata({ orientation: 6 })
     .toBuffer()
   const options: Parameters<typeof imageLoader.load>[0]['options'] = {
-    directory,
-    base: '/media',
+    storage: { directory, base: '/media' },
     sources: {},
     palettes: {},
     processedPalettes: {},
   }
   const load = (input = bytes) =>
     imageLoader.load({ bytes: input, relativePath: 'image.jpg', options })
-  return { bytes, options, load }
+  return { bytes, options, directory, load }
 }
 
 test('images are auto-rotated into immutable WebP files without enlargement', async (t) => {
-  const { bytes, options, load } = await fixture(t)
+  const { bytes, directory, load } = await fixture(t)
   const image = await load()
   assert.equal(image.width, 40)
   assert.equal(image.height, 80)
   assert.equal(image.sourceSha256, createHash('sha256').update(bytes).digest('hex'))
-  const output = await readFile(join(options.directory, 'images', basename(image.src)))
+  const output = await readFile(join(directory, 'images', basename(image.src)))
   const metadata = await sharp(output).metadata()
   assert.equal(metadata.format, 'webp')
   assert.equal(metadata.width, 40)
@@ -44,8 +43,8 @@ test('images are auto-rotated into immutable WebP files without enlargement', as
 })
 
 test('responsive variants use the configured widths and stop at 2560px', async (t) => {
-  const { options, load } = await fixture(t)
-  options.base = 'https://media.example.com/nested'
+  const { options, directory, load } = await fixture(t)
+  options.storage.base = 'https://media.example.com/nested'
   const bytes = await sharp({
     create: { width: 2700, height: 12, channels: 3, background: '#0000ff' },
   })
@@ -55,8 +54,8 @@ test('responsive variants use the configured widths and stop at 2560px', async (
   const widths = []
   for (const variant of image.srcSet.split(', ')) {
     const [src, descriptor] = variant.split(' ')
-    assert.ok(src.startsWith(options.base + '/images/'))
-    const metadata = await sharp(join(options.directory, 'images', basename(src))).metadata()
+    assert.ok(src.startsWith(options.storage.base + '/images/'))
+    const metadata = await sharp(join(directory, 'images', basename(src))).metadata()
     assert.equal(descriptor, `${metadata.width}w`)
     widths.push(metadata.width)
   }

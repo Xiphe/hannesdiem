@@ -1,8 +1,7 @@
 import { cmx } from '@cmx-tools/bundle'
 import { createCmxAssetPipeline } from '@cmx-tools/assets'
 import { globSync } from 'node:fs'
-import { mkdir, writeFile } from 'node:fs/promises'
-import { basename, resolve, sep } from 'node:path'
+import { resolve, sep } from 'node:path'
 import { rolldown } from 'rolldown'
 import config from '../cmx.config.ts'
 
@@ -25,24 +24,7 @@ await assets.prepare({
 const bundle = await rolldown({
   cwd,
   input: entries,
-  plugins: [
-    cmx({ ...config, cwd }),
-    {
-      name: 'media-manifest',
-      async generateBundle() {
-        const images = Object.fromEntries(
-          await Promise.all(
-            [...this.getModuleIds()]
-              .filter(assets.matches)
-              .sort()
-              .map(async (file) => [basename(file), await assets.load(file)]),
-          ),
-        )
-        await mkdir('.generated', { recursive: true })
-        await writeFile('.generated/media.json', JSON.stringify(images, null, 2) + '\n')
-      },
-    },
-  ],
+  plugins: [cmx({ ...config, cwd })],
   // Page imports can create entry facades without sourcemaps.
   // https://github.com/cmx-tools/packages/issues/208
   preserveEntrySignatures: 'allow-extension',
