@@ -43,12 +43,14 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
           image={{ src: source, width: item.width, height: item.height }}
           lightSource={lightSource}
         />
-        <PoemSection
-          id={id}
-          kind="verse"
-        >
-          {children}
-        </PoemSection>
+        {children != null && (
+          <PoemSection
+            id={id}
+            kind="verse"
+          >
+            {children}
+          </PoemSection>
+        )}
       </>
     )
   }
