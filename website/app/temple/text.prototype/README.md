@@ -1,23 +1,35 @@
-# First verse/refrain — text studies (unapproved)
-
-Question: which existing typefaces, measures, weights and paragraph arrangements should we explore further for the first pair?
+# First pair — words in the sunlight space (unapproved)
 
 `npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound`.
-`?variant=all` compares six studies; `?variant=A` … `F` opens one. Arrow keys switch; H hides/restores review controls. `sand tunnel 8790` forwards the preview.
+`?variant=all` compares A–C; open each for the actual viewport and pointer/touch interaction. Arrows switch; H hides/restores controls. `sand tunnel 8790`.
 
-Branch: `codex/temple-first-text-studies`. Local-only server; no Worker route, CMX publication entry or production build entry. No selection or publication approval. The live opener remains unchanged.
+Local experimental branch `codex/temple-first-text-studies`. No Worker route, production build entry or CMX publication. Live remains opener-only. Prose, order and the paired verse/refrain come directly from the unchanged draft.
 
-All studies read the first pair directly from `content/drafts/temple-of-sound.tsx`; preserve words, punctuation, explicit line breaks and order. Shared background `#030503`, text `#e4e0d4`. This pass explores static text images; reading motion, imagery, interaction and audio remain separate decisions. Six studies explicitly agreed with the artist; no whole-scene proposals.
+## Rejection of the first six studies
 
-| Study | Native font                   | Composition                                                   |
-| ----- | ----------------------------- | ------------------------------------------------------------- |
-| A     | Fraunces 620                  | Short left-aligned measure; SOFT 65, WONK 1, opsz 70          |
-| B     | Bricolage Grotesque 750       | Large close-set text mass, native kerning                     |
-| C     | Kalam Bold 700                | Hand-drawn letterforms, offset paragraphs, shared slight tilt |
-| D     | Barlow Condensed Bold 700     | Narrow setting, successive paragraph indents                  |
-| E     | Unbounded 400                 | Extended letters, long lines and alternating alignment        |
-| F     | Cormorant Garamond Italic 650 | Large centred italic, shared centre                           |
+Checkpoint `a43d68a` preserves the discarded font survey. The artist found its relationship to the creative direction random and asked to discard unsupported proposals. The survey optimized font contrast while removing the imagery, light, interaction and shared depth that gave this project its direction.
 
-Native fonts only; no glyph modifications or synthetic italics. OFL licenses accompany each added font. Bricolage/Unbounded use existing website assets. Barlow is restored byte-for-byte from `76e9ca7`.
+| Old study     | Actual basis; insufficient artistic grounding                                               |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| A / Fraunces  | Generic serif / short measure; no established connection to the artist's expression         |
+| B / Bricolage | Accepted opener's face and ink density; no demonstrated opening, connection or shared space |
+| C / Kalam     | Handwriting / tilt had no basis in the artist's statements                                  |
+| D / Barlow    | Stepped indentation was a formal contrast, not a demonstrated rising energy                 |
+| E / Unbounded | Face came from prior exploration; alternating alignment lacked a reason                     |
+| F / Cormorant | Generic italic poem setting; no established connection                                      |
 
-New font sources: [Fraunces](https://github.com/google/fonts/tree/main/ofl/fraunces), [Kalam](https://github.com/google/fonts/tree/main/ofl/kalam), [Cormorant Garamond](https://github.com/google/fonts/tree/main/ofl/cormorantgaramond). Downloads from their raw upstream files; licenses retained under `fonts/`.
+All six withdrawn as proposals for the passage. Their new fonts and layouts are removed from the active viewer. No retrospective emotional meaning assigned.
+
+## One bounded question
+
+How can words inhabit the existing sunlight space? Same first pair, working Bricolage 550, measure and arrangement throughout; this does not select the poem's typeface. Keep the artist's original IMG_6257.JPG, source point 53.24%/54.07%, and the opener's uneven, edge-fading glimmers. Local prototype copy of the particle painter adds a field input; production code stays untouched.
+
+| New test                  | Evidence                                                                                                                     | New hypothesis and actual mechanism                                                                                                                                                        |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A / Light within letters  | Artist accepted the opener's combined photo/glimmer mask                                                                     | Test whether the photographic ink can carry full sentences. Same world clipped to letter strokes; a working pale underprint supports smaller type.                                         |
+| B / Projected words       | Artist's sunlight, depth, and interwoven shared space                                                                        | Shadow projection is a new hypothesis, not an artist-approved symbol. Dark text projected with a shared affine depth transform, slight defocus, photograph exposed for shadow legibility.  |
+| C / Shared response field | Artist requested lingering invisible cursor trails; words, image and motion should feel interwoven; input belongs to visitor | The same decaying input trail displaces words gently, deflects/brightens particles, and opens the photograph locally. Text stays readable and resolves after the visitor leaves the point. |
+
+A tests continuity of material; B tests a spatial hypothesis; C tests an observable relationship. None proves that vulnerability, gratitude, faith or connection has been expressed. Upward construction and the passage's dramaturgy remain separate open questions. Do not claim that reusing the photo alone satisfies the creative compass. The artist judges whether any mechanism belongs.
+
+No invented artwork copy. Explanations stay in review chrome. No audio, literal houses, unrelated sculptures, new fonts or independent whole-scene compositions. Reduced motion freezes ambient rendering and disables displacement; original text remains accessible in the DOM.
