@@ -22,15 +22,14 @@ async function fixture(t: TestContext) {
   }
   const load = (input = bytes) =>
     imageLoader.load({ bytes: input, relativePath: 'image.jpg', options })
-  return { bytes, options, directory, load }
+  return { options, directory, load }
 }
 
 test('images are auto-rotated into immutable WebP files without enlargement', async (t) => {
-  const { bytes, directory, load } = await fixture(t)
+  const { directory, load } = await fixture(t)
   const image = await load()
   assert.equal(image.width, 40)
   assert.equal(image.height, 80)
-  assert.equal(image.sourceSha256, createHash('sha256').update(bytes).digest('hex'))
   const output = await readFile(join(directory, 'images', basename(image.src)))
   const metadata = await sharp(output).metadata()
   assert.equal(metadata.format, 'webp')
@@ -64,8 +63,6 @@ test('editorial metadata is preserved and palettes are extracted from the input 
   const { options, load } = await fixture(t)
   options.sources['image.jpg'] = {
     alt: 'Supplied alternative text',
-    width: 80,
-    height: 40,
     focalX: 20,
     focalY: 70,
   }

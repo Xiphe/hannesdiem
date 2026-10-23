@@ -8,11 +8,8 @@ import { storeMedia, type MediaStorage } from './media-storage.ts'
 
 type Source = {
   alt: string
-  width: number
-  height: number
   focalX: number
   focalY: number
-  sourceId?: string
 }
 export function mediaBase(value: string): string {
   if (/[\s\u0000-\u001f\u007f\\?#]/.test(value))
@@ -33,12 +30,11 @@ export function mediaBase(value: string): string {
 }
 
 export const imageLoader = {
-  version: `3:vibrant-${vibrantPackage.version}:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
+  version: `4:vibrant-${vibrantPackage.version}:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
   extensions: ['.jpg', '.jpeg', '.png', '.webp', '.avif'],
   async load({ bytes, relativePath, options }) {
     const filename = basename(relativePath)
     const input = Buffer.from(bytes)
-    const sourceSha256 = createHash('sha256').update(input).digest('hex')
     const metadata = await sharp(input).metadata()
     const rotated = [5, 6, 7, 8].includes(metadata.orientation ?? 1)
     const width = rotated ? metadata.height! : metadata.width!
@@ -78,15 +74,13 @@ export const imageLoader = {
       const src = await storeMedia(options.storage, key, image, 'image/webp')
       variants.push({ src, width: variantWidth })
     }
-    const source: Partial<Source> = options.sources[filename] ?? {}
     return {
-      ...source,
+      ...(options.sources[filename] ?? {}),
       filename,
       src: variants.at(-1)!.src,
       srcSet: variants.map(({ src, width }) => `${src} ${width}w`).join(', '),
       width,
       height,
-      sourceSha256,
       color,
       palette,
     }
