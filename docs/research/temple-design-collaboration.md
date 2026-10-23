@@ -19,7 +19,9 @@ The artist explicitly accepted the completed opener: “lass uns das bitte als o
 
 ## Current experiment
 
-First verse/refrain pair: identify and compare text image, reading motion, image material, shared depth, moving forms, input response and the pair's progression separately. Start with six static typographic studies; keep original prose and order. No whole-scene proposal or publication. Local branch `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`; no font or setting selected yet. The opener calibrates depth of workmanship; later scenes need their own exploration.
+The six detached font/layout studies at `a43d68a` are withdrawn: their formal variety had no sufficient connection to the artist's values/energy. Existing Bricolage/Unbounded references alone did not justify them. Do not retrofit symbolism to arbitrary choices. Explain an experiment's source, hypothesis and actual mechanism before judging it.
+
+Current bounded question: how can words inhabit the existing sunlight space? Three unapproved material tests share the original first pair, one working type setting and the accepted photo/glimmer material: light within letters; projected shadow (new hypothesis); shared input trail affecting words and glimmers. These test particular relationships, not the full emotional brief or a finished scene. Upward construction and the pair's dramaturgy remain open. Local branch `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`.
 
 ## Evidence from this project
 

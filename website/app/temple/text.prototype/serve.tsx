@@ -4,24 +4,36 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToString } from 'remix/component/server'
 import { Review } from './studies.tsx'
+import { build } from 'esbuild'
 
 const root = new URL('./', import.meta.url)
-const types: Record<string, string> = { css: 'text/css', js: 'text/javascript', ttf: 'font/ttf' }
+const types: Record<string, string> = {
+  css: 'text/css',
+  js: 'text/javascript',
+  ttf: 'font/ttf',
+  jpg: 'image/jpeg',
+}
 const files = new Map([
   ['/style.css', new URL('style.css', root)],
   ['/review.js', new URL('review.js', root)],
-  ...['fraunces.ttf', 'kalam-bold.ttf', 'barlowcondensed.ttf', 'cormorant-italic.ttf'].map(
-    (file) => [`/fonts/${file}`, new URL(`fonts/${file}`, root)] as const,
-  ),
-  ...['bricolage.ttf', 'unbounded.ttf'].map(
-    (file) => [`/fonts/${file}`, new URL(`../../assets/temple/${file}`, root)] as const,
-  ),
+  ['/fonts/bricolage.ttf', new URL('../../assets/temple/bricolage.ttf', root)],
+  ['/forest.jpg', new URL('../../../../content/media/IMG_6257.JPG', root)],
 ])
+const scene = await build({
+  entryPoints: [fileURLToPath(new URL('light-space.ts', root))],
+  bundle: true,
+  format: 'esm',
+  platform: 'browser',
+  write: false,
+})
 createServer(async (request, response) => {
   const url = new URL(request.url!, 'http://localhost')
   response.setHeader('Cache-Control', 'no-store')
   const file = files.get(url.pathname)
-  if (file) {
+  if (url.pathname === '/light-space.js') {
+    response.setHeader('Content-Type', 'text/javascript')
+    response.end(scene.outputFiles[0].contents)
+  } else if (file) {
     response.setHeader('Content-Type', types[url.pathname.split('.').pop()!] ?? 'text/plain')
     response.end(readFileSync(fileURLToPath(file)))
   } else if (url.pathname === '/' || url.pathname === '/temple-of-sound') {

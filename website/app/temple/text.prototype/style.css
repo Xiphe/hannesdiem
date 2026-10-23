@@ -1,39 +1,9 @@
 @font-face {
-  font-family: Fraunces;
-  src: url('/fonts/fraunces.ttf');
-  font-weight: 100 900;
-  font-display: block;
-}
-@font-face {
   font-family: Bricolage;
   src: url('/fonts/bricolage.ttf');
   font-weight: 200 800;
   font-display: block;
-}
-@font-face {
-  font-family: Kalam;
-  src: url('/fonts/kalam-bold.ttf');
-  font-weight: 700;
-  font-display: block;
-}
-@font-face {
-  font-family: Barlow;
-  src: url('/fonts/barlowcondensed.ttf');
-  font-weight: 700;
-  font-display: block;
-}
-@font-face {
-  font-family: Unbounded;
-  src: url('/fonts/unbounded.ttf');
-  font-weight: 200 900;
-  font-display: block;
-}
-@font-face {
-  font-family: Cormorant;
-  src: url('/fonts/cormorant-italic.ttf');
-  font-weight: 300 700;
-  font-style: italic;
-  font-display: block;
+  font-variation-settings: 'opsz' 48;
 }
 * {
   box-sizing: border-box;
@@ -51,152 +21,43 @@ p {
 }
 .study-surface {
   width: 100%;
-  max-width: 1440px;
-  margin-inline: auto;
   container-type: inline-size;
 }
+.light-space {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
 .poem {
+  position: relative;
   min-height: 1000px;
+  font-family: Bricolage, sans-serif;
+  font-weight: 550;
+  font-size: clamp(26px, 3.4cqw, 50px);
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  padding: 8cqw 18cqw 12cqw;
   font-synthesis: none;
   text-wrap: pretty;
-  overflow-wrap: break-word;
 }
-.poem p:last-child {
-  margin-bottom: 0;
-}
-
-/* A: an uninterrupted, substantial serif voice, with a narrow optical measure. */
-.study-A {
-  font-family: Fraunces, serif;
-  font-weight: 620;
-  font-variation-settings:
-    'SOFT' 65,
-    'WONK' 1,
-    'opsz' 70;
-  font-size: clamp(26px, 3.7cqw, 54px);
-  line-height: 1.22;
-  letter-spacing: -0.035em;
-  padding: 9cqw 16cqw 10cqw 13cqw;
-}
-.study-A p {
-  max-width: 27ch;
-  margin-bottom: 1.1em;
-}
-.study-A p:last-child {
-  margin-top: 1.8em;
-}
-
-/* B: broad, close-set ink mass; native kerning, no character substitutions. */
-.study-B {
-  font-family: Bricolage, sans-serif;
-  font-weight: 750;
-  font-variation-settings: 'opsz' 96;
-  font-size: clamp(31px, 5.1cqw, 74px);
-  line-height: 0.99;
-  letter-spacing: -0.035em;
-  word-spacing: 0.025em;
-  padding: 6cqw 4.4cqw 8cqw;
-}
-.study-B p {
-  margin-bottom: 0.55em;
-}
-.study-B p:last-child {
-  margin-top: 0.9em;
-}
-
-/* C: one actual drawn typeface, a whole-passage tilt and offset paragraph masses. */
-.study-C {
-  font-family: Kalam, cursive;
-  font-weight: 700;
-  font-size: clamp(28px, 4.25cqw, 61px);
-  line-height: 1.24;
-  letter-spacing: -0.025em;
-  padding: 9cqw 9cqw 10cqw;
-}
-.study-C p {
-  transform: rotate(-1.2deg);
-}
-.study-C p:first-child {
-  margin-left: 14%;
-  margin-bottom: 1.1em;
-}
-.study-C p:nth-child(2) {
-  max-width: 23ch;
-  margin-bottom: 1.2em;
-}
-.study-C p:last-child {
-  margin-left: 14%;
-}
-
-/* D: three successive positions across the page; the original reading order holds. */
-.study-D {
-  font-family: Barlow, sans-serif;
-  font-weight: 700;
-  font-size: clamp(33px, 5.8cqw, 84px);
-  line-height: 1.04;
-  letter-spacing: -0.015em;
-  padding: 6cqw 6cqw 10cqw;
-}
-.study-D p:first-child {
-  max-width: 58%;
-  margin-bottom: 0.7em;
-}
-.study-D p:nth-child(2) {
-  width: 70%;
-  margin-left: 12%;
+.poem p {
   margin-bottom: 0.9em;
 }
-.study-D p:last-child {
-  width: 70%;
-  margin-left: 30%;
+.poem p:last-child {
+  margin-top: 1.35em;
+  margin-bottom: 0;
 }
-
-/* E: extended native letterforms, long horizontal reaches and generous line spacing. */
-.study-E {
-  font-family: Unbounded, sans-serif;
-  font-weight: 400;
-  font-size: clamp(22px, 3.1cqw, 45px);
-  line-height: 1.65;
-  letter-spacing: -0.04em;
-  padding: 10cqw 7cqw;
+.word {
+  display: inline-block;
 }
-.study-E p:first-child {
-  text-align: right;
-  margin-bottom: 1.5em;
+body[data-material-ready] .poem {
+  color: transparent;
 }
-.study-E p:nth-child(2) {
-  width: 89%;
-  margin-bottom: 2em;
-}
-.study-E p:last-child {
-  text-align: right;
-  width: 94%;
-  margin-left: auto;
-}
-
-/* F: a continuous, large italic setting, held around a shared centre. */
-.study-F {
-  font-family: Cormorant, serif;
-  font-style: italic;
-  font-weight: 650;
-  font-size: clamp(34px, 5.5cqw, 80px);
-  line-height: 1.04;
-  letter-spacing: -0.035em;
-  text-align: center;
-  padding: 8cqw 6cqw 9cqw;
-}
-.study-F p {
-  margin-bottom: 0.8em;
-}
-.study-F p:nth-child(2) {
-  font-size: 0.86em;
-  max-width: 29ch;
-  margin-inline: auto;
-  margin-bottom: 1.3em;
-}
-
 /* Review chrome lives outside the artist's text. */
 .overview {
+  min-height: 100svh;
   background: #d5d6ce;
   color: #222720;
   font-family: system-ui, sans-serif;
@@ -218,7 +79,7 @@ p {
 }
 .comparison {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 28px 24px;
   padding: 0 28px 130px;
   align-items: start;
@@ -266,7 +127,7 @@ p {
   height: 1000px;
   border: none;
   transform-origin: 0 0;
-  pointer-events: none;
+  pointer-events: auto;
   color-scheme: dark;
 }
 .single {
@@ -355,34 +216,8 @@ a:focus-visible {
   .single .poem {
     min-height: calc(100svh - 90px);
   }
-  .study-A {
-    padding: 16cqw 8cqw 16cqw;
-  }
-  .study-B {
-    padding: 14cqw 5cqw 16cqw;
-  }
-  .study-C {
-    padding: 16cqw 7cqw;
-  }
-  .study-D p:first-child {
-    max-width: 85%;
-  }
-  .study-D p:nth-child(2) {
-    width: 88%;
-    margin-left: 8%;
-  }
-  .study-D p:last-child {
-    width: 90%;
-    margin-left: 10%;
-  }
-  .study-E {
-    padding: 16cqw 7cqw;
-  }
-  .study-E p:nth-child(2) {
-    width: 100%;
-  }
-  .study-F {
-    padding: 16cqw 7cqw;
+  .poem {
+    padding: 16cqw 8cqw 20cqw;
   }
 }
 
@@ -420,4 +255,28 @@ button:focus-visible {
 }
 body[data-ui='hidden'] .restore-controls {
   display: block;
+}
+
+.specimen-caption {
+  min-height: 120px;
+  align-items: flex-start;
+}
+.specimen-caption small {
+  line-height: 1.4;
+  max-width: 46ch;
+}
+.specimen-caption b {
+  display: block;
+  margin-bottom: 5px;
+}
+.current-setting small {
+  max-width: 38ch;
+  white-space: normal;
+}
+@media (min-width: 701px) and (max-width: 1150px) {
+  .comparison {
+    grid-template-columns: 1fr;
+    max-width: 900px;
+    margin: auto;
+  }
 }

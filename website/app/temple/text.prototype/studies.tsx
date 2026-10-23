@@ -1,15 +1,27 @@
-// THROWAWAY: six text-image studies of the first verse/refrain pair.
-// Local comparison on /temple-of-sound?variant=all|A..F; no publication entry.
+// THROWAWAY: three material relationships in the existing sunlight space.
+// Local comparison on /temple-of-sound?variant=all|A..C; no publication entry.
 import { readFileSync } from 'node:fs'
 import type { Handle } from 'remix/component'
 
 export const studies = [
-  { key: 'A', font: 'Fraunces', setting: '620 · linksbündig · kurzer Satz' },
-  { key: 'B', font: 'Bricolage Grotesque', setting: '750 · dichter Flächensatz' },
-  { key: 'C', font: 'Kalam', setting: '700 · Handschrift · versetzte Absätze' },
-  { key: 'D', font: 'Barlow Condensed', setting: '700 · schmaler Stufensatz' },
-  { key: 'E', font: 'Unbounded', setting: '400 · breite Schrift · wechselnde Ausrichtung' },
-  { key: 'F', font: 'Cormorant Garamond', setting: '650 · kursiv · zentrierter Satz' },
+  {
+    key: 'A',
+    name: 'Licht in der Schrift',
+    setting:
+      'Aus dem Opener: Foto und Glimmer bilden das Material der Buchstaben. Test: trägt die Maske auch die längeren Sätze?',
+  },
+  {
+    key: 'B',
+    name: 'Schrift als Schatten',
+    setting:
+      'Aus deinem Sonnenraum und der gemeinsamen Tiefe. Neue Hypothese: Worte erscheinen als projizierter Schatten im Licht.',
+  },
+  {
+    key: 'C',
+    name: 'Ein gemeinsames Reaktionsfeld',
+    setting:
+      'Aus deinem Cursor-Nachhall und dem Verweben: Worte und Glimmer reagieren auf dieselbe unsichtbare Bewegungsspur. Maus / Touch bewegen.',
+  },
 ] as const
 export type Study = (typeof studies)[number]
 
@@ -26,13 +38,20 @@ export function TextStudy(handle: Handle<{ study: Study }>) {
   const paragraphs = pair()
   return () => (
     <main class="study-surface">
-      <article class={`poem study-${handle.props.study.key}`}>
+      <canvas
+        class="light-space"
+        data-treatment={handle.props.study.key}
+        aria-hidden="true"
+      />
+      <article class="poem">
         {paragraphs.map((lines) => (
           <p>
             {lines.map((line, index) => (
               <>
                 {index > 0 && <br />}
-                {line}
+                {line
+                  .split(/(\s+)/)
+                  .map((word) => (/\s+/.test(word) ? word : <span class="word">{word}</span>))}
               </>
             ))}
           </p>
@@ -59,11 +78,17 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
             name="robots"
             content="noindex,nofollow"
           />
-          <title>{selected ? `${selected.key} / ${selected.font}` : 'A–F / Textstudien'}</title>
+          <title>
+            {selected ? `${selected.key} / ${selected.name}` : 'A–C / Schrift im Sonnenraum'}
+          </title>
           <link
             rel="stylesheet"
             href="/style.css"
           />
+          <script
+            type="module"
+            src="/light-space.js"
+          ></script>
           <script
             src="/review.js"
             defer
@@ -75,8 +100,8 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
           ) : (
             <>
               <header class="review-header">
-                <h1>Textbild / erste Strophe + Refrain</h1>
-                <p>6 Studien · nur lokal · keine Auswahl getroffen</p>
+                <h1>Schrift / Licht / gemeinsamer Raum</h1>
+                <p>3 Materialtests · gleiche Schrift, gleicher Satz · unbewertet</p>
               </header>
               <main class="comparison">
                 {studies.map((study) => (
@@ -87,14 +112,14 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
                     >
                       <strong>{study.key}</strong>
                       <span>
-                        <b>{study.font}</b>
+                        <b>{study.name}</b>
                         <small>{study.setting}</small>
                       </span>
                       <span class="open-label">Öffnen ↗</span>
                     </a>
                     <div class="preview">
                       <iframe
-                        title={`${study.key}: ${study.font}`}
+                        title={`${study.key}: ${study.name}`}
                         src={`?variant=${study.key}&embedded=1`}
                         loading="eager"
                         scrolling="no"
@@ -113,7 +138,7 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
             >
               <a
                 data-step="previous"
-                href={`?variant=${studies[at < 0 ? 5 : (at + 5) % 6].key}`}
+                href={`?variant=${studies[at < 0 ? studies.length - 1 : (at + studies.length - 1) % studies.length].key}`}
                 aria-label="Vorherige Studie"
               >
                 ←
@@ -128,21 +153,21 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
                 <a
                   href={`?variant=${study.key}`}
                   aria-current={study === selected ? 'page' : undefined}
-                  title={study.font}
+                  title={study.name}
                 >
                   {study.key}
                 </a>
               ))}
               <a
                 data-step="next"
-                href={`?variant=${studies[(at + 1) % 6].key}`}
+                href={`?variant=${studies[(at + 1) % studies.length].key}`}
                 aria-label="Nächste Studie"
               >
                 →
               </a>
               {selected && (
                 <span class="current-setting">
-                  {selected.font}
+                  {selected.name}
                   <small>{selected.setting}</small>
                 </span>
               )}
@@ -163,7 +188,7 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
               data-restore-ui
               aria-label="Bedienung einblenden"
             >
-              A–F
+              A–C
             </button>
           )}
         </body>
