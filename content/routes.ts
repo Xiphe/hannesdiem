@@ -3,9 +3,17 @@ import photo29PalmsRainbow from './media/29_palms_rainbow.jpg'
 import fire from './media/fire.jpg'
 import ogImageOnly from './media/og_image_only.jpg'
 import portrait from './media/portrait.png'
+import forest from './media/IMG_6257.JPG'
 import type { ContentPublication } from './types.ts'
 
 export const routes = [
+  {
+    path: '/temple-of-sound',
+    document: 'temple-of-sound',
+    kind: 'temple',
+    image: forest,
+    ogType: 'website',
+  },
   {
     path: '/one-week-album/2025-lunow-stolzenhagen',
     document: 'one-week-album/2025-lunow-stolzenhagen',

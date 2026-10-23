@@ -20,13 +20,17 @@ export function Page(
   const site = handle.context.get(SiteContent)
   return () => {
     const { title, body, route, path = '/', noindex, plain } = handle.props
+    const temple = route?.kind === 'temple'
     const canonical = `https://hannesdiem.de${path}`
     const image =
       site.shareImages[path] ?? (route?.image ? getMedia(site.media, route.image) : undefined)
     const pageTitle = route?.title ?? title
     const documentTitle = pageTitle === 'Hannes Diem' ? pageTitle : `${pageTitle} • Hannes Diem`
     return (
-      <html lang="en">
+      <html
+        lang="en"
+        data-layout={temple ? 'temple' : undefined}
+      >
         <head>
           <meta charSet="utf-8" />
           <meta
@@ -129,6 +133,12 @@ export function Page(
             rel="stylesheet"
             href={assets.style}
           />
+          {temple && (
+            <link
+              rel="stylesheet"
+              href={assets.templeStyle}
+            />
+          )}
           <style>{themeCss(contentTheme(site, route))}</style>
           <script
             type="module"
@@ -136,14 +146,14 @@ export function Page(
           ></script>
         </head>
         <body>
-          {!plain && (
+          {!plain && !temple && (
             <>
               <Chrome path={path} />
               <NavigationDialog pathname={path} />
             </>
           )}
           <main id="content">{body}</main>
-          {!plain && <Footer />}
+          {!plain && !temple && <Footer />}
         </body>
       </html>
     )

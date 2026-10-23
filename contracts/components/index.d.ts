@@ -146,3 +146,23 @@ export declare const Timetable: Component<TimetableProps>
 export declare const Release: Component<ReleaseProps>
 export declare const Song: Component<SongProps>
 export declare const LinkTree: Component<LinkTreeProps>
+
+export interface PoemCanvasProps {
+  children?: RemixNode
+}
+export interface PoemOpeningProps {
+  id: string
+  title: string
+  dates: { start: string; end: string }
+  image: ImageSource
+  lightSource: { x: number; y: number }
+  children?: RemixNode
+}
+export interface PoemSectionProps {
+  id: string
+  kind: 'verse' | 'bridge' | 'practicalities'
+  children?: RemixNode
+}
+export declare const PoemCanvas: Component<PoemCanvasProps>
+export declare const PoemOpening: Component<PoemOpeningProps>
+export declare const PoemSection: Component<PoemSectionProps>

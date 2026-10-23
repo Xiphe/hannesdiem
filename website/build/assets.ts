@@ -26,6 +26,8 @@ const result = await build({
     date: 'website/app/date.tsx',
     newsletter: 'website/app/newsletter/form.tsx',
     style: 'website/app/style.css',
+    temple: 'website/app/temple/opening.tsx',
+    templeStyle: 'website/app/temple/style.css',
   },
   outdir: 'dist/assets',
   entryNames: '[name]-[hash]',
@@ -40,10 +42,12 @@ const result = await build({
   minify: true,
   metafile: true,
   external: ['/font/*'],
+  loader: { '.ttf': 'file' },
 })
 
 const serverModules = [
   'website/app/page.tsx',
+  'website/app/temple/poem.tsx',
   'website/app/ui-library/index.ts',
   'website/app/ui-library/render.ts',
   'website/app/ui-library/components.ts',
@@ -74,6 +78,8 @@ const entries = Object.fromEntries(
         'website/app/date.tsx': 'date',
         'website/app/newsletter/form.tsx': 'newsletter',
         'website/app/style.css': 'style',
+        'website/app/temple/opening.tsx': 'temple',
+        'website/app/temple/style.css': 'templeStyle',
       }[output.entryPoint!],
       '/' + path.replace(/^dist\//, ''),
     ]),
