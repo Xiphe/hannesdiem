@@ -4,7 +4,7 @@
   "main": "app/worker.ts",
   "build": {
     "command": "node dev.ts",
-    "watch_dir": ["../content", ".", "../contracts", "../dev.ts"],
+    "watch_dir": ["../content", "app", "build", "cmx.config.ts", "../contracts", "../dev.ts"],
   },
   "compatibility_date": "2026-10-18",
   "workers_dev": true,
