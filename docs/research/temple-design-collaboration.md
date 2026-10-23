@@ -29,7 +29,11 @@ The artist questioned the new-font search and authorized exploring the **four ex
 
 **2026-10-24: first-pair typeface accepted.** Artist: “All of these work somehow”; “let’s use A for the first section.” A = **Bricolage Grotesque 600**, four-face checkpoint `0b97988`. Use it throughout the first verse/refrain pair; applied to draft `#verse-1` in the regular Temple stylesheet. Setting, motion, image relationships and publication remain unapproved. Germania One “is kind of a meme”; Cinzel Decorative is more suitable for headlines/special effects; Unbounded also works. These comments do not change the accepted opener.
 
-Active local viewer: `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`, port 8790. Next bounded comparison: **line length**, three widths (44/64/82% at 1280px) with Bricolage and all other parameters held constant. The widest preserves previous A's measure. Original pair unchanged; explicit breaks preserved; on narrow screens the columns stop shrinking to keep words legible. Size, alignment and density remain later setting questions. No preferred width or publication decision.
+**Line-length study parked at `d621633`.** The artist rejected this as unnecessary optimization: use a normal readable maximum width on large screens and otherwise adapt to the viewport. Do not reopen a typography-width survey. The regular draft already uses `max-width: 65ch` within responsive padding.
+
+**New artist-led question:** reveal the text line by line, with the glimmers taking a particular form for each line. Explore the text/glimmer relationship together; the earlier staged process is a guide, not a reason to postpone that relationship. Retain Bricolage and the original words/order. Do not independently assign symbolic forms to the prose. Unresolved: does “line” mean a rendered screen line or a stable sentence/sense unit that can wrap? Ask before implementing segmentation; no artist-approved segmentation or glimmer shapes yet.
+
+Local workspace remains `codex/temple-first-text-studies`, `website/app/temple/text.prototype/`, port 8790. The existing viewer is the parked width study until the next experiment replaces it. No new scene or publication approval.
 
 ## Evidence from this project
 

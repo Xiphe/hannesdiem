@@ -1,4 +1,4 @@
-# First pair — line length (exploring)
+# First pair — line-length study (parked)
 
 `npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound?variant=all`.
 1–3 open individual specimens; arrows switch; H hides/restores review chrome. `sand tunnel 8790`.
@@ -11,7 +11,13 @@ Artist: “All of these work somehow” and “let's use A for the first section
 
 Other feedback: Germania One “is kind of a meme”; Cinzel Decorative is more suitable for headlines/special effects; Unbounded also works. This is not an instruction to remove them from the accepted opener or a rejection of all future uses. Four-face comparison recoverable at `0b97988`.
 
-## Current question
+## Artist correction / next question
+
+The artist rejected this width study as unnecessary optimization. Use a normal readable maximum width and otherwise adapt to the viewport (`max-width: 65ch` already exists in the regular draft stylesheet). Do not seek a width choice from these specimens.
+
+Next artist-led idea: reveal text line by line, with a glimmer form accompanying each line. Pending clarification: rendered screen lines versus stable authored sentence/sense units. Preserve wording/order; do not assign symbolic shapes or restructure the prose. The viewer below is archived work, not the active design question.
+
+## Parked question
 
 How much of a sentence should share one line? This is the first bounded part of the agreed setting exploration. Three widths, same left edge and all other type parameters fixed. No hierarchy, emphasis, motion or scene proposals bundled into the comparison.
 
@@ -28,9 +34,8 @@ Only native wrapping changes. On narrow screens columns stop shrinking at 340px 
 ## Sequence / boundary
 
 1. **Type character accepted:** Bricolage for the first verse/refrain pair.
-2. **Setting now:** line length first; size, alignment and density still open.
-3. Reading movement.
-4. Interweaving with image, light, glimmers and input.
+2. **Setting resolved pragmatically:** responsive, readable maximum width; no width survey.
+3. **Next exploration:** line-by-line text and glimmer formation together, following the artist's direction.
 
 Proceed proactively within the authorized exploration. The artist makes the expressive decisions; no complete scene or poem publication follows from this step.
 
