@@ -1,5 +1,5 @@
 import { createForest } from './forest.ts'
-import { leftAlignmentStudy } from './alignment.prototype.ts'
+import { alignmentStudy } from './alignment.prototype.ts'
 import type { OpeningProps } from './types.ts'
 type Face = { id: string; family: string; weight: number }
 type Glyph = {
@@ -176,7 +176,7 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
       leading - bounds[2].actualBoundingBoxAscent - bounds[1].actualBoundingBoxDescent
     if (cinzel) baselines[2] -= originalGap / 2
     const totalHeight = baselines[2] + Math.max(0, bounds[2].actualBoundingBoxDescent)
-    const study = leftAlignmentStudy(width, height, rowWidths, totalHeight, bricolage)
+    const study = alignmentStudy(width, height, rowWidths, totalHeight, bricolage)
     const scale =
       study?.scale ??
       (bricolage
@@ -188,7 +188,7 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     const joint = left + (rowWidths[0] - rowWidths[1]) * scale
     const glyphs: Glyph[] = []
     const rows = text.map((word, row) => {
-      const x = study || row === 0 ? left : joint
+      const x = study ? study.rowLefts[row] : row === 0 ? left : joint
       const origin = x + bounds[row].actualBoundingBoxLeft * scale
       const baseline = top + baselines[row] * scale
       const y = baseline - bounds[row].actualBoundingBoxAscent * scale
