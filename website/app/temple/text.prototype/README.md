@@ -1,41 +1,43 @@
-# First pair — the opener's four faces (exploring; no verdict)
+# First pair — line length (exploring)
 
 `npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound?variant=all`.
-A–D open individual specimens; arrows switch; H hides/restores review chrome. `sand tunnel 8790`.
+1–3 open individual specimens; arrows switch; H hides/restores review chrome. `sand tunnel 8790`.
 
 Branch `codex/temple-first-text-studies`; standalone port 8790. No Worker route, production entry or CMX publication. Live remains opener-only. Artist text comes directly from `content/drafts/temple-of-sound.tsx`; preserve punctuation, order, explicit breaks and the verse/refrain pair.
 
+## Typeface accepted — 2026-10-24
+
+Artist: “All of these work somehow” and “let's use A for the first section.” A is **Bricolage Grotesque 600**, not a new face. Applied to the draft first pair (`#verse-1`) in the regular Temple stylesheet. This settles its typeface, not its setting, effects or publication.
+
+Other feedback: Germania One “is kind of a meme”; Cinzel Decorative is more suitable for headlines/special effects; Unbounded also works. This is not an instruction to remove them from the accepted opener or a rejection of all future uses. Four-face comparison recoverable at `0b97988`.
+
 ## Current question
 
-How do the opener's four established voices carry the longer, personal sentences? The artist questioned why we were searching for additional fonts, then authorized exploring the existing set. A new search lacked an identified need. Start from the shared work; widen the pool only if an actual limitation emerges.
+How much of a sentence should share one line? This is the first bounded part of the agreed setting exploration. Three widths, same left edge and all other type parameters fixed. No hierarchy, emphasis, motion or scene proposals bundled into the comparison.
 
-| Specimen | Face / cut                 | Question / possible mismatch                                                                         |
-| -------- | -------------------------- | ---------------------------------------------------------------------------------------------------- |
-| A        | Bricolage Grotesque 600    | Does the opener's physical presence support personal address? Could sound like a title/poster.       |
-| B        | Germania One 400           | How does the familiar angular voice carry whole thoughts? Historical forms could overtake the words. |
-| C        | Cinzel Decorative Bold 700 | Can the ceremonial form support direct address? Decoration could create distance or impair reading.  |
-| D        | Unbounded 650              | How does the broad presence carry longer sentences? Width could fragment the reading flow.           |
+| Specimen   | Width at the 1280px comparison viewport | Prospective question                                               |
+| ---------- | --------------------------------------- | ------------------------------------------------------------------ |
+| 1 / Short  | 44vw = 563.2px                          | Do frequent wraps support the direct address or fragment thoughts? |
+| 2 / Medium | 64vw = 819.2px                          | How do longer thoughts and the short refrain statements relate?    |
+| 3 / Wide   | 82vw = 1049.6px; previous A's measure   | Does the longer line support the opening or lose tension?          |
 
-Notes identify observable traits and questions, not validated emotional meanings. A face cannot prove vulnerability, connection, gratitude or faith. The artist judges its relationship to their words.
+These widths are unapproved probes; the middle one is not a recommendation. Same Bricolage 600, `opsz 48`, `wdth 100`, font-size adjustment 0.52, size, physical line/paragraph spacing, left edge at 9vw, `#e4e0d4` ink and `#030503` background. Original font binary and OFL already in `website/app/assets/temple/`. No new font files or dependencies.
 
-## Controlled comparison
+Only native wrapping changes. On narrow screens columns stop shrinking at 340px or 82vw, whichever fits; differences can disappear on phones. The overview uses the same 1280px viewport for each specimen. Explicit artist breaks remain in every size. This neutral setting is a comparison fixture, not approved scene composition.
 
-Same physical measure, left alignment, padding, paragraph spacing, line height, `#e4e0d4` ink and `#030503` background. Browser `font-size-adjust: 0.52` normalizes lowercase x-height; natural widths and wraps remain native. Cinzel's native small-cap-like lowercase shapes remain; do not change the source capitalization to imitate the title.
+## Sequence / boundary
 
-Original binaries and OFL notices already in `website/app/assets/temple/`. No new font files, service or dependency. Cuts are part of each candidate; weight numbers do not represent equal ink density. No per-face tracking, overlap, strikethrough, glitches, masks, imagery or movement: title treatments do not automatically become poem treatments. The neutral setting is a comparison fixture, not a proposed scene composition.
-
-## Agreed sequence
-
-1. **Type character now**, using the opener's four faces.
-2. Setting: measure, size, alignment, leading, density.
+1. **Type character accepted:** Bricolage for the first verse/refrain pair.
+2. **Setting now:** line length first; size, alignment and density still open.
 3. Reading movement.
 4. Interweaving with image, light, glimmers and input.
 
-Proceed with the authorized comparison without asking approval for each routine step. Positive feedback remains exploration evidence; artistic approval belongs to the artist. No poem publication or complete scene follows from this comparison.
+Proceed proactively within the authorized exploration. The artist makes the expressive decisions; no complete scene or poem publication follows from this step.
 
 ## Recovery
 
-- `a43d68a`: six withdrawn font/layout bundles; insufficient grounding in the brief.
-- `dc20cdc`: three material tests, parked and unjudged; the question changed without agreement.
-- `e44f3fe`: five-face survey; superseded by the artist's request to use the opener's existing families. No verdict on the individual new faces.
+- `a43d68a`: six withdrawn font/layout bundles; insufficient grounding.
+- `dc20cdc`: three material tests, parked and unjudged; question changed without agreement.
+- `e44f3fe`: superseded new-font survey; no verdict on individual new faces.
+- `0b97988`: existing four-face comparison; artist selected A for the first section.
 - Only the accepted opener is published.

@@ -24,6 +24,15 @@ html[data-layout='temple'] body {
   font-size: clamp(1.0625rem, 1.8vw, 1.375rem);
   line-height: 1.8;
 }
+/* Accepted first-pair typeface; its setting and scene remain in exploration. */
+.temple-section#verse-1 [data-poem-text] {
+  font-family: Bricolage, sans-serif;
+  font-weight: 600;
+  font-optical-sizing: none;
+  font-variation-settings:
+    'opsz' 48,
+    'wdth' 100;
+}
 .temple-section [data-poem-text] > p + p {
   margin-top: 1.4em;
 }

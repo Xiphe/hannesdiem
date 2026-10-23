@@ -23,11 +23,13 @@ The six detached font/layout studies at `a43d68a` are withdrawn: their formal va
 
 The three material tests at `dc20cdc` are **parked and unjudged**. The assistant switched from typography to light/material without agreeing the question. They are not a selected direction.
 
-Agreed order: **type character → setting → reading movement → image/light/input**. Current question: which font characters could carry the original first verse/refrain pair, and which feel alien? Compare native faces at equal lowercase x-height with identical measure, alignment, physical spacing, ink and background. Natural widths/wraps remain. Explicitly connect visible traits to a prospective test against the artist's brief; include the possible mismatch. Do not claim fonts encode emotions or prove the full creative compass. No winner required; no adjacent scene work.
+Agreed order: **type character → setting → reading movement → image/light/input**. Keep each comparison bounded and explicitly connect visible changes to prospective questions against the artist's brief. Do not claim fonts or layout encode emotions or prove the full creative compass.
 
 The artist questioned the new-font search and authorized exploring the **four existing opener families**: Bricolage, Germania One, Cinzel Decorative Bold and Unbounded. Use the jointly developed set first; new fonts need an observed limitation. The five-face survey at `e44f3fe` is superseded, without a verdict on individual new faces. Title effects and casing are not automatically poem treatments. Execute authorized steps proactively; do not repeatedly request permission to continue.
 
-Active local viewer: `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`, port 8790. Four existing faces in a controlled comparison; original pair unchanged. No setting, scene or publication decision follows from this comparison.
+**2026-10-24: first-pair typeface accepted.** Artist: “All of these work somehow”; “let’s use A for the first section.” A = **Bricolage Grotesque 600**, four-face checkpoint `0b97988`. Use it throughout the first verse/refrain pair; applied to draft `#verse-1` in the regular Temple stylesheet. Setting, motion, image relationships and publication remain unapproved. Germania One “is kind of a meme”; Cinzel Decorative is more suitable for headlines/special effects; Unbounded also works. These comments do not change the accepted opener.
+
+Active local viewer: `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`, port 8790. Next bounded comparison: **line length**, three widths (44/64/82% at 1280px) with Bricolage and all other parameters held constant. The widest preserves previous A's measure. Original pair unchanged; explicit breaks preserved; on narrow screens the columns stop shrinking to keep words legible. Size, alignment and density remain later setting questions. No preferred width or publication decision.
 
 ## Evidence from this project
 

@@ -1,40 +1,36 @@
-// THROWAWAY: font character only. Identical text, measure, ink, size and spacing.
-// Local /temple-of-sound?variant=all|A..D; never a publication entry.
+// THROWAWAY: line length only. Bricolage accepted for the first pair; setting open.
+// Local /temple-of-sound?variant=all|1..3; never a publication entry.
 import { readFileSync } from 'node:fs'
 import type { Handle } from 'remix/component'
 
 export const studies = [
   {
-    key: 'A',
-    name: 'Bricolage Grotesque',
-    cut: 'Semibold · 600',
-    feature: 'Breite Rundungen, kompakte Verbindungen, ungleiche Buchstabenproportionen.',
-    question: 'Trägt die körperliche Präsenz aus dem Opener auch diese persönliche Ansprache?',
-    risk: 'Die Stimme könnte zu sehr nach Titel oder Plakat klingen.',
+    key: '1',
+    name: 'Kurze Zeilen',
+    cut: '44 % der Ansichtsbreite',
+    feature: 'Schmale Textfläche, mehr natürliche Umbrüche; dieselbe linke Kante.',
+    question:
+      'Tragen die kurzen Zeilen deine direkte Ansprache oder zerlegen sie zusammengehörige Gedanken?',
+    risk: 'Der lange zweite Absatz und die letzte Refrainzeile könnten zu stark zerstückelt werden.',
   },
   {
-    key: 'B',
-    name: 'Germania One',
-    cut: 'Regular · 400',
-    feature: 'Gebrochene Bögen, kantige Übergänge und gerundete Innenräume.',
-    question: 'Wie wirkt die bereits vertraute kantige Stimme, wenn sie ganze Gedanken trägt?',
-    risk: 'Die historischen Formen könnten stärker auffallen als die Worte.',
+    key: '2',
+    name: 'Mittlere Zeilen',
+    cut: '64 % der Ansichtsbreite',
+    feature: 'Mehr zusammenhängende Worte je Zeile; Schriftgröße und Abstände bleiben gleich.',
+    question:
+      'Wie liest sich der Wechsel zwischen langen Gedanken und den kurzen Aussagen im Refrain?',
+    risk: 'Auch dieser Mittelwert ist nur ein Vergleich, keine bevorzugte Lösung.',
   },
   {
-    key: 'C',
-    name: 'Cinzel Decorative',
-    cut: 'Bold · 700',
-    feature: 'Ausgeprägte Serifen, starke Strichkontraste und versalienartige Kleinbuchstaben.',
-    question: 'Kann die feierliche Form der direkten, persönlichen Ansprache Raum geben?',
-    risk: 'Die dekorativen Formen könnten Distanz schaffen oder das Lesen erschweren.',
-  },
-  {
-    key: 'D',
-    name: 'Unbounded',
-    cut: '650 · wie im Opener',
-    feature: 'Breite geometrische Formen, große Rundungen und gleichmäßige Striche.',
-    question: 'Wie viel von dieser ausladenden Präsenz vertragen die längeren Sätze?',
-    risk: 'Die Breite könnte den Lesefluss in zu viele kurze Zeilen zerlegen.',
+    key: '3',
+    name: 'Weite Zeilen',
+    cut: '82 % · Satzbreite der bisherigen Schriftprobe A',
+    feature:
+      'Längere Satzteile bleiben in einer Zeile; die Fläche entspricht der bisherigen Probe.',
+    question:
+      'Hilft der längere Atem der Öffnung, die du beschreibst, oder verliert der Text seine Spannung?',
+    risk: 'Weite Zeilen könnten sich zu sehr wie ein gewöhnlicher Absatz lesen.',
   },
 ] as const
 export type Study = (typeof studies)[number]
@@ -53,7 +49,7 @@ export function TextStudy(handle: Handle<{ study: Study }>) {
   return () => (
     <main
       class="study-surface"
-      data-face={handle.props.study.key}
+      data-measure={handle.props.study.key}
     >
       <article
         class="poem"
@@ -115,7 +111,7 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
             content="noindex,nofollow"
           />
           <title>
-            {selected ? `${selected.key} / ${selected.name}` : 'Schriftcharakter / Temple of Sound'}
+            {selected ? `${selected.key} / ${selected.name}` : 'Zeilenlänge / Temple of Sound'}
           </title>
           <link
             rel="stylesheet"
@@ -144,31 +140,30 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
             <>
               <header class="review-header">
                 <p class="context">Temple of Sound · lokale Werkstatt · keine Veröffentlichung</p>
-                <h1>Schriftcharakter</h1>
-                <p class="question">
-                  Wie tragen die vier Schriften aus dem Opener deine längeren Sätze?
+                <h1>Satz / Zeilenlänge</h1>
+                <p class="question">Wie viel Raum sollen deine Sätze in einer Zeile bekommen?</p>
+                <p>
+                  Festgehalten: Bricolage Grotesque für das erste Strophen-Refrain-Paar. Jetzt
+                  ändern wir ausschließlich die Breite der Textfläche.
                 </p>
                 <p>
-                  Bricolage, Germania One, Cinzel Decorative und Unbounded — die gemeinsam
-                  erarbeiteten Stimmen als Ausgangspunkt für das erste Strophen-Refrain-Paar.
-                </p>
-                <p>
-                  Gleich bleiben Text, Satzbreite, Ausrichtung, Zeilenabstand, Farbe und
-                  Hintergrund. Die Kleinbuchstaben sind auf gleiche Höhe angeglichen; natürliche
-                  Umbrüche unterscheiden sich.
+                  Gleich bleiben dein Text, Bricolage 600, Schriftgröße, linke Kante, Zeilen- und
+                  Absatzabstände, Farbe und Hintergrund. Deine ausdrücklichen Zeilenumbrüche bleiben
+                  erhalten; weitere entstehen durch die unterschiedliche Breite.
                 </p>
                 <ol
                   class="rounds"
                   aria-label="Vereinbarte Schritte"
                 >
-                  <li aria-current="step">Schriftcharakter</li>
-                  <li>Satz</li>
+                  <li>Schriftcharakter ✓</li>
+                  <li aria-current="step">Satz</li>
                   <li>Lesebewegung</li>
                   <li>Bild / Licht / Input</li>
                 </ol>
                 <p class="boundary">
-                  Hier beurteilen wir nur die Schrift. Keine davon beweist Verletzlichkeit oder
-                  Verbindung. Die Begründungen sind Prüffragen; es gibt noch keine Auswahl.
+                  Die Breiten sind unbewertete Proben. Auf kleinen Bildschirmen begrenzen wir die
+                  Verengung zugunsten lesbarer Zeilen; die Übersicht zeigt alle drei bei derselben
+                  großen Ansichtsbreite. Bewegung und Bild bleiben ein späterer Schritt.
                 </p>
               </header>
               <main class="comparison">
@@ -205,13 +200,13 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
             <>
               <nav
                 class="switcher"
-                aria-label="Schriften vergleichen"
+                aria-label="Zeilenlängen vergleichen"
                 data-current={variant}
               >
                 <a
                   data-step="previous"
                   href={`?variant=${studies[at < 0 ? studies.length - 1 : (at + studies.length - 1) % studies.length].key}`}
-                  aria-label="Vorherige Schrift"
+                  aria-label="Vorherige Breite"
                 >
                   ←
                 </a>
@@ -233,7 +228,7 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
                 <a
                   data-step="next"
                   href={`?variant=${studies[(at + 1) % studies.length].key}`}
-                  aria-label="Nächste Schrift"
+                  aria-label="Nächste Breite"
                 >
                   →
                 </a>
@@ -253,7 +248,7 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
                 data-restore-ui
                 aria-label="Bedienung einblenden"
               >
-                A–D
+                1–3
               </button>
             </>
           )}

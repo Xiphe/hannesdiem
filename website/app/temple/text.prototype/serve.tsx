@@ -14,10 +14,7 @@ const types: Record<string, string> = {
 const files = new Map([
   ['/style.css', new URL('style.css', root)],
   ['/review.js', new URL('review.js', root)],
-  ...['bricolage', 'germaniaone', 'cinzeldecorative-bold', 'unbounded'].map(
-    (family) =>
-      [`/fonts/${family}.ttf`, new URL(`../../assets/temple/${family}.ttf`, root)] as const,
-  ),
+  ['/fonts/bricolage.ttf', new URL('../../assets/temple/bricolage.ttf', root)],
 ])
 createServer(async (request, response) => {
   const url = new URL(request.url!, 'http://localhost')
