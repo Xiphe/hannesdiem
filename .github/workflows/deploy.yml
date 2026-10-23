@@ -97,7 +97,7 @@ jobs:
             npm run deploy -- --var "CMX_PUBLISH_PUBLIC_KEYS:$CMX_PUBLISH_PUBLIC_KEYS" --secrets-file "$secrets_file" --var "RESEND_HANNESDIEM_DE_SEGMENT_ID:$RESEND_HANNESDIEM_DE_SEGMENT_ID"
           else
             npm run deploy -- --var "CMX_PUBLISH_PUBLIC_KEYS:$CMX_PUBLISH_PUBLIC_KEYS"
-            echo 'Newsletter disabled until its Production secrets and segment variable are configured; see docs/newsletter.md.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Newsletter disabled until its Production secrets and segment variable are configured.' >> "$GITHUB_STEP_SUMMARY"
           fi
           deployment_url=$(jq -ers '[.[] | select(.type == "deploy") | .targets[]? | select(startswith("https://"))][0] // error("Wrangler returned no deployment URL")' "$WRANGLER_OUTPUT_FILE_PATH")
           echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
