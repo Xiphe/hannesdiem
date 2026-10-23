@@ -17,6 +17,10 @@ The artist explicitly accepted the completed opener: “lass uns das bitte als o
 - Assets: original IMG_6257.JPG, sunlight x53.24%/y54.07%, existing LFS → immutable R2 pipeline. The 1920px variant is byte-identical to the accepted preview. Only four accepted fonts ship, through the hashed website build. No new dependencies.
 - Island lifecycle: listeners/observers/RAF stop on task abort; offscreen/inactive-tab rendering pauses. Observe actual stage dimensions to avoid stale canvas sizes during viewport changes. Reduced motion freezes ambient animation and crossfades transitions.
 
+## Current experiment
+
+First verse/refrain pair: identify and compare text image, reading motion, image material, shared depth, moving forms, input response and the pair's progression separately. Start with six static typographic studies; keep original prose and order. No whole-scene proposal or publication. Local branch `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`; no font or setting selected yet. The opener calibrates depth of workmanship; later scenes need their own exploration.
+
 ## Evidence from this project
 
 Whole-scene variants bundled typography, composition, imagery, motion and meaning. The artist could reject the bundle without having enough alternatives for any individual decision. Increasing the variant count repeated this problem. The artist wants smaller commitments and a creative role throughout. D’s masked typography and A’s forest/glimmers are promising evidence; neither is approval of a finished composition. Preserve the supplied prose and existing value/mood exploration.

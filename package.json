@@ -21,7 +21,8 @@
     "predeploy": "npm run build:app",
     "typecheck:website": "wrangler types --config website/wrangler.jsonc worker-configuration.d.ts && tsc --noEmit -p website/tsconfig.json",
     "test:website": "node --import remix/node-tsx --test website/app/newsletter/*.test.ts website/app/document-host/*.test.ts && playwright test --config website/playwright.config.ts",
-    "check:website": "prettier website contracts dev.ts tsconfig.json package.json .github/workflows --check && npm run typecheck:website && npm run test:website"
+    "check:website": "prettier website contracts dev.ts tsconfig.json package.json .github/workflows --check && npm run typecheck:website && npm run test:website",
+    "prototype:temple-text": "node --watch --import remix/node-tsx website/app/temple/text.prototype/serve.tsx"
   },
   "dependencies": {
     "@cmx-tools/contracts": "0.3.0",

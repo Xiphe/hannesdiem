@@ -1,0 +1,423 @@
+@font-face {
+  font-family: Fraunces;
+  src: url('/fonts/fraunces.ttf');
+  font-weight: 100 900;
+  font-display: block;
+}
+@font-face {
+  font-family: Bricolage;
+  src: url('/fonts/bricolage.ttf');
+  font-weight: 200 800;
+  font-display: block;
+}
+@font-face {
+  font-family: Kalam;
+  src: url('/fonts/kalam-bold.ttf');
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: Barlow;
+  src: url('/fonts/barlowcondensed.ttf');
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: Unbounded;
+  src: url('/fonts/unbounded.ttf');
+  font-weight: 200 900;
+  font-display: block;
+}
+@font-face {
+  font-family: Cormorant;
+  src: url('/fonts/cormorant-italic.ttf');
+  font-weight: 300 700;
+  font-style: italic;
+  font-display: block;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  color-scheme: dark;
+  background: #030503;
+}
+body {
+  margin: 0;
+  color: #e4e0d4;
+}
+p {
+  margin: 0;
+}
+.study-surface {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  container-type: inline-size;
+}
+.poem {
+  min-height: 1000px;
+  font-synthesis: none;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+.poem p:last-child {
+  margin-bottom: 0;
+}
+
+/* A: an uninterrupted, substantial serif voice, with a narrow optical measure. */
+.study-A {
+  font-family: Fraunces, serif;
+  font-weight: 620;
+  font-variation-settings:
+    'SOFT' 65,
+    'WONK' 1,
+    'opsz' 70;
+  font-size: clamp(26px, 3.7cqw, 54px);
+  line-height: 1.22;
+  letter-spacing: -0.035em;
+  padding: 9cqw 16cqw 10cqw 13cqw;
+}
+.study-A p {
+  max-width: 27ch;
+  margin-bottom: 1.1em;
+}
+.study-A p:last-child {
+  margin-top: 1.8em;
+}
+
+/* B: broad, close-set ink mass; native kerning, no character substitutions. */
+.study-B {
+  font-family: Bricolage, sans-serif;
+  font-weight: 750;
+  font-variation-settings: 'opsz' 96;
+  font-size: clamp(31px, 5.1cqw, 74px);
+  line-height: 0.99;
+  letter-spacing: -0.035em;
+  word-spacing: 0.025em;
+  padding: 6cqw 4.4cqw 8cqw;
+}
+.study-B p {
+  margin-bottom: 0.55em;
+}
+.study-B p:last-child {
+  margin-top: 0.9em;
+}
+
+/* C: one actual drawn typeface, a whole-passage tilt and offset paragraph masses. */
+.study-C {
+  font-family: Kalam, cursive;
+  font-weight: 700;
+  font-size: clamp(28px, 4.25cqw, 61px);
+  line-height: 1.24;
+  letter-spacing: -0.025em;
+  padding: 9cqw 9cqw 10cqw;
+}
+.study-C p {
+  transform: rotate(-1.2deg);
+}
+.study-C p:first-child {
+  margin-left: 14%;
+  margin-bottom: 1.1em;
+}
+.study-C p:nth-child(2) {
+  max-width: 23ch;
+  margin-bottom: 1.2em;
+}
+.study-C p:last-child {
+  margin-left: 14%;
+}
+
+/* D: three successive positions across the page; the original reading order holds. */
+.study-D {
+  font-family: Barlow, sans-serif;
+  font-weight: 700;
+  font-size: clamp(33px, 5.8cqw, 84px);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  padding: 6cqw 6cqw 10cqw;
+}
+.study-D p:first-child {
+  max-width: 58%;
+  margin-bottom: 0.7em;
+}
+.study-D p:nth-child(2) {
+  width: 70%;
+  margin-left: 12%;
+  margin-bottom: 0.9em;
+}
+.study-D p:last-child {
+  width: 70%;
+  margin-left: 30%;
+}
+
+/* E: extended native letterforms, long horizontal reaches and generous line spacing. */
+.study-E {
+  font-family: Unbounded, sans-serif;
+  font-weight: 400;
+  font-size: clamp(22px, 3.1cqw, 45px);
+  line-height: 1.65;
+  letter-spacing: -0.04em;
+  padding: 10cqw 7cqw;
+}
+.study-E p:first-child {
+  text-align: right;
+  margin-bottom: 1.5em;
+}
+.study-E p:nth-child(2) {
+  width: 89%;
+  margin-bottom: 2em;
+}
+.study-E p:last-child {
+  text-align: right;
+  width: 94%;
+  margin-left: auto;
+}
+
+/* F: a continuous, large italic setting, held around a shared centre. */
+.study-F {
+  font-family: Cormorant, serif;
+  font-style: italic;
+  font-weight: 650;
+  font-size: clamp(34px, 5.5cqw, 80px);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  text-align: center;
+  padding: 8cqw 6cqw 9cqw;
+}
+.study-F p {
+  margin-bottom: 0.8em;
+}
+.study-F p:nth-child(2) {
+  font-size: 0.86em;
+  max-width: 29ch;
+  margin-inline: auto;
+  margin-bottom: 1.3em;
+}
+
+/* Review chrome lives outside the artist's text. */
+.overview {
+  background: #d5d6ce;
+  color: #222720;
+  font-family: system-ui, sans-serif;
+}
+.review-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 28px 32px 22px;
+}
+.review-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+.review-header p {
+  font-size: 13px;
+}
+.comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 24px;
+  padding: 0 28px 130px;
+  align-items: start;
+}
+.specimen {
+  min-width: 0;
+}
+.specimen-caption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+  padding: 12px 0;
+}
+.specimen-caption > strong {
+  font-weight: 500;
+  font-size: 30px;
+  width: 28px;
+}
+.specimen-caption b {
+  font-size: 15px;
+  font-weight: 600;
+}
+.specimen-caption small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+}
+.open-label {
+  margin-left: auto;
+  font-size: 12px;
+}
+.preview {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #030503;
+}
+.preview iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: 1000px;
+  border: none;
+  transform-origin: 0 0;
+  pointer-events: none;
+  color-scheme: dark;
+}
+.single {
+  padding-bottom: 110px;
+}
+.embedded .poem {
+  min-height: 1000px;
+}
+.switcher {
+  position: fixed;
+  z-index: 10;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  max-width: calc(100vw - 24px);
+  padding: 7px;
+  border: 1px solid #42473f;
+  border-radius: 9px;
+  background: #171c18;
+  color: #e4e0d4;
+  font:
+    14px/1.3 system-ui,
+    sans-serif;
+  box-shadow: 0 5px 24px #0004;
+}
+.switcher a {
+  color: inherit;
+  text-decoration: none;
+  min-width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0 7px;
+  border-radius: 4px;
+}
+.switcher a[aria-current='page'] {
+  background: #e4e0d4;
+  color: #171c18;
+}
+.switcher a:hover {
+  outline: 1px solid currentColor;
+  outline-offset: -2px;
+}
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.current-setting {
+  white-space: nowrap;
+  padding: 0 12px;
+}
+.current-setting small {
+  display: block;
+  font-size: 10px;
+  margin-top: 2px;
+  opacity: 0.65;
+}
+@media (max-width: 700px) {
+  .review-header {
+    display: block;
+    padding: 22px 16px 12px;
+  }
+  .review-header p {
+    margin-top: 8px;
+  }
+  .comparison {
+    grid-template-columns: 1fr;
+    padding-inline: 12px;
+    gap: 18px;
+  }
+  .switcher {
+    bottom: 12px;
+    gap: 0;
+    padding: 5px;
+  }
+  .switcher a {
+    min-width: 31px;
+    height: 34px;
+  }
+  .current-setting {
+    display: none;
+  }
+  .single .poem {
+    min-height: calc(100svh - 90px);
+  }
+  .study-A {
+    padding: 16cqw 8cqw 16cqw;
+  }
+  .study-B {
+    padding: 14cqw 5cqw 16cqw;
+  }
+  .study-C {
+    padding: 16cqw 7cqw;
+  }
+  .study-D p:first-child {
+    max-width: 85%;
+  }
+  .study-D p:nth-child(2) {
+    width: 88%;
+    margin-left: 8%;
+  }
+  .study-D p:last-child {
+    width: 90%;
+    margin-left: 10%;
+  }
+  .study-E {
+    padding: 16cqw 7cqw;
+  }
+  .study-E p:nth-child(2) {
+    width: 100%;
+  }
+  .study-F {
+    padding: 16cqw 7cqw;
+  }
+}
+
+.switcher button {
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  width: 28px;
+  height: 32px;
+}
+body[data-ui='hidden'] .switcher {
+  visibility: hidden;
+}
+button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.restore-controls {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  border: 1px solid #42473f;
+  border-radius: 5px;
+  padding: 8px 12px;
+  background: #171c18;
+  color: #e4e0d4;
+  font:
+    12px system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+body[data-ui='hidden'] .restore-controls {
+  display: block;
+}
