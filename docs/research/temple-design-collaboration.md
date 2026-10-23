@@ -25,7 +25,9 @@ The three material tests at `dc20cdc` are **parked and unjudged**. The assistant
 
 Agreed order: **type character → setting → reading movement → image/light/input**. Current question: which font characters could carry the original first verse/refrain pair, and which feel alien? Compare native faces at equal lowercase x-height with identical measure, alignment, physical spacing, ink and background. Natural widths/wraps remain. Explicitly connect visible traits to a prospective test against the artist's brief; include the possible mismatch. Do not claim fonts encode emotions or prove the full creative compass. No winner required; no adjacent scene work.
 
-Active local viewer: `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`, port 8790. Five unapproved candidates: Bricolage (opener reference), Recursive Sans Casual, Alegreya Sans, Alegreya, Grandstander. The original pair remains unchanged. No scene/layout decision or publication follows from this comparison.
+The artist questioned the new-font search and authorized exploring the **four existing opener families**: Bricolage, Germania One, Cinzel Decorative Bold and Unbounded. Use the jointly developed set first; new fonts need an observed limitation. The five-face survey at `e44f3fe` is superseded, without a verdict on individual new faces. Title effects and casing are not automatically poem treatments. Execute authorized steps proactively; do not repeatedly request permission to continue.
+
+Active local viewer: `codex/temple-first-text-studies`, `website/app/temple/text.prototype/README.md`, port 8790. Four existing faces in a controlled comparison; original pair unchanged. No setting, scene or publication decision follows from this comparison.
 
 ## Evidence from this project
 

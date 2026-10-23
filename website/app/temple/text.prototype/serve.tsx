@@ -14,9 +14,9 @@ const types: Record<string, string> = {
 const files = new Map([
   ['/style.css', new URL('style.css', root)],
   ['/review.js', new URL('review.js', root)],
-  ['/fonts/bricolage.ttf', new URL('../../assets/temple/bricolage.ttf', root)],
-  ...['recursive', 'alegreyasans', 'alegreya', 'grandstander'].map(
-    (family) => [`/fonts/${family}.ttf`, new URL(`fonts/${family}.ttf`, root)] as const,
+  ...['bricolage', 'germaniaone', 'cinzeldecorative-bold', 'unbounded'].map(
+    (family) =>
+      [`/fonts/${family}.ttf`, new URL(`../../assets/temple/${family}.ttf`, root)] as const,
   ),
 ])
 createServer(async (request, response) => {

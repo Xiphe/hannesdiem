@@ -5,27 +5,21 @@
   font-display: block;
 }
 @font-face {
-  font-family: Recursive;
-  src: url('/fonts/recursive.ttf');
-  font-weight: 300 1000;
+  font-family: Germania;
+  src: url('/fonts/germaniaone.ttf');
+  font-weight: 400;
   font-display: block;
 }
 @font-face {
-  font-family: AlegreyaSans;
-  src: url('/fonts/alegreyasans.ttf');
+  font-family: CinzelDecorative;
+  src: url('/fonts/cinzeldecorative-bold.ttf');
   font-weight: 700;
   font-display: block;
 }
 @font-face {
-  font-family: Alegreya;
-  src: url('/fonts/alegreya.ttf');
-  font-weight: 400 900;
-  font-display: block;
-}
-@font-face {
-  font-family: Grandstander;
-  src: url('/fonts/grandstander.ttf');
-  font-weight: 100 900;
+  font-family: Unbounded;
+  src: url('/fonts/unbounded.ttf');
+  font-weight: 200 900;
   font-display: block;
 }
 * {
@@ -73,23 +67,16 @@ p {
     'wdth' 100;
 }
 [data-face='B'] .poem {
-  font-family: Recursive, sans-serif;
-  font-variation-settings:
-    'MONO' 0,
-    'CASL' 1,
-    'CRSV' 0,
-    'slnt' 0;
+  font-family: Germania, serif;
+  font-weight: 400;
 }
 [data-face='C'] .poem {
-  font-family: AlegreyaSans, sans-serif;
+  font-family: CinzelDecorative, serif;
   font-weight: 700;
 }
 [data-face='D'] .poem {
-  font-family: Alegreya, serif;
-  font-weight: 700;
-}
-[data-face='E'] .poem {
-  font-family: Grandstander, sans-serif;
+  font-family: Unbounded, sans-serif;
+  font-weight: 650;
 }
 
 /* Everything below is review chrome, outside the artist's specimen. */
@@ -195,13 +182,6 @@ p {
 .notes dd {
   margin: 0;
   max-width: 70ch;
-}
-.source {
-  display: inline-block;
-  color: inherit;
-  font-size: 12px;
-  margin-top: 4px;
-  margin-left: 74px;
 }
 .preview {
   position: relative;

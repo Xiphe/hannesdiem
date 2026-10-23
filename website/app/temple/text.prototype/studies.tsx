@@ -1,5 +1,5 @@
 // THROWAWAY: font character only. Identical text, measure, ink, size and spacing.
-// Local /temple-of-sound?variant=all|A..E; never a publication entry.
+// Local /temple-of-sound?variant=all|A..D; never a publication entry.
 import { readFileSync } from 'node:fs'
 import type { Handle } from 'remix/component'
 
@@ -9,52 +9,32 @@ export const studies = [
     name: 'Bricolage Grotesque',
     cut: 'Semibold · 600',
     feature: 'Breite Rundungen, kompakte Verbindungen, ungleiche Buchstabenproportionen.',
-    question:
-      'Die körperliche Präsenz des Openers auch für diese persönliche Ansprache prüfen: trägt sie die Worte oder übertönt sie sie?',
+    question: 'Trägt die körperliche Präsenz aus dem Opener auch diese persönliche Ansprache?',
     risk: 'Die Stimme könnte zu sehr nach Titel oder Plakat klingen.',
-    source: 'https://github.com/ateliertriay/bricolage',
   },
   {
     key: 'B',
-    name: 'Recursive Sans Casual',
-    cut: 'Semibold · 600 · proportional, aufrecht',
-    feature: 'Gebogene Stämme, angeschrägte Enden und sichtbar unregelmäßige Übergänge.',
-    question:
-      'Für dein „rough“: Können diese Abweichungen etwas Ungeglättetes beitragen, ohne die Buchstaben künstlich zu beschädigen?',
-    risk: 'Der eigenwillige Rhythmus könnte von der direkten Ansprache ablenken.',
-    source: 'https://www.recursive.design/process/',
+    name: 'Germania One',
+    cut: 'Regular · 400',
+    feature: 'Gebrochene Bögen, kantige Übergänge und gerundete Innenräume.',
+    question: 'Wie wirkt die bereits vertraute kantige Stimme, wenn sie ganze Gedanken trägt?',
+    risk: 'Die historischen Formen könnten stärker auffallen als die Worte.',
   },
   {
     key: 'C',
-    name: 'Alegreya Sans',
+    name: 'Cinzel Decorative',
     cut: 'Bold · 700',
-    feature: 'Schmale Formen, wechselnde Strichstärke und deutlich offene Buchstaben.',
-    question:
-      'Für das Sich-Öffnen: prüfen, ob weniger geschlossene Formen und ein bewegter Strich persönlicher wirken, ohne dünn zu werden.',
-    risk: 'Die Schrift könnte zu freundlich oder beiläufig wirken.',
-    source: 'https://github.com/huertatipografica/Alegreya-Sans',
+    feature: 'Ausgeprägte Serifen, starke Strichkontraste und versalienartige Kleinbuchstaben.',
+    question: 'Kann die feierliche Form der direkten, persönlichen Ansprache Raum geben?',
+    risk: 'Die dekorativen Formen könnten Distanz schaffen oder das Lesen erschweren.',
   },
   {
     key: 'D',
-    name: 'Alegreya',
-    cut: 'Bold · 700 · aufrecht',
-    feature:
-      'Serifen und kräftige Anstriche, mit wechselnder Strichstärke statt gleichmäßiger Geometrie.',
-    question:
-      'Derselbe Ansatz wie C mit mehr Gewicht an den Strichenden: Gibt das dem mutigen, großen Öffnen Halt oder schafft es Distanz?',
-    risk: 'Buch- oder Traditionsassoziationen könnten die gegenwärtige Stimme überlagern.',
-    source: 'https://github.com/huertatipografica/Alegreya',
-  },
-  {
-    key: 'E',
-    name: 'Grandstander',
-    cut: 'Semibold · 600',
-    feature:
-      'Runde, ungleichmäßige Konturen und wechselnde Neigungen innerhalb aufrechter Buchstaben.',
-    question:
-      'Für „I’m playful and inspired“: Wie viel sichtbare Verspieltheit verträgt das gesamte Paar, einschließlich seiner ernsten Sätze?',
-    risk: 'Das kann ins Niedliche oder Illustrative kippen und die Größe des Textes verlieren.',
-    source: 'https://github.com/Etcetera-Type-Co/Grandstander',
+    name: 'Unbounded',
+    cut: '650 · wie im Opener',
+    feature: 'Breite geometrische Formen, große Rundungen und gleichmäßige Striche.',
+    question: 'Wie viel von dieser ausladenden Präsenz vertragen die längeren Sätze?',
+    risk: 'Die Breite könnte den Lesefluss in zu viele kurze Zeilen zerlegen.',
   },
 ] as const
 export type Study = (typeof studies)[number]
@@ -166,12 +146,11 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
                 <p class="context">Temple of Sound · lokale Werkstatt · keine Veröffentlichung</p>
                 <h1>Schriftcharakter</h1>
                 <p class="question">
-                  Welche Schriftcharaktere könnten deine Worte tragen — und welche fühlen sich ihnen
-                  fremd an?
+                  Wie tragen die vier Schriften aus dem Opener deine längeren Sätze?
                 </p>
                 <p>
-                  Ausgangspunkt: mutiges, großes Öffnen; Verbindung; rough statt glatt; „I’m playful
-                  and inspired“.
+                  Bricolage, Germania One, Cinzel Decorative und Unbounded — die gemeinsam
+                  erarbeiteten Stimmen als Ausgangspunkt für das erste Strophen-Refrain-Paar.
                 </p>
                 <p>
                   Gleich bleiben Text, Satzbreite, Ausrichtung, Zeilenabstand, Farbe und
@@ -208,14 +187,6 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
                         <span class="open-label">Öffnen ↗</span>
                       </a>
                       <Notes study={study} />
-                      <a
-                        class="source"
-                        href={study.source}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Schriftquelle
-                      </a>
                     </header>
                     <div class="preview">
                       <iframe
@@ -282,7 +253,7 @@ export function Review(handle: Handle<{ variant: string; embedded: boolean }>) {
                 data-restore-ui
                 aria-label="Bedienung einblenden"
               >
-                A–E
+                A–D
               </button>
             </>
           )}
