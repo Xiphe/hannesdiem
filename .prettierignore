@@ -13,6 +13,7 @@ playwright-report/
 # Upstream sources and media
 .agents/skills/
 website/app/assets/
+website/app/temple/assets/
 content/media/
 
 # npm owns lockfile formatting

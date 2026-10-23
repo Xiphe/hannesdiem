@@ -16,7 +16,7 @@ const types: Record<string, string> = {
 const files = new Map([
   ['/style.css', new URL('style.css', root)],
   ['/review.js', new URL('review.js', root)],
-  ['/fonts/bricolage.ttf', new URL('../../assets/temple/bricolage.ttf', root)],
+  ['/fonts/bricolage.ttf', new URL('../assets/bricolage.ttf', root)],
   ['/forest.jpg', new URL('../../../../content/media/IMG_6257.JPG', root)],
 ])
 const scene = await build({

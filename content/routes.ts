@@ -1,13 +1,8 @@
 import type { ContentPublication } from './types.ts'
+import { templeRoute } from './temple-of-sound/route.ts'
 
 export default [
-  {
-    path: '/temple-of-sound',
-    document: 'temple-of-sound',
-    kind: 'temple',
-    image: 'IMG_6257.JPG',
-    ogType: 'website',
-  },
+  templeRoute,
   {
     path: '/one-week-album/2025-lunow-stolzenhagen',
     document: 'one-week-album/2025-lunow-stolzenhagen',

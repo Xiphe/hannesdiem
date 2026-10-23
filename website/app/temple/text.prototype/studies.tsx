@@ -27,7 +27,7 @@ export type Study = (typeof studies)[number]
 
 function pair() {
   // Read the artist's source; line wrapping here never changes words or punctuation.
-  const draft = readFileSync('content/drafts/temple-of-sound.tsx', 'utf8')
+  const draft = readFileSync('content/temple-of-sound/draft.tsx', 'utf8')
   const opening = draft.match(/<PoemOpening\b[^>]*>([\s\S]*?)<\/PoemOpening>/)![1]
   return [...opening.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((p) =>
     p[1].split(/<br\s*\/>/).map((line) => line.replace(/\s+/g, ' ').trim()),
