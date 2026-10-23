@@ -2,6 +2,13 @@ import type { ContentPublication } from './types.ts'
 
 export default [
   {
+    path: '/temple-of-sound',
+    document: 'temple-of-sound',
+    kind: 'temple',
+    image: 'IMG_6257.JPG',
+    ogType: 'website',
+  },
+  {
     path: '/one-week-album/2025-lunow-stolzenhagen',
     document: 'one-week-album/2025-lunow-stolzenhagen',
     kind: 'page',

@@ -1,5 +1,5 @@
 // Canvas study of A's flight: pinned sun, uneven light, fade at viewport edges.
-export function createForest(image) {
+export function createForest(image: HTMLImageElement, lightSource: { x: number; y: number }) {
   let seed = 8129
   function random() {
     seed = (Math.imul(seed, 1664525) + 1013904223) | 0
@@ -17,7 +17,7 @@ export function createForest(image) {
   })
   const sprite = document.createElement('canvas')
   sprite.width = sprite.height = 48
-  const brush = sprite.getContext('2d')
+  const brush = sprite.getContext('2d')!
   const glow = brush.createRadialGradient(24, 24, 0, 24, 24, 24)
   glow.addColorStop(0, '#fff9df')
   glow.addColorStop(0.1, '#ffeac6e0')
@@ -26,20 +26,20 @@ export function createForest(image) {
   brush.fillStyle = glow
   brush.fillRect(0, 0, 48, 48)
 
-  return (context, width, height, seconds) => {
+  return (context: CanvasRenderingContext2D, width: number, height: number, seconds: number) => {
     // Image-space light source from the archived forest study, centred exactly.
-    const x = 0.5324,
-      y = 0.5407
+    const x = lightSource.x / 100,
+      y = lightSource.y / 100
     const scale = Math.max(
-      width / (2 * Math.min(x, 1 - x) * image.width),
-      height / (2 * Math.min(y, 1 - y) * image.height),
+      width / (2 * Math.min(x, 1 - x) * image.naturalWidth),
+      height / (2 * Math.min(y, 1 - y) * image.naturalHeight),
     )
     context.drawImage(
       image,
-      width / 2 - image.width * scale * x,
-      height / 2 - image.height * scale * y,
-      image.width * scale,
-      image.height * scale,
+      width / 2 - image.naturalWidth * scale * x,
+      height / 2 - image.naturalHeight * scale * y,
+      image.naturalWidth * scale,
+      image.naturalHeight * scale,
     )
     context.globalCompositeOperation = 'screen'
     for (const particle of particles) {
