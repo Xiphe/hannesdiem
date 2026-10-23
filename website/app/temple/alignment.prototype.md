@@ -2,6 +2,8 @@
 
 Question: does a conventional left-aligned or centred TEMPLE / OF / SOUND stack give the four faces more presence?
 
-Local `/temple-of-sound?variant=left` and `?variant=center`; accepted baseline: `?variant=original` (unchanged default, `886ce52`). Same kerning, line spacing, photograph, mask, glitches and scroll timing. The longest word sets width; viewport height caps scale. Left and centre use the same scale, isolating alignment. No new controls or prose. Artist verdict pending; unpublished.
+Accepted 2026-10-24: larger centred stack for portrait viewports, original staggered setting for landscape. Production implementation: `6869594`. The normal `/temple-of-sound` URL now follows orientation automatically. The poem remains unpublished.
+
+Archived comparisons: left at `b815003`, centred at `ca5da9c`; the old `?variant=` experiments are recoverable there. Their only variable was alignment at the same enlarged scale. No left-aligned setting was approved.
 
 Run: `npm run dev` (8787); `sand tunnel 8787`.
