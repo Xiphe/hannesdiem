@@ -1,0 +1,170 @@
+[
+  {
+    "id": "1",
+    "name": "Bricolage Grotesque \u00b7 D",
+    "family": "Bricolage",
+    "file": "bricolage",
+    "weight": 800,
+    "tracking": -0.045
+  },
+  {
+    "id": "2",
+    "name": "Unbounded",
+    "family": "Unbounded",
+    "file": "unbounded",
+    "weight": 650,
+    "tracking": -0.045
+  },
+  {
+    "id": "3",
+    "name": "Syne",
+    "family": "Syne",
+    "file": "syne",
+    "weight": 800,
+    "tracking": -0.045
+  },
+  {
+    "id": "4",
+    "name": "Barlow Condensed",
+    "family": "Barlow Condensed",
+    "file": "barlowcondensed",
+    "weight": 700,
+    "tracking": 0
+  },
+  {
+    "id": "5",
+    "name": "Cormorant Garamond",
+    "family": "Cormorant Garamond",
+    "file": "cormorantgaramond",
+    "weight": 650,
+    "tracking": -0.045
+  },
+  {
+    "id": "6",
+    "name": "Bitter",
+    "family": "Bitter",
+    "file": "bitter",
+    "weight": 800,
+    "tracking": -0.045
+  },
+  {
+    "id": "7",
+    "name": "Krona One",
+    "family": "Krona One",
+    "file": "kronaone",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "8",
+    "name": "Zen Dots",
+    "family": "Zen Dots",
+    "file": "zendots",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "9",
+    "name": "Bruno Ace",
+    "family": "Bruno Ace",
+    "file": "brunoace",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "10",
+    "name": "Audiowide",
+    "family": "Audiowide",
+    "file": "audiowide",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "11",
+    "name": "Syncopate",
+    "family": "Syncopate",
+    "file": "syncopate",
+    "weight": 700,
+    "tracking": 0
+  },
+  {
+    "id": "12",
+    "name": "Righteous",
+    "family": "Righteous",
+    "file": "righteous",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "13",
+    "name": "Dela Gothic One",
+    "family": "Dela Gothic One",
+    "file": "delagothicone",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "14",
+    "name": "Anybody",
+    "family": "Anybody",
+    "file": "anybody",
+    "weight": 750,
+    "tracking": 0
+  },
+  {
+    "id": "15",
+    "name": "Tilt Warp",
+    "family": "Tilt Warp",
+    "file": "tiltwarp",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "16",
+    "name": "Climate Crisis",
+    "family": "Climate Crisis",
+    "file": "climatecrisis",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "17",
+    "name": "Rammetto One",
+    "family": "Rammetto One",
+    "file": "rammettoone",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "18",
+    "name": "Jaro",
+    "family": "Jaro",
+    "file": "jaro",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "19",
+    "name": "Germania One",
+    "family": "Germania One",
+    "file": "germaniaone",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "20",
+    "name": "Cinzel Decorative",
+    "family": "Cinzel Decorative",
+    "file": "cinzeldecorative",
+    "weight": 400,
+    "tracking": 0
+  },
+  {
+    "id": "21",
+    "name": "Cinzel Decorative Bold",
+    "family": "Cinzel Decorative Bold",
+    "file": "cinzeldecorative-bold",
+    "weight": 700,
+    "tracking": 0
+  }
+]

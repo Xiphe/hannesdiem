@@ -6,6 +6,7 @@
     "node": ">=24.3.0"
   },
   "scripts": {
+    "prototype:temple": "node website/app/temple/lettering.prototype/serve.ts",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "media:upload": "node content/publishing/upload-media.ts",
