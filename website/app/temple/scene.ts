@@ -92,6 +92,7 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
   const edgeContext = edgeOverlay.getContext('2d')!
   const measure = document.createElement('canvas').getContext('2d')!
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+  const portrait = matchMedia('(orientation: portrait)')
   const words = props.title.toUpperCase().split(/\s+/)
   const lastInputStart = performance.now()
   let width = 0,
@@ -175,16 +176,19 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
       leading - bounds[2].actualBoundingBoxAscent - bounds[1].actualBoundingBoxDescent
     if (cinzel) baselines[2] -= originalGap / 2
     const totalHeight = baselines[2] + Math.max(0, bounds[2].actualBoundingBoxDescent)
-    const scale = bricolage
-      ? width / extent
-      : Math.min((width * 0.88) / extent, (height * 0.78) / totalHeight)
+    const inset = bricolage ? 0 : Math.max(16, width * 0.03)
+    const scale = portrait.matches
+      ? Math.min((width - inset * 2) / Math.max(...rowWidths), (height * 0.78) / totalHeight)
+      : bricolage
+        ? width / extent
+        : Math.min((width * 0.88) / extent, (height * 0.78) / totalHeight)
     const size = unitSize * scale
     const left = (width - extent * scale) / 2
     const top = (height - totalHeight * scale) / 2 - height * 0.025
     const joint = left + (rowWidths[0] - rowWidths[1]) * scale
     const glyphs: Glyph[] = []
     const rows = text.map((word, row) => {
-      const x = row === 0 ? left : joint
+      const x = portrait.matches ? (width - rowWidths[row] * scale) / 2 : row === 0 ? left : joint
       const origin = x + bounds[row].actualBoundingBoxLeft * scale
       const baseline = top + baselines[row] * scale
       const y = baseline - bounds[row].actualBoundingBoxAscent * scale
@@ -587,6 +591,7 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     },
     { passive: true, signal },
   )
+  portrait.addEventListener('change', resize, { signal })
   const sizeObserver = new ResizeObserver(resize)
   sizeObserver.observe(stage)
   reduced.addEventListener(
