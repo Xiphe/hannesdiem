@@ -10,6 +10,9 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { createCmxPublicationState } from '@cmx-tools/publish'
 import { documents as fixture } from '../../website/tests/host-fixture.ts'
 import { publicationPath } from '../../contracts/publication.ts'
+import sharp from 'sharp'
+import { imageLoader } from '../preparation/image-loader.ts'
+import type { SiteMetadata } from '../../contracts/content.ts'
 
 test('the released CMX CLI loads the signed config and publishes directly to the host', async (t) => {
   const keys = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify'])
@@ -52,29 +55,32 @@ test('the released CMX CLI loads the signed config and publishes directly to the
 
   const endpoint = new URL(publicationPath, await runtime.ready).href
   const publicationFile = join(directory, 'publication.json')
-  await writeFile(publicationFile, JSON.stringify(fixture))
-  const { stdout } = await promisify(execFile)(
-    process.execPath,
-    [
-      'node_modules/@cmx-tools/publish/dist/cli/cli.js',
-      publicationFile,
-      endpoint,
-      '--config',
-      'content/publishing/config.ts',
-    ],
-    {
-      env: {
-        ...process.env,
-        CMX_PUBLISH_URL: endpoint,
-        CMX_PUBLISH_KEY_ID: 'publisher',
-        CMX_PUBLISH_PRIVATE_KEY: JSON.stringify(
-          await crypto.subtle.exportKey('jwk', keys.privateKey),
-        ),
+  async function publish(documents: typeof fixture) {
+    await writeFile(publicationFile, JSON.stringify(documents))
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      [
+        'node_modules/@cmx-tools/publish/dist/cli/cli.js',
+        publicationFile,
+        endpoint,
+        '--config',
+        'content/publishing/config.ts',
+      ],
+      {
+        env: {
+          ...process.env,
+          CMX_PUBLISH_URL: endpoint,
+          CMX_PUBLISH_KEY_ID: 'publisher',
+          CMX_PUBLISH_PRIVATE_KEY: JSON.stringify(
+            await crypto.subtle.exportKey('jwk', keys.privateKey),
+          ),
+        },
+        timeout: 20_000,
       },
-      timeout: 20_000,
-    },
-  )
-  const published = JSON.parse(stdout) as { contentHash: string }
+    )
+    return JSON.parse(stdout) as { contentHash: string }
+  }
+  const published = await publish(fixture)
   const expected = await createCmxPublicationState(fixture)
   assert.equal(published.contentHash, expected.contentHash)
   assert.equal((await get('/fixture')).headers.get('X-Content-Revision'), expected.contentHash)
@@ -87,4 +93,34 @@ test('the released CMX CLI loads the signed config and publishes directly to the
     },
   )
   assert.match(preflight.stdout, /Published content is compatible/)
+
+  const bytes = await sharp({
+    create: { width: 40, height: 30, channels: 3, background: '#5874a8' },
+  })
+    .jpeg()
+    .toBuffer()
+  const image = await imageLoader.load({
+    bytes,
+    relativePath: 'fixture.jpg',
+    options: {
+      storage: { directory: join(directory, 'media'), base: '/fixture-media' },
+      sources: {},
+    },
+  })
+  const prepared = structuredClone(fixture)
+  const site = prepared._site.content.site as SiteMetadata
+  site.routes[0].image = image
+  prepared.fixture.content.default = {
+    type: 'component',
+    from: '@hannesdiem/content-components',
+    import: 'Image',
+    props: { image },
+  }
+  const revised = await publish(prepared)
+  const route = site.routes.find((route) => route.image && typeof route.image !== 'string')!
+  const page = await get(route.path)
+  assert.equal(page.status, 200)
+  assert.equal(page.headers.get('X-Content-Revision'), revised.contentHash)
+  assert.ok(typeof route.image === 'object')
+  assert.ok((await page.text()).includes(`src="${route.image.src}"`))
 })

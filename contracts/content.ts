@@ -1,5 +1,5 @@
 import { isCmxDocument, type CmxDocument } from '@cmx-tools/contracts'
-import type { Identity } from '@hannesdiem/content-components'
+import type { Identity, ImageSource, MediaImage } from '@hannesdiem/content-components'
 
 export interface ContentRoute {
   path: string
@@ -7,7 +7,7 @@ export interface ContentRoute {
   title: string
   kind: string
   description?: string
-  image?: string
+  image?: ImageSource
   theme?: string
   releaseDate?: string
   creationDate?: string
@@ -27,22 +27,7 @@ export interface ContentRoute {
   sourceId?: string
 }
 
-export interface PaletteColor {
-  name: string
-  hsl: number[]
-}
-
-export interface MediaImage {
-  src: string
-  srcSet?: string
-  width: number
-  height: number
-  alt?: string
-  focalX?: number
-  focalY?: number
-  color?: string
-  palette?: PaletteColor[]
-}
+export type { MediaImage, PaletteColor } from '@hannesdiem/content-components'
 
 export const siteEntry = '_site'
 
@@ -154,7 +139,9 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
       typeof route.title !== 'string' ||
       typeof route.kind !== 'string' ||
       (route.image !== undefined &&
-        (typeof route.image !== 'string' || !Object.hasOwn(site.media, route.image)))
+        (typeof route.image === 'string'
+          ? !Object.hasOwn(site.media, route.image)
+          : !image(route.image)))
     ) {
       throw new Error('Invalid or duplicate content route')
     }

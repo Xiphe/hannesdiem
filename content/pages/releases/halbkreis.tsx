@@ -1,3 +1,4 @@
+import hannesDiemHalbkreis from '../../media/hannes_diem_halbkreis.jpg'
 import { Release } from '@hannesdiem/content-components'
 import type { ReleaseMetadata } from '../../types.ts'
 import { people } from '../../people.ts'
@@ -9,7 +10,7 @@ import { song as wieEsMirGefaellt } from '../songs/wie-es-mir-gefaellt.tsx'
 
 export const release = {
   title: 'Halbkreis',
-  cover: 'hannes_diem_halbkreis.jpg',
+  cover: hannesDiemHalbkreis,
   releaseDate: '2010-08-01T12:00:00+00:00',
   hideReleaseDay: true,
   genres: ['Gothic', 'Rock', 'Pop'],

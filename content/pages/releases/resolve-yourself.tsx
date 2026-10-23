@@ -1,3 +1,4 @@
+import hannesDiemResolveYourself from '../../media/hannes_diem_resolve_yourself.jpg'
 import { Release } from '@hannesdiem/content-components'
 import type { ReleaseMetadata } from '../../types.ts'
 import { people } from '../../people.ts'
@@ -6,7 +7,7 @@ import { song as resolveYourself } from '../songs/resolve-yourself.tsx'
 export const release = {
   title: 'Resolve Yourself',
   subtitle: 'with Iuli Banu',
-  cover: 'hannes_diem_resolve_yourself.jpg',
+  cover: hannesDiemResolveYourself,
   releaseDate: '2023-11-25T12:00:00+00:00',
   genres: ['Funk', 'Disco', 'Electro', 'Pop'],
   languages: ['English'],

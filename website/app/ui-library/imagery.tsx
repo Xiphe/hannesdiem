@@ -1,5 +1,10 @@
 import { css, type Handle, type RemixNode } from 'remix/component'
-import type { ImageProps, HeroProps, ImageBandProps } from '@hannesdiem/content-components'
+import type {
+  ImageProps,
+  HeroProps,
+  ImageBandProps,
+  ImageSource,
+} from '@hannesdiem/content-components'
 import { getMedia, type MediaImage } from '../media.ts'
 import { SiteContent } from './context.ts'
 import { type CSS, sm, md, lg } from './styles.ts'
@@ -14,7 +19,7 @@ function lines(text?: string): RemixNode {
 }
 export function imageElement(
   media: Record<string, MediaImage>,
-  image: string,
+  image: ImageSource,
   options: {
     alt?: string
     sizes?: string

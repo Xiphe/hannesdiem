@@ -1,13 +1,18 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { CmxNode } from '@cmx-tools/contracts'
-import { loadContent, contentRoutes, legacyRedirects } from './fixture.ts'
-import { createApp as createRuntimeApp } from '../../website/app/router.tsx'
-import type { ContentLoader } from '../../website/app/document-host/index.ts'
+import { documents, site } from './browser-fixture.ts'
+import { createContentSource } from '../app/document-host/index.ts'
+import { createApp as createRuntimeApp } from '../app/router.tsx'
+import type { ContentLoader } from '../app/document-host/index.ts'
+
+const loadContent = createContentSource(documents, 'fixture')
+const contentRoutes = site.routes
+const legacyRedirects = new Map(site.redirects.map(({ path, ...target }) => [path, target]))
 const createApp = (loader: ContentLoader = loadContent) => createRuntimeApp(loader)
 
 async function publication(title: string, paragraph: string) {
-  const page = structuredClone(await loadContent(new Request('https://example.com/linktree')))
+  const page = structuredClone(await loadContent(new Request('https://example.com/fixture-links')))
   page.key = 'test-publication'
   page.route = undefined
   page.document.content.title = title
@@ -99,7 +104,7 @@ test('public pages include a cacheable local navigation dialog', async () => {
   const app = createApp(loadContent)
   for (const cookie of [undefined, 'hdm_user_session=existing-browser-session']) {
     const response = await app.fetch(
-      new Request('https://example.com/hoffnung', {
+      new Request('https://example.com/fixture-long-release', {
         headers: cookie ? { Cookie: cookie } : undefined,
       }),
     )

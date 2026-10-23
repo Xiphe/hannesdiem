@@ -1,10 +1,11 @@
 import { isCmxDocument } from '@cmx-tools/contracts'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import publications from '../routes.ts'
 import { people } from '../people.ts'
-import type { ContentRoute, ReleaseMetadata, SongDefinition } from '../types.ts'
+import type { ContentPublication, ContentRoute, ReleaseMetadata, SongDefinition } from '../types.ts'
 
 const routes: ContentRoute[] = []
+const { content } = JSON.parse(await readFile('.cmx/documents/_routes.json', 'utf8'))
+const publications = content.routes as ContentPublication[]
 for (const publication of publications) {
   const document = JSON.parse(await readFile(`.cmx/documents/${publication.document}.json`, 'utf8'))
   if (!isCmxDocument(document) || typeof document.content.title !== 'string') {

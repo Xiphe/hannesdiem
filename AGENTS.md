@@ -1,5 +1,9 @@
 # hannesdiem.de
 
+## Tests
+
+Use synthetic fixtures for all test assertions. Never assert against authored production content or use its generated Publications and media as fixtures. Keep website builds and checks runnable with `content/` absent to simulate the future repository split.
+
 ## Prose
 
 Never invent prose for the user unless explicitly instructed. Preserve supplied wording and order; edit only as requested, including spelling corrections when authorized.

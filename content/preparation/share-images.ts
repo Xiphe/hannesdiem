@@ -1,24 +1,11 @@
 import { createHash } from 'node:crypto'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import sharp, { type OverlayOptions } from 'sharp'
 import type { ContentRoute } from '../types.ts'
+import config from '../cmx.config.ts'
+import { storeMedia } from './media-storage.ts'
 
-interface Media {
-  src: string
-  srcSet: string
-  width: number
-  height: number
-  alt?: string
-  color?: string
-}
-interface MediaFile {
-  key: string
-  path: string
-  contentType: string
-  bytes: number
-  sha256: string
-}
 interface ShareImage {
   src: string
   width: number
@@ -28,18 +15,8 @@ interface ShareImage {
 const width = 1052,
   height = 550
 const routes: ContentRoute[] = JSON.parse(await readFile('.generated/routes.json', 'utf8'))
-const media: Record<string, Media> = JSON.parse(await readFile('.generated/media.json', 'utf8'))
-const files: MediaFile[] = JSON.parse(await readFile('.generated/media-files.json', 'utf8'))
-const retainedFiles = files.filter((file) => !file.key.startsWith('og/'))
-const first = Object.values(media)[0]!
-const firstVariant = first.srcSet.split(', ')[0]!.replace(/ \d+w$/, '')
-const firstKey = retainedFiles[0]!.key
-if (!firstVariant.endsWith('/' + firstKey))
-  throw new Error('Cannot determine media base for share images')
-const base = firstVariant.slice(0, -firstKey.length - 1)
+const storage = config.assets.loaders.image.options.storage
 const output: Record<string, ShareImage> = {}
-await rm('.generated/media/og', { recursive: true, force: true })
-await mkdir('.generated/media/og', { recursive: true })
 
 function escapeMarkup(text: string): string {
   return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -87,7 +64,9 @@ async function shadow(
 }
 for (const route of routes) {
   if (route.kind === 'release' && route.image) {
-    const cover = media[route.image]!
+    const cover = route.image
+    if (typeof cover === 'string') throw new Error('Import cover images directly')
+    if (!cover.srcSet) throw new Error(`Missing cover variants: ${route.path}`)
     const variants = cover.srcSet.split(', ').map((item) => {
       const match = /^(.*) (\d+)w$/.exec(item)
       if (!match) throw new Error(`Invalid cover variant: ${item}`)
@@ -118,8 +97,11 @@ for (const route of routes) {
     : await textImage(route.ogSubtitle, 'Noto Sans Light', 'NotoSans-Light.ttf', 35, foreground)
   let background: Buffer
   if (!song && route.image) {
-    if (!media[route.image]) throw new Error(`Unknown share image: ${route.image}`)
-    background = await sharp(`content/media/${route.image}`)
+    const routeImage = route.image
+    if (typeof routeImage === 'string' || !('filename' in routeImage))
+      throw new Error(`Import share images directly: ${route.path}`)
+    const image = routeImage
+    background = await sharp(`content/media/${image.filename}`)
       .rotate()
       .resize(width, height, { fit: 'cover', position: 'centre' })
       .png()
@@ -172,31 +154,13 @@ for (const route of routes) {
   const sha256 = createHash('sha256').update(image).digest('hex')
   const stem = route.path.slice(1).replaceAll('/', '--')
   const key = `og/${stem}-${sha256.slice(0, 16)}.jpg`
-  const path = `.generated/media/${key}`
-  await writeFile(path, image)
-  retainedFiles.push({ key, path, contentType: 'image/jpeg', bytes: image.length, sha256 })
+  const src = await storeMedia(storage, key, image, 'image/jpeg')
   output[route.path] = {
-    src: `${base}/${key}`,
+    src,
     width,
     height,
     alt: route.ogImageTitle?.trim() || route.title,
   }
 }
 await writeFile('.generated/og.json', JSON.stringify(output, null, 2) + '\n')
-const metadata = Buffer.from(JSON.stringify({ version: 1, images: media, shareImages: output }))
-const metadataHash = createHash('sha256').update(metadata).digest('hex')
-const metadataKey = `metadata/manifest-${metadataHash.slice(0, 16)}.json`
-await mkdir('.generated/media/metadata', { recursive: true })
-await writeFile(`.generated/media/${metadataKey}`, metadata)
-const uploadFiles = retainedFiles.filter((file) => !file.key.startsWith('metadata/'))
-uploadFiles.push({
-  key: metadataKey,
-  path: `.generated/media/${metadataKey}`,
-  contentType: 'application/json',
-  bytes: metadata.length,
-  sha256: metadataHash,
-})
-await writeFile('.generated/media-files.json', JSON.stringify(uploadFiles, null, 2) + '\n')
-console.log(
-  `Share images: ${Object.keys(output).length} routes, ${retainedFiles.filter((file) => file.key.startsWith('og/')).length} generated cards`,
-)
+console.log(`Share images: ${Object.keys(output).length} routes`)

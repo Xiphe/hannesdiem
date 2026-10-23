@@ -1,3 +1,21 @@
+import photo29PalmsRainbow from '../../media/29_palms_rainbow.jpg'
+import photo29PalmsOutdoor from '../../media/29_palms_outdoor.jpg'
+import chiefSing2 from '../../media/chief_sing_2.jpg'
+import warner from '../../media/warner.jpg'
+import laMood from '../../media/la_mood.jpg'
+import cabinMood from '../../media/cabin_mood.jpg'
+import bigBearMood from '../../media/big_bear_mood.jpg'
+import bigBearSelfie from '../../media/big_bear_selfie.jpg'
+import hannesRec from '../../media/hannes_rec.jpg'
+import bbTrees from '../../media/bb_trees.jpg'
+import chiefSofa from '../../media/chief_sofa.jpg'
+import hannesDriving from '../../media/hannes_driving.jpg'
+import photo29PalmsHouse from '../../media/29_palms_house.jpg'
+import chiefSing from '../../media/chief_sing.jpg'
+import hannesRecTop from '../../media/hannes_rec_top.jpg'
+import chiefHannesDancing from '../../media/chief_hannes_dancing.jpg'
+import chiefHannesRe from '../../media/chief_hannes_re.jpg'
+import chiefHannesMed from '../../media/chief_hannes_med.jpg'
 import { Hero, ImageBand, Page, Prose, TextBlock } from '@hannesdiem/content-components'
 
 export const title = 'California 2024 Recap'
@@ -9,7 +27,7 @@ export default function Content() {
         <Hero
           title={'California 2024 Recap'}
           subtitle={'One Week Album - Two bald brothers'}
-          image={'29_palms_rainbow.jpg'}
+          image={photo29PalmsRainbow}
           first={true}
           pullUp={false}
           textColor={'dark'}
@@ -48,7 +66,7 @@ export default function Content() {
         <ImageBand
           pullUp={true}
           breakPoint={'sm'}
-          images={[{ image: 'chief_sing_2.jpg', includeStacked: true }]}
+          images={[{ image: chiefSing2, includeStacked: true }]}
         />
         <TextBlock pullUp={true}>
           <p>
@@ -82,8 +100,8 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'warner.jpg', includeStacked: true },
-            { image: 'la_mood.jpg', includeStacked: false },
+            { image: warner, includeStacked: true },
+            { image: laMood, includeStacked: false },
           ]}
         />
         <a
@@ -121,9 +139,9 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'cabin_mood.jpg', includeStacked: true },
-            { image: 'big_bear_mood.jpg', includeStacked: false },
-            { image: 'big_bear_selfie.jpg', includeStacked: false },
+            { image: cabinMood, includeStacked: true },
+            { image: bigBearMood, includeStacked: false },
+            { image: bigBearSelfie, includeStacked: false },
           ]}
         />
         <a
@@ -177,9 +195,9 @@ export default function Content() {
           pullUp={true}
           breakPoint={'sm'}
           images={[
-            { image: 'hannes_rec.jpg', includeStacked: true },
-            { image: 'bb_trees.jpg', includeStacked: false },
-            { image: 'chief_sofa.jpg', includeStacked: false },
+            { image: hannesRec, includeStacked: true },
+            { image: bbTrees, includeStacked: false },
+            { image: chiefSofa, includeStacked: false },
           ]}
         />
         <TextBlock pullUp={true}>
@@ -222,8 +240,8 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'hannes_driving.jpg', includeStacked: false },
-            { image: '29_palms_house.jpg', includeStacked: true },
+            { image: hannesDriving, includeStacked: false },
+            { image: photo29PalmsHouse, includeStacked: true },
           ]}
         />
         <TextBlock
@@ -265,8 +283,8 @@ export default function Content() {
           pullUp={false}
           breakPoint={'none'}
           images={[
-            { image: 'chief_sing.jpg', includeStacked: true },
-            { image: 'hannes_rec_top.jpg', includeStacked: true },
+            { image: chiefSing, includeStacked: true },
+            { image: hannesRecTop, includeStacked: true },
           ]}
         />
         <a
@@ -344,9 +362,9 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'chief_hannes_dancing.jpg', includeStacked: true },
-            { image: 'chief_hannes_re.jpg', includeStacked: false },
-            { image: 'chief_hannes_med.jpg', includeStacked: false },
+            { image: chiefHannesDancing, includeStacked: true },
+            { image: chiefHannesRe, includeStacked: false },
+            { image: chiefHannesMed, includeStacked: false },
           ]}
         />
         <a
@@ -386,7 +404,7 @@ export default function Content() {
           subtitle={
             'for this crazy ride\\nfor your love\\nfor your music\\nfor everything words can not hold'
           }
-          image={'29_palms_outdoor.jpg'}
+          image={photo29PalmsOutdoor}
           first={false}
           pullUp={false}
           textColor={'light'}
