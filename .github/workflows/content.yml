@@ -23,10 +23,29 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Prepare content and image metadata
+      - name: Cache extracted palettes
+        id: palettes
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .generated/palettes.json
+          key: ${{ runner.os }}-${{ runner.arch }}-palettes-v1-${{ hashFiles('package-lock.json', 'content/preparation/palettes.ts', 'content/preparation/palette/package-lock.json', 'content/media/**') }}
+      - name: Cache prepared image assets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            .cmx/assets
+            .generated/media
+            .generated/media-files.json
+          key: ${{ runner.os }}-${{ runner.arch }}-cmx-assets-v1-${{ hashFiles('package-lock.json', 'content/preparation/image-loader.ts') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-cmx-assets-v1-${{ hashFiles('package-lock.json', 'content/preparation/image-loader.ts') }}-
+      - name: Extract palettes for changed image inputs
+        if: steps.palettes.outputs.cache-hit != 'true'
         run: |
           npm ci --prefix content/preparation/palette
-          npm run content:build -- --extract-palettes
+          node content/preparation/palettes.ts
+      - name: Prepare content and image metadata
+        run: npm run content:build
       - name: Check authored content
         run: |
           npx prettier content contracts/cmx.ts --check
