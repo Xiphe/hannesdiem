@@ -32,7 +32,6 @@ execFileSync(
   { stdio: 'inherit' },
 )
 run('routes.ts')
-run('media.ts')
 run('share-images.ts')
 
 run('publication.ts')

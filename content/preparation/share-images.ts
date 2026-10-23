@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto'
+import { globSync } from 'node:fs'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import sharp, { type OverlayOptions } from 'sharp'
 import type { ContentRoute } from '../types.ts'
+import config from '../cmx.config.ts'
 
 interface Media {
   filename: string
@@ -12,13 +14,6 @@ interface Media {
   height: number
   alt?: string
   color?: string
-}
-interface MediaFile {
-  key: string
-  path: string
-  contentType: string
-  bytes: number
-  sha256: string
 }
 interface ShareImage {
   src: string
@@ -30,14 +25,21 @@ const width = 1052,
   height = 550
 const routes: ContentRoute[] = JSON.parse(await readFile('.generated/routes.json', 'utf8'))
 const media: Record<string, Media> = JSON.parse(await readFile('.generated/media.json', 'utf8'))
-const files: MediaFile[] = JSON.parse(await readFile('.generated/media-files.json', 'utf8'))
-const retainedFiles = files.filter((file) => !file.key.startsWith('og/'))
-const first = Object.values(media)[0]!
-const firstVariant = first.srcSet.split(', ')[0]!.replace(/ \d+w$/, '')
-const firstKey = retainedFiles[0]!.key
-if (!firstVariant.endsWith('/' + firstKey))
-  throw new Error('Cannot determine media base for share images')
-const base = firstVariant.slice(0, -firstKey.length - 1)
+const retainedFiles = await Promise.all(
+  globSync('.generated/media/images/*.webp')
+    .sort()
+    .map(async (path) => {
+      const bytes = await readFile(path)
+      return {
+        key: path.slice('.generated/media/'.length),
+        path,
+        contentType: 'image/webp',
+        bytes: bytes.length,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+      }
+    }),
+)
+const base = config.assets.loaders.image.options.base
 const output: Record<string, ShareImage> = {}
 await rm('.generated/media/og', { recursive: true, force: true })
 await mkdir('.generated/media/og', { recursive: true })
@@ -121,10 +123,7 @@ for (const route of routes) {
   let background: Buffer
   if (!song && route.image) {
     const routeImage = route.image
-    const image =
-      typeof routeImage === 'string'
-        ? media[routeImage]
-        : Object.values(media).find((image) => image.src === routeImage.src)
+    const image = typeof routeImage === 'string' ? media[routeImage] : (routeImage as Media)
     if (!image) throw new Error(`Unknown share image: ${route.path}`)
     background = await sharp(`content/media/${image.filename}`)
       .rotate()

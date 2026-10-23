@@ -53,29 +53,32 @@ test('the released CMX CLI loads the signed config and publishes directly to the
 
   const endpoint = new URL(publicationPath, await runtime.ready).href
   const publicationFile = join(directory, 'publication.json')
-  await writeFile(publicationFile, JSON.stringify(fixture))
-  const { stdout } = await promisify(execFile)(
-    process.execPath,
-    [
-      'node_modules/@cmx-tools/publish/dist/cli/cli.js',
-      publicationFile,
-      endpoint,
-      '--config',
-      'content/publishing/config.ts',
-    ],
-    {
-      env: {
-        ...process.env,
-        CMX_PUBLISH_URL: endpoint,
-        CMX_PUBLISH_KEY_ID: 'publisher',
-        CMX_PUBLISH_PRIVATE_KEY: JSON.stringify(
-          await crypto.subtle.exportKey('jwk', keys.privateKey),
-        ),
+  async function publish(documents: typeof fixture) {
+    await writeFile(publicationFile, JSON.stringify(documents))
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      [
+        'node_modules/@cmx-tools/publish/dist/cli/cli.js',
+        publicationFile,
+        endpoint,
+        '--config',
+        'content/publishing/config.ts',
+      ],
+      {
+        env: {
+          ...process.env,
+          CMX_PUBLISH_URL: endpoint,
+          CMX_PUBLISH_KEY_ID: 'publisher',
+          CMX_PUBLISH_PRIVATE_KEY: JSON.stringify(
+            await crypto.subtle.exportKey('jwk', keys.privateKey),
+          ),
+        },
+        timeout: 20_000,
       },
-      timeout: 20_000,
-    },
-  )
-  const published = JSON.parse(stdout) as { contentHash: string }
+    )
+    return JSON.parse(stdout) as { contentHash: string }
+  }
+  const published = await publish(fixture)
   const expected = await createCmxPublicationState(fixture)
   assert.equal(published.contentHash, expected.contentHash)
   assert.equal((await get('/fixture')).headers.get('X-Content-Revision'), expected.contentHash)
@@ -89,33 +92,11 @@ test('the released CMX CLI loads the signed config and publishes directly to the
   )
   assert.match(preflight.stdout, /Published content is compatible/)
 
-  // Exercise the authored publication, including inline image metadata, through
-  // the same signed CLI and host verification used in production.
-  await writeFile(publicationFile, JSON.stringify(prepared))
-  await promisify(execFile)(
-    process.execPath,
-    [
-      'node_modules/@cmx-tools/publish/dist/cli/cli.js',
-      publicationFile,
-      endpoint,
-      '--config',
-      'content/publishing/config.ts',
-    ],
-    {
-      env: {
-        ...process.env,
-        CMX_PUBLISH_URL: endpoint,
-        CMX_PUBLISH_KEY_ID: 'publisher',
-        CMX_PUBLISH_PRIVATE_KEY: JSON.stringify(
-          await crypto.subtle.exportKey('jwk', keys.privateKey),
-        ),
-      },
-      timeout: 20_000,
-    },
-  )
+  const revised = await publish(prepared)
   const route = site.routes.find((route) => route.image && typeof route.image !== 'string')!
   const page = await get(route.path)
   assert.equal(page.status, 200)
+  assert.equal(page.headers.get('X-Content-Revision'), revised.contentHash)
   assert.ok(typeof route.image === 'object')
   assert.ok((await page.text()).includes(`src="${route.image.src}"`))
 })
