@@ -105,8 +105,6 @@ test('the released CMX CLI loads the signed config and publishes directly to the
     options: {
       storage: { directory: join(directory, 'media'), base: '/fixture-media' },
       sources: {},
-      palettes: {},
-      processedPalettes: {},
     },
   })
   const prepared = structuredClone(fixture)

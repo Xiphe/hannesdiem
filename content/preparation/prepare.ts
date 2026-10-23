@@ -9,7 +9,6 @@ const run = (script: string) =>
 
 for (const path of ['.cmx/bundle', '.cmx/documents']) rmSync(path, { recursive: true, force: true })
 
-if (process.argv.includes('--extract-palettes')) run('palettes.ts')
 run('compile.ts')
 execFileSync(
   'npx',

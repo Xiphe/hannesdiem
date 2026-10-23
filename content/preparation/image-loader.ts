@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { basename, extname } from 'node:path'
 import type { CmxAssetLoader } from '@cmx-tools/contracts'
+import { Vibrant } from 'node-vibrant/node'
+import vibrantPackage from 'node-vibrant/package.json' with { type: 'json' }
 import sharp from 'sharp'
 import { storeMedia, type MediaStorage } from './media-storage.ts'
 
@@ -12,9 +14,6 @@ type Source = {
   focalY: number
   sourceId?: string
 }
-type Swatch = { name: string; color: string; hsl: number[]; population: number }
-export type Palette = { sha256: string; color: string; palette: Swatch[] }
-
 export function mediaBase(value: string): string {
   if (/[\s\u0000-\u001f\u007f\\?#]/.test(value))
     throw new Error('MEDIA_BASE_URL must have no whitespace, query, hash, or backslash')
@@ -34,7 +33,7 @@ export function mediaBase(value: string): string {
 }
 
 export const imageLoader = {
-  version: `2:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
+  version: `3:vibrant-${vibrantPackage.version}:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
   extensions: ['.jpg', '.jpeg', '.png', '.webp', '.avif'],
   async load({ bytes, relativePath, options }) {
     const filename = basename(relativePath)
@@ -45,6 +44,20 @@ export const imageLoader = {
     const width = rotated ? metadata.height! : metadata.width!
     const height = rotated ? metadata.width! : metadata.height!
     if (!width || !height) throw new Error(`Missing image dimensions: ${relativePath}`)
+    // The legacy extractor decodes JPEG/PNG; Sharp supplies PNG for other formats.
+    const paletteInput = ['jpeg', 'png'].includes(metadata.format ?? '')
+      ? input
+      : await sharp(input).png().toBuffer()
+    const swatches = await Vibrant.from(paletteInput).getPalette()
+    const { data } = await sharp(input)
+      .resize(1, 1, { fit: 'cover' })
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    const color = `#${[...data.subarray(0, 3)].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+    const palette = Object.entries(swatches).flatMap(([name, swatch]) =>
+      swatch ? [{ name, color: swatch.hex, hsl: swatch.hsl, population: swatch.population }] : [],
+    )
     const widths = [
       ...new Set(
         [320, 480, 960, 1440, 1920, Math.min(width, 2560)].filter(
@@ -66,9 +79,6 @@ export const imageLoader = {
       variants.push({ src, width: variantWidth })
     }
     const source: Partial<Source> = options.sources[filename] ?? {}
-    const palette = [options.processedPalettes[filename], options.palettes[filename]].find(
-      (value) => value?.sha256 === sourceSha256,
-    )
     return {
       ...source,
       filename,
@@ -77,14 +87,11 @@ export const imageLoader = {
       width,
       height,
       sourceSha256,
-      ...(palette?.sha256 === sourceSha256
-        ? { color: palette.color, palette: palette.palette }
-        : {}),
+      color,
+      palette,
     }
   },
 } satisfies CmxAssetLoader<{
   storage: MediaStorage
   sources: Record<string, Source>
-  palettes: Record<string, Palette>
-  processedPalettes: Record<string, Palette>
 }>

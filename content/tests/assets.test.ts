@@ -19,8 +19,6 @@ async function fixture(t: TestContext) {
   const options: Parameters<typeof imageLoader.load>[0]['options'] = {
     storage: { directory, base: '/media' },
     sources: {},
-    palettes: {},
-    processedPalettes: {},
   }
   const load = (input = bytes) =>
     imageLoader.load({ bytes: input, relativePath: 'image.jpg', options })
@@ -62,9 +60,8 @@ test('responsive variants use the configured widths and stop at 2560px', async (
   assert.deepEqual(widths, [320, 480, 960, 1440, 1920, 2560])
 })
 
-test('editorial metadata is preserved and palettes must match the original bytes', async (t) => {
-  const { bytes, options, load } = await fixture(t)
-  const sha256 = createHash('sha256').update(bytes).digest('hex')
+test('editorial metadata is preserved and palettes are extracted from the input bytes locally', async (t) => {
+  const { options, load } = await fixture(t)
   options.sources['image.jpg'] = {
     alt: 'Supplied alternative text',
     width: 80,
@@ -72,16 +69,36 @@ test('editorial metadata is preserved and palettes must match the original bytes
     focalX: 20,
     focalY: 70,
   }
-  options.palettes['image.jpg'] = { sha256, color: '#ff8800', palette: [] }
-  options.processedPalettes['image.jpg'] = { sha256: 'stale', color: '#000000', palette: [] }
   const image = await load()
   assert.equal(image.alt, 'Supplied alternative text')
   assert.equal(image.focalX, 20)
   assert.equal(image.focalY, 70)
-  assert.equal(image.color, '#ff8800')
-  options.processedPalettes['image.jpg'] = { sha256, color: '#ff9900', palette: [] }
-  assert.equal((await load()).color, '#ff9900')
-  options.palettes = {}
-  options.processedPalettes['image.jpg'].sha256 = 'stale'
-  assert.equal((await load()).color, undefined)
+  assert.match(image.color, /^#[a-f0-9]{6}$/)
+  assert.ok(image.palette.length > 0)
+  const blue = await sharp({
+    create: { width: 80, height: 40, channels: 3, background: '#0044ff' },
+  })
+    .png()
+    .toBuffer()
+  const updated = await load(blue)
+  assert.equal(updated.color, '#0044ff')
+  assert.notDeepEqual(updated.palette, image.palette)
+  const vibrant = updated.palette.find((swatch) => swatch.name === 'Vibrant')!
+  assert.ok(vibrant.hsl[0] > 0.55 && vibrant.hsl[0] < 0.75)
+  assert.ok(vibrant.hsl[1] > 0.8)
+  assert.ok(vibrant.population >= 0)
+})
+
+test('WebP and AVIF inputs also return extracted palettes', async (t) => {
+  const { load } = await fixture(t)
+  for (const format of ['webp', 'avif'] as const) {
+    const bytes = await sharp({
+      create: { width: 40, height: 30, channels: 3, background: '#0044ff' },
+    })
+      .toFormat(format)
+      .toBuffer()
+    const image = await load(bytes)
+    assert.match(image.color, /^#[a-f0-9]{6}$/)
+    assert.ok(image.palette.some((swatch) => swatch.name === 'Vibrant'))
+  }
 })
