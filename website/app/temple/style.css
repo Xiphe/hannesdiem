@@ -1,7 +1,10 @@
+html[data-layout='temple'] {
+  color-scheme: light dark;
+}
 html[data-layout='temple'],
 html[data-layout='temple'] body {
-  background: #030503;
-  color: #d2d0c8;
+  background: light-dark(#f7ecdf, #030503);
+  color: light-dark(#11120b, #d2d0c8);
 }
 .temple-page {
   width: 100%;
@@ -34,7 +37,7 @@ html[data-layout='temple'] body {
 .temple-opening {
   position: relative;
   height: 130svh;
-  background: #030503;
+  background: light-dark(#f7ecdf, #030503);
 }
 .temple-stage {
   position: sticky;
@@ -83,25 +86,25 @@ html[data-layout='temple'] body {
 }
 @font-face {
   font-family: 'Bricolage';
-  src: url('../assets/temple/bricolage.ttf') format('truetype');
+  src: url('./assets/bricolage.ttf') format('truetype');
   font-weight: 200 800;
   font-display: swap;
 }
 @font-face {
   font-family: 'Germania';
-  src: url('../assets/temple/germaniaone.ttf') format('truetype');
+  src: url('./assets/germaniaone.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: 'CinzelDecorative';
-  src: url('../assets/temple/cinzeldecorative-bold.ttf') format('truetype');
+  src: url('./assets/cinzeldecorative-bold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }
 @font-face {
   font-family: 'Unbounded';
-  src: url('../assets/temple/unbounded.ttf') format('truetype');
+  src: url('./assets/unbounded.ttf') format('truetype');
   font-weight: 650;
   font-display: swap;
 }
@@ -113,13 +116,13 @@ html[data-layout='temple'] body {
   left: 50%;
   transform: translate(-50%, var(--scene-exit, 0px));
   white-space: nowrap;
-  color: #343434;
+  color: light-dark(#84442b, #343434);
   font-family: 'Bricolage', sans-serif;
   font-size: clamp(14px, 1.1vw, 17px);
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: 0.035em;
-  text-shadow: 0 1px 5px #030503;
+  text-shadow: 0 1px 5px light-dark(#f7ecdf, #030503);
 }
 
 .temple-scroll-hint {
@@ -130,7 +133,7 @@ html[data-layout='temple'] body {
   transform: translateX(-50%);
   width: 20px;
   height: 26px;
-  color: #343434;
+  color: light-dark(#84442b, #343434);
   pointer-events: none;
 }
 .temple-scroll-hint svg {

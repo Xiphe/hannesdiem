@@ -93,6 +93,9 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
   const measure = document.createElement('canvas').getContext('2d')!
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const portrait = matchMedia('(orientation: portrait)')
+  const appearance = matchMedia('(prefers-color-scheme: dark)')
+  let veilColor = getComputedStyle(root).backgroundColor
+  let appearanceChanged = false
   const words = props.title.toUpperCase().split(/\s+/)
   const lastInputStart = performance.now()
   let width = 0,
@@ -472,6 +475,10 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
   }
   function draw(now: number) {
     raf = 0
+    if (appearanceChanged) {
+      veilColor = getComputedStyle(root).backgroundColor
+      appearanceChanged = false
+    }
     const dt = Math.min(0.05, (now - lastNow) / 1000)
     lastNow = now
     if (!reduced.matches) elapsed += dt
@@ -504,7 +511,7 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     veilContext.clearRect(0, 0, width, height)
     veilContext.globalCompositeOperation = 'source-over'
     veilContext.globalAlpha = 1 - s.reveal
-    veilContext.fillStyle = '#030503'
+    veilContext.fillStyle = veilColor
     veilContext.fillRect(0, 0, width, height)
     veilContext.globalAlpha = 1
     veilContext.globalCompositeOperation = 'destination-out'
@@ -592,6 +599,14 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     { passive: true, signal },
   )
   portrait.addEventListener('change', resize, { signal })
+  appearance.addEventListener(
+    'change',
+    () => {
+      appearanceChanged = true
+      requestDraw()
+    },
+    { signal },
+  )
   const sizeObserver = new ResizeObserver(resize)
   sizeObserver.observe(stage)
   reduced.addEventListener(

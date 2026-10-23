@@ -84,9 +84,15 @@ const entries = Object.fromEntries(
       '/' + path.replace(/^dist\//, ''),
     ]),
 )
-const mark = await readFile('website/app/assets/mark.svg')
-entries.mark = `/assets/mark-${createHash('sha256').update(mark).digest('hex').slice(0, 16)}.svg`
-await writeFile(`dist${entries.mark}`, mark)
+for (const [key, source] of [
+  ['mark', 'website/app/assets/mark.svg'],
+  ['templeMark', 'website/app/temple/assets/mark.svg'],
+] as const) {
+  const mark = await readFile(source)
+  entries[key] =
+    `/assets/${key}-${createHash('sha256').update(mark).digest('hex').slice(0, 16)}.svg`
+  await writeFile(`dist${entries[key]}`, mark)
+}
 await mkdir('dist/font', { recursive: true })
 await cp('website/app/assets/fuggles.woff2', 'dist/font/fuggles-v12-latin-regular.woff2')
 await cp('website/app/assets/googlef6f5b9a886cf5949.html', 'dist/googlef6f5b9a886cf5949.html')

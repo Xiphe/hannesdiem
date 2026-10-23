@@ -3,8 +3,8 @@ import { defineConfig } from '@playwright/test'
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 8787)
 
 export default defineConfig({
-  testDir: './tests',
-  testMatch: '**/*.spec.ts',
+  testDir: '.',
+  testMatch: ['**/tests/*.spec.ts', '**/temple/tests/temple.spec.ts'],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
