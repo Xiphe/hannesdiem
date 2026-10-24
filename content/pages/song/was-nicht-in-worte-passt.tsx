@@ -16,12 +16,7 @@ export const song = {
 
 const { slug, ...lyrics } = song
 
-export const metadata = songMetadata(song, {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-02-27T15:53:00.804+00:00',
-  sourceId: '3d84d40e-c075-4fd3-bb2a-b2863c6d320f',
-}) satisfies PageMetadata
+export const metadata = songMetadata(song) satisfies PageMetadata
 
 export const title = song.title
 

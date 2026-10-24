@@ -8,6 +8,10 @@ Other extensions are supporting files. Duplicate URLs fail the build/publication
 Each page exports `title`, `default`, and optional typed `metadata` (`PageMetadata`
 from `types.ts`). URLs come only from filenames. Song/release entries call helpers
 from `metadata.ts` during CMX execution; explicit metadata overrides defaults.
+OG titles default to the page title; music helpers supply kind/type/artist defaults.
+Shared description: `site.ts`. Authored pages contain no legacy CMS IDs/timestamps.
+Legacy CMS share-image ID redirects are removed. CMX host state provides hashes,
+not per-document modification timestamps; new pages omit sitemap `lastmod`.
 
 Publication v2: document keys determine URLs; each page carries `content.metadata`.
 `_site`: global navigation/media. `_redirects`: explicit aliases from `redirects.ts`.

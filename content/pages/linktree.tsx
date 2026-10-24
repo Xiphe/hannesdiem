@@ -1,3 +1,5 @@
+import { people } from '../people.ts'
+import { description } from '../site.ts'
 import type { PageMetadata } from '../types.ts'
 import portrait from '../media/portrait.png'
 
@@ -7,12 +9,10 @@ export const metadata = {
   kind: 'linktree',
   image: portrait,
   theme: 'electrocute',
-  description: '...about Music, Life, and Everything',
-  ogType: 'website',
-  ogTitle: 'Hannes Diem',
+  description,
 } satisfies PageMetadata
 
-export const title = 'Hannes Diem'
+export const title = people.hannesDiem.name
 
 export default function Content() {
   return (

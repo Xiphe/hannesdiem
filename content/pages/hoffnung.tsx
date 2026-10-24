@@ -81,13 +81,8 @@ export const release = {
 } satisfies ReleaseMetadata
 
 export const metadata = releaseMetadata(release, {
-  kind: 'release',
   description: 'Ungefär 10 Lieder über Liebe, Vertrauen und Veränderung',
-  ogType: 'music.album',
-  ogTitle: 'Hoffnung • Hannes Diem',
-  updatedAt: '2025-03-02T11:15:17.019+00:00',
-  sourceId: '5e8f78ac-8784-413a-846d-b86094374756',
-  musicians: ['https://hannesdiem.de/about'],
+  ogTitle: `${release.title} • ${people.hannesDiem.name}`,
 }) satisfies PageMetadata
 
 export const title = release.title

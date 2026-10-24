@@ -4,7 +4,7 @@ import { PoemCanvas, PoemOpening } from '@hannesdiem/content-components'
 
 import forest from '../../media/IMG_6257.JPG'
 
-export const metadata = { kind: 'temple', image: forest, ogType: 'website' } satisfies PageMetadata
+export const metadata = { kind: 'temple', image: forest } satisfies PageMetadata
 
 export const title = 'Temple of Sound'
 

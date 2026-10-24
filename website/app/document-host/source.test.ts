@@ -68,7 +68,6 @@ test('published document names drive routes, sitemap, metadata and private-file 
     title: 'Collection title',
     description: 'Collection description',
     ogImage: { src: 'https://media.example.com/card.jpg', width: 100, height: 50 },
-    sourceId: 'legacy-source',
   }
   documents['song/example'] = structuredClone(documents.fixture)
   documents['song/example'].content.metadata = { kind: 'song' }
@@ -88,9 +87,6 @@ test('published document names drive routes, sitemap, metadata and private-file 
   for (const path of ['/_helper', '/nested/_private/page', '/_404', '/collection/index']) {
     assert.equal((await app.fetch('https://example.com' + path)).status, 404)
   }
-  const legacy = await app.fetch('https://example.com/og-image/hdm-pages/legacy-source.png')
-  assert.equal(legacy.status, 307)
-  assert.equal(legacy.headers.get('Location'), 'https://media.example.com/card.jpg')
 })
 
 test('publication validation rejects conflicting URLs and metadata that overrides routing', () => {

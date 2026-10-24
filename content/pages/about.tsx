@@ -1,12 +1,12 @@
+import { people } from '../people.ts'
+import { description } from '../site.ts'
 import type { PageMetadata } from '../types.ts'
 
 export const metadata = {
-  title: 'Hannes Diem',
-  kind: 'page',
+  title: people.hannesDiem.name,
   theme: 'electrocute',
-  description: '...about Music, Life, and Everything',
+  description,
   ogType: 'profile',
-  ogTitle: 'Hannes Diem',
   profile: {
     firstName: 'Hannes',
     lastName: 'Diem',

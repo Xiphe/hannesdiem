@@ -21,15 +21,10 @@ import chiefHannesMed from '../../media/chief_hannes_med.jpg'
 import { Hero, ImageBand, Page, Prose, TextBlock } from '@hannesdiem/content-components'
 
 export const metadata = {
-  kind: 'page',
   description:
     'Two musicians. Two weeks. A journey through creativity, tension, and trust, capturing raw music, deep connection, and the space we choose to hold. This is One Week Album.',
   image: photo29PalmsRainbow,
   theme: 'beach',
-  ogType: 'website',
-  ogTitle: 'California 2024 Recap',
-  updatedAt: '2025-02-28T02:33:03.308+00:00',
-  sourceId: '33c3dfaf-5767-4c9a-b09a-0e4dd1263145',
   ogImageTitle: 'California 2024',
   ogSubtitle: 'Creating at the Edge of Everything',
   ogTextColor: 'dark',
@@ -43,7 +38,7 @@ export default function Content() {
     <>
       <Page firstIsHero={true}>
         <Hero
-          title={'California 2024 Recap'}
+          title={title}
           subtitle={'One Week Album - Two bald brothers'}
           image={photo29PalmsRainbow}
           first={true}

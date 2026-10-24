@@ -63,14 +63,7 @@ export const release = {
   ],
 } satisfies ReleaseMetadata
 
-export const metadata = releaseMetadata(release, {
-  kind: 'release',
-  description: '...about Music, Life, and Everything',
-  ogType: 'music.album',
-  updatedAt: '2025-02-28T11:05:34.098+00:00',
-  sourceId: '1ebc587e-31a3-489a-aac4-e48c8927d18e',
-  musicians: ['https://hannesdiem.de/about'],
-}) satisfies PageMetadata
+export const metadata = releaseMetadata(release) satisfies PageMetadata
 
 export const title = release.title
 

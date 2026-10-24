@@ -26,7 +26,6 @@ export interface ContentRoute {
   songs?: string[]
   authors?: (Identity & { ogProfile?: string })[]
   profile?: { firstName: string; lastName: string }
-  sourceId?: string
 }
 
 export type { MediaImage, PaletteColor } from '@hannesdiem/content-components'

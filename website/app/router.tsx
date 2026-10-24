@@ -126,27 +126,6 @@ export function createApp(content: ContentLoader) {
       },
     )
   })
-  router.get(routes.legacyShareImage, async ({ request, params }) => {
-    const { routes } = await content(request)
-    const kind =
-      params.collection === 'hdm-pages'
-        ? 'page'
-        : params.collection === 'hdm-songs'
-          ? 'song'
-          : undefined
-    const page =
-      kind &&
-      routes.find(
-        (route) => route.kind === kind && route.sourceId === params.file.replace(/\.png$/, ''),
-      )
-    const image = page?.ogImage
-    return image
-      ? redirect(image.src, {
-          status: 307,
-          headers: { 'Cache-Tag': contentCacheTag, 'Cache-Control': 'no-cache' },
-        })
-      : new Response('Not found', { status: 404, headers: privateHeaders })
-  })
   router.get(
     routes.robots,
     () =>
