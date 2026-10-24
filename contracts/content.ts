@@ -201,6 +201,15 @@ function legacyPublication(documents: PublishedDocuments): PublicationIndex {
   }
 }
 
+export function validatePage(key: string, document: CmxDocument | undefined): void {
+  if (
+    !isCmxDocument(document) ||
+    typeof document.content.title !== 'string' ||
+    !Object.hasOwn(document.content, 'default')
+  )
+    throw new Error(`Missing or invalid page: ${key}`)
+}
+
 // Validate the complete collection before publishing and before accepting it.
 export function validatePublication(documents: PublishedDocuments): PublicationIndex {
   const rawSite = documents[siteEntry]?.content.site
@@ -230,14 +239,7 @@ export function validatePublication(documents: PublishedDocuments): PublicationI
           }),
         }
   validateRoutes(publication)
-  for (const key of [publication.notFound, ...publication.routes.map((route) => route.document)]) {
-    const document = documents[key]
-    if (
-      !isCmxDocument(document) ||
-      typeof document.content.title !== 'string' ||
-      !Object.hasOwn(document.content, 'default')
-    )
-      throw new Error(`Missing or invalid page: ${key}`)
-  }
+  for (const key of [publication.notFound, ...publication.routes.map((route) => route.document)])
+    validatePage(key, documents[key])
   return publication
 }
