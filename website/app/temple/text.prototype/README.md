@@ -1,48 +1,40 @@
-# First pair — line-length study (parked)
+# First pair — fixed sense units + glimmer coupling (exploring)
 
-`npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound?variant=all`.
-1–3 open individual specimens; arrows switch; H hides/restores review chrome. `sand tunnel 8790`.
+`npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound`.
+`sand tunnel 8790`. Scroll / touch to advance; ←/→ or buttons move one unit. H hides/restores review controls. “Buchstabenform” toggles between glyph-bound particles and the same free field without changing the text position.
 
-Branch `codex/temple-first-text-studies`; standalone port 8790. No Worker route, production entry or CMX publication. Live remains opener-only. Artist text comes directly from `content/drafts/temple-of-sound.tsx`; preserve punctuation, order, explicit breaks and the verse/refrain pair.
+Branch `codex/temple-first-text-studies`; standalone port 8790. No Worker route, publication entry, new dependency, audio or deployment. Only the opener is published.
 
-## Typeface accepted — 2026-10-24
+## Accepted constraints
 
-Artist: “All of these work somehow” and “let's use A for the first section.” A is **Bricolage Grotesque 600**, not a new face. Applied to the draft first pair (`#verse-1`) in the regular Temple stylesheet. This settles its typeface, not its setting, effects or publication.
+- Typeface: Bricolage Grotesque 600 for the first verse/refrain pair; artist selected A from `0b97988`.
+- Artist rejected width tuning (`d621633`): normal responsive reading width, capped on large screens. Working cap: 65ch / 56rem with 1.5rem minimum side padding; not an artistic layout verdict.
+- “Zeile” means **a fixed sentence/sense unit**, not a rendered screen line. A unit may wrap across several lines on a phone.
+- Preserve supplied words, punctuation and order. The seven existing paragraph/`br` units are read directly from the unchanged draft. No new editorial splits. Source: `content/temple-of-sound/draft.tsx`, with the pre-colocation `content/drafts/temple-of-sound.tsx` path on this older experimental branch.
 
-Other feedback: Germania One “is kind of a meme”; Cinzel Decorative is more suitable for headlines/special effects; Unbounded also works. This is not an instruction to remove them from the accepted opener or a rejection of all future uses. Four-face comparison recoverable at `0b97988`.
+## One coupling hypothesis, not a selected form language
 
-## Artist correction / next question
+The artist proposed revealing units individually, with a glimmer formation accompanying each. This first probe derives a mechanism from the accepted opener's light/letter relationship: **particles gather just outside the active words' glyph contours**, then travel to the next unit's contours. The free field is a comparison baseline, not a second scene.
 
-The artist rejected this width study as unnecessary optimization. Use a normal readable maximum width and otherwise adapt to the viewport (`max-width: 65ch` already exists in the regular draft stylesheet). Do not seek a width choice from these specimens.
+This is an agent-proposed hypothesis. The artist has not asked for literal particle lettering or accepted its result. Do not assign metaphors or symbols to individual sentences. Other, independent spatial formations remain open for co-creation.
 
-Next artist-led idea: reveal text line by line, with a glimmer form accompanying each line. Pending clarification: rendered screen lines versus stable authored sentence/sense units. Preserve wording/order; do not assign symbolic shapes or restructure the prose. The viewer below is archived work, not the active design question.
+The working reveal replaces each unit in place; previous units do not accumulate. Scroll position selects the active unit and interpolates particle targets. The next unit has a short 240ms entrance that completes when input stops; at rest one full unit stays readable rather than leaving the visitor between two faded or overlapping sentences. Ambient motion continues at rest; it never advances text. Reversing scroll reverses the sequence. Traversal is 0.7 viewport per unit (4.2 viewports total), an unapproved timing fixture.
 
-## Parked question
+One particle field keeps the opener's native forest photo, pinned sun point (53.24% / 54.07%), uneven brightness and viewport-edge fading. A subset gathers at glyph edges while the rest continues drifting. Plain DOM text stays readable; no semantic dependency on the canvas. Working dark veil supports text contrast; colour/composition are not being approved here.
 
-How much of a sentence should share one line? This is the first bounded part of the agreed setting exploration. Three widths, same left edge and all other type parameters fixed. No hierarchy, emphasis, motion or scene proposals bundled into the comparison.
+Native wrapping only changes a unit's shape, not its identity. Resize remeasures masks and preserves semantic progress, including browser scroll clamping during rotation. Reduced motion freezes ambient rendering and switches directly between units. Hidden tabs pause RAF; page exit removes listeners/observers. Image failure retains readable text and the particle field. Without JS the full first pair remains readable in source order.
 
-| Specimen   | Width at the 1280px comparison viewport | Prospective question                                               |
-| ---------- | --------------------------------------- | ------------------------------------------------------------------ |
-| 1 / Short  | 44vw = 563.2px                          | Do frequent wraps support the direct address or fragment thoughts? |
-| 2 / Medium | 64vw = 819.2px                          | How do longer thoughts and the short refrain statements relate?    |
-| 3 / Wide   | 82vw = 1049.6px; previous A's measure   | Does the longer line support the opening or lose tension?          |
+## Validation / boundary
 
-These widths are unapproved probes; the middle one is not a recommendation. Same Bricolage 600, `opsz 48`, `wdth 100`, font-size adjustment 0.52, size, physical line/paragraph spacing, left edge at 9vw, `#e4e0d4` ink and `#030503` background. Original font binary and OFL already in `website/app/assets/temple/`. No new font files or dependencies.
+Browser-checked all seven states forward/backward, original text, desktop/phone bounds, free/bound toggle, hidden controls, portrait/landscape identity and frozen reduced-motion canvas. Scoped TypeScript, JS syntax and Prettier checks. No permanent tests for throwaway visuals; no CI wait.
 
-Only native wrapping changes. On narrow screens columns stop shrinking at 340px or 82vw, whichever fits; differences can disappear on phones. The overview uses the same 1280px viewport for each specimen. Explicit artist breaks remain in every size. This neutral setting is a comparison fixture, not approved scene composition.
-
-## Sequence / boundary
-
-1. **Type character accepted:** Bricolage for the first verse/refrain pair.
-2. **Setting resolved pragmatically:** responsive, readable maximum width; no width survey.
-3. **Next exploration:** line-by-line text and glimmer formation together, following the artist's direction.
-
-Proceed proactively within the authorized exploration. The artist makes the expressive decisions; no complete scene or poem publication follows from this step.
+Open: whether glyph formation is useful; reveal style and pacing; independent form language and the purpose of particular forms. This is a coupling fragment, not a finished scene or publication approval.
 
 ## Recovery
 
-- `a43d68a`: six withdrawn font/layout bundles; insufficient grounding.
-- `dc20cdc`: three material tests, parked and unjudged; question changed without agreement.
-- `e44f3fe`: superseded new-font survey; no verdict on individual new faces.
-- `0b97988`: existing four-face comparison; artist selected A for the first section.
-- Only the accepted opener is published.
+- `a43d68a`: withdrawn font/layout bundles; insufficient grounding.
+- `dc20cdc`: parked material tests; question changed without agreement.
+- `e44f3fe`: superseded new-font survey.
+- `0b97988`: four existing faces; artist chose A for the first section.
+- `d621633`: width study, parked by artist as unnecessary optimization.
+- `eeea438`: artist-led direction toward fixed units and glimmer formations.
