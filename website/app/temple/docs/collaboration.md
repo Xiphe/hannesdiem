@@ -8,15 +8,15 @@ The artist explicitly accepted the completed opener: “lass uns das bitte als o
 
 ## Process / current decision state — 2026-10-24
 
-The artist chose a small dedicated process skill after [researching existing skills](design-skill-research.md). Use [creative-exploration](../../../../.agents/skills/creative-exploration/SKILL.md) for **Expansion**, **Festhalten**, **Wendepunkt**, **Zusammenführung**. That file owns the reusable rules; this document owns Temple's evidence and decisions.
+The artist approved the `explore` skill after [research and a shared-understanding interview](design-skill-research.md). Its source is [Xiphe/skills](https://github.com/Xiphe/skills/blob/main/skills/explore/SKILL.md), installed locally as `$explore`. It owns the reusable collaboration guidance; this document owns Temple's evidence and decisions.
 
 - **Question / scope:** relationship between fixed sentence/sense units and glimmer forms, first verse/refrain pair.
-- **Mode:** Expansion. No Wendepunkt agreed for this scene.
+- **Phase:** Expansion. No transition to Convergence agreed for this scene.
 - **Anchors:** Bricolage Grotesque 600 for this pair (`0b97988`); original prose/order; fixed semantic units, not screen lines. Normal responsive readable maximum width; no width survey.
 - **Unapproved:** glyph-contour formation, replacement of preceding units and 240ms entrance at `551612d`; one proposed mechanism plus a free-field toggle did not offer sufficient creative breadth. Do not treat it as the selected shape language.
 - **Parked / rejected:** material studies `dc20cdc` remain unjudged; detached font/layout studies `a43d68a` withdrawn for lack of grounding; width study `d621633` parked as unnecessary.
 - **Open:** form language, reading movement, spatial/image relationship. No new symbolic meanings or publication approval.
-- **Next:** reopen meaningful mechanisms for the particle/text relationship using alternatives or consequential controls; interview where expressive direction is missing. Artwork implementation paused during process setup; the existing probe remains on port 8790.
+- **Next:** reopen meaningful mechanisms for the particle/text relationship using alternatives or consequential controls; interview where expressive direction is missing. Process approved; new artwork remains unapproved. The existing probe was served on port 8790.
 
 ## Accepted opener / recovery
 

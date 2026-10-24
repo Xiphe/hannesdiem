@@ -1,6 +1,6 @@
 # Skills for collaborative creative exploration
 
-Research: 2026-10-24. Reviewed actual upstream instructions. Primary question: can a reusable skill preserve **Expansion → jointly named Wendepunkt → Zusammenführung**, while treating a scoped Yes independently from a whole-direction decision?
+Research: 2026-10-24. Reviewed actual upstream instructions. Primary question: can a reusable skill preserve **Expansion → an agreed transition → Convergence**, while treating a scoped Yes independently from a whole-direction decision?
 
 ## Finding
 
@@ -8,9 +8,9 @@ Research: 2026-10-24. Reviewed actual upstream instructions. Primary question: c
 
 No inspected skill covers the full requested interaction contract unchanged: grounded visual alternatives **or meaningful live controls**; interview for missing expressive direction; broaden on rejection; preserve local Yes without silently closing the wider field; jointly identify convergence; restore those states in fresh sessions. This is a bounded finding, not a claim that no such skill exists anywhere.
 
-**Decision:** the artist chose “Kleiner eigener Prozess-Skill auf Basis der Recherche”. [creative-exploration](../../../../.agents/skills/creative-exploration/SKILL.md) is the versioned source; installed at `/home/agent/.codex/skills/creative-exploration` for global discovery. It uses the research without installing BMad or adding runtime dependencies. Artwork remains in Expansion; no artwork changes in this task.
+**Decision, updated 2026-10-25:** the artist approved a concise role and adaptive workflow after an interview about artistic uncertainty, then named it `explore`. Published in [Xiphe/skills](https://github.com/Xiphe/skills/blob/main/skills/explore/SKILL.md), commit `353f0ae`. Installed at `/home/agent/.codex/skills/explore`. The earlier site-local process and its separate phase manuals are superseded. Artwork remains in Expansion; this approval applies to the skill, not the open scene.
 
-**Validation:** bundled skill validator passes. A fresh agent enacted seven independent scenarios: rejected concept, scoped typeface Yes, tentative praise, explicit combination request, exact approved color change, fresh-session recovery, and timing refinement inside an accepted scene. Responses preserved the affected scopes, kept unresolved directions open, and executed explicit convergence/implementation requests without repeated approval. This checks process decisions, not aesthetic quality or guaranteed future compliance.
+**Earlier draft evaluation:** a fresh agent enacted seven independent scenarios: rejected concept, scoped typeface Yes, tentative praise, explicit combination request, exact approved color change, fresh-session recovery, and timing refinement inside an accepted scene. Responses preserved the affected scopes, kept unresolved directions open, and executed explicit convergence/implementation requests without repeated approval. This evaluated that earlier draft, not the subsequently rewritten skill. The approved `explore` version passes bundled skill validation, formatting and local reference checks; no aesthetic-quality claim follows.
 
 ## Adoption signals
 
@@ -35,7 +35,7 @@ The Asim pair is useful prior art for named modes, not a widely adopted recommen
 
 - **Framing** resists premature conclusion; session memlog records ideas, decisions and authorship. Creative Partner participates with the user; Facilitator and autonomous stances also exist.
 - **Converging** explicitly separates the phases, waits for readiness/request, and prevents convergence leaking into generation. The convergence reference restores the whole field, including buried ideas, before narrowing.
-- **On Activation / Resuming** rely on BMad scripts/config and the full memlog. This is a framework setup, not an instructions-only drop-in. Persisted `mode` denotes stance, not the explicit Expansion/Zusammenführung phase we need.
+- **On Activation / Resuming** rely on BMad scripts/config and the full memlog. This is a framework setup, not an instructions-only drop-in. Persisted `mode` denotes stance, not the explicit Expansion/Convergence phase we need.
 - Needed adaptations: scoped element Yes versus global readiness; shared phase keywords/turning point; live visual alternatives/controls. Replace the 100+ ideas target and user-majority dialogue defaults where they conflict with this artist's requested collaboration. Customization hooks exist, but their adequacy for every change was not executed/tested.
 
 ### Anthropic Playground — strongest controls building block
@@ -65,4 +65,4 @@ The Asim pair is useful prior art for named modes, not a widely adopted recommen
 
 The [Design Council's Double Diamond](https://www.designcouncil.org.uk/resources/framework-for-innovation/) explicitly alternates divergent exploration and convergent action, involves the people affected and tests multiple answers. It is non-linear/revisitable. The exact approval semantics below come from **this user's instructions**, not from the Council or the inspected skills:
 
-The operational definitions and persistence contract now live in the [skill](../../../../.agents/skills/creative-exploration/SKILL.md); Temple's current state lives in [collaboration.md](collaboration.md).
+The approved `explore` skill owns the collaboration guidance; Temple's current state lives in [collaboration.md](collaboration.md).
