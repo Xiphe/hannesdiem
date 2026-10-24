@@ -1,8 +1,6 @@
-import { cmx } from '@cmx-tools/bundle'
-import { createCmxAssetPipeline } from '@cmx-tools/assets'
+import { compileCmxBundle } from '@cmx-tools/bundle'
 import { globSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
-import { rolldown } from 'rolldown'
 import config from '../cmx.config.ts'
 
 const cwd = process.cwd()
@@ -15,26 +13,10 @@ const entries = Object.fromEntries(
 if (Object.keys(entries).length === 0) throw new Error('No CMX pages found')
 entries._routes = resolve(cwd, 'content/routes.ts')
 
-const assets = createCmxAssetPipeline({ cwd, assets: config.assets })
-await assets.prepare({
+await compileCmxBundle({
+  ...config,
+  cwd,
   entries,
+  outDir: '.cmx/bundle',
   configPath: 'content/cmx.config.ts',
 })
-
-const bundle = await rolldown({
-  cwd,
-  input: entries,
-  plugins: [cmx({ ...config, cwd })],
-  // Page imports can create entry facades without sourcemaps.
-  // https://github.com/cmx-tools/packages/issues/208
-  preserveEntrySignatures: 'allow-extension',
-})
-try {
-  await bundle.write({
-    dir: resolve(cwd, '.cmx/bundle'),
-    entryFileNames: '[name].js',
-    chunkFileNames: '[name]-[hash].js',
-  })
-} finally {
-  await bundle.close()
-}
