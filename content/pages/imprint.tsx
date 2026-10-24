@@ -1,4 +1,14 @@
+import { description } from '../site.ts'
+import type { PageMetadata } from '../types.ts'
+
 import { Prose } from '@hannesdiem/content-components'
+
+export const metadata = {
+  theme: 'electrocute',
+  noindex: true,
+  description,
+  nofollow: true,
+} satisfies PageMetadata
 
 export const title = 'Imprint'
 

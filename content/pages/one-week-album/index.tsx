@@ -1,3 +1,6 @@
+import type { PageMetadata } from '../../types.ts'
+import ogImageOnly from '../../media/og_image_only.jpg'
+
 import photo67bfc27bE033470B9B6F77A800385A70 from '../../media/67BFC27B-E033-470B-9B6F-77A800385A70.jpeg'
 import portraitHannes from '../../media/portrait_hannes.png'
 import portraitRoxy from '../../media/portrait_roxy.png'
@@ -19,6 +22,17 @@ import {
   TwoColumnText,
 } from '@hannesdiem/content-components'
 
+export const metadata = {
+  description: 'Join 7 artists for 7 days of music, food, community and creation',
+  image: ogImageOnly,
+  theme: 'beach',
+  ogTitle: 'One Week Album Retreat',
+  ogImageTitle: ' ',
+  ogSubtitle: ' ',
+  ogTextColor: 'light',
+  shareImage: true,
+} satisfies PageMetadata
+
 export const title = 'One Week Album'
 
 export default function Content() {
@@ -26,7 +40,7 @@ export default function Content() {
     <>
       <Page firstIsHero={true}>
         <Hero
-          title={'One Week Album'}
+          title={title}
           subtitle={'Join 7 artists for 7 days of music, food, community and creation'}
           image={photo67bfc27bE033470B9B6F77A800385A70}
           first={true}

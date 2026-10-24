@@ -1,4 +1,6 @@
+import type { PageMetadata } from '../../types.ts'
 import fire from '../../media/fire.jpg'
+
 import selfie from '../../media/selfie.jpg'
 import hannesRec1 from '../../media/hannes_rec_1.jpg'
 import cooking from '../../media/cooking.jpg'
@@ -12,6 +14,17 @@ import yoga2 from '../../media/yoga2.jpg'
 import hygge from '../../media/hygge.jpg'
 import { Button, Hero, ImageBand, Page, TextBlock } from '@hannesdiem/content-components'
 
+export const metadata = {
+  description:
+    'A creative retreat in Denmark, a house meant for ten, and two artists diving deep into music, food, and creativity. One Week Album is just getting started.',
+  image: fire,
+  theme: 'beach',
+  ogImageTitle: 'Løkken 2024',
+  ogSubtitle: 'Just the two of us',
+  ogTextColor: 'dark',
+  shareImage: true,
+} satisfies PageMetadata
+
 export const title = 'Løkken 2024 Recap'
 
 export default function Content() {
@@ -19,7 +32,7 @@ export default function Content() {
     <>
       <Page firstIsHero={true}>
         <Hero
-          title={'Løkken 2024 Recap'}
+          title={title}
           subtitle={'One Week Album - Just the two of us.'}
           image={fire}
           first={true}

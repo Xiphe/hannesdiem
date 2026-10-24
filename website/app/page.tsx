@@ -22,8 +22,7 @@ export function Page(
     const { title, body, route, path = '/', noindex, plain } = handle.props
     const temple = route?.kind === 'temple'
     const canonical = `https://hannesdiem.de${path}`
-    const image =
-      site.shareImages[path] ?? (route?.image ? getMedia(site.media, route.image) : undefined)
+    const image = route?.ogImage ?? (route?.image ? getMedia(site.media, route.image) : undefined)
     const pageTitle = route?.title ?? title
     const documentTitle = pageTitle === 'Hannes Diem' ? pageTitle : `${pageTitle} • Hannes Diem`
     return (

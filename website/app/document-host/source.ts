@@ -4,6 +4,8 @@ import {
   type ContentRoute,
   type SiteMetadata,
   type PublishedDocuments,
+  type PublicationIndex,
+  type ContentRedirect,
 } from '../../../contracts/content.ts'
 
 export interface ContentPage {
@@ -12,28 +14,31 @@ export interface ContentPage {
   key: string
   route?: ContentRoute
   site: SiteMetadata
+  routes: ContentRoute[]
+  redirects: ContentRedirect[]
   contentHash: string
 }
 export type ContentLoader = (request: Request) => Promise<ContentPage>
 
 export function contentPage(
   path: string,
-  site: SiteMetadata,
+  publication: PublicationIndex,
   getDocument: (key: string) => CmxDocument | undefined,
   contentHash: string,
 ): ContentPage {
-  const route = site.routes.find((route) => route.path === path)
-  const key = route?.document ?? '404'
+  const { site, routes, redirects } = publication
+  const route = routes.find((route) => route.path === path)
+  const key = route?.document ?? publication.notFound
   const document = getDocument(key)
   if (!isCmxDocument(document)) throw new Error(`Invalid CMX document: ${key}`)
-  return { document, status: route ? 200 : 404, key, route, site, contentHash }
+  return { document, status: route ? 200 : 404, key, route, site, routes, redirects, contentHash }
 }
 export function createContentSource(
   documents: PublishedDocuments,
   revision = 'local',
 ): ContentLoader {
   const snapshot = structuredClone(documents)
-  const site = validatePublication(snapshot)
+  const publication = validatePublication(snapshot)
   return async (request) =>
-    contentPage(new URL(request.url).pathname, site, (key) => snapshot[key], revision)
+    contentPage(new URL(request.url).pathname, publication, (key) => snapshot[key], revision)
 }

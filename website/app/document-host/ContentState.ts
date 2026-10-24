@@ -9,7 +9,11 @@ import { verifyCmxDocumentEnvironment, type CmxDocument } from '@cmx-tools/contr
 import { cmx } from '@cmx-tools/remix'
 import { environment } from '../../../.cmx/environment.ts'
 import { contentPage } from './source.ts'
-import { siteEntry, readSite, validatePage } from '../../../contracts/content.ts'
+import {
+  validatePublication,
+  type PublishedDocuments,
+  type PublicationIndex,
+} from '../../../contracts/content.ts'
 import { verifyPublicationRequest } from './authentication.ts'
 import { manifestConditionHeader } from '../../../contracts/publication.ts'
 
@@ -20,6 +24,7 @@ const emptyState = {
 const privateHeaders = { 'Cache-Control': 'no-store' }
 
 export class ContentState extends DurableObject<Env> {
+  private index?: { contentHash: string; publication: PublicationIndex }
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
     this.ctx.storage.sql.exec(`
@@ -103,8 +108,16 @@ export class ContentState extends DurableObject<Env> {
   readPage(path: string) {
     const state = this.state()
     if (!Object.keys(state.manifest).length) return null
-    const site = readSite(this.document(siteEntry))
-    return contentPage(path, site, (key) => this.document(key), state.contentHash)
+    if (this.index?.contentHash !== state.contentHash) {
+      const documents: PublishedDocuments = Object.fromEntries(
+        this.ctx.storage.sql
+          .exec<{ entry: string; document: string }>('SELECT entry, document FROM documents')
+          .toArray()
+          .map((row) => [row.entry, JSON.parse(row.document)]),
+      )
+      this.index = { contentHash: state.contentHash, publication: validatePublication(documents) }
+    }
+    return contentPage(path, this.index.publication, (key) => this.document(key), state.contentHash)
   }
 
   pendingPurge(): string | null {
@@ -149,6 +162,7 @@ export class ContentState extends DurableObject<Env> {
         getDocument: async (key) => this.document(key),
         commit: async (publication) => this.commit(publication),
       }
+      const currentEntries = Object.keys(this.state().manifest)
       const host = createCmxDocumentHost({
         store,
         async verifyPublicationUpdate(update, loadDocument) {
@@ -159,9 +173,15 @@ export class ContentState extends DurableObject<Env> {
               // Resolve named component imports as well as dependency versions.
               cmx(document, environment)
             }
-            const site = readSite(await loadDocument(siteEntry))
-            for (const key of ['404', ...site.routes.map((route) => route.document)])
-              validatePage(key, await loadDocument(key))
+            const entries = new Set([...currentEntries, ...Object.keys(update.upsert)])
+            for (const key of update.remove) entries.delete(key)
+            const documents: PublishedDocuments = {}
+            for (const key of entries) {
+              const document = await loadDocument(key)
+              if (document)
+                Object.defineProperty(documents, key, { value: document, enumerable: true })
+            }
+            validatePublication(documents)
             return { valid: true }
           } catch (error) {
             return {

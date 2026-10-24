@@ -1,5 +1,9 @@
 # hannesdiem.de
 
+## CMX
+
+This project exists to battle-test CMX. Use CMX primitives wherever possible. Treat custom glue as a potential CMX gap: investigate available primitives and surface the gap before introducing a workaround.
+
 ## Tests
 
 Use synthetic fixtures for all test assertions. Never assert against authored production content or use its generated Publications and media as fixtures. Keep website builds and checks runnable with `content/` absent to simulate the future repository split.

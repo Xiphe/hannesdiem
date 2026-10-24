@@ -1,5 +1,17 @@
+import type { PageMetadata } from '../../types.ts'
 import photo20250415191136 from '../../media/PHOTO-2025-04-15-19-11-36.jpg'
+
 import { Button, Hero, Page, TextBlock } from '@hannesdiem/content-components'
+
+export const metadata = {
+  description:
+    'Join 7 artists and spend 7 days expanding ourselves into a band, then settle on an album of songs',
+  image: photo20250415191136,
+  ogImageTitle: 'One Week Album 2025',
+  ogSubtitle: 'August 16 - 23',
+  ogTextColor: 'light',
+  shareImage: true,
+} satisfies PageMetadata
 
 export const title = 'Lunow-Stolzenhagen 2025'
 
@@ -8,7 +20,7 @@ export default function Content() {
     <>
       <Page firstIsHero={true}>
         <Hero
-          title={'One Week Album 2025'}
+          title={metadata.ogImageTitle}
           subtitle={'August 16. - 23.\\nLunow-Stolzenhagen'}
           image={photo20250415191136}
           first={true}

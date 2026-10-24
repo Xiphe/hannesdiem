@@ -1,4 +1,6 @@
+import type { PageMetadata } from '../../types.ts'
 import photo29PalmsRainbow from '../../media/29_palms_rainbow.jpg'
+
 import photo29PalmsOutdoor from '../../media/29_palms_outdoor.jpg'
 import chiefSing2 from '../../media/chief_sing_2.jpg'
 import warner from '../../media/warner.jpg'
@@ -18,6 +20,17 @@ import chiefHannesRe from '../../media/chief_hannes_re.jpg'
 import chiefHannesMed from '../../media/chief_hannes_med.jpg'
 import { Hero, ImageBand, Page, Prose, TextBlock } from '@hannesdiem/content-components'
 
+export const metadata = {
+  description:
+    'Two musicians. Two weeks. A journey through creativity, tension, and trust, capturing raw music, deep connection, and the space we choose to hold. This is One Week Album.',
+  image: photo29PalmsRainbow,
+  theme: 'beach',
+  ogImageTitle: 'California 2024',
+  ogSubtitle: 'Creating at the Edge of Everything',
+  ogTextColor: 'dark',
+  shareImage: true,
+} satisfies PageMetadata
+
 export const title = 'California 2024 Recap'
 
 export default function Content() {
@@ -25,7 +38,7 @@ export default function Content() {
     <>
       <Page firstIsHero={true}>
         <Hero
-          title={'California 2024 Recap'}
+          title={title}
           subtitle={'One Week Album - Two bald brothers'}
           image={photo29PalmsRainbow}
           first={true}
