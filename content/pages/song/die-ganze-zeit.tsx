@@ -1,15 +1,9 @@
+import { songMetadata } from '../../metadata.ts'
 import type { PageMetadata } from '../../types.ts'
 
 import { Song } from '@hannesdiem/content-components'
 import { people } from '../../people.ts'
 import type { SongDefinition } from '../../types.ts'
-
-export const metadata = {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-02-27T15:32:06.606+00:00',
-  sourceId: 'dddcbf95-38b7-41c6-912c-9ff2082719f7',
-} satisfies PageMetadata
 
 export const song = {
   slug: 'song/die-ganze-zeit',
@@ -21,6 +15,13 @@ export const song = {
 } satisfies SongDefinition
 
 const { slug, ...lyrics } = song
+
+export const metadata = songMetadata(song, {
+  kind: 'song',
+  ogType: 'music.song',
+  updatedAt: '2025-02-27T15:32:06.606+00:00',
+  sourceId: 'dddcbf95-38b7-41c6-912c-9ff2082719f7',
+}) satisfies PageMetadata
 
 export const title = song.title
 

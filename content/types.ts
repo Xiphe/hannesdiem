@@ -7,6 +7,6 @@ export interface SongDefinition extends Omit<SongProps, 'children'>, SongReferen
 import type { ContentRoute } from '../contracts/content.ts'
 export type { ContentRoute } from '../contracts/content.ts'
 
-export type PageMetadata = Omit<ContentRoute, 'path' | 'document' | 'title' | 'ogImage'> & {
+export type PageMetadata = Omit<ContentRoute, 'path' | 'document' | 'title'> & {
   title?: string
 }

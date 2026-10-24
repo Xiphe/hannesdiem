@@ -1,15 +1,9 @@
+import { songMetadata } from '../../metadata.ts'
 import type { PageMetadata } from '../../types.ts'
 
 import { Song } from '@hannesdiem/content-components'
 import { people } from '../../people.ts'
 import type { SongDefinition } from '../../types.ts'
-
-export const metadata = {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-02-27T15:27:30.613+00:00',
-  sourceId: '6342bfca-6e7c-4566-8643-71e6873ce2b7',
-} satisfies PageMetadata
 
 export const song = {
   slug: 'song/das-versprechen',
@@ -20,6 +14,13 @@ export const song = {
 } satisfies SongDefinition
 
 const { slug, ...lyrics } = song
+
+export const metadata = songMetadata(song, {
+  kind: 'song',
+  ogType: 'music.song',
+  updatedAt: '2025-02-27T15:27:30.613+00:00',
+  sourceId: '6342bfca-6e7c-4566-8643-71e6873ce2b7',
+}) satisfies PageMetadata
 
 export const title = song.title
 

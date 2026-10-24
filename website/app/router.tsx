@@ -32,7 +32,10 @@ export function createApp(content: ContentLoader) {
       return new Response('Not found', { status: 404, headers: privateHeaders })
     if (request.headers.get('X-Remix-Target') !== 'overlay') return redirect(path, 307)
     return render(
-      <SiteContent site={page.site}>
+      <SiteContent
+        site={page.site}
+        routes={page.routes}
+      >
         <div
           mix={css({
             display: 'flex',
@@ -176,7 +179,10 @@ export function createApp(content: ContentLoader) {
     if (path.endsWith('/') && path !== '/')
       return redirect(path.slice(0, -1) + new URL(request.url).search, 308)
     return render(
-      <SiteContent site={page.site}>
+      <SiteContent
+        site={page.site}
+        routes={page.routes}
+      >
         <Page
           {...renderContent(page.document)}
           route={page.route}

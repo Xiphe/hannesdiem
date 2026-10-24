@@ -1,15 +1,9 @@
+import { songMetadata } from '../../metadata.ts'
 import type { PageMetadata } from '../../types.ts'
 
 import { Song } from '@hannesdiem/content-components'
 import { people } from '../../people.ts'
 import type { SongDefinition } from '../../types.ts'
-
-export const metadata = {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-02-27T15:49:14.53+00:00',
-  sourceId: '5c312a1c-a393-4c21-aa73-24c7253d25f0',
-} satisfies PageMetadata
 
 export const song = {
   slug: 'song/resolve-yourself',
@@ -20,6 +14,13 @@ export const song = {
 } satisfies SongDefinition
 
 const { slug, ...lyrics } = song
+
+export const metadata = songMetadata(song, {
+  kind: 'song',
+  ogType: 'music.song',
+  updatedAt: '2025-02-27T15:49:14.53+00:00',
+  sourceId: '5c312a1c-a393-4c21-aa73-24c7253d25f0',
+}) satisfies PageMetadata
 
 export const title = song.title
 

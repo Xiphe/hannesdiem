@@ -1,15 +1,9 @@
+import { songMetadata } from '../../metadata.ts'
 import type { PageMetadata } from '../../types.ts'
 
 import { Song } from '@hannesdiem/content-components'
 import { people } from '../../people.ts'
 import type { SongDefinition } from '../../types.ts'
-
-export const metadata = {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-02-27T15:24:24.163+00:00',
-  sourceId: 'bdcb1828-dbe3-4a25-a5fa-4f00c5476d49',
-} satisfies PageMetadata
 
 export const song = {
   slug: 'song/alles-brennt',
@@ -20,6 +14,13 @@ export const song = {
 } satisfies SongDefinition
 
 const { slug, ...lyrics } = song
+
+export const metadata = songMetadata(song, {
+  kind: 'song',
+  ogType: 'music.song',
+  updatedAt: '2025-02-27T15:24:24.163+00:00',
+  sourceId: 'bdcb1828-dbe3-4a25-a5fa-4f00c5476d49',
+}) satisfies PageMetadata
 
 export const title = song.title
 

@@ -1,3 +1,4 @@
+import { releaseMetadata } from '../metadata.ts'
 import type { PageMetadata } from '../types.ts'
 
 import hannesDiemHalbkreis from '../media/hannes_diem_halbkreis.jpg'
@@ -9,15 +10,6 @@ import { song as bruder } from './song/bruder.tsx'
 import { song as dieMuehle } from './song/die-muehle.tsx'
 import { song as pidderLueng } from './song/pidder-lueng.tsx'
 import { song as wieEsMirGefaellt } from './song/wie-es-mir-gefaellt.tsx'
-
-export const metadata = {
-  kind: 'release',
-  description: '...about Music, Life, and Everything',
-  ogType: 'music.album',
-  updatedAt: '2025-02-28T11:05:34.098+00:00',
-  sourceId: '1ebc587e-31a3-489a-aac4-e48c8927d18e',
-  musicians: ['https://hannesdiem.de/about'],
-} satisfies PageMetadata
 
 export const release = {
   title: 'Halbkreis',
@@ -70,6 +62,15 @@ export const release = {
     },
   ],
 } satisfies ReleaseMetadata
+
+export const metadata = releaseMetadata(release, {
+  kind: 'release',
+  description: '...about Music, Life, and Everything',
+  ogType: 'music.album',
+  updatedAt: '2025-02-28T11:05:34.098+00:00',
+  sourceId: '1ebc587e-31a3-489a-aac4-e48c8927d18e',
+  musicians: ['https://hannesdiem.de/about'],
+}) satisfies PageMetadata
 
 export const title = release.title
 

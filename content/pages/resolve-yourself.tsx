@@ -1,3 +1,4 @@
+import { releaseMetadata } from '../metadata.ts'
 import type { PageMetadata } from '../types.ts'
 
 import hannesDiemResolveYourself from '../media/hannes_diem_resolve_yourself.jpg'
@@ -5,15 +6,6 @@ import { Release } from '@hannesdiem/content-components'
 import type { ReleaseMetadata } from '../types.ts'
 import { people } from '../people.ts'
 import { song as resolveYourself } from './song/resolve-yourself.tsx'
-
-export const metadata = {
-  kind: 'release',
-  description: '...about Music, Life, and Everything',
-  ogType: 'music.album',
-  updatedAt: '2025-02-28T11:06:23.148+00:00',
-  sourceId: '3da233d2-7aab-4bec-a21b-fa5aa3c17c5f',
-  musicians: ['https://hannesdiem.de/about'],
-} satisfies PageMetadata
 
 export const release = {
   title: 'Resolve Yourself',
@@ -64,6 +56,15 @@ export const release = {
     },
   ],
 } satisfies ReleaseMetadata
+
+export const metadata = releaseMetadata(release, {
+  kind: 'release',
+  description: '...about Music, Life, and Everything',
+  ogType: 'music.album',
+  updatedAt: '2025-02-28T11:06:23.148+00:00',
+  sourceId: '3da233d2-7aab-4bec-a21b-fa5aa3c17c5f',
+  musicians: ['https://hannesdiem.de/about'],
+}) satisfies PageMetadata
 
 export const title = release.title
 

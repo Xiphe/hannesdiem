@@ -1,15 +1,9 @@
+import { songMetadata } from '../../metadata.ts'
 import type { PageMetadata } from '../../types.ts'
 
 import { Song } from '@hannesdiem/content-components'
 import { people } from '../../people.ts'
 import type { SongDefinition } from '../../types.ts'
-
-export const metadata = {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-02-27T15:59:07.38+00:00',
-  sourceId: '127eacec-2ed6-4dbe-8aae-aa8fc7cac1b5',
-} satisfies PageMetadata
 
 export const song = {
   slug: 'song/vom-muessen-und-koennen',
@@ -21,6 +15,13 @@ export const song = {
 } satisfies SongDefinition
 
 const { slug, ...lyrics } = song
+
+export const metadata = songMetadata(song, {
+  kind: 'song',
+  ogType: 'music.song',
+  updatedAt: '2025-02-27T15:59:07.38+00:00',
+  sourceId: '127eacec-2ed6-4dbe-8aae-aa8fc7cac1b5',
+}) satisfies PageMetadata
 
 export const title = song.title
 

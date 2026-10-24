@@ -1,3 +1,4 @@
+import { releaseMetadata } from '../metadata.ts'
 import type { PageMetadata } from '../types.ts'
 
 import unbeschriebenCover from '../media/unbeschrieben-cover.jpg'
@@ -9,15 +10,6 @@ import { song as absinth } from './song/absinth.tsx'
 import { song as bruder } from './song/bruder.tsx'
 import { song as allesBrennt } from './song/alles-brennt.tsx'
 import { song as dasVersprechen } from './song/das-versprechen.tsx'
-
-export const metadata = {
-  kind: 'release',
-  description: '...about Music, Life, and Everything',
-  ogType: 'music.album',
-  updatedAt: '2025-03-04T22:25:18.244+00:00',
-  sourceId: 'b3275533-cf41-4e04-8339-d67de7e96dda',
-  musicians: ['https://hannesdiem.de/about'],
-} satisfies PageMetadata
 
 export const release = {
   title: 'unbeschrieben',
@@ -65,6 +57,15 @@ export const release = {
     { ...people.federkielFotografie, roles: ['Photography'] },
   ],
 } satisfies ReleaseMetadata
+
+export const metadata = releaseMetadata(release, {
+  kind: 'release',
+  description: '...about Music, Life, and Everything',
+  ogType: 'music.album',
+  updatedAt: '2025-03-04T22:25:18.244+00:00',
+  sourceId: 'b3275533-cf41-4e04-8339-d67de7e96dda',
+  musicians: ['https://hannesdiem.de/about'],
+}) satisfies PageMetadata
 
 export const title = release.title
 

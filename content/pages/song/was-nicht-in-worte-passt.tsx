@@ -1,15 +1,9 @@
+import { songMetadata } from '../../metadata.ts'
 import type { PageMetadata } from '../../types.ts'
 
 import { Song } from '@hannesdiem/content-components'
 import { people } from '../../people.ts'
 import type { SongDefinition } from '../../types.ts'
-
-export const metadata = {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-02-27T15:53:00.804+00:00',
-  sourceId: '3d84d40e-c075-4fd3-bb2a-b2863c6d320f',
-} satisfies PageMetadata
 
 export const song = {
   slug: 'song/was-nicht-in-worte-passt',
@@ -21,6 +15,13 @@ export const song = {
 } satisfies SongDefinition
 
 const { slug, ...lyrics } = song
+
+export const metadata = songMetadata(song, {
+  kind: 'song',
+  ogType: 'music.song',
+  updatedAt: '2025-02-27T15:53:00.804+00:00',
+  sourceId: '3d84d40e-c075-4fd3-bb2a-b2863c6d320f',
+}) satisfies PageMetadata
 
 export const title = song.title
 

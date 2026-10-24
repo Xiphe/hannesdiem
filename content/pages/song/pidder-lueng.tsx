@@ -1,15 +1,9 @@
+import { songMetadata } from '../../metadata.ts'
 import type { PageMetadata } from '../../types.ts'
 
 import { Song } from '@hannesdiem/content-components'
 import { people } from '../../people.ts'
 import type { SongDefinition } from '../../types.ts'
-
-export const metadata = {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-02-27T15:45:49.095+00:00',
-  sourceId: '8c9ff36b-fb1f-4b1c-9383-931dccd9bfc4',
-} satisfies PageMetadata
 
 export const song = {
   slug: 'song/pidder-lueng',
@@ -20,6 +14,13 @@ export const song = {
 } satisfies SongDefinition
 
 const { slug, ...lyrics } = song
+
+export const metadata = songMetadata(song, {
+  kind: 'song',
+  ogType: 'music.song',
+  updatedAt: '2025-02-27T15:45:49.095+00:00',
+  sourceId: '8c9ff36b-fb1f-4b1c-9383-931dccd9bfc4',
+}) satisfies PageMetadata
 
 export const title = song.title
 

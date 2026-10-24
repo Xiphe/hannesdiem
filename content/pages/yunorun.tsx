@@ -1,3 +1,4 @@
+import { releaseMetadata } from '../metadata.ts'
 import type { PageMetadata } from '../types.ts'
 
 import hannesDiemYunorun from '../media/hannes_diem_yunorun.jpg'
@@ -5,15 +6,6 @@ import { Release } from '@hannesdiem/content-components'
 import type { ReleaseMetadata } from '../types.ts'
 import { people } from '../people.ts'
 import { song as yunorun } from './song/yunorun.tsx'
-
-export const metadata = {
-  kind: 'release',
-  description: '...about Music, Life, and Everything',
-  ogType: 'music.album',
-  updatedAt: '2025-02-27T17:27:28.556+00:00',
-  sourceId: '6fe027b1-cb3a-4e82-9c16-f5fecb9a5385',
-  musicians: ['https://hannesdiem.de/about'],
-} satisfies PageMetadata
 
 export const release = {
   title: 'Y U NO RUN?',
@@ -44,6 +36,15 @@ export const release = {
     },
   ],
 } satisfies ReleaseMetadata
+
+export const metadata = releaseMetadata(release, {
+  kind: 'release',
+  description: '...about Music, Life, and Everything',
+  ogType: 'music.album',
+  updatedAt: '2025-02-27T17:27:28.556+00:00',
+  sourceId: '6fe027b1-cb3a-4e82-9c16-f5fecb9a5385',
+  musicians: ['https://hannesdiem.de/about'],
+}) satisfies PageMetadata
 
 export const title = release.title
 

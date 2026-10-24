@@ -1,15 +1,9 @@
+import { songMetadata } from '../../metadata.ts'
 import type { PageMetadata } from '../../types.ts'
 
 import { Song } from '@hannesdiem/content-components'
 import { people } from '../../people.ts'
 import type { SongDefinition } from '../../types.ts'
-
-export const metadata = {
-  kind: 'song',
-  ogType: 'music.song',
-  updatedAt: '2025-03-04T22:12:13.541+00:00',
-  sourceId: '4484385c-af11-4fac-8f9f-681e896c0b0a',
-} satisfies PageMetadata
 
 export const song = {
   slug: 'song/absinth',
@@ -20,6 +14,13 @@ export const song = {
 } satisfies SongDefinition
 
 const { slug, ...lyrics } = song
+
+export const metadata = songMetadata(song, {
+  kind: 'song',
+  ogType: 'music.song',
+  updatedAt: '2025-03-04T22:12:13.541+00:00',
+  sourceId: '4484385c-af11-4fac-8f9f-681e896c0b0a',
+}) satisfies PageMetadata
 
 export const title = song.title
 

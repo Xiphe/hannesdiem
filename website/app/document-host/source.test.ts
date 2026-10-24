@@ -133,3 +133,23 @@ test('legacy publications remain readable while the new website rolls out', asyn
   assert.match(await response.text(), /https:\/\/media.example.com\/legacy.jpg/)
   assert.equal((await app.fetch('https://example.com/fixture')).status, 404)
 })
+
+test('collection navigation reads the same publication without a generated global list', async () => {
+  const documents = structuredClone(fixture)
+  const site = documents._site.content.site as SiteMetadata
+  site.navigation.sections = [{ name: 'Work', collection: 'release', items: [] }]
+  const addRelease = (key: string, title: string, date: string) => {
+    documents[key] = structuredClone(documents.fixture)
+    documents[key].content.metadata = { kind: 'release', title, releaseDate: date }
+  }
+  addRelease('earlier', 'Earlier release', '2020-01-01')
+  const first = createApp(createContentSource(documents))
+  addRelease('later', 'Later release', '2021-01-01')
+  const second = createApp(createContentSource(documents))
+  const firstHtml = await (await first.fetch('https://example.com/fixture')).text()
+  const secondHtml = await (await second.fetch('https://example.com/fixture')).text()
+  assert.match(firstHtml, /Earlier release/)
+  assert.doesNotMatch(firstHtml, /Later release/)
+  assert.ok(secondHtml.indexOf('Later release') < secondHtml.indexOf('Earlier release'))
+  assert.deepEqual(site.navigation.sections[0].items, [])
+})
