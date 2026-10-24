@@ -9,17 +9,13 @@
 }
 html {
   color-scheme: dark;
-  background: #030503;
+  background: #10120f;
+  --ink: #e4e0d4;
+  --paper: #10120f;
 }
 body {
   margin: 0;
-  color: #e4e0d4;
-}
-.stage {
-  position: relative;
-}
-.stage canvas {
-  display: none;
+  color: var(--ink);
 }
 .units {
   width: min(65ch, 56rem, calc(100% - 3rem));
@@ -37,100 +33,116 @@ body {
 }
 .unit {
   margin: 0 0 1.3em;
-}
-.word {
-  display: inline-block;
+  overflow-wrap: break-word;
 }
 body[data-ready] .sequence {
-  height: calc(100svh + var(--segments) * 70svh);
+  height: calc(100svh + var(--distance, 1.2) * 100svh);
 }
 body[data-ready] .stage {
   position: sticky;
   top: 0;
   height: 100svh;
-}
-body[data-ready] .stage canvas {
-  display: block;
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  overflow: clip;
 }
 body[data-ready] .units {
   position: relative;
-  display: grid;
-  align-content: center;
   height: 100%;
-  padding-block: 4.5rem;
+  padding: 0;
 }
 body[data-ready] .unit {
-  grid-area: 1 / 1;
-  align-self: center;
+  position: absolute;
+  inset: 0 0 auto;
   margin: 0;
   opacity: 0;
+  transform-origin: center center;
+  transition:
+    transform 300ms cubic-bezier(0.16, 0.7, 0.26, 1),
+    opacity 220ms linear;
+  pointer-events: none;
 }
-body[data-ready] .unit:first-child {
-  opacity: 1;
+body[data-ready] .unit[data-state='current'] {
+  z-index: 10;
 }
-/* Factual review controls, outside the artist's text; H hides them. */
+body[data-variant='B'] .unit[data-state='trace'] {
+  color: transparent;
+  -webkit-text-stroke: 0.8px var(--ink);
+}
+/* Review UI, not artist prose or the proposed final scene. H hides it. */
 .review-controls,
 .restore-controls {
   position: fixed;
-  z-index: 2;
+  z-index: 20;
   border: 1px solid #55584d;
   border-radius: 7px;
-  background: #171c18ee;
+  background: #171c18f5;
   color: #e4e0d4;
   font:
     13px/1.3 system-ui,
     sans-serif;
-  backdrop-filter: blur(12px);
 }
 .review-controls {
-  bottom: max(16px, env(safe-area-inset-bottom));
+  bottom: max(12px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
+  width: min(650px, calc(100% - 24px));
+  padding: 8px 10px;
+}
+.variant-row,
+.range-row,
+.variant-links {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px;
-  max-width: calc(100% - 24px);
+  gap: 6px;
 }
-.review-controls button {
-  flex: none;
+.variant-links {
+  flex: 1;
+  justify-content: center;
+}
+.review-controls button,
+.variant-links a {
   border: 0;
   border-radius: 4px;
   background: transparent;
   color: inherit;
   font: inherit;
-  min-width: 32px;
-  min-height: 36px;
-  padding: 6px;
+  min-width: 30px;
+  min-height: 32px;
+  padding: 7px;
   cursor: pointer;
-}
-.review-controls button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-.review-controls output {
-  min-width: 42px;
+  text-decoration: none;
   text-align: center;
-  font-variant-numeric: tabular-nums;
 }
-.review-controls [data-binding] {
-  margin-inline: 5px;
-  border: 1px solid #686c5e;
-  padding-inline: 10px;
-}
-.review-controls [aria-pressed='true'] {
+.variant-links a[aria-current='page'] {
   background: #e4e0d4;
   color: #171c18;
 }
-.review-controls button:hover {
-  outline: 1px solid currentColor;
-  outline-offset: -2px;
+.review-controls p {
+  margin: 6px 3px 12px;
+  color: #b5bbb0;
 }
-button:focus-visible {
+.range-row label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.range-row input {
+  min-width: 20px;
+  width: 100%;
+  accent-color: #d1d8cb;
+  cursor: pointer;
+}
+.range-row output {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+}
+.range-row output:last-child {
+  min-width: 70px;
+  text-align: right;
+}
+:where(button, a, input):focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 3px;
 }
@@ -146,4 +158,48 @@ body[data-ui='hidden'] .review-controls {
 }
 body[data-ui='hidden'] .restore-controls {
   display: block;
+}
+body[data-measuring] .unit {
+  transition: none;
+}
+@media (max-width: 540px) {
+  .review-controls {
+    font-size: 11px;
+    padding: 6px;
+  }
+  .variant-row,
+  .variant-links {
+    gap: 0;
+  }
+  .variant-links a {
+    padding-inline: 5px;
+  }
+  .variant-row button {
+    min-width: 24px;
+    padding-inline: 4px;
+  }
+  .range-row {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+  .range-row label {
+    flex-basis: 65%;
+  }
+  .range-row output {
+    flex: 1;
+    text-align: right;
+  }
+}
+@media (prefers-color-scheme: light) {
+  html {
+    color-scheme: light;
+    background: #efede5;
+    --ink: #343434;
+    --paper: #efede5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-ready] .unit {
+    transition: none;
+  }
 }

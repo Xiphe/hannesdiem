@@ -1,40 +1,41 @@
-# First pair — fixed sense units + glimmer coupling (exploring)
+# First pair — accumulation and pace (Expansion)
 
-`npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound`.
-`sand tunnel 8790`. Scroll / touch to advance; ←/→ or buttons move one unit. H hides/restores review controls. “Buchstabenform” toggles between glyph-bound particles and the same free field without changing the text position.
+`npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound?variant=A`.
+User access: `sand tunnel 8790`.
 
-Branch `codex/temple-first-text-studies`; standalone port 8790. No Worker route, publication entry, new dependency, audio or deployment. Only the opener is published.
+Question: can earlier sentences remain felt as traces without consuming excessive reading space or making progression drag? Artist: “spuren sind wichtiger als lesbarkeit”; avoid a drawn-out, boring experience. No mechanism has been selected.
 
-## Accepted constraints
+## Comparison
 
-- Typeface: Bricolage Grotesque 600 for the first verse/refrain pair; artist selected A from `0b97988`.
-- Artist rejected width tuning (`d621633`): normal responsive reading width, capped on large screens. Working cap: 65ch / 56rem with 1.5rem minimum side padding; not an artistic layout verdict.
-- “Zeile” means **a fixed sentence/sense unit**, not a rendered screen line. A unit may wrap across several lines on a phone.
-- Preserve supplied words, punctuation and order. The seven existing paragraph/`br` units are read directly from the unchanged draft. No new editorial splits. Source: `content/temple-of-sound/draft.tsx`, with the pre-colocation `content/drafts/temple-of-sound.tsx` path on this older experimental branch.
+- **A · Aufrücken:** earlier sentences rise into a compressed stack above the current sentence.
+- **B · Überdruck:** earlier sentences stay as enlarged, overlapping outlines near the reading position.
+- **C · Randspuren:** earlier sentences move sideways; partially clipped text remains at viewport margins.
 
-## One coupling hypothesis, not a selected form language
+All compare the same unchanged first verse/refrain pair in Bricolage Grotesque 600. The source paragraph/`br` units supply seven fixed sentences/sense units; mobile wrapping does not create new units. Source: `content/temple-of-sound/draft.tsx`, with `content/drafts/temple-of-sound.tsx` fallback on this older branch. No invented artist prose.
 
-The artist proposed revealing units individually, with a glimmer formation accompanying each. This first probe derives a mechanism from the accepted opener's light/letter relationship: **particles gather just outside the active words' glyph contours**, then travel to the next unit's contours. The free field is a comparison baseline, not a second scene.
+Scroll selects a unit. Completed units leave traces; future units remain hidden. Short CSS transitions finish after input stops; time never advances the poem. Reverse scroll reverses the sequence. Neutral responsive light/dark background, central reading position, 300ms movement / 220ms opacity are isolation fixtures, not scene decisions. No forest, particles, audio or automatic playback.
 
-This is an agent-proposed hypothesis. The artist has not asked for literal particle lettering or accepted its result. Do not assign metaphors or symbols to individual sentences. Other, independent spatial formations remain open for co-creation.
+## Review controls
 
-The working reveal replaces each unit in place; previous units do not accumulate. Scroll position selects the active unit and interpolates particle targets. The next unit has a short 240ms entrance that completes when input stops; at rest one full unit stays readable rather than leaving the visitor between two faded or overlapping sentences. Ambient motion continues at rest; it never advances text. Reversing scroll reverses the sequence. Traversal is 0.7 viewport per unit (4.2 viewports total), an unapproved timing fixture.
+- Links A/B/C and ←/→ cycle `?variant=` without losing the current unit. Variant URLs work on reload.
+- “Position” jumps directly between units for comparison.
+- “Scrollweg” adjusts total traversal between 0.6 and 3 viewport heights (initially 1.2); it preserves the current unit.
+- H or × hides controls; ↔ restores them. Inputs keep their native arrow keys.
 
-One particle field keeps the opener's native forest photo, pinned sun point (53.24% / 54.07%), uneven brightness and viewport-edge fading. A subset gathers at glyph edges while the rest continues drifting. Plain DOM text stays readable; no semantic dependency on the canvas. Working dark veil supports text contrast; colour/composition are not being approved here.
+Phone rotation preserves the active unit. Reduced motion disables transitions. No ambient animation loop. Without JS the complete first pair remains readable in source order. Review controls are separate from artist prose; they are not a proposed part of the published artwork.
 
-Native wrapping only changes a unit's shape, not its identity. Resize remeasures masks and preserves semantic progress, including browser scroll clamping during rotation. Reduced motion freezes ambient rendering and switches directly between units. Hidden tabs pause RAF; page exit removes listeners/observers. Image failure retains readable text and the particle field. Without JS the full first pair remains readable in source order.
+## Boundary / validation
 
-## Validation / boundary
+Standalone port 8790 on `codex/temple-first-text-studies`; no Worker route, publication entry, new dependency or deployment. Public site still contains only the accepted opener. Bricolage is the accepted first-pair face; trace behaviours, pacing and composition remain unapproved.
 
-Browser-checked all seven states forward/backward, original text, desktop/phone bounds, free/bound toggle, hidden controls, portrait/landscape identity and frozen reduced-motion canvas. Scoped TypeScript, JS syntax and Prettier checks. No permanent tests for throwaway visuals; no CI wait.
-
-Open: whether glyph formation is useful; reveal style and pacing; independent form language and the purpose of particular forms. This is a coupling fragment, not a finished scene or publication approval.
+Browser-checked three variants at first/long/final units, forwards/backwards, current-unit preservation during switches and scroll-distance changes, phone/rotation bounds, light/dark, reduced motion, shareable URLs and hidden controls. Scoped TypeScript, JS syntax, Prettier. No permanent tests or CI polling for throwaway visuals.
 
 ## Recovery
 
+- `551612d`: parked glyph-coupling probe. The artist clarified that coupling text to glimmers was not the assignment; it is not a premise for this comparison.
+- `0b97988`: four opener faces; artist selected Bricolage for the first pair.
+- `d621633`: width survey rejected as unnecessary; use normal responsive capped reading width.
 - `a43d68a`: withdrawn font/layout bundles; insufficient grounding.
-- `dc20cdc`: parked material tests; question changed without agreement.
-- `e44f3fe`: superseded new-font survey.
-- `0b97988`: four existing faces; artist chose A for the first section.
-- `d621633`: width study, parked by artist as unnecessary optimization.
-- `eeea438`: artist-led direction toward fixed units and glimmer formations.
+- `dc20cdc`: material studies parked unjudged after an unframed scope change.
+
+Current intention, acceptance boundaries and next review: [collaboration](../docs/collaboration.md).

@@ -6,17 +6,18 @@ Research: 2026-10-22. Small collaborative steps accepted; opener prototype expli
 
 The artist explicitly accepted the completed opener: “lass uns das bitte als opener scene festhalten. Prototype akzeptiert”. The accepted checkpoint is `76e9ca7`, default impressions treatment. The artist subsequently requested integration into the regular `/temple-of-sound` page. **Only the opener is approved for publication.** The poem and practicalities remain unpublished drafts until explicitly approved. Preserve the opener’s appearance and behaviour; new poem artwork remains separate work. For lettering, present existing, unmodified typefaces with unexpected, edgy character. Custom-font creation and glyph modification are outside the request.
 
-## Process / current decision state — 2026-10-24
+## Process / current decision state — 2026-10-25
 
 The artist approved the `explore` skill after [research and a shared-understanding interview](design-skill-research.md). Its source is [Xiphe/skills](https://github.com/Xiphe/skills/blob/main/skills/explore/SKILL.md), installed locally as `$explore`. It owns the reusable collaboration guidance; this document owns Temple's evidence and decisions.
 
-- **Question / scope:** relationship between fixed sentence/sense units and glimmer forms, first verse/refrain pair.
+- **Question / scope:** how to present and animate the first verse/refrain pair. Explore the reading experience before any text/glimmer coupling.
 - **Phase:** Expansion. No transition to Convergence agreed for this scene.
 - **Anchors:** Bricolage Grotesque 600 for this pair (`0b97988`); original prose/order; fixed semantic units, not screen lines. Normal responsive readable maximum width; no width survey.
 - **Unapproved:** glyph-contour formation, replacement of preceding units and 240ms entrance at `551612d`; one proposed mechanism plus a free-field toggle did not offer sufficient creative breadth. Do not treat it as the selected shape language.
 - **Parked / rejected:** material studies `dc20cdc` remain unjudged; detached font/layout studies `a43d68a` withdrawn for lack of grounding; width study `d621633` parked as unnecessary.
-- **Open:** form language, reading movement, spatial/image relationship. No new symbolic meanings or publication approval.
-- **Next:** reopen meaningful mechanisms for the particle/text relationship using alternatives or consequential controls; interview where expressive direction is missing. Process approved; new artwork remains unapproved. The existing probe was served on port 8790.
+- **Artist direction:** accumulation makes energetic sense; earlier text should remain present as traces, with presence more important than continued legibility. Avoid a drawn-out or boring experience. No trace mechanism, timing or scene approved.
+- **Open:** trace behaviour, reading movement, pacing, spatial/image relationship. No new symbolic meanings or publication approval.
+- **Current comparison / next review:** port 8790 compares upward compression (A), overlapping outlines (B), and text moving to the margins (C), all using the original first pair and accepted face. Scroll distance is adjustable (0.6–3 viewport heights, initially 1.2); no forced dwell or automatic advance. Compare felt presence and pace, not a finished composition. The glyph-coupling probe at `551612d` stays parked in history; new artwork remains unapproved.
 
 ## Accepted opener / recovery
 
@@ -44,9 +45,11 @@ The artist questioned the new-font search and authorized exploring the **four ex
 
 **Line-length study parked at `d621633`.** The artist rejected this as unnecessary optimization: use a normal readable maximum width on large screens and otherwise adapt to the viewport. Do not reopen a typography-width survey. The regular draft already uses `max-width: 65ch` within responsive padding.
 
-**New artist-led question:** reveal the text line by line, with the glimmers taking a particular form for each line. Explore the text/glimmer relationship together; the earlier staged process is a guide, not a reason to postpone that relationship. Retain Bricolage and the original words/order. Do not independently assign symbolic forms to the prose. **Resolved by artist:** “einen festen Satz/Sinnabschnitt.” The seven existing paragraph/`br` units supply an initial segmentation without rewriting the source; native wrapping never creates new semantic units. Glimmer shapes remain unapproved.
+**Sequential reveal remains an exploration.** The artist suggested revealing a line at a time, and clarified “einen festen Satz/Sinnabschnitt”: fixed semantic units, not screen lines. This defines the unit when testing sequential presentation; it does not approve replacement, accumulation, timing or particle lettering.
 
-Active local probe: `codex/temple-first-text-studies`, `website/app/temple/text.prototype/`, port 8790. One fixed unit visible at a time; scroll controls text reveal and formation targets. **Agent-proposed first hypothesis:** particles gather outside the current words’ glyph contours, derived from the accepted opener’s light/letter relationship; toggle against the same free field. This is not an artist request for literal particle lettering or an accepted shape language. Previous units are replaced rather than accumulated; the next unit fades in over 240ms after input selects it. These are unapproved working choices. At rest keep one complete unit readable. Keep independent spatial forms and their purpose open for co-creation. No new prose, symbolic assignments or publication approval.
+**Latest correction:** “schrift mit glimmers koppeln war irgendwie nie der auftrag”; first discover how to present/animate the verse. Park the coupling probe at `551612d` (`website/app/temple/text.prototype/`, port 8790). Glyph-contour formation was the agent's inference. Do not treat the opener's mask as a poem requirement, or the probe's in-place replacement and 240ms entrance as accepted. Text presence, entrance, persistence, exit and reading movement remain open. Preserve the accepted face and original verse/refrain pair; glimmer relationships can be explored separately later.
+
+**2026-10-25: trace direction.** Artist: “dass es weiterhin anwesend wirkt, spuren sind wichtiger als lesbarkeit”; “nicht zu sehr hinzieht … nicht langweilig”. This supports testing residual presence with compact visitor-controlled progression. It does not settle the representation, entrance, exact duration or when the refrain changes behaviour. The current comparison uses the same seven source units, 300ms movement / 220ms opacity, neutral responsive light/dark background and no imagery, particles or audio. These are unapproved isolation fixtures. Variant switching preserves the current unit; H hides review controls. Seek feedback before selecting/refining a mechanism. No artwork was published.
 
 ## Evidence from this project
 

@@ -1,6 +1,7 @@
-// THROWAWAY: one fixed sense unit per scroll step; free field vs glyph formation.
-// No publication entry. Wording/order comes exclusively from the artist's draft.
+// THROWAWAY: three trace behaviours for the original first verse/refrain pair.
+// Compare presence after reading + scroll distance. No particle coupling/publication.
 import { existsSync, readFileSync } from 'node:fs'
+import type { Handle } from 'remix/component'
 
 export function firstPair() {
   const source = existsSync('content/temple-of-sound/draft.tsx')
@@ -13,7 +14,19 @@ export function firstPair() {
   )
 }
 
-export function Review() {
+const variants = {
+  A: { name: 'Aufrücken', description: 'Ältere Sätze rücken nach oben und verdichten sich.' },
+  B: { name: 'Überdruck', description: 'Ältere Sätze bleiben als überlagerte Konturen zurück.' },
+  C: {
+    name: 'Randspuren',
+    description: 'Ältere Sätze weichen seitlich aus und bleiben am Bildrand.',
+  },
+} as const
+
+export function Review(handle: Handle<{ variant: string }>) {
+  const { variant } = handle.props
+  const key = Object.hasOwn(variants, variant) ? (variant as keyof typeof variants) : 'A'
+  const current = variants[key]
   const units = firstPair()
   return () => (
     <html lang="en">
@@ -27,7 +40,7 @@ export function Review() {
           name="robots"
           content="noindex,nofollow"
         />
-        <title>Temple of Sound / Sinneinheit + Glimmer</title>
+        <title>Temple of Sound / Textspuren</title>
         <link
           rel="icon"
           href="data:,"
@@ -41,13 +54,9 @@ export function Review() {
           src="/sequence.js"
         ></script>
       </head>
-      <body>
-        <main
-          class="sequence"
-          style={{ '--segments': units.length - 1 }}
-        >
+      <body data-variant={key}>
+        <main class="sequence">
           <div class="stage">
-            <canvas aria-hidden="true" />
             <article
               class="units"
               aria-label="Originaltext: erstes Strophen-Refrain-Paar"
@@ -58,9 +67,7 @@ export function Review() {
                   data-unit={index}
                   id={`verse-1-${index + 1}`}
                 >
-                  {unit
-                    .split(/(\s+)/)
-                    .map((part) => (/\s+/.test(part) ? part : <span class="word">{part}</span>))}
+                  {unit}
                 </p>
               ))}
             </article>
@@ -71,42 +78,68 @@ export function Review() {
           aria-label="Prototyp-Steuerung"
           lang="de"
         >
-          <button
-            type="button"
-            data-previous
-            aria-label="Vorherige Sinneinheit"
-          >
-            ←
-          </button>
-          <output
-            data-count
-            aria-label="Aktive Sinneinheit"
-          >
-            1 / {units.length}
-          </output>
-          <button
-            type="button"
-            data-next
-            aria-label="Nächste Sinneinheit"
-          >
-            →
-          </button>
-          <button
-            type="button"
-            data-binding
-            aria-pressed="true"
-            title="Gleiche Textfolge: Glimmer frei oder an die Buchstaben gebunden"
-          >
-            Buchstabenform
-          </button>
-          <button
-            type="button"
-            data-hide
-            aria-label="Bedienung ausblenden"
-            title="Bedienung: H"
-          >
-            ×
-          </button>
+          <div class="variant-row">
+            <button
+              type="button"
+              data-previous
+              aria-label="Vorherige Variante"
+            >
+              ←
+            </button>
+            <div class="variant-links">
+              {Object.entries(variants).map(([id, item]) => (
+                <a
+                  href={`?variant=${id}`}
+                  data-variant-link={id}
+                  aria-current={id === key ? 'page' : undefined}
+                >
+                  {id} · {item.name}
+                </a>
+              ))}
+            </div>
+            <button
+              type="button"
+              data-next
+              aria-label="Nächste Variante"
+            >
+              →
+            </button>
+            <button
+              type="button"
+              data-hide
+              aria-label="Bedienung ausblenden"
+              title="Bedienung: H"
+            >
+              ×
+            </button>
+          </div>
+          <p data-description>{current.description}</p>
+          <div class="range-row">
+            <label>
+              Position{' '}
+              <input
+                data-position
+                type="range"
+                min="0"
+                max={units.length - 1}
+                step="1"
+                defaultValue="0"
+              />
+            </label>
+            <output data-count>1 / {units.length}</output>
+            <label>
+              Scrollweg{' '}
+              <input
+                data-distance
+                type="range"
+                min="0.6"
+                max="3"
+                step="0.1"
+                defaultValue="1.2"
+              />
+            </label>
+            <output data-distance-label>1,2 × Höhe</output>
+          </div>
         </nav>
         <button
           class="restore-controls"

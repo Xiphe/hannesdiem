@@ -15,7 +15,6 @@ const types: Record<string, string> = {
 const files = new Map([
   ['/style.css', new URL('style.css', root)],
   ['/sequence.js', new URL('sequence.js', root)],
-  ['/forest.jpg', new URL('../../../../content/media/IMG_6257.JPG', root)],
   ['/fonts/bricolage.ttf', new URL('../../assets/temple/bricolage.ttf', root)],
 ])
 createServer(async (request, response) => {
@@ -27,11 +26,14 @@ createServer(async (request, response) => {
     response.end(readFileSync(fileURLToPath(file)))
   } else if (url.pathname === '/' || url.pathname === '/temple-of-sound') {
     response.setHeader('Content-Type', 'text/html; charset=utf-8')
-    response.end('<!doctype html>' + (await renderToString(<Review />)))
+    response.end(
+      '<!doctype html>' +
+        (await renderToString(<Review variant={url.searchParams.get('variant') ?? 'A'} />)),
+    )
   } else {
     response.writeHead(404)
     response.end()
   }
 }).listen(8790, '0.0.0.0', () =>
-  console.log('Local sense-unit / glimmer probe: http://localhost:8790/temple-of-sound'),
+  console.log('Local text-trace comparison: http://localhost:8790/temple-of-sound'),
 )
