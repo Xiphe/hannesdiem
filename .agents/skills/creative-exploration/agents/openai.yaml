@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Creative Exploration'
+  short_description: 'Grounded expansion and shared convergence'
+  default_prompt: 'Use $creative-exploration to explore meaningful alternatives with me and make our current phase explicit.'

@@ -4,7 +4,19 @@ Research: 2026-10-22. Small collaborative steps accepted; opener prototype expli
 
 ## Current exploration rule
 
-The artist explicitly accepted the completed opener: “lass uns das bitte als opener scene festhalten. Prototype akzeptiert”. The accepted checkpoint is `76e9ca7`, default impressions treatment. The artist subsequently requested integration into the regular `/temple-of-sound` page. **Only the opener is approved for publication.** The poem and practicalities remain unpublished drafts until explicitly approved. Preserve the opener’s appearance and behaviour; new poem artwork remains separate work. For future unresolved design questions, continue exploring until the artist explicitly approves. Positive feedback guides further options; it is not a shortlist, commitment or permission to refine a winner. For lettering, present existing, unmodified typefaces with unexpected, edgy character. Custom-font creation and glyph modification are outside the request.
+The artist explicitly accepted the completed opener: “lass uns das bitte als opener scene festhalten. Prototype akzeptiert”. The accepted checkpoint is `76e9ca7`, default impressions treatment. The artist subsequently requested integration into the regular `/temple-of-sound` page. **Only the opener is approved for publication.** The poem and practicalities remain unpublished drafts until explicitly approved. Preserve the opener’s appearance and behaviour; new poem artwork remains separate work. For lettering, present existing, unmodified typefaces with unexpected, edgy character. Custom-font creation and glyph modification are outside the request.
+
+## Process / current decision state — 2026-10-24
+
+The artist chose a small dedicated process skill after [researching existing skills](design-skill-research.md). Use [creative-exploration](../../../../.agents/skills/creative-exploration/SKILL.md) for **Expansion**, **Festhalten**, **Wendepunkt**, **Zusammenführung**. That file owns the reusable rules; this document owns Temple's evidence and decisions.
+
+- **Question / scope:** relationship between fixed sentence/sense units and glimmer forms, first verse/refrain pair.
+- **Mode:** Expansion. No Wendepunkt agreed for this scene.
+- **Anchors:** Bricolage Grotesque 600 for this pair (`0b97988`); original prose/order; fixed semantic units, not screen lines. Normal responsive readable maximum width; no width survey.
+- **Unapproved:** glyph-contour formation, replacement of preceding units and 240ms entrance at `551612d`; one proposed mechanism plus a free-field toggle did not offer sufficient creative breadth. Do not treat it as the selected shape language.
+- **Parked / rejected:** material studies `dc20cdc` remain unjudged; detached font/layout studies `a43d68a` withdrawn for lack of grounding; width study `d621633` parked as unnecessary.
+- **Open:** form language, reading movement, spatial/image relationship. No new symbolic meanings or publication approval.
+- **Next:** reopen meaningful mechanisms for the particle/text relationship using alternatives or consequential controls; interview where expressive direction is missing. Artwork implementation paused during process setup; the existing probe remains on port 8790.
 
 ## Accepted opener / recovery
 
@@ -47,15 +59,3 @@ Whole-scene variants bundled typography, composition, imagery, motion and meanin
 - **A critique needs an explicit scope and shared objectives.** Sarah Gibbons distinguishes exploratory critique from an approval review. Feedback should be a conversation about how the work meets its objectives, with clear boundaries for the current discussion. [NN/g, _Design Critiques_](https://www.nngroup.com/articles/design-critiques/).
 - **Feedback must determine the next tangible iteration.** IDEO.org recommends documenting findings and needed changes, then building and testing again. Iteration refines an idea; the method does not demand a complete answer in the first prototype. [IDEO.org, _Integrate Feedback and Iterate_](https://www.designkit.org/methods/integrate-feedback-and-iterate.html).
 - **Show what the feedback changed.** Rachel Krause recommends a short immediate recap, followed by visible changes connected to the feedback that caused them. Also acknowledge suggestions that were deferred or not acted on, with reasons. [NN/g, _Closing the Loop_](https://www.nngroup.com/articles/after-design-critique/).
-
-## Proposed application here
-
-This loop is our synthesis; the sources do not prescribe its exact sequence, a magic option count or universal artistic approval rules.
-
-1. **Agree the next decision.** Name one manageable question and why it matters to the artist’s stated intent. The artist can change the question before work starts. No new emotional brief or compulsory questionnaire.
-2. **Choose the smallest useful comparison.** Typography can begin with the actual title in several contrasting treatments; motion needs a browser fragment. Supply enough genuinely different alternatives to reveal preferences within that question. Keep already-favored material available as context. Related variables may move together when separating them would make the comparison misleading.
-3. **Create together.** Invite the artist to select, combine, annotate, supply references, redirect or reject all options before polishing. Ask about the specific mismatch when intent is unclear. Do not independently assign symbolic meanings to forms.
-4. **Make the chosen experiment.** Implement only the agreed scope. Inspect it in context so local improvements do not quietly damage the whole. A promising fragment is permission to explore that fragment, not approval of neighboring choices.
-5. **Record the decision and stop at that boundary.** Save the artifact and a short record: question; artist’s choice and reason in their words; accepted scope; unresolved concerns; next question. Distinguish **exploring**, **accepted for now**, and **rejected**. Accepted choices are revisitable when later evidence conflicts; explain the reason before reopening them. Commit accepted work in small units, leaving alternatives recoverable.
-
-The artist directs and owns the expression. The agent prepares legible alternatives, reveals assumptions and executes agreed experiments. Artistic decisions and technical execution are separate responsibilities; routine technical work need not become another approval ceremony.

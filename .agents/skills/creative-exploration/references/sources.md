@@ -1,0 +1,10 @@
+# Process provenance
+
+Research date: 2026-10-24. Original synthesis of inspected primary sources and the commissioning user's collaboration requirements; no framework installation or runtime dependencies.
+
+- [Design Council: Framework for Innovation / Double Diamond](https://www.designcouncil.org.uk/resources/framework-for-innovation/): divergent and convergent work, participation and iteration. The exact four shared keywords and scoped acceptance semantics are user requirements, not Council prescriptions.
+- [BMad brainstorming](https://github.com/bmad-code-org/BMAD-METHOD/blob/61e01f82644c4bb533750cfa0d6d61ab61d2cc9b/skills/bmad-brainstorming/SKILL.md), [convergence](https://github.com/bmad-code-org/BMAD-METHOD/blob/61e01f82644c4bb533750cfa0d6d61ab61d2cc9b/skills/bmad-brainstorming/references/converge.md), [resume](https://github.com/bmad-code-org/BMAD-METHOD/blob/61e01f82644c4bb533750cfa0d6d61ab61d2cc9b/skills/bmad-brainstorming/references/resume.md): separate generation from user-led convergence; retain ideas and decisions across sessions. This skill omits BMad's framework scripts, idea quota and facilitation stance machinery.
+- [Anthropic playground](https://github.com/anthropics/claude-plugins-official/blob/58267944f92187b7d6a1c822165c96c81c864806/plugins/playground/skills/playground/SKILL.md): immediate manipulation, meaningful controls, coherent presets and recoverable/shareable state. Controls alone do not establish expressive grounding or consent to a direction.
+- [gstack design-shotgun](https://github.com/garrytan/gstack/blob/00100f1598dcfc192f0f0f2d3345b6825737932a/design-shotgun/SKILL.md): distinct visual concepts, comparison, element feedback and remixing. Selecting one element here does not automatically lock a complete direction.
+
+The distinctive contract is the user's: stay expansive through uncertainty and rejection; keep local Yes separate from the shared turning point; interview when meaningful direction is missing; co-create through alternatives or controls. Popularity signals establish adoption, not artistic effectiveness. The process makes decisions inspectable; it does not guarantee aesthetic quality.
