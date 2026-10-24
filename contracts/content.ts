@@ -165,17 +165,19 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
   return site as unknown as SiteMetadata
 }
 
-// Validate the complete collection before publishing and before accepting it.
+export function validatePage(key: string, document: CmxDocument | undefined): void {
+  if (
+    !isCmxDocument(document) ||
+    typeof document.content.title !== 'string' ||
+    !Object.hasOwn(document.content, 'default')
+  )
+    throw new Error(`Missing or invalid page: ${key}`)
+}
+
+// Validate a complete collection before publishing or serving local content.
 export function validatePublication(documents: PublishedDocuments): SiteMetadata {
   const site = readSite(documents[siteEntry])
-  for (const key of ['404', ...site.routes.map((route) => route.document)]) {
-    const document = documents[key]
-    if (
-      !isCmxDocument(document) ||
-      typeof document.content.title !== 'string' ||
-      !Object.hasOwn(document.content, 'default')
-    )
-      throw new Error(`Missing or invalid page: ${key}`)
-  }
+  for (const key of ['404', ...site.routes.map((route) => route.document)])
+    validatePage(key, documents[key])
   return site
 }
