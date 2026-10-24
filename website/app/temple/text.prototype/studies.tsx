@@ -1,35 +1,28 @@
-// THROWAWAY: three trace behaviours for the original first verse/refrain pair.
-// Compare presence after reading + scroll distance. No particle coupling/publication.
+// THROWAWAY: first words in the actual opener context. Not a selected scene.
 import { existsSync, readFileSync } from 'node:fs'
-import type { Handle } from 'remix/component'
+import { Opening } from '../opening.tsx'
 
 export function firstPair() {
   const source = existsSync('content/temple-of-sound/draft.tsx')
     ? 'content/temple-of-sound/draft.tsx'
     : 'content/drafts/temple-of-sound.tsx'
-  const draft = readFileSync(source, 'utf8')
-  const opening = draft.match(/<PoemOpening\b[^>]*>([\s\S]*?)<\/PoemOpening>/)![1]
+  const opening = readFileSync(source, 'utf8').match(
+    /<PoemOpening\b[^>]*>([\s\S]*?)<\/PoemOpening>/,
+  )![1]
   return [...opening.matchAll(/<p>([\s\S]*?)<\/p>/g)].flatMap((paragraph) =>
     paragraph[1].split(/<br\s*\/>/).map((line) => line.replace(/\s+/g, ' ').trim()),
   )
 }
 
-const variants = {
-  A: { name: 'Aufrücken', description: 'Ältere Sätze rücken nach oben und verdichten sich.' },
-  B: { name: 'Überdruck', description: 'Ältere Sätze bleiben als überlagerte Konturen zurück.' },
-  C: {
-    name: 'Randspuren',
-    description: 'Ältere Sätze weichen seitlich aus und bleiben am Bildrand.',
-  },
-} as const
+import { openingProps } from './context-props.ts'
 
-export function Review(handle: Handle<{ variant: string }>) {
-  const { variant } = handle.props
-  const key = Object.hasOwn(variants, variant) ? (variant as keyof typeof variants) : 'A'
-  const current = variants[key]
-  const units = firstPair()
+export function Review() {
+  const firstSentence = firstPair()[0]
   return () => (
-    <html lang="en">
+    <html
+      lang="en"
+      data-layout="temple"
+    >
       <head>
         <meta charSet="utf-8" />
         <meta
@@ -40,10 +33,14 @@ export function Review(handle: Handle<{ variant: string }>) {
           name="robots"
           content="noindex,nofollow"
         />
-        <title>Temple of Sound / Textspuren</title>
+        <title>Temple of Sound / Übergang zur Strophe</title>
         <link
           rel="icon"
           href="data:,"
+        />
+        <link
+          rel="stylesheet"
+          href="/opening.css"
         />
         <link
           rel="stylesheet"
@@ -51,95 +48,101 @@ export function Review(handle: Handle<{ variant: string }>) {
         />
         <script
           type="module"
-          src="/sequence.js"
+          src="/context.js"
         ></script>
       </head>
-      <body data-variant={key}>
-        <main class="sequence">
-          <div class="stage">
-            <article
-              class="units"
-              aria-label="Originaltext: erstes Strophen-Refrain-Paar"
-            >
-              {units.map((unit, index) => (
-                <p
-                  class="unit"
-                  data-unit={index}
-                  id={`verse-1-${index + 1}`}
-                >
-                  {unit}
-                </p>
-              ))}
-            </article>
-          </div>
+      <body>
+        <main class="temple-page">
+          <Opening {...openingProps} />
+          <article
+            class="entry-text"
+            aria-label="Erster Satz der ersten Strophe"
+          >
+            <p>{firstSentence}</p>
+          </article>
         </main>
         <nav
           class="review-controls"
-          aria-label="Prototyp-Steuerung"
+          aria-label="Exploration: Übergang zum ersten Satz"
           lang="de"
         >
-          <div class="variant-row">
+          <div class="review-heading">
+            <strong>Übergang · erster Satz</strong>
             <button
               type="button"
-              data-previous
-              aria-label="Vorherige Variante"
+              data-replay
             >
-              ←
-            </button>
-            <div class="variant-links">
-              {Object.entries(variants).map(([id, item]) => (
-                <a
-                  href={`?variant=${id}`}
-                  data-variant-link={id}
-                  aria-current={id === key ? 'page' : undefined}
-                >
-                  {id} · {item.name}
-                </a>
-              ))}
-            </div>
-            <button
-              type="button"
-              data-next
-              aria-label="Nächste Variante"
-            >
-              →
+              Zum Anfang
             </button>
             <button
               type="button"
               data-hide
               aria-label="Bedienung ausblenden"
-              title="Bedienung: H"
+              title="H"
             >
               ×
             </button>
           </div>
-          <p data-description>{current.description}</p>
-          <div class="range-row">
+          <div
+            class="motion-options"
+            role="group"
+            aria-label="Bewegungsprobe"
+          >
+            <button
+              type="button"
+              data-motion="rise"
+              aria-pressed="true"
+            >
+              Von unten aufsteigen
+            </button>
+            <button
+              type="button"
+              data-motion="close"
+              aria-pressed="false"
+            >
+              Aus nächster Nähe
+            </button>
+          </div>
+          <div class="adjustments">
             <label>
-              Position{' '}
+              Größe{' '}
+              <input
+                data-size
+                type="range"
+                min="48"
+                max="160"
+                step="4"
+                defaultValue="96"
+              />
+              <output data-size-label>96</output>
+            </label>
+            <label>
+              Einsatz{' '}
+              <input
+                data-entry
+                type="range"
+                min="0.18"
+                max="0.6"
+                step="0.01"
+                defaultValue="0.30"
+              />
+              <output data-entry-label>0,30 × Höhe</output>
+            </label>
+            <label>
+              Scrollposition{' '}
               <input
                 data-position
                 type="range"
                 min="0"
-                max={units.length - 1}
-                step="1"
+                max="1"
+                step="0.002"
                 defaultValue="0"
               />
             </label>
-            <output data-count>1 / {units.length}</output>
-            <label>
-              Scrollweg{' '}
-              <input
-                data-distance
-                type="range"
-                min="0.6"
-                max="3"
-                step="0.1"
-                defaultValue="1.2"
-              />
-            </label>
-            <output data-distance-label>1,2 × Höhe</output>
           </div>
+          <p class="review-note">
+            Arbeitsfläche: erster Satz nach dem Opener. H versteckt die Bedienung.
+          </p>
         </nav>
         <button
           class="restore-controls"
