@@ -92,16 +92,7 @@ const pages: Record<string, { kind: string; title: string; body: CmxNode }> = {
 }
 export const documents = structuredClone(minimal)
 export const site = documents._site.content.site as SiteMetadata
-site.routes.push(
-  ...Object.entries(pages).map(([key, page]) => ({
-    path: '/' + key,
-    document: key,
-    title: page.title,
-    kind: page.kind,
-    ...(page.kind === 'release' ? { image } : {}),
-  })),
-)
-site.redirects = [
+documents._redirects.content.redirects = [
   { path: '/', to: '/fixture-links', status: 307, preserveSearch: true },
   { path: '/fixture-alias', to: '/fixture-release', status: 308 },
 ]
@@ -126,6 +117,10 @@ site.navigation = {
 for (const [key, page] of Object.entries(pages)) {
   documents[key] = {
     ...structuredClone(minimal.fixture),
-    content: { title: page.title, default: page.body },
+    content: {
+      title: page.title,
+      default: page.body,
+      metadata: { kind: page.kind, ...(page.kind === 'release' ? { image } : {}) },
+    },
   }
 }

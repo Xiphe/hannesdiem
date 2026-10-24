@@ -1,3 +1,6 @@
+import type { PageMetadata } from '../../types.ts'
+import ogImageOnly from '../../media/og_image_only.jpg'
+
 import photo67bfc27bE033470B9B6F77A800385A70 from '../../media/67BFC27B-E033-470B-9B6F-77A800385A70.jpeg'
 import portraitHannes from '../../media/portrait_hannes.png'
 import portraitRoxy from '../../media/portrait_roxy.png'
@@ -18,6 +21,21 @@ import {
   Timetable,
   TwoColumnText,
 } from '@hannesdiem/content-components'
+
+export const metadata = {
+  kind: 'page',
+  description: 'Join 7 artists for 7 days of music, food, community and creation',
+  image: ogImageOnly,
+  theme: 'beach',
+  ogType: 'website',
+  ogTitle: 'One Week Album Retreat',
+  updatedAt: '2025-11-19T16:31:05.519+00:00',
+  sourceId: 'acc26960-2e89-46f2-bed3-ab43060bfe73',
+  ogImageTitle: ' ',
+  ogSubtitle: ' ',
+  ogTextColor: 'light',
+  shareImage: true,
+} satisfies PageMetadata
 
 export const title = 'One Week Album'
 

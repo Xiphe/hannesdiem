@@ -5,6 +5,6 @@ export const routes = route({
   songOverlay: get('/m/*path'),
   sitemap: get('/sitemap.xml'),
   robots: get('/robots.txt'),
-  legacyShareImage: get('/og-image/:collection/:file'),
+  legacyShareImage: get('/og-image/:collection/*file'),
   content: get('/*path'),
 })

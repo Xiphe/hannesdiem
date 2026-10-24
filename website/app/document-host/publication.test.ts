@@ -7,7 +7,7 @@ import { build } from 'esbuild'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { publishCmxDocuments, createCmxPublicationState } from '@cmx-tools/publish'
 import { documents as fixture } from '../../tests/host-fixture.ts'
-import { siteEntry, type SiteMetadata } from '../../../contracts/content.ts'
+import { siteEntry, type SiteMetadata, type ContentRedirect } from '../../../contracts/content.ts'
 import { publicationPath } from '../../../contracts/publication.ts'
 import { appendSignature, createSignature, webcrypto } from 'http-message-sig'
 import {
@@ -174,10 +174,40 @@ test('signed publications persist, update the complete site and reject replay or
     },
   )
 
+  await t.test(
+    'the deployed Worker serves a legacy publication before the new format arrives',
+    async () => {
+      const legacy = structuredClone(fixture)
+      legacy['404'] = legacy._404
+      delete legacy._404
+      legacy._site.content.site = {
+        ...(legacy._site.content.site as SiteMetadata),
+        version: 1,
+        routes: [
+          { path: '/fixture', document: 'fixture', title: 'Synthetic title', kind: 'page' },
+          {
+            path: '/temple-of-sound',
+            document: 'temple-of-sound',
+            title: 'Temple of Sound',
+            kind: 'temple',
+          },
+        ],
+        shareImages: {},
+        redirects: legacy._redirects.content.redirects,
+      }
+      delete legacy._redirects
+      await publish(legacy)
+      assert.equal((await get('/fixture')).status, 200)
+      assert.equal((await get('/missing')).status, 404)
+      assert.match(await (await get('/sitemap.xml')).text(), /https:\/\/hannesdiem.de\/fixture/)
+    },
+  )
+
   const documents = structuredClone(fixture)
   documents.fixture.content.default = 'Hosted content is published independently.'
   const site = documents[siteEntry].content.site as SiteMetadata
-  const page = structuredClone(documents['404'])
+  const redirects = documents._redirects.content.redirects as ContentRedirect[]
+  const page = structuredClone(documents._404)
   page.content.title = 'Independent publication'
   page.content.default = {
     type: 'element',
@@ -195,19 +225,13 @@ test('signed publications persist, update the complete site and reject replay or
   // Use a page that declares the component dependency, as real CMX compilation does.
   page.interface.imports = structuredClone(documents.fixture.interface.imports)
   documents['test-publication'] = page
-  site.routes.push({
-    path: '/test-publication',
-    document: 'test-publication',
-    title: 'Independent publication',
-    kind: 'release',
-    releaseDate: '2026-10-21',
-  })
+  page.content.metadata = { kind: 'release', releaseDate: '2026-10-21' }
   site.media['publication.webp'] = {
     src: 'https://media.example.com/immutable-image.webp',
     width: 100,
     height: 80,
   }
-  site.shareImages['/test-publication'] = {
+  ;(page.content.metadata as Record<string, unknown>).ogImage = {
     src: 'https://media.example.com/immutable-card.jpg',
     width: 1052,
     height: 550,
@@ -216,7 +240,7 @@ test('signed publications persist, update the complete site and reject replay or
     name: 'Independent publication',
     href: '/test-publication',
   })
-  site.redirects.push({ path: '/fresh-alias', to: '/test-publication', status: 307 })
+  redirects.push({ path: '/fresh-alias', to: '/test-publication', status: 307 })
 
   await t.test(
     'publishing updates pages, media, SEO, navigation and sitemap together',
@@ -240,7 +264,7 @@ test('signed publications persist, update the complete site and reject replay or
       assert.equal(alias.status, 307)
       assert.equal(alias.headers.get('Location'), '/test-publication')
       assert.equal(alias.headers.get('Cache-Tag'), 'content')
-      assert.equal(((await (await get('/test-purge')).json()) as { purges: number }).purges, 1)
+      assert.equal(((await (await get('/test-purge')).json()) as { purges: number }).purges, 2)
     },
   )
 
@@ -271,7 +295,7 @@ test('signed publications persist, update the complete site and reject replay or
     'an invalid complete collection leaves the accepted publication active',
     async () => {
       const invalid = structuredClone(documents)
-      delete invalid['404']
+      delete invalid._404
       await assert.rejects(publish(invalid), (error: { status?: number }) => error.status === 422)
       assert.match((await readPage()).html, /First publication/)
       const missingComponent = structuredClone(documents)
@@ -338,11 +362,9 @@ test('signed publications persist, update the complete site and reject replay or
 
   await t.test('removing a page unpublishes it from routing and the sitemap', async () => {
     delete documents['test-publication']
-    site.routes = site.routes.filter((route) => route.path !== '/test-publication')
     site.navigation.sections[0].items = site.navigation.sections[0].items.filter(
       (link) => link.href !== '/test-publication',
     )
-    delete site.shareImages['/test-publication']
     await publish(documents)
     assert.equal((await get('/test-publication')).status, 404)
     assert.doesNotMatch(await (await get('/sitemap.xml')).text(), /\/test-publication/)

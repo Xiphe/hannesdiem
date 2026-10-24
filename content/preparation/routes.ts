@@ -1,16 +1,19 @@
 import { isCmxDocument } from '@cmx-tools/contracts'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { people } from '../people.ts'
-import type { ContentPublication, ContentRoute, ReleaseMetadata, SongDefinition } from '../types.ts'
+import type { PageMetadata, ContentRoute, ReleaseMetadata, SongDefinition } from '../types.ts'
 
 const routes: ContentRoute[] = []
-const { content } = JSON.parse(await readFile('.cmx/documents/_routes.json', 'utf8'))
-const publications = content.routes as ContentPublication[]
-for (const publication of publications) {
-  const document = JSON.parse(await readFile(`.cmx/documents/${publication.document}.json`, 'utf8'))
+const pages: { document: string; path: string }[] = JSON.parse(
+  await readFile('.generated/pages.json', 'utf8'),
+)
+for (const page of pages) {
+  const file = `.cmx/documents/${page.document}.json`
+  const document = JSON.parse(await readFile(file, 'utf8'))
   if (!isCmxDocument(document) || typeof document.content.title !== 'string') {
-    throw new Error(`Invalid CMX page: ${publication.document}`)
+    throw new Error(`Invalid CMX page: ${page.document}`)
   }
+  const publication = (document.content.metadata ?? { kind: 'page' }) as PageMetadata
   let metadata: Partial<ContentRoute> = {}
   if (publication.kind === 'song') {
     const song = document.content.song as SongDefinition
@@ -39,7 +42,10 @@ for (const publication of publications) {
       ),
     }
   }
-  routes.push({ title: document.content.title, ...metadata, ...publication })
+  const resolved = { title: document.content.title, ...metadata, ...publication }
+  document.content.metadata = resolved
+  await writeFile(file, JSON.stringify(document) + '\n')
+  routes.push({ ...resolved, path: page.path, document: page.document })
 }
 await mkdir('.generated', { recursive: true })
 await writeFile('.generated/routes.json', JSON.stringify(routes, null, 2) + '\n')

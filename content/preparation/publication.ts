@@ -4,19 +4,25 @@ import { navigation } from '../navigation.ts'
 import { redirects } from '../redirects.ts'
 import {
   siteEntry,
+  redirectsEntry,
   validatePublication,
   type PublishedDocuments,
   type SiteMetadata,
 } from '../../contracts/content.ts'
+import { notFoundEntry } from '../../contracts/page-routing.ts'
 
 const read = async (file: string) => JSON.parse(await readFile(file, 'utf8'))
-const routes: SiteMetadata['routes'] = await read('.generated/routes.json')
+const routes: import('../types.ts').ContentRoute[] = await read('.generated/routes.json')
+const shareImages = await read('.generated/og.json')
 const documents: PublishedDocuments = Object.fromEntries(
   await Promise.all(
-    [...new Set(['404', ...routes.map((route) => route.document)])].map(async (key) => [
-      key,
-      await read(`.cmx/documents/${key}.json`),
-    ]),
+    [notFoundEntry, ...routes.map((route) => route.document)].map(async (key) => {
+      const document = await read(`.cmx/documents/${key}.json`)
+      const route = routes.find((route) => route.document === key)
+      if (route && shareImages[route.path])
+        document.content.metadata.ogImage = shareImages[route.path]
+      return [key, document]
+    }),
   ),
 )
 if (Object.hasOwn(documents, siteEntry)) throw new Error('Reserved CMX entry: ' + siteEntry)
@@ -26,17 +32,22 @@ documents[siteEntry] = {
   interface: { imports: {}, exports: { site: {} } },
   content: {
     site: {
-      version: 1,
-      routes,
+      version: 2,
       media: {},
-      shareImages: await read('.generated/og.json'),
       navigation: navigation(routes),
-      redirects: [...redirects].map(([path, destination]) => ({
-        path,
-        ...destination,
-        ...(path === '/' ? { preserveSearch: true } : {}),
-      })),
     } satisfies SiteMetadata,
+  },
+} satisfies CmxDocument
+documents[redirectsEntry] = {
+  $schema: CMX_DOCUMENT_SCHEMA,
+  cmxVersion: CMX_DOCUMENT_VERSION,
+  interface: { imports: {}, exports: { redirects: {} } },
+  content: {
+    redirects: [...redirects].map(([path, destination]) => ({
+      path,
+      ...destination,
+      ...(path === '/' ? { preserveSearch: true } : {}),
+    })),
   },
 } satisfies CmxDocument
 validatePublication(documents)

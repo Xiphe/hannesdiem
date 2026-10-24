@@ -12,7 +12,6 @@ import { documents as fixture } from '../../website/tests/host-fixture.ts'
 import { publicationPath } from '../../contracts/publication.ts'
 import sharp from 'sharp'
 import { imageLoader } from '../preparation/image-loader.ts'
-import type { SiteMetadata } from '../../contracts/content.ts'
 
 test('the released CMX CLI loads the signed config and publishes directly to the host', async (t) => {
   const keys = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify'])
@@ -108,8 +107,7 @@ test('the released CMX CLI loads the signed config and publishes directly to the
     },
   })
   const prepared = structuredClone(fixture)
-  const site = prepared._site.content.site as SiteMetadata
-  site.routes[0].image = image
+  prepared.fixture.content.metadata = { image }
   prepared.fixture.content.default = {
     type: 'component',
     from: '@hannesdiem/content-components',
@@ -117,10 +115,8 @@ test('the released CMX CLI loads the signed config and publishes directly to the
     props: { image },
   }
   const revised = await publish(prepared)
-  const route = site.routes.find((route) => route.image && typeof route.image !== 'string')!
-  const page = await get(route.path)
+  const page = await get('/fixture')
   assert.equal(page.status, 200)
   assert.equal(page.headers.get('X-Content-Revision'), revised.contentHash)
-  assert.ok(typeof route.image === 'object')
-  assert.ok((await page.text()).includes(`src="${route.image.src}"`))
+  assert.ok((await page.text()).includes(`src="${image.src}"`))
 })

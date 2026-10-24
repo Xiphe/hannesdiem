@@ -102,10 +102,10 @@ export function createApp(content: ContentLoader) {
     )
   })
   router.get(routes.sitemap, async ({ request }) => {
-    const { site } = await content(request)
+    const { routes } = await content(request)
     return new Response(
       '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
-        site.routes
+        routes
           .filter((route) => !route.noindex && route.path !== '/about')
           .map(
             (route) =>
@@ -124,7 +124,7 @@ export function createApp(content: ContentLoader) {
     )
   })
   router.get(routes.legacyShareImage, async ({ request, params }) => {
-    const { site } = await content(request)
+    const { routes } = await content(request)
     const kind =
       params.collection === 'hdm-pages'
         ? 'page'
@@ -133,10 +133,10 @@ export function createApp(content: ContentLoader) {
           : undefined
     const page =
       kind &&
-      site.routes.find(
+      routes.find(
         (route) => route.kind === kind && route.sourceId === params.file.replace(/\.png$/, ''),
       )
-    const image = page && site.shareImages[page.path]
+    const image = page?.ogImage
     return image
       ? redirect(image.src, {
           status: 307,
@@ -160,7 +160,7 @@ export function createApp(content: ContentLoader) {
   router.get(routes.content, async ({ request, render }) => {
     const path = new URL(request.url).pathname
     const page = await content(request)
-    const destination = page.site.redirects.find((redirect) => redirect.path === path)
+    const destination = page.redirects.find((redirect) => redirect.path === path)
     if (destination)
       return redirect(
         destination.to + (destination.preserveSearch ? new URL(request.url).search : ''),

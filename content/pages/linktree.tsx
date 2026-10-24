@@ -1,5 +1,16 @@
+import type { PageMetadata } from '../types.ts'
 import portrait from '../media/portrait.png'
+
 import { LinkTree } from '@hannesdiem/content-components'
+
+export const metadata = {
+  kind: 'linktree',
+  image: portrait,
+  theme: 'electrocute',
+  description: '...about Music, Life, and Everything',
+  ogType: 'website',
+  ogTitle: 'Hannes Diem',
+} satisfies PageMetadata
 
 export const title = 'Hannes Diem'
 

@@ -10,10 +10,9 @@ import { cmx } from '@cmx-tools/remix'
 import { environment } from '../../../.cmx/environment.ts'
 import { contentPage } from './source.ts'
 import {
-  siteEntry,
-  readSite,
   validatePublication,
   type PublishedDocuments,
+  type PublicationIndex,
 } from '../../../contracts/content.ts'
 import { verifyPublicationRequest } from './authentication.ts'
 import { manifestConditionHeader } from '../../../contracts/publication.ts'
@@ -26,6 +25,7 @@ const privateHeaders = { 'Cache-Control': 'no-store' }
 class InvalidCollection extends Error {}
 
 export class ContentState extends DurableObject<Env> {
+  private index?: { contentHash: string; publication: PublicationIndex }
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
     this.ctx.storage.sql.exec(`
@@ -135,8 +135,16 @@ export class ContentState extends DurableObject<Env> {
   readPage(path: string) {
     const state = this.state()
     if (!Object.keys(state.manifest).length) return null
-    const site = readSite(this.document(siteEntry))
-    return contentPage(path, site, (key) => this.document(key), state.contentHash)
+    if (this.index?.contentHash !== state.contentHash) {
+      const documents: PublishedDocuments = Object.fromEntries(
+        this.ctx.storage.sql
+          .exec<{ entry: string; document: string }>('SELECT entry, document FROM documents')
+          .toArray()
+          .map((row) => [row.entry, JSON.parse(row.document)]),
+      )
+      this.index = { contentHash: state.contentHash, publication: validatePublication(documents) }
+    }
+    return contentPage(path, this.index.publication, (key) => this.document(key), state.contentHash)
   }
 
   pendingPurge(): string | null {

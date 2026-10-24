@@ -1,4 +1,6 @@
+import type { PageMetadata } from '../../types.ts'
 import fire from '../../media/fire.jpg'
+
 import selfie from '../../media/selfie.jpg'
 import hannesRec1 from '../../media/hannes_rec_1.jpg'
 import cooking from '../../media/cooking.jpg'
@@ -11,6 +13,22 @@ import food1 from '../../media/food_1.jpg'
 import yoga2 from '../../media/yoga2.jpg'
 import hygge from '../../media/hygge.jpg'
 import { Button, Hero, ImageBand, Page, TextBlock } from '@hannesdiem/content-components'
+
+export const metadata = {
+  kind: 'page',
+  description:
+    'A creative retreat in Denmark, a house meant for ten, and two artists diving deep into music, food, and creativity. One Week Album is just getting started.',
+  image: fire,
+  theme: 'beach',
+  ogType: 'website',
+  ogTitle: 'Løkken 2024 Recap',
+  updatedAt: '2025-02-28T02:32:55.432+00:00',
+  sourceId: '37a52c30-47a1-4bc8-87fe-f966331d33ee',
+  ogImageTitle: 'Løkken 2024',
+  ogSubtitle: 'Just the two of us',
+  ogTextColor: 'dark',
+  shareImage: true,
+} satisfies PageMetadata
 
 export const title = 'Løkken 2024 Recap'
 

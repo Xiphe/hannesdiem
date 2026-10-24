@@ -14,4 +14,4 @@
 
 **Publication**: The complete collection of pages and site metadata accepted together for the website.
 
-**Publication snapshot**: A page, its site metadata, and the revision they share from one Publication.
+**Publication snapshot**: A page, its metadata, global site data, and the revision they share from one Publication.

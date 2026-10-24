@@ -1,4 +1,6 @@
+import type { PageMetadata } from '../../types.ts'
 import photo29PalmsRainbow from '../../media/29_palms_rainbow.jpg'
+
 import photo29PalmsOutdoor from '../../media/29_palms_outdoor.jpg'
 import chiefSing2 from '../../media/chief_sing_2.jpg'
 import warner from '../../media/warner.jpg'
@@ -17,6 +19,22 @@ import chiefHannesDancing from '../../media/chief_hannes_dancing.jpg'
 import chiefHannesRe from '../../media/chief_hannes_re.jpg'
 import chiefHannesMed from '../../media/chief_hannes_med.jpg'
 import { Hero, ImageBand, Page, Prose, TextBlock } from '@hannesdiem/content-components'
+
+export const metadata = {
+  kind: 'page',
+  description:
+    'Two musicians. Two weeks. A journey through creativity, tension, and trust, capturing raw music, deep connection, and the space we choose to hold. This is One Week Album.',
+  image: photo29PalmsRainbow,
+  theme: 'beach',
+  ogType: 'website',
+  ogTitle: 'California 2024 Recap',
+  updatedAt: '2025-02-28T02:33:03.308+00:00',
+  sourceId: '33c3dfaf-5767-4c9a-b09a-0e4dd1263145',
+  ogImageTitle: 'California 2024',
+  ogSubtitle: 'Creating at the Edge of Everything',
+  ogTextColor: 'dark',
+  shareImage: true,
+} satisfies PageMetadata
 
 export const title = 'California 2024 Recap'
 

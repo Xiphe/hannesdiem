@@ -15,7 +15,6 @@ const storage: MediaStorage =
 
 export default {
   ...config,
-  exports: { ...config.exports, routes: { required: false } },
   assets: {
     cacheDir: 'directory' in storage ? `${storage.directory}/.cmx` : '.cmx/assets',
     loaders: {

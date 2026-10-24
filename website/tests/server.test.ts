@@ -1,14 +1,17 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { CmxNode } from '@cmx-tools/contracts'
-import { documents, site } from './browser-fixture.ts'
+import { documents } from './browser-fixture.ts'
 import { createContentSource } from '../app/document-host/index.ts'
 import { createApp as createRuntimeApp } from '../app/router.tsx'
+import { validatePublication } from '../../contracts/content.ts'
 import type { ContentLoader } from '../app/document-host/index.ts'
 
 const loadContent = createContentSource(documents, 'fixture')
-const contentRoutes = site.routes
-const legacyRedirects = new Map(site.redirects.map(({ path, ...target }) => [path, target]))
+const contentRoutes = validatePublication(documents).routes
+const legacyRedirects = new Map(
+  validatePublication(documents).redirects.map(({ path, ...target }) => [path, target]),
+)
 const createApp = (loader: ContentLoader = loadContent) => createRuntimeApp(loader)
 
 async function publication(title: string, paragraph: string) {

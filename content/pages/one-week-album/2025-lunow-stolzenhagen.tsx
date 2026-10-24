@@ -1,5 +1,22 @@
+import type { PageMetadata } from '../../types.ts'
 import photo20250415191136 from '../../media/PHOTO-2025-04-15-19-11-36.jpg'
+
 import { Button, Hero, Page, TextBlock } from '@hannesdiem/content-components'
+
+export const metadata = {
+  kind: 'page',
+  description:
+    'Join 7 artists and spend 7 days expanding ourselves into a band, then settle on an album of songs',
+  image: photo20250415191136,
+  ogType: 'website',
+  ogTitle: 'Lunow-Stolzenhagen 2025',
+  updatedAt: '2025-05-16T13:17:20.824+00:00',
+  sourceId: '21dfbb18-e4f5-4f11-939d-cd2ee537afc1',
+  ogImageTitle: 'One Week Album 2025',
+  ogSubtitle: 'August 16 - 23',
+  ogTextColor: 'light',
+  shareImage: true,
+} satisfies PageMetadata
 
 export const title = 'Lunow-Stolzenhagen 2025'
 

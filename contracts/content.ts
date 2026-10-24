@@ -1,5 +1,6 @@
 import { isCmxDocument, type CmxDocument } from '@cmx-tools/contracts'
 import type { Identity, ImageSource, MediaImage } from '@hannesdiem/content-components'
+import { notFoundEntry, pagePath } from './page-routing.ts'
 
 export interface ContentRoute {
   path: string
@@ -8,6 +9,7 @@ export interface ContentRoute {
   kind: string
   description?: string
   image?: ImageSource
+  ogImage?: MediaImage
   theme?: string
   releaseDate?: string
   creationDate?: string
@@ -30,6 +32,14 @@ export interface ContentRoute {
 export type { MediaImage, PaletteColor } from '@hannesdiem/content-components'
 
 export const siteEntry = '_site'
+export const redirectsEntry = '_redirects'
+
+export interface ContentRedirect {
+  path: string
+  to: string
+  status: 307 | 308
+  preserveSearch?: boolean
+}
 
 export interface NavigationLink {
   name: string
@@ -41,11 +51,8 @@ export interface SocialLink {
   name: string
 }
 export interface SiteMetadata {
-  version: 1
-  routes: ContentRoute[]
+  version: 2
   media: Record<string, MediaImage>
-  shareImages: Record<string, MediaImage>
-  redirects: { path: string; to: string; status: 307 | 308; preserveSearch?: boolean }[]
   navigation: {
     sections: { name: string; items: NavigationLink[] }[]
     legal: { name: string; items: NavigationLink[] }
@@ -96,12 +103,12 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
   const site = document?.content.site
   if (
     !record(site) ||
-    site.version !== 1 ||
-    !Array.isArray(site.routes) ||
+    site.version !== 2 ||
+    'routes' in site ||
+    'shareImages' in site ||
+    'redirects' in site ||
     !record(site.media) ||
     !Object.values(site.media).every(image) ||
-    !record(site.shareImages) ||
-    !Object.values(site.shareImages).every(image) ||
     !record(site.navigation)
   )
     throw new Error('Invalid site metadata')
@@ -128,8 +135,19 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
     !links(navigation.listen, 'title')
   )
     throw new Error('Invalid navigation metadata')
+  return site as unknown as SiteMetadata
+}
+
+export interface PublicationIndex {
+  site: SiteMetadata
+  routes: ContentRoute[]
+  notFound: string
+  redirects: ContentRedirect[]
+}
+
+function validateRoutes({ routes, site, redirects }: PublicationIndex) {
   const paths = new Set<string>()
-  for (const route of site.routes) {
+  for (const route of routes) {
     if (
       !record(route) ||
       !contentPath(route.path) ||
@@ -141,14 +159,14 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
       (route.image !== undefined &&
         (typeof route.image === 'string'
           ? !Object.hasOwn(site.media, route.image)
-          : !image(route.image)))
-    ) {
+          : !image(route.image))) ||
+      (route.ogImage !== undefined && !image(route.ogImage))
+    )
       throw new Error('Invalid or duplicate content route')
-    }
     paths.add(route.path)
   }
-  if (!Array.isArray(site.redirects)) throw new Error('Invalid redirects')
-  for (const redirect of site.redirects) {
+  if (!Array.isArray(redirects)) throw new Error('Invalid redirects')
+  for (const redirect of redirects) {
     if (
       !record(redirect) ||
       !contentPath(redirect.path) ||
@@ -157,18 +175,60 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
       typeof redirect.status !== 'number' ||
       ![307, 308].includes(redirect.status) ||
       (redirect.preserveSearch !== undefined && typeof redirect.preserveSearch !== 'boolean')
-    ) {
+    )
       throw new Error('Invalid or duplicate redirect')
-    }
     paths.add(redirect.path)
   }
-  return site as unknown as SiteMetadata
+}
+
+// Read v1 during the rollout: the website deploys before the v2 content publication.
+function legacyPublication(documents: PublishedDocuments): PublicationIndex {
+  const legacy = documents[siteEntry].content.site as Record<string, unknown>
+  const { routes, shareImages, redirects, ...globals } = legacy
+  if (!Array.isArray(routes) || !record(shareImages) || !Object.values(shareImages).every(image))
+    throw new Error('Invalid legacy site metadata')
+  const site = readSite({
+    ...documents[siteEntry],
+    content: { site: { ...globals, version: 2 } },
+  })
+  return {
+    site,
+    routes: routes.map((route) => ({ ...route, ogImage: shareImages[route.path] })),
+    notFound: '404',
+    redirects: redirects as ContentRedirect[],
+  }
 }
 
 // Validate the complete collection before publishing and before accepting it.
-export function validatePublication(documents: PublishedDocuments): SiteMetadata {
-  const site = readSite(documents[siteEntry])
-  for (const key of ['404', ...site.routes.map((route) => route.document)]) {
+export function validatePublication(documents: PublishedDocuments): PublicationIndex {
+  const rawSite = documents[siteEntry]?.content.site
+  const publication: PublicationIndex =
+    record(rawSite) && rawSite.version === 1
+      ? legacyPublication(documents)
+      : {
+          site: readSite(documents[siteEntry]),
+          notFound: notFoundEntry,
+          redirects: documents[redirectsEntry]?.content.redirects as ContentRedirect[],
+          routes: Object.entries(documents).flatMap(([entry, document]) => {
+            const path = pagePath(entry)
+            if (path === undefined) return []
+            if (!isCmxDocument(document)) throw new Error(`Invalid CMX page: ${entry}`)
+            const metadata = document.content.metadata ?? {}
+            if (!record(metadata) || 'path' in metadata || 'document' in metadata)
+              throw new Error(`Invalid page metadata: ${entry}`)
+            return [
+              {
+                kind: 'page',
+                title: document.content.title,
+                ...metadata,
+                path,
+                document: entry,
+              } as ContentRoute,
+            ]
+          }),
+        }
+  validateRoutes(publication)
+  for (const key of [publication.notFound, ...publication.routes.map((route) => route.document)]) {
     const document = documents[key]
     if (
       !isCmxDocument(document) ||
@@ -177,5 +237,5 @@ export function validatePublication(documents: PublishedDocuments): SiteMetadata
     )
       throw new Error(`Missing or invalid page: ${key}`)
   }
-  return site
+  return publication
 }
