@@ -84,6 +84,15 @@ test('the released CMX CLI loads the signed config and publishes directly to the
   const expected = await createCmxPublicationState(fixture)
   assert.equal(published.contentHash, expected.contentHash)
   assert.equal((await get('/fixture')).headers.get('X-Content-Revision'), expected.contentHash)
+  const invalid = structuredClone(fixture)
+  delete invalid['404']
+  await assert.rejects(
+    publish(invalid),
+    (error: { stderr?: string }) =>
+      /app\/invalid-publication/.test(error.stderr ?? '') &&
+      /Missing or invalid page: 404/.test(error.stderr ?? ''),
+  )
+  assert.equal((await get('/fixture')).headers.get('X-Content-Revision'), expected.contentHash)
   const preflight = await promisify(execFile)(
     process.execPath,
     ['--import', 'remix/node-tsx', 'website/build/check-content-host.ts'],
