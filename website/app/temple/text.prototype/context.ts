@@ -1,155 +1,100 @@
-// THROWAWAY: extend the liked close-view entrance to the original first pair.
-// Old words continue into depth as working traces; no scene/publication approval.
+// THROWAWAY: native document flow. No verse timeline, input interception or sentence pinning.
 import { mountOpening } from '../scene.ts'
 import { openingProps } from './context-props.ts'
 
 const root = document.querySelector<HTMLElement>('.temple-opening')!
 const stage = root.querySelector<HTMLElement>('.temple-stage')!
-const text = document.querySelector<HTMLElement>('.entry-text')!
-const units = [...text.querySelectorAll<HTMLElement>('.entry-unit')]
-const position = document.querySelector<HTMLInputElement>('[data-position]')!
-const entryControl = document.querySelector<HTMLInputElement>('[data-entry]')!
-const spacingControl = document.querySelector<HTMLInputElement>('[data-spacing]')!
-const size = document.querySelector<HTMLInputElement>('[data-size]')!
-const count = document.querySelector<HTMLOutputElement>('[data-count]')!
+const layouts = [...document.querySelectorAll<HTMLElement>('.document-poem')]
+const descriptions = {
+  type: 'Große Textfelder und ein verdichteter Refrain.',
+  woven: 'Textpassagen greifen über und zwischen Bildausschnitte.',
+}
+type Layout = keyof typeof descriptions
+let layout = document.body.dataset.reading as Layout
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+const clamp = (v: number) => Math.max(0, Math.min(1, v))
+let frame = 0
 const abort = new AbortController()
 const on = (target: EventTarget, event: string, listener: EventListener) =>
   target.addEventListener(event, listener, { signal: abort.signal })
-const clamp = (value: number) => Math.max(0, Math.min(1, value))
-// Half the previous scroll span, with a fast initial response instead of a slow start.
-const entrance = 0.12
-const arrive = (value: number) => 1 - (1 - clamp(value)) ** 3
-const weights = units.map((unit) =>
-  Math.min(1.65, Math.max(1, Math.sqrt(unit.textContent!.split(/\s+/).length / 7))),
-)
-let entry = 0.18,
-  spacing = 0.22,
-  mode = 'close',
-  raf = 0,
-  height = 0,
-  progress = 0
-let onsets: number[] = [],
-  end = 0
-stage.append(text)
-document.body.dataset.context = 'ready'
+const visibleArticle = () => layouts.find((article) => !article.hidden)!
 
-function timeline() {
-  let at = entry
-  onsets = weights.map((weight) => {
-    const start = at
-    at += spacing * weight
-    return start
+// Keep the accepted background at its viewport anchor after the wordmark exits.
+// The opener retains its natural 130svh document box; poem paragraphs remain in flow.
+function paint() {
+  frame = 0
+  root.classList.toggle(
+    'reading-backdrop',
+    -root.getBoundingClientRect().top >= stage.clientHeight * 0.3,
+  )
+  const article = visibleArticle()
+  const first = article.querySelector<HTMLElement>('[data-unit="0"]')!
+  const rect = first.getBoundingClientRect()
+  const entry = clamp(
+    (innerHeight * 0.9 - rect.top) / Math.min(rect.height * 0.6, innerHeight * 0.35),
+  )
+  article.querySelectorAll<HTMLElement>('[data-entry-word]').forEach((word, index) => {
+    const t = reduced.matches ? 1 : clamp((entry - index * 0.055) / 0.72)
+    word.style.transform = `translateY(${(1 - t) * 0.22}em) rotateX(${(1 - t) * -35}deg)`
+    word.style.opacity = String(0.65 + 0.35 * t)
   })
-  end = onsets.at(-1)! + entrance + 0.16
-  root.style.height = `${(1 + end) * 100}svh`
-  position.max = String(end)
-  progress = Math.min(progress, end)
-}
-function draw() {
-  raf = 0
-  if (stage.clientHeight !== height) {
-    measure()
-    return
-  }
-  progress = Math.max(0, Math.min(end, scrollY / height))
-  position.value = String(progress)
-  const active = onsets.findLastIndex((start) => progress >= start)
-  units.forEach((unit, index) => {
-    if (index > active) {
-      unit.style.opacity = '0'
-      unit.dataset.state = 'future'
-      unit.setAttribute('aria-hidden', 'true')
-      return
-    }
-    const t = clamp((progress - onsets[index]) / entrance)
-    let opacity = clamp(t * 5)
-    let scale = mode === 'close' ? 1 + (1 - arrive(t)) * 2.3 : 1
-    let move = mode === 'rise' ? (1 - arrive(t)) * height * 0.65 : 0
-    if (index < active) {
-      // Continue the same depth direction after arrival, instead of replacing a phrase.
-      const departure = (progress - onsets[index + 1]) / entrance
-      const leaving = reduced.matches ? Number(departure >= 0.5) : arrive(departure)
-      const depth = active - index - 1 + leaving
-      scale = 0.68 ** depth
-      move = -height * 0.14 * Math.min(depth, 3)
-      opacity = 1 - leaving * 0.84
-      if (active - index > 1) opacity = 0.16 / (1 + (active - index - 1) * 0.4)
-    } else if (reduced.matches) {
-      opacity = Number(t >= 0.5)
-      scale = 1
-      move = 0
-    }
-    unit.style.opacity = String(opacity)
-    unit.style.transform = `translateY(${move}px) scale(${scale})`
-    unit.style.zIndex = String(index + 1)
-    unit.setAttribute('aria-hidden', String(opacity === 0))
-    unit.dataset.state = index === active ? 'current' : 'trace'
+  article.querySelectorAll<HTMLElement>('.woven-image').forEach((figure) => {
+    const image = figure.querySelector<HTMLImageElement>('img')!
+    const r = figure.getBoundingClientRect()
+    const t = clamp((innerHeight - r.top) / (innerHeight + r.height))
+    image.style.transform = reduced.matches
+      ? 'none'
+      : `translateY(${(t * 2 - 1) * 16}px) scale(1.08)`
   })
-  count.textContent = active < 0 ? 'Opener' : `${active + 1} / ${units.length}`
-  root.dataset.unit = String(active)
 }
 function request() {
-  if (!raf) raf = requestAnimationFrame(draw)
+  if (!frame) frame = requestAnimationFrame(paint)
 }
-function fitText() {
-  // Keep the selected size for short phrases; long units must fit at rest on phones too.
-  const base = parseFloat(getComputedStyle(text).fontSize)
-  units.forEach((unit) => {
-    let font = base
-    unit.style.fontSize = `${font}px`
-    while (unit.offsetHeight > height * 0.76 && font > 24) {
-      font = Math.max(24, font * 0.92)
-      unit.style.fontSize = `${font}px`
-    }
+function change(next: Layout) {
+  if (next === layout) return
+  const units = [...visibleArticle().querySelectorAll<HTMLElement>('[data-unit]')]
+  // Anchor only after the verse has entered; switching in the opener preserves its scroll.
+  const anchor =
+    units.find((unit) => unit.getBoundingClientRect().bottom > innerHeight * 0.2) ?? units.at(-1)!
+  const top = anchor.getBoundingClientRect().top
+  const inPoem = units[0].getBoundingClientRect().top < innerHeight * 0.8
+  layout = next
+  document.body.dataset.reading = next
+  layouts.forEach((article) => {
+    article.hidden = article.dataset.layout !== next
   })
-}
-function measure() {
-  height = stage.clientHeight
-  fitText()
-  scrollTo({ top: progress * height, behavior: 'instant' })
+  document.querySelectorAll<HTMLAnchorElement>('[data-layout-link]').forEach((link) => {
+    if (link.dataset.layoutLink === next) link.setAttribute('aria-current', 'page')
+    else link.removeAttribute('aria-current')
+  })
+  document.querySelector('[data-description]')!.textContent = descriptions[next]
+  const url = new URL(location.href)
+  url.searchParams.set('layout', next)
+  history.replaceState(null, '', url)
+  if (inPoem) {
+    const target = visibleArticle().querySelector<HTMLElement>(
+      `[data-unit="${anchor.dataset.unit}"]`,
+    )!
+    scrollTo({ top: scrollY + target.getBoundingClientRect().top - top, behavior: 'instant' })
+  }
   request()
+}
+function cycle() {
+  change(layout === 'type' ? 'woven' : 'type')
 }
 function toggleUI() {
   document.body.dataset.ui = document.body.dataset.ui === 'hidden' ? 'visible' : 'hidden'
 }
-const number = (value: number) => `${value.toFixed(2).replace('.', ',')} × Höhe`
-on(window, 'scroll', request)
-on(reduced, 'change', request)
-on(position, 'input', () => {
-  progress = Number(position.value)
-  scrollTo({ top: progress * height, behavior: 'instant' })
-  request()
-})
-on(entryControl, 'input', () => {
-  entry = Number(entryControl.value)
-  document.querySelector('[data-entry-label]')!.textContent = number(entry)
-  timeline()
-  request()
-})
-on(spacingControl, 'input', () => {
-  spacing = Number(spacingControl.value)
-  document.querySelector('[data-spacing-label]')!.textContent = number(spacing)
-  timeline()
-  request()
-})
-on(size, 'input', () => {
-  document.body.style.setProperty('--entry-size', size.value)
-  document.querySelector('[data-size-label]')!.textContent = size.value
-  fitText()
-  request()
-})
-document.querySelectorAll<HTMLButtonElement>('[data-motion]').forEach((button) =>
-  on(button, 'click', () => {
-    mode = button.dataset.motion!
-    document
-      .querySelectorAll<HTMLButtonElement>('[data-motion]')
-      .forEach((item) => item.setAttribute('aria-pressed', String(item === button)))
-    request()
-  }),
+document.querySelectorAll<HTMLAnchorElement>('[data-layout-link]').forEach((link) =>
+  on(link, 'click', ((event: MouseEvent) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    event.preventDefault()
+    change(link.dataset.layoutLink as Layout)
+  }) as EventListener),
 )
+on(document.querySelector('[data-previous]')!, 'click', cycle)
+on(document.querySelector('[data-next]')!, 'click', cycle)
 on(document.querySelector('[data-replay]')!, 'click', () => {
-  progress = 0
   scrollTo({ top: 0, behavior: 'instant' })
   request()
 })
@@ -157,25 +102,19 @@ on(document.querySelector('[data-hide]')!, 'click', toggleUI)
 on(document.querySelector('[data-restore]')!, 'click', toggleUI)
 on(window, 'keydown', ((event: KeyboardEvent) => {
   if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault()
+    cycle()
+  }
   if (event.key.toLowerCase() === 'h') toggleUI()
 }) as EventListener)
-let width = stage.clientWidth
-const observer = new ResizeObserver(() => {
-  if (stage.clientHeight !== height || stage.clientWidth !== width) {
-    width = stage.clientWidth
-    measure()
-  }
-})
-observer.observe(stage)
+on(window, 'scroll', request)
+on(reduced, 'change', request)
+on(window, 'resize', request)
 on(window, 'pagehide', () => {
   abort.abort()
-  observer.disconnect()
-  cancelAnimationFrame(raf)
+  cancelAnimationFrame(frame)
 })
-timeline()
-measure()
+paint()
 await mountOpening(root, openingProps, abort.signal)
-if (!abort.signal.aborted) {
-  fitText()
-  request()
-}
+request()

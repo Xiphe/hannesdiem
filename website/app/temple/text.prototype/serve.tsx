@@ -38,7 +38,11 @@ const scene = await build({
       name: 'accepted-opener',
       setup(build) {
         build.onLoad({ filter: /[/\\]temple[/\\](?:scene|forest)\.ts$/ }, (args) => ({
-          contents: gitFile(`website/app/temple/${args.path.split(/[/\\]/).pop()}`).toString(),
+          // The backdrop now outlives the opener's document box: observe its actual
+          // visible stage rather than the departed root, preserving ambient motion.
+          contents: gitFile(`website/app/temple/${args.path.split(/[/\\]/).pop()}`)
+            .toString()
+            .replace('observer.observe(root)', 'observer.observe(stage)'),
           loader: 'ts',
           resolveDir: dirname(args.path),
         }))
@@ -65,7 +69,10 @@ createServer(async (request, response) => {
     response.end(forest)
   } else if (url.pathname === '/' || url.pathname === '/temple-of-sound') {
     response.setHeader('Content-Type', 'text/html; charset=utf-8')
-    response.end('<!doctype html>' + (await renderToString(<Review />)))
+    response.end(
+      '<!doctype html>' +
+        (await renderToString(<Review layout={url.searchParams.get('layout') ?? 'type'} />)),
+    )
   } else {
     response.writeHead(404)
     response.end()

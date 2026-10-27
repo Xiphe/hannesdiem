@@ -1,12 +1,29 @@
 * {
   box-sizing: border-box;
 }
+html {
+  overflow-anchor: none;
+}
+[hidden] {
+  display: none !important;
+}
 body {
   margin: 0;
 }
-.entry-text {
-  width: min(65ch, 80rem, calc(100% - 3rem));
-  margin: 3rem auto;
+/* After its accepted title sequence, only the forest remains anchored.
+   Every poem block below keeps a normal, measurable document position. */
+.temple-opening.reading-backdrop .temple-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+.document-poem {
+  position: relative;
+  z-index: 2;
+  margin-top: -18svh;
+  padding-top: 6svh;
+  padding-bottom: clamp(140px, 18svh, 240px);
+  color: #f7ecdf;
   font-family: Bricolage, sans-serif;
   font-weight: 600;
   font-optical-sizing: none;
@@ -14,40 +31,158 @@ body {
     'opsz' 48,
     'wdth' 100;
   font-synthesis: none;
-  font-size: clamp(
-    32px,
-    calc(var(--entry-size, 160) * 0.069444vw),
-    calc(var(--entry-size, 160) * 1px)
-  );
-  line-height: 1.12;
   letter-spacing: -0.025em;
-  text-wrap: balance;
 }
-.entry-text p {
-  margin: 0;
-}
-body[data-context] .entry-text {
+.document-poem::before {
+  content: '';
   position: absolute;
   inset: 0;
-  z-index: 2;
-  display: grid;
-  align-content: center;
-  height: 100%;
-  margin: auto;
-  color: #f7ecdf;
-  text-shadow:
-    0 2px 28px #030503c9,
-    0 1px 2px #030503aa;
+  z-index: -1;
   pointer-events: none;
+  background: linear-gradient(to bottom, transparent, #030503b8 300px, #030503d4);
 }
-body[data-context] .entry-unit {
-  grid-area: 1 / 1;
-  align-self: center;
-  opacity: 0;
-  transform-origin: center;
-  will-change: transform, opacity;
+.document-poem p {
+  margin: 0;
+  position: relative;
+  text-wrap: pretty;
 }
-/* The review panel is outside the artist's prose. */
+/* A: a large opening, a smaller direct address, a dense body, then a close rhythm. */
+.type-flow {
+  padding-inline: max(24px, calc((100vw - 1280px) / 2));
+}
+.type-opening {
+  font-size: clamp(48px, 11.11vw, 160px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+.type-address {
+  font-size: clamp(30px, 5vw, 72px);
+  line-height: 1.15;
+  max-width: 25ch;
+  margin-top: clamp(42px, 8svh, 100px) !important;
+  margin-left: 8% !important;
+}
+.type-body {
+  font-size: clamp(30px, 4.3vw, 62px);
+  line-height: 1.15;
+  max-width: 32ch;
+  margin-top: clamp(64px, 12svh, 130px) !important;
+  margin-left: auto !important;
+}
+.type-refrain {
+  margin-top: clamp(64px, 12svh, 130px);
+  max-width: 29ch;
+  font-size: clamp(34px, 5.4vw, 78px);
+  line-height: 1.08;
+}
+.type-refrain p + p {
+  margin-top: 0.32em;
+}
+.type-refrain p:last-child {
+  margin-top: 0.65em;
+}
+/* B: independent image fields cross the native text path; source order is unchanged. */
+.woven-flow {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 clamp(8px, 1.6vw, 24px);
+  padding-inline: max(24px, calc((100vw - 1440px) / 2));
+  text-shadow:
+    0 2px 24px #030503d9,
+    0 1px 3px #030503;
+}
+.woven-flow::before {
+  background: linear-gradient(to bottom, transparent, #030503c9 320px, #030503e8);
+}
+.woven-flow p {
+  z-index: 2;
+}
+.woven-opening {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  font-size: clamp(48px, 11.11vw, 160px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  margin-bottom: 5svh !important;
+}
+.woven-image {
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+.woven-image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.woven-canopy {
+  grid-column: 5 / 13;
+  grid-row: 2 / 4;
+  margin-top: 2svh;
+  margin-bottom: 4svh;
+}
+.woven-canopy img {
+  object-position: 33% 45%;
+  filter: brightness(0.87);
+}
+.woven-address {
+  grid-column: 1 / 10;
+  grid-row: 2;
+  font-size: clamp(32px, 5.2vw, 75px);
+  line-height: 1.08;
+  margin-top: 9svh !important;
+  margin-bottom: 7svh !important;
+}
+.woven-body {
+  grid-column: 3 / 12;
+  grid-row: 3;
+  font-size: clamp(30px, 4vw, 58px);
+  line-height: 1.16;
+  margin-top: 6svh !important;
+  margin-bottom: 8svh !important;
+}
+.woven-ground {
+  grid-column: 1 / 9;
+  grid-row: 4 / 8;
+  margin-top: 6svh;
+  margin-bottom: 10svh;
+}
+.woven-ground img {
+  object-position: 70% 85%;
+  filter: brightness(0.72);
+}
+.woven-refrain {
+  font-size: clamp(34px, 5.2vw, 75px);
+  line-height: 1.07;
+  padding-block: 1.5svh;
+}
+.woven-line-0 {
+  grid-column: 3 / 13;
+  grid-row: 4;
+  margin-top: 12svh !important;
+}
+.woven-line-1 {
+  grid-column: 5 / 13;
+  grid-row: 5;
+}
+.woven-line-2 {
+  grid-column: 2 / 12;
+  grid-row: 6;
+}
+.woven-line-3 {
+  grid-column: 4 / 13;
+  grid-row: 7;
+  margin-top: 5svh !important;
+  margin-bottom: 12svh !important;
+  font-size: clamp(30px, 4vw, 58px);
+  line-height: 1.13;
+}
+/* Review UI, kept outside artist prose. */
 .review-controls,
 .restore-controls {
   position: fixed;
@@ -64,70 +199,42 @@ body[data-context] .entry-unit {
   bottom: max(12px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  width: min(640px, calc(100% - 24px));
-  padding: 10px 12px;
+  width: min(690px, calc(100% - 24px));
+  padding: 9px 10px;
 }
-.review-heading,
-.motion-options {
+.review-heading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
-.review-heading output {
-  min-width: 45px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.review-heading strong {
+.review-heading a {
   flex: 1;
-  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
 }
-.review-controls button {
-  border: 1px solid #55584d;
-  border-radius: 4px;
+.review-heading a,
+.review-heading button {
+  padding: 7px;
+  min-height: 30px;
   background: transparent;
   color: inherit;
   font: inherit;
-  min-height: 28px;
-  padding: 5px 8px;
+  border: 0;
+  border-radius: 4px;
   cursor: pointer;
 }
-.motion-options {
-  margin-block: 10px;
-}
-.motion-options button[aria-pressed='true'] {
-  color: #171c18;
+.review-heading a[aria-current='page'] {
   background: #e4e0d4;
+  color: #171c18;
 }
-.adjustments {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 14px;
-}
-.adjustments label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.adjustments label:last-child {
-  grid-column: 1 / -1;
-}
-.adjustments input {
-  width: 100%;
-  min-width: 20px;
-  accent-color: #d1d8cb;
-  cursor: pointer;
-}
-.adjustments output {
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+.review-controls p {
+  margin: 8px 4px 0;
 }
 .review-note {
-  margin: 8px 0 0;
   color: #b5bbb0;
   font-size: 11px;
 }
-:where(button, input):focus-visible {
+:where(button, a):focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 3px;
 }
@@ -144,12 +251,67 @@ body[data-ui='hidden'] .review-controls {
 body[data-ui='hidden'] .restore-controls {
   display: block;
 }
-@media (max-width: 540px) {
-  .adjustments {
-    grid-template-columns: 1fr;
+@media (max-width: 640px) {
+  .type-address {
+    margin-left: 0 !important;
+  }
+  .type-body {
+    max-width: 100%;
+  }
+  .type-refrain {
+    font-size: clamp(30px, 7.5vw, 48px);
+  }
+  .woven-flow {
+    column-gap: 4px;
+  }
+  .woven-address {
+    grid-column: 1 / 12;
+    font-size: clamp(32px, 7.8vw, 48px);
+  }
+  .woven-body {
+    grid-column: 2 / 13;
+    font-size: clamp(28px, 7vw, 42px);
+  }
+  .woven-canopy {
+    grid-column: 3 / 13;
+  }
+  .woven-ground {
+    grid-column: 1 / 12;
+  }
+  .woven-line-0,
+  .woven-line-1,
+  .woven-line-2 {
+    grid-column: 1 / 13;
+    font-size: clamp(32px, 8vw, 48px);
+  }
+  .woven-line-1 {
+    padding-left: 7%;
+  }
+  .woven-line-3 {
+    grid-column: 2 / 13;
+    font-size: clamp(28px, 7vw, 42px);
   }
   .review-controls {
-    font-size: 11px;
-    padding: 8px;
+    font-size: 10px;
+    padding: 6px;
   }
+  .review-heading {
+    gap: 1px;
+  }
+  .review-heading a,
+  .review-heading button {
+    padding: 5px;
+  }
+  .review-note {
+    font-size: 10px;
+  }
+}
+
+/* Local entrance and image movement leave paragraph/document geometry intact. */
+.type-opening [data-entry-word] {
+  display: inline-block;
+  transform-origin: center bottom;
+}
+.woven-image img {
+  will-change: transform;
 }

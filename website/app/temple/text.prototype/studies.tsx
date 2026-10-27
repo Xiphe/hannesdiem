@@ -1,6 +1,8 @@
-// THROWAWAY: the first verse/refrain follows the liked close entrance in context.
+// THROWAWAY: compare two native-flow document forms after the accepted opener.
 import { existsSync, readFileSync } from 'node:fs'
+import type { Handle } from 'remix/component'
 import { Opening } from '../opening.tsx'
+import { openingProps } from './context-props.ts'
 
 export function firstPair() {
   const source = existsSync('content/temple-of-sound/draft.tsx')
@@ -14,9 +16,102 @@ export function firstPair() {
   )
 }
 
-import { openingProps } from './context-props.ts'
-
-export function Review() {
+type FlowProps = { units: string[]; hidden: boolean }
+export function TypeFlow(handle: Handle<FlowProps>) {
+  return () => (
+    <article
+      class="document-poem type-flow"
+      data-layout="type"
+      hidden={handle.props.hidden}
+      aria-label="Erstes Strophen-Refrain-Paar"
+    >
+      <p
+        class="type-opening"
+        data-unit="0"
+      >
+        {handle.props.units[0]
+          .split(/(\s+)/)
+          .map((part) => (/\s+/.test(part) ? part : <span data-entry-word>{part}</span>))}
+      </p>
+      <p
+        class="type-address"
+        data-unit="1"
+      >
+        {handle.props.units[1]}
+      </p>
+      <p
+        class="type-body"
+        data-unit="2"
+      >
+        {handle.props.units[2]}
+      </p>
+      <div class="type-refrain">
+        {handle.props.units.slice(3).map((unit, index) => (
+          <p data-unit={index + 3}>{unit}</p>
+        ))}
+      </div>
+    </article>
+  )
+}
+export function WovenFlow(handle: Handle<FlowProps>) {
+  return () => (
+    <article
+      class="document-poem woven-flow"
+      data-layout="woven"
+      hidden={handle.props.hidden}
+      aria-label="Erstes Strophen-Refrain-Paar"
+    >
+      <p
+        class="woven-opening"
+        data-unit="0"
+      >
+        {handle.props.units[0]}
+      </p>
+      <figure
+        class="woven-image woven-canopy"
+        aria-hidden="true"
+      >
+        <img
+          src="/forest.webp"
+          alt=""
+          loading="lazy"
+        />
+      </figure>
+      <p
+        class="woven-address"
+        data-unit="1"
+      >
+        {handle.props.units[1]}
+      </p>
+      <p
+        class="woven-body"
+        data-unit="2"
+      >
+        {handle.props.units[2]}
+      </p>
+      <figure
+        class="woven-image woven-ground"
+        aria-hidden="true"
+      >
+        <img
+          src="/forest.webp"
+          alt=""
+          loading="lazy"
+        />
+      </figure>
+      {handle.props.units.slice(3).map((unit, index) => (
+        <p
+          class={`woven-refrain woven-line-${index}`}
+          data-unit={index + 3}
+        >
+          {unit}
+        </p>
+      ))}
+    </article>
+  )
+}
+export function Review(handle: Handle<{ layout: string }>) {
+  const layout = handle.props.layout === 'woven' ? 'woven' : 'type'
   const units = firstPair()
   return () => (
     <html
@@ -33,7 +128,7 @@ export function Review() {
           name="robots"
           content="noindex,nofollow"
         />
-        <title>Temple of Sound / Übergang zur Strophe</title>
+        <title>Temple of Sound / Dokumentformen</title>
         <link
           rel="icon"
           href="data:,"
@@ -51,31 +146,52 @@ export function Review() {
           src="/context.js"
         ></script>
       </head>
-      <body>
+      <body data-reading={layout}>
         <main class="temple-page">
           <Opening {...openingProps} />
-          <article
-            class="entry-text"
-            aria-label="Erstes Strophen-Refrain-Paar"
-          >
-            {units.map((unit, index) => (
-              <p
-                class="entry-unit"
-                data-unit={index}
-              >
-                {unit}
-              </p>
-            ))}
-          </article>
+          <TypeFlow
+            units={units}
+            hidden={layout !== 'type'}
+          />
+          <WovenFlow
+            units={units}
+            hidden={layout !== 'woven'}
+          />
         </main>
         <nav
           class="review-controls"
-          aria-label="Exploration: erstes Strophen-Refrain-Paar"
+          aria-label="Zwei Dokumentformen im Vergleich"
           lang="de"
         >
           <div class="review-heading">
-            <strong>Erste Strophe + Refrain</strong>
-            <output data-count>Opener</output>
+            <button
+              type="button"
+              data-previous
+              aria-label="Vorherige Dokumentform"
+            >
+              ←
+            </button>
+            <a
+              href="?layout=type"
+              data-layout-link="type"
+              aria-current={layout === 'type' ? 'page' : undefined}
+            >
+              A · Schriftfläche
+            </a>
+            <a
+              href="?layout=woven"
+              data-layout-link="woven"
+              aria-current={layout === 'woven' ? 'page' : undefined}
+            >
+              B · Text &amp; Bild
+            </a>
+            <button
+              type="button"
+              data-next
+              aria-label="Nächste Dokumentform"
+            >
+              →
+            </button>
             <button
               type="button"
               data-replay
@@ -91,76 +207,15 @@ export function Review() {
               ×
             </button>
           </div>
-          <div
-            class="motion-options"
-            role="group"
-            aria-label="Bewegungsprobe"
-          >
-            <button
-              type="button"
-              data-motion="rise"
-              aria-pressed="false"
-            >
-              Von unten aufsteigen
-            </button>
-            <button
-              type="button"
-              data-motion="close"
-              aria-pressed="true"
-            >
-              Aus nächster Nähe
-            </button>
-          </div>
-          <div class="adjustments">
-            <label>
-              Größe{' '}
-              <input
-                data-size
-                type="range"
-                min="48"
-                max="160"
-                step="4"
-                defaultValue="160"
-              />
-              <output data-size-label>160</output>
-            </label>
-            <label>
-              Einsatz{' '}
-              <input
-                data-entry
-                type="range"
-                min="0.18"
-                max="0.6"
-                step="0.01"
-                defaultValue="0.18"
-              />
-              <output data-entry-label>0,18 × Höhe</output>
-            </label>
-            <label>
-              Abstand{' '}
-              <input
-                data-spacing
-                type="range"
-                min="0.16"
-                max="0.42"
-                step="0.01"
-                defaultValue="0.22"
-              />
-              <output data-spacing-label>0,22 × Höhe</output>
-            </label>
-            <label>
-              Scrollposition{' '}
-              <input
-                data-position
-                type="range"
-                min="0"
-                max="2"
-                step="0.002"
-                defaultValue="0"
-              />
-            </label>
-          </div>
-          <p class="review-note">Sinneinheiten im Originalwortlaut. H versteckt die Bedienung.</p>
+          <p data-description>
+            {layout === 'type'
+              ? 'Große Textfelder und ein verdichteter Refrain.'
+              : 'Textpassagen greifen über und zwischen Bildausschnitte.'}
+          </p>
+          <p class="review-note">
+            Normal scrollen. ← / → wechseln die Form an derselben Textstelle. H versteckt die
+            Bedienung.
+          </p>
         </nav>
         <button
           class="restore-controls"
