@@ -6,8 +6,8 @@ const root = document.querySelector<HTMLElement>('.temple-opening')!
 const stage = root.querySelector<HTMLElement>('.temple-stage')!
 const layouts = [...document.querySelectorAll<HTMLElement>('.document-poem')]
 const descriptions = {
-  type: 'Große Textfelder und ein verdichteter Refrain.',
-  woven: 'Textpassagen greifen über und zwischen Bildausschnitte.',
+  type: 'Codrops Effect 2: gedehnte Buchstaben richten sich auf.',
+  woven: 'Codrops Effect 7: Buchstaben klappen aus der Tiefe auf.',
 }
 type Layout = keyof typeof descriptions
 let layout = document.body.dataset.reading as Layout
@@ -18,6 +18,18 @@ const abort = new AbortController()
 const on = (target: EventTarget, event: string, listener: EventListener) =>
   target.addEventListener(event, listener, { signal: abort.signal })
 const visibleArticle = () => layouts.find((article) => !article.hidden)!
+// Adapted from Codrops effects 2 and 7. See codrops-LICENSE.txt and README.
+const lastProgress = new WeakMap<HTMLElement, number>()
+const words = new Map(
+  layouts.map((article) => [
+    article,
+    [...article.querySelectorAll<HTMLElement>('.motion-word')].map((word) => ({
+      word,
+      chars: [...word.querySelectorAll<HTMLElement>('.motion-char')],
+      first: word.closest<HTMLElement>('[data-unit]')!.dataset.unit === '0',
+    })),
+  ]),
+)
 
 // Keep the accepted background at its viewport anchor after the wordmark exits.
 // The opener retains its natural 130svh document box; poem paragraphs remain in flow.
@@ -28,16 +40,32 @@ function paint() {
     -root.getBoundingClientRect().top >= stage.clientHeight * 0.3,
   )
   const article = visibleArticle()
-  const first = article.querySelector<HTMLElement>('[data-unit="0"]')!
-  const rect = first.getBoundingClientRect()
-  const entry = clamp(
-    (innerHeight * 0.9 - rect.top) / Math.min(rect.height * 0.6, innerHeight * 0.35),
-  )
-  article.querySelectorAll<HTMLElement>('[data-entry-word]').forEach((word, index) => {
-    const t = reduced.matches ? 1 : clamp((entry - index * 0.055) / 0.72)
-    word.style.transform = `translateY(${(1 - t) * 0.22}em) rotateX(${(1 - t) * -35}deg)`
-    word.style.opacity = String(0.65 + 0.35 * t)
-  })
+  const handoff = clamp((scrollY / stage.clientHeight - 0.13) / 0.14)
+  document.body.style.setProperty('--reading-veil', String(Math.min(1, handoff * 4)))
+  for (const item of words.get(article)!) {
+    const rect = item.word.getBoundingClientRect()
+    const local = item.first
+      ? handoff
+      : clamp(
+          (innerHeight * 0.98 - rect.top) / Math.min(innerHeight * 0.34, rect.height * 2.2 + 70),
+        )
+    const progress = reduced.matches ? Number(handoff >= 0.5) : local * Math.min(1, handoff * 4)
+    if (lastProgress.get(item.word) === progress) continue
+    lastProgress.set(item.word, progress)
+    item.chars.forEach((char, index) => {
+      const rank = item.chars.length < 2 ? 0 : index / (item.chars.length - 1)
+      const delay = (layout === 'type' ? rank : 1 - rank) * 0.25
+      const t = reduced.matches ? progress : clamp((progress - delay) / 0.75)
+      const ease =
+        layout === 'type' ? 1 - (1 - t) ** 3 : t === 0 ? 0 : t === 1 ? 1 : 1 - 2 ** (-8 * t)
+      char.style.opacity = String(clamp(t * 4))
+      char.style.transform = reduced.matches
+        ? 'none'
+        : layout === 'type'
+          ? `translateY(${(1 - ease) * 120}%) scale(${0.7 + 0.3 * ease}, ${2.3 - 1.3 * ease})`
+          : `translateZ(${(1 - ease) * -300}px) rotateY(${(1 - ease) * -90}deg)`
+    })
+  }
   article.querySelectorAll<HTMLElement>('.woven-image').forEach((figure) => {
     const image = figure.querySelector<HTMLImageElement>('img')!
     const r = figure.getBoundingClientRect()

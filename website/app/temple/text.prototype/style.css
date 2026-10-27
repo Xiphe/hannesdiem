@@ -20,7 +20,7 @@ body {
 .document-poem {
   position: relative;
   z-index: 2;
-  margin-top: -18svh;
+  margin-top: -78svh;
   padding-top: 6svh;
   padding-bottom: clamp(140px, 18svh, 240px);
   color: #f7ecdf;
@@ -40,11 +40,14 @@ body {
   z-index: -1;
   pointer-events: none;
   background: linear-gradient(to bottom, transparent, #030503b8 300px, #030503d4);
+  opacity: var(--reading-veil, 0);
 }
 .document-poem p {
   margin: 0;
   position: relative;
   text-wrap: pretty;
+  overflow: clip;
+  overflow-clip-margin: 0.15em;
 }
 /* A: a large opening, a smaller direct address, a dense body, then a close rhythm. */
 .type-flow {
@@ -106,6 +109,7 @@ body {
   margin-bottom: 5svh !important;
 }
 .woven-image {
+  opacity: var(--reading-veil, 0);
   margin: 0;
   min-width: 0;
   min-height: 0;
@@ -307,10 +311,23 @@ body[data-ui='hidden'] .restore-controls {
   }
 }
 
-/* Local entrance and image movement leave paragraph/document geometry intact. */
-.type-opening [data-entry-word] {
+/* Adapted mechanisms from Codrops OnScrollTypographyAnimations, effects 2/7.
+   See codrops-LICENSE.txt. Letter transforms cannot enlarge the document box. */
+.motion-word {
   display: inline-block;
-  transform-origin: center bottom;
+  white-space: nowrap;
+  perspective: 2000px;
+}
+.motion-char {
+  display: inline-block;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.type-flow .motion-char {
+  transform-origin: 50% 0%;
+}
+.woven-flow .motion-char {
+  transform-origin: 100% 50%;
 }
 .woven-image img {
   will-change: transform;

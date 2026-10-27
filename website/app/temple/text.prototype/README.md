@@ -1,25 +1,32 @@
-# Two document forms — first verse/refrain in context
+# Codrops letter motion — immediate opener-to-verse handoff
 
 `npm run prototype:temple-text`; user access: `sand tunnel 8790`.
 
-- **A · Schriftfläche:** `http://localhost:8790/temple-of-sound?layout=type`
-- **B · Text & Bild:** `http://localhost:8790/temple-of-sound?layout=woven`
+- **A · Aufrichten / Effect 2:** `http://localhost:8790/temple-of-sound?layout=type`
+- **B · Aufklappen / Effect 7:** `http://localhost:8790/temple-of-sound?layout=woven`
 
 The artist rejected the verse's pinned scroll model (`6dfe338`): the scrollbar must retain a tangible relationship to the document. They requested exploring both large typographic flow and interwoven text/image composition before choosing a direction. Both studies remain in Expansion.
 
-## The comparison
+## Current correction
 
-**A:** a large first statement, smaller direct address and body, then a dense refrain. First words locally rise/unfold as the paragraph enters; paragraphs keep their document positions.
+The artist rejected the low-amplitude result at `531c222` as boring, expects the actual linked Codrops experiments and wants the first line during the opener exit without a blank screen.
 
-**B:** native grid composition with text reaching across two differently cropped fields of the existing forest photo. One reading path, original source order. Images move up to 16px inside their fixed document boxes; text itself follows native scrolling.
+Mechanisms adapted from [Codrops OnScrollTypographyAnimations](https://github.com/codrops/OnScrollTypographyAnimations/blob/main/src/js/index.js), **effects 2 and 7**; MIT notice retained in [codrops-LICENSE.txt](codrops-LICENSE.txt). No GSAP/Splitting dependency added.
 
-Both use the unchanged seven original units in Bricolage 600, with the first statement capped at 160px on desktop. Sizes, spacing, veil, crop and motion are hypotheses. No artwork labels or invented prose. Earlier text physically remains above; no residual text copies. Whether this fulfils the artist's desired sense of traces remains open.
+- **A / effect 2:** characters rise from y120%, stretched vertically 2.3× and narrowed 0.7×, into native proportions. Compact ease-out and intra-word staggering replace the source's bouncing ease/long ranges.
+- **B / effect 7:** characters rotate from Y -90° and -300px depth around their right edge, with reverse character staggering. Existing image fields remain behind the text.
+- All seven original units participate. Local motion follows words' real viewport positions; no sentence timeline or pinning.
+- First sentence starts at document y0.58 viewport. Letter entry runs across scroll 0.13–0.27, overlapping title exit: visible by 0.16, complete by 0.24 on tested desktop/phone sizes.
+- Clipped paragraph ink keeps document height constant despite large transforms. Native proportional character widths, Bricolage 600 and original wording/order remain.
+- Reduced motion shows settled text; no-JS displays the prose in normal flow after the opener.
+
+These are stronger motion probes, not accepted artwork. Setting, easing and material remain open for review.
 
 ## Actual document and opener
 
-All verse text has natural content height. No fake scroll range, active-sentence timeline, text pinning, forced dwell, wheel interception, or `scrollTo` in scroll handling. A 120px scroll moves paragraphs exactly 120px; their document coordinates remain stable.
+All verse text has natural content height. No fake scroll range, active-sentence timeline, text pinning, forced dwell, wheel interception, or `scrollTo` in scroll handling. Paragraph document coordinates and total page height remain stable across the entry frames; their screen displacement follows native scrolling.
 
-The accepted opener retains its 130svh document box and title sequence. After title exit its stage stays fixed behind the reading area. Local esbuild uses renderer/CSS/fonts from main `3b839491bf4743f05bce54b9f8a00c64de29ad08`; one visibility adaptation observes the actual stage rather than the departed opener root. This keeps ambient glimmers alive without changing title visuals or production code. Reduced motion freezes local word/image movement and ambient particles.
+The accepted opener retains its 130svh document box and title sequence. After title exit its stage stays fixed behind the reading area. Local esbuild uses renderer/CSS/fonts from main `3b839491bf4743f05bce54b9f8a00c64de29ad08`; one visibility adaptation observes the actual stage rather than the departed opener root. This keeps ambient glimmers alive without changing title visuals or production code. Reduced motion removes letter/image movement and freezes ambient particles.
 
 The source photo is prepared with accepted pipeline settings (rotate, 1920px, WebP quality 80; hash prefix `6f60f5b1a39bdac4`). No CDN dependency or new package. Text comes from `content/temple-of-sound/draft.tsx`, or `content/drafts/temple-of-sound.tsx` on this older branch. Source prose/order unchanged.
 
@@ -29,6 +36,6 @@ A/B links or ←/→ switch at the currently read passage and update `?layout=`.
 
 ## Validation / boundary
 
-Scoped TypeScript and Prettier. Browser-checked exact native scroll displacement, stable document coordinates, original text/order, desktop and 390px phone bounds, variant switching (mid-passage top within a pixel), ambient motion after opener exit, shareable URLs, hidden controls and reset. No permanent visual tests, CI polling, Worker/publication changes or deployment. Only the opener remains public.
+Scoped TypeScript and Prettier. Browser-checked first-word visibility through the handoff (0, 0.16, 0.24, 0.32 viewport), constant document height/paragraph coordinates, original seven units, desktop/390px phone bounds, final-unit visibility, reduced-motion identity transforms and a real no-JS browser context. No permanent visual tests, CI polling, Worker/publication changes or deployment. Only the opener remains public.
 
 Recovery: `6dfe338` pinned first-pair sequence; `4013e89` liked first-sentence close view; `c1d9879` rejected isolated traces; `551612d` parked glyph coupling. [Shared context](../docs/collaboration.md).

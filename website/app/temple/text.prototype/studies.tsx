@@ -16,6 +16,25 @@ export function firstPair() {
   )
 }
 
+// Native proportional glyph widths; no fixed letter slots or replacement prose.
+function Letters(handle: Handle<{ text: string }>) {
+  return () => (
+    <>
+      {handle.props.text.split(/(\s+)/).map((part) =>
+        /\s+/.test(part) ? (
+          part
+        ) : (
+          <span class="motion-word">
+            {[...part].map((char) => (
+              <span class="motion-char">{char}</span>
+            ))}
+          </span>
+        ),
+      )}
+    </>
+  )
+}
+
 type FlowProps = { units: string[]; hidden: boolean }
 export function TypeFlow(handle: Handle<FlowProps>) {
   return () => (
@@ -29,25 +48,25 @@ export function TypeFlow(handle: Handle<FlowProps>) {
         class="type-opening"
         data-unit="0"
       >
-        {handle.props.units[0]
-          .split(/(\s+)/)
-          .map((part) => (/\s+/.test(part) ? part : <span data-entry-word>{part}</span>))}
+        <Letters text={handle.props.units[0]} />
       </p>
       <p
         class="type-address"
         data-unit="1"
       >
-        {handle.props.units[1]}
+        <Letters text={handle.props.units[1]} />
       </p>
       <p
         class="type-body"
         data-unit="2"
       >
-        {handle.props.units[2]}
+        <Letters text={handle.props.units[2]} />
       </p>
       <div class="type-refrain">
         {handle.props.units.slice(3).map((unit, index) => (
-          <p data-unit={index + 3}>{unit}</p>
+          <p data-unit={index + 3}>
+            <Letters text={unit} />
+          </p>
         ))}
       </div>
     </article>
@@ -65,7 +84,7 @@ export function WovenFlow(handle: Handle<FlowProps>) {
         class="woven-opening"
         data-unit="0"
       >
-        {handle.props.units[0]}
+        <Letters text={handle.props.units[0]} />
       </p>
       <figure
         class="woven-image woven-canopy"
@@ -81,13 +100,13 @@ export function WovenFlow(handle: Handle<FlowProps>) {
         class="woven-address"
         data-unit="1"
       >
-        {handle.props.units[1]}
+        <Letters text={handle.props.units[1]} />
       </p>
       <p
         class="woven-body"
         data-unit="2"
       >
-        {handle.props.units[2]}
+        <Letters text={handle.props.units[2]} />
       </p>
       <figure
         class="woven-image woven-ground"
@@ -104,7 +123,7 @@ export function WovenFlow(handle: Handle<FlowProps>) {
           class={`woven-refrain woven-line-${index}`}
           data-unit={index + 3}
         >
-          {unit}
+          <Letters text={unit} />
         </p>
       ))}
     </article>
@@ -128,7 +147,14 @@ export function Review(handle: Handle<{ layout: string }>) {
           name="robots"
           content="noindex,nofollow"
         />
-        <title>Temple of Sound / Dokumentformen</title>
+        <title>Temple of Sound / Typografie in Bewegung</title>
+        <noscript>
+          <style>
+            {
+              '.motion-char{opacity:1!important;transform:none!important}.document-poem{margin-top:0!important;--reading-veil:1}'
+            }
+          </style>
+        </noscript>
         <link
           rel="icon"
           href="data:,"
@@ -176,14 +202,14 @@ export function Review(handle: Handle<{ layout: string }>) {
               data-layout-link="type"
               aria-current={layout === 'type' ? 'page' : undefined}
             >
-              A · Schriftfläche
+              A · Aufrichten
             </a>
             <a
               href="?layout=woven"
               data-layout-link="woven"
               aria-current={layout === 'woven' ? 'page' : undefined}
             >
-              B · Text &amp; Bild
+              B · Aufklappen
             </a>
             <button
               type="button"
@@ -209,8 +235,8 @@ export function Review(handle: Handle<{ layout: string }>) {
           </div>
           <p data-description>
             {layout === 'type'
-              ? 'Große Textfelder und ein verdichteter Refrain.'
-              : 'Textpassagen greifen über und zwischen Bildausschnitte.'}
+              ? 'Codrops Effect 2: gedehnte Buchstaben richten sich auf.'
+              : 'Codrops Effect 7: Buchstaben klappen aus der Tiefe auf.'}
           </p>
           <p class="review-note">
             Normal scrollen. ← / → wechseln die Form an derselben Textstelle. H versteckt die
