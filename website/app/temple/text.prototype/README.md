@@ -1,42 +1,40 @@
-# First words after the opener — contextual workbench
+# First verse/refrain after the opener — contextual exploration
 
 `npm run prototype:temple-text` → `http://localhost:8790/temple-of-sound`.
-User access: `sand tunnel 8790`. Local only, on `codex/temple-first-text-studies`.
+User access: `sand tunnel 8790`. Branch `codex/temple-first-text-studies`; local only.
 
-The artist rejected all three isolated trace studies (`c1d9879`): too little impact; exploration must happen directly after the opener, in the page context. Preserve the direction that past words should remain felt as traces, but do not carry over any rejected mechanism.
+Artist feedback on `4013e89`: likes the shown close-view state (size 160, onset 0.18), asks for a snappier entrance and the following lines. Preserve this local preference; no complete scene, trace mechanism or publication is approved.
 
-## Scope of this workbench
+## Current sequence
 
-Start with the actual opener. Its title exits over the approved 0.3 viewport of scroll. The same forest/glimmer canvas then stays pinned as the **original first sentence** enters: “I’m in love with humanity.” This is an agent-bounded next fragment for exploration, not a finished first verse/refrain or an approved layout. The rest of the poem is absent from the workbench; its source is unchanged.
+The actual accepted opener leads into all **seven fixed sense units** of the original first verse/refrain pair. Source wording/order is unchanged. Sentences may wrap on smaller screens; wrapping does not create new units.
 
-Adjust consequential variables directly in context:
+- Defaults: **Aus nächster Nähe**, size **160**, onset **0.18 viewport**.
+- Entrance: **0.12 viewport**, cubic ease-out; previously 0.23 with a slow initial smoothstep.
+- Spacing: **0.22 viewport** for short units, up to 1.65× for long units. Full traversal including opener ~1.95 viewports; no compulsory dwell or automatic text advance.
+- Earlier text recedes smaller/upward into depth as faint traces. This is a working accumulation hypothesis, not an approved trace design.
+- Short phrases retain the chosen size. Long units shrink only as needed to fit 76% of stage height at rest, including landscape phones. Entry clipping at enlarged scale is intentional.
+- Reduced motion changes poses directly; scroll backwards reverses the full sequence.
 
-- **Von unten aufsteigen:** sentence travels upward from below the viewport.
-- **Aus nächster Nähe:** initially oversized/cropped text resolves into readable size.
-- **Größe:** responsive base size, 48–160 at 1440px (initially 96).
-- **Einsatz:** onset relative to the opener, 0.18–0.6 viewport (initially 0.30).
-- **Scrollposition:** scrub the complete opener + first-word transition; native scrolling works too.
-- **Zum Anfang:** replay from the opening; H/× hides controls, ↔ restores them.
+## Controls
 
-Text direction/typeface: original wording, Bricolage 600. Size, 0.23-viewport entrance span, cream text/shadow, vertical position and motion are open fixtures. The harness is 200svh, not a proposed duration for the whole pair. Input controls progress; no automatic poem playback or ambient text effect. Reduced motion uses a direct reveal. Appearance and portrait behaviour come from the accepted opener. Controls are review UI, not artist prose.
+**Größe**, **Einsatz**, **Abstand**, **Scrollposition** manipulate the sequence in place. Counter shows active unit / seven. The earlier rising entrance remains available for comparison. **Zum Anfang** resets to the opener; H/× hides controls, ↔ restores them. Review controls are separate from artist prose.
 
 ## Actual opener, no production edits
 
-`serve.tsx` bundles `scene.ts` and `forest.ts` from pinned main revision `3b839491bf4743f05bce54b9f8a00c64de29ad08` through esbuild. CSS/fonts come from the same revision. This keeps the approved portrait/theme updates without merging unrelated CMS changes into the experimental branch. `Opening` renders the unchanged real markup; the local entry mounts its canvas renderer. `context-props.ts` uses the published title/dates/light source and a local image URL.
+The local server bundles `scene.ts`/`forest.ts`, CSS and fonts from pinned main `3b839491bf4743f05bce54b9f8a00c64de29ad08` via esbuild. This retains accepted portrait/theme behaviour without merging unrelated CMS work. `Opening` renders its unchanged real markup. `context-props.ts` uses the published title/dates/light source and a local image URL. The sticky scene is extended locally beyond the title exit to host the poem.
 
-The source photo is prepared in memory with the existing media pipeline settings (rotate, 1920px, WebP quality 80); SHA-256 starts `6f60f5b1a39bdac4`, matching the accepted media variant. No CDN dependency or new package. Scene code and published CMX entry stay untouched. The only scene extension is local: retain its sticky stage after the title exit for the new fragment.
+Source photo preparation matches the accepted 1920px WebP (rotate, quality 80, SHA-256 prefix `6f60f5b1a39bdac4`). No CDN dependency, new package, particle/text coupling, audio, Worker/publication entry or deployment. Public site remains opener-only.
 
-Source words are read from `content/temple-of-sound/draft.tsx`, or the older `content/drafts/temple-of-sound.tsx` on this branch. Server/watch starts from the package script; restart it after editing the bundled client modules.
+Words are read from `content/temple-of-sound/draft.tsx`, falling back to `content/drafts/temple-of-sound.tsx` on this older branch. Restart the server after editing bundled client modules.
 
-## Validation / boundary
+## Validation / recovery
 
-Browser-checked opener readiness, first-word reveal, both movement controls, size/onset changes, replay/hidden controls, mobile bounds and light/dark/reduced motion. Image hash matches the accepted variant. Scoped TypeScript and formatting pass. No permanent visual tests, CI polling or deployment. Public site remains opener only.
+Scoped TypeScript and formatting pass. Browser-checked every settled unit on desktop 1440×960, phone 390×844 and landscape 844×390, source order, original text, liked defaults, trace presence and complete reverse reset. No permanent visual tests or CI polling.
 
-## Recovery / next review
+- `4013e89`: first-sentence contextual workbench; liked close-view configuration.
+- `c1d9879`: all isolated trace variants rejected for insufficient impact; do not carry their mechanisms forward as selected.
+- `551612d`: glyph coupling parked; it was not the assignment.
+- `0b97988`: Bricolage accepted for this first pair.
 
-- `c1d9879`: rejected isolated trace comparison (upward compression, outlines, margins).
-- `551612d`: parked glyph-coupling probe; coupling was not the assignment.
-- `0b97988`: artist selected Bricolage for this first pair.
-- `d621633`: unnecessary width survey; retain normal responsive capped reading width.
-
-Review from the opener: how should the first words arrive with sufficient presence? No entrance selected and no finished-scene approval. [Shared context](../docs/collaboration.md).
+[Shared intention, scoped feedback and next review](../docs/collaboration.md).

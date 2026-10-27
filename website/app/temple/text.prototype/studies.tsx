@@ -1,4 +1,4 @@
-// THROWAWAY: first words in the actual opener context. Not a selected scene.
+// THROWAWAY: the first verse/refrain follows the liked close entrance in context.
 import { existsSync, readFileSync } from 'node:fs'
 import { Opening } from '../opening.tsx'
 
@@ -17,7 +17,7 @@ export function firstPair() {
 import { openingProps } from './context-props.ts'
 
 export function Review() {
-  const firstSentence = firstPair()[0]
+  const units = firstPair()
   return () => (
     <html
       lang="en"
@@ -56,18 +56,26 @@ export function Review() {
           <Opening {...openingProps} />
           <article
             class="entry-text"
-            aria-label="Erster Satz der ersten Strophe"
+            aria-label="Erstes Strophen-Refrain-Paar"
           >
-            <p>{firstSentence}</p>
+            {units.map((unit, index) => (
+              <p
+                class="entry-unit"
+                data-unit={index}
+              >
+                {unit}
+              </p>
+            ))}
           </article>
         </main>
         <nav
           class="review-controls"
-          aria-label="Exploration: Übergang zum ersten Satz"
+          aria-label="Exploration: erstes Strophen-Refrain-Paar"
           lang="de"
         >
           <div class="review-heading">
-            <strong>Übergang · erster Satz</strong>
+            <strong>Erste Strophe + Refrain</strong>
+            <output data-count>Opener</output>
             <button
               type="button"
               data-replay
@@ -91,14 +99,14 @@ export function Review() {
             <button
               type="button"
               data-motion="rise"
-              aria-pressed="true"
+              aria-pressed="false"
             >
               Von unten aufsteigen
             </button>
             <button
               type="button"
               data-motion="close"
-              aria-pressed="false"
+              aria-pressed="true"
             >
               Aus nächster Nähe
             </button>
@@ -112,9 +120,9 @@ export function Review() {
                 min="48"
                 max="160"
                 step="4"
-                defaultValue="96"
+                defaultValue="160"
               />
-              <output data-size-label>96</output>
+              <output data-size-label>160</output>
             </label>
             <label>
               Einsatz{' '}
@@ -124,9 +132,21 @@ export function Review() {
                 min="0.18"
                 max="0.6"
                 step="0.01"
-                defaultValue="0.30"
+                defaultValue="0.18"
               />
-              <output data-entry-label>0,30 × Höhe</output>
+              <output data-entry-label>0,18 × Höhe</output>
+            </label>
+            <label>
+              Abstand{' '}
+              <input
+                data-spacing
+                type="range"
+                min="0.16"
+                max="0.42"
+                step="0.01"
+                defaultValue="0.22"
+              />
+              <output data-spacing-label>0,22 × Höhe</output>
             </label>
             <label>
               Scrollposition{' '}
@@ -134,15 +154,13 @@ export function Review() {
                 data-position
                 type="range"
                 min="0"
-                max="1"
+                max="2"
                 step="0.002"
                 defaultValue="0"
               />
             </label>
           </div>
-          <p class="review-note">
-            Arbeitsfläche: erster Satz nach dem Opener. H versteckt die Bedienung.
-          </p>
+          <p class="review-note">Sinneinheiten im Originalwortlaut. H versteckt die Bedienung.</p>
         </nav>
         <button
           class="restore-controls"

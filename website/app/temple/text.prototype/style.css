@@ -16,8 +16,8 @@ body {
   font-synthesis: none;
   font-size: clamp(
     32px,
-    calc(var(--entry-size, 96) * 0.069444vw),
-    calc(var(--entry-size, 96) * 1px)
+    calc(var(--entry-size, 160) * 0.069444vw),
+    calc(var(--entry-size, 160) * 1px)
   );
   line-height: 1.12;
   letter-spacing: -0.025em;
@@ -38,8 +38,13 @@ body[data-context] .entry-text {
   text-shadow:
     0 2px 28px #030503c9,
     0 1px 2px #030503aa;
-  opacity: 0;
   pointer-events: none;
+}
+body[data-context] .entry-unit {
+  grid-area: 1 / 1;
+  align-self: center;
+  opacity: 0;
+  transform-origin: center;
   will-change: transform, opacity;
 }
 /* The review panel is outside the artist's prose. */
@@ -67,6 +72,11 @@ body[data-context] .entry-text {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.review-heading output {
+  min-width: 45px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .review-heading strong {
   flex: 1;
