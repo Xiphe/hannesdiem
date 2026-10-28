@@ -22,3 +22,21 @@ export interface PoemSectionProps {
 export declare const PoemCanvas: Component<PoemCanvasProps>
 export declare const PoemOpening: Component<PoemOpeningProps>
 export declare const PoemSection: Component<PoemSectionProps>
+
+export interface InvitationGridProps {
+  children?: RemixNode
+}
+export interface InvitationCardProps {
+  id: string
+  title: string
+  action: { label: string; target: string }
+  children?: RemixNode
+}
+export interface InvitationDetailsProps {
+  id: string
+  title: string
+  children?: RemixNode
+}
+export declare const InvitationGrid: Component<InvitationGridProps>
+export declare const InvitationCard: Component<InvitationCardProps>
+export declare const InvitationDetails: Component<InvitationDetailsProps>

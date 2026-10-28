@@ -149,3 +149,10 @@ export declare const LinkTree: Component<LinkTreeProps>
 
 export { PoemCanvas, PoemOpening, PoemSection } from './temple.d.ts'
 export type { PoemCanvasProps, PoemOpeningProps, PoemSectionProps } from './temple.d.ts'
+
+export { InvitationGrid, InvitationCard, InvitationDetails } from './temple.d.ts'
+export type {
+  InvitationGridProps,
+  InvitationCardProps,
+  InvitationDetailsProps,
+} from './temple.d.ts'

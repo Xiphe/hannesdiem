@@ -41,6 +41,39 @@ const release = (title: string, count: number) =>
     })),
   })
 const pages: Record<string, { kind: string; title: string; body: CmxNode }> = {
+  'fixture-invitations': {
+    kind: 'temple',
+    title: 'Fixture invitations',
+    body: component('PoemCanvas', {}, [
+      component('InvitationGrid', {}, [
+        component(
+          'InvitationCard',
+          {
+            id: 'fixture-invitation',
+            title: 'Fixture invitation',
+            action: { label: 'Open fixture details', target: 'fixture-invitation-details' },
+          },
+          [text('p', 'Static invitation description.')],
+        ),
+        component(
+          'InvitationDetails',
+          {
+            id: 'fixture-invitation-details',
+            title: 'Fixture details',
+          },
+          [
+            text('p', 'Static dialog explanation.'),
+            {
+              type: 'element',
+              tag: 'a',
+              props: { href: '/fixture' },
+              children: ['Return to fixture'],
+            },
+          ],
+        ),
+      ]),
+    ]),
+  },
   'fixture-release': {
     kind: 'release',
     title: 'Fixture release',
