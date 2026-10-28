@@ -219,23 +219,6 @@ export function Review(_handle: Handle) {
               />
               <output data-mist-highlights-label>65 %</output>
             </label>
-            <span class="copy-mode-choices">
-              <span>Text-Farbe</span>
-              <button
-                type="button"
-                data-copy-mode="letters"
-                aria-pressed="true"
-              >
-                Buchstaben
-              </button>
-              <button
-                type="button"
-                data-copy-mode="clouds"
-                aria-pressed="false"
-              >
-                Farbwolken
-              </button>
-            </span>
             <label>
               Text-Varianz{' '}
               <input

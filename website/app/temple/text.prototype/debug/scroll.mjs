@@ -27,7 +27,6 @@ try {
   })
   await page.goto('http://localhost:8790/temple-of-sound')
   await page.waitForSelector('.temple-opening[data-ready]')
-  if (process.env.COPY_MODE === 'clouds') await page.locator('[data-copy-mode="clouds"]').click()
   await page.waitForTimeout(300)
   const result = await page.evaluate(async () => {
     window.__drawTimes = []

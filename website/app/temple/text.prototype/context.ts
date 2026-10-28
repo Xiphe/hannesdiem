@@ -183,15 +183,6 @@ if (!abort.signal.aborted) {
     invalidateForest()
     request()
   })
-  document.querySelectorAll<HTMLButtonElement>('[data-copy-mode]').forEach((button) =>
-    on(button, 'click', () => {
-      copyColour.setMode(button.dataset.copyMode as 'letters' | 'clouds')
-      document
-        .querySelectorAll<HTMLButtonElement>('[data-copy-mode]')
-        .forEach((b) => b.setAttribute('aria-pressed', String(b === button)))
-      request()
-    }),
-  )
   on(document.querySelector('[data-copy-variance]')!, 'input', (event) => {
     const value = (event.target as HTMLInputElement).value
     copyColour.setVariance(Number(value) / 100)

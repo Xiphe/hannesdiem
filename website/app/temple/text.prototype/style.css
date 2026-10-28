@@ -290,20 +290,11 @@ body[data-ui='hidden'] .restore-controls {
   background: linear-gradient(to right, #ff0008, #ff8008, #ffff08);
 }
 
-.copy-mode-choices {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-body[data-copy-mode='clouds'] .verse-copy > p:not(.verse-opening) {
+/* Set only once the first cloud texture is ready; plain text is the fallback. */
+.verse-copy > p[data-copy-cloud] {
   background-clip: text;
   -webkit-background-clip: text;
-}
-body[data-copy-mode='clouds'] [data-copy-letter] {
-  color: transparent !important;
-}
-body:not([data-copy-mode='clouds']) .verse-copy > p {
-  background-image: none !important;
+  color: transparent;
 }
 ::selection {
   color: #fff;
