@@ -9,38 +9,79 @@ const firstPair = document.querySelector<HTMLElement>('.first-pair')!
 const refrain = document.querySelector<HTMLElement>('.refrain-composition')!
 const refrainStage = document.querySelector<HTMLElement>('.refrain-stage')!
 const phrases = [...document.querySelectorAll<HTMLElement>('.refrain-phrase')]
-const highlights = [...document.querySelectorAll<HTMLElement>('[data-mask]')]
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
 const abort = new AbortController()
 const on = (target: EventTarget, event: string, listener: EventListener) =>
   target.addEventListener(event, listener, { signal: abort.signal })
 let raf = 0,
-  lastScroll = -Infinity,
-  lift = 0.42,
-  pigment = '#e8dfcc'
-let surfaces: { host: HTMLElement; ink: ReturnType<typeof createTypeSurface> }[] = []
+  lastScroll = -Infinity
 let refrainInk: ReturnType<typeof createTypeSurface>
 
+const measure = document.createElement('canvas').getContext('2d')!
+function inkBounds(phrase: HTMLElement) {
+  const style = getComputedStyle(phrase)
+  measure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+  const fontAscent = measure.measureText('Hg').fontBoundingBoxAscent
+  const range = document.createRange()
+  let left = Infinity,
+    right = -Infinity,
+    top = Infinity,
+    bottom = -Infinity
+  for (const word of phrase.querySelectorAll<HTMLElement>('[data-word]')) {
+    const node = word.firstChild!
+    const text = node.textContent!
+    for (let i = 0; i < text.length; i++) {
+      range.setStart(node, i)
+      range.setEnd(node, i + 1)
+      const rect = range.getBoundingClientRect()
+      const m = measure.measureText(text[i])
+      left = Math.min(left, rect.left - m.actualBoundingBoxLeft)
+      right = Math.max(right, rect.left + m.actualBoundingBoxRight)
+      top = Math.min(top, rect.top + fontAscent - m.actualBoundingBoxAscent)
+      bottom = Math.max(bottom, rect.top + fontAscent + m.actualBoundingBoxDescent)
+    }
+  }
+  return { left, right, top, bottom, width: right - left, height: bottom - top }
+}
 function fitRefrain() {
   const width = refrainStage.clientWidth * 0.9
   const maxHeight = innerHeight * 0.5
   for (const phrase of phrases) {
+    phrase.style.removeProperty('--ink-x')
+    phrase.style.removeProperty('--ink-y')
+    if (phrase.dataset.face === 'bricolage') {
+      phrase.style.fontSize = '100px'
+      // Fit actual glyph ink, not advance boxes: the long line touches both edges.
+      const bounds = inkBounds(phrase)
+      phrase.style.fontSize = `${(100 * refrainStage.clientWidth) / bounds.width}px`
+      const ink = inkBounds(phrase),
+        rect = phrase.getBoundingClientRect()
+      phrase.style.setProperty(
+        '--ink-x',
+        `${rect.left + rect.width / 2 - (ink.left + ink.right) / 2}px`,
+      )
+      phrase.style.setProperty(
+        '--ink-y',
+        `${rect.top + rect.height / 2 - (ink.top + ink.bottom) / 2}px`,
+      )
+      continue
+    }
     const size = Math.min(190, width / 5.9, maxHeight / 2.6)
     phrase.style.fontSize = `${size}px`
-    let scale = 1
     for (let i = 0; i < 3; i++) {
       const content = phrase.querySelector<HTMLElement>('[data-ink]')!
-      scale = Math.min(1, maxHeight / content.offsetHeight, width / content.scrollWidth)
+      const scale = Math.min(1, maxHeight / content.offsetHeight, width / content.scrollWidth)
       if (scale >= 0.999) break
       phrase.style.fontSize = `${parseFloat(phrase.style.fontSize) * scale}px`
     }
   }
-  const contentHeight = Math.max(...phrases.map((p) => p.offsetHeight)) + 32
+  const contentHeight =
+    Math.max(...phrases.map((p) => Math.max(p.offsetHeight, inkBounds(p).height))) + 32
   refrain.style.setProperty('--refrain-height', `${contentHeight}px`)
 }
+
 function resize() {
   fitRefrain()
-  for (const { ink } of surfaces) ink.resize()
   refrainInk.resize()
   request()
 }
@@ -50,11 +91,6 @@ function draw(now: number) {
   root.classList.toggle('reading-backdrop', progress >= 0.3)
   const scrolling = now - lastScroll < 140
   let active = false
-  for (const { host, ink } of surfaces) {
-    if (host.getBoundingClientRect().bottom < 0 || host.getBoundingClientRect().top > innerHeight)
-      continue
-    active = ink.draw(now, 0, 0, 0, scrolling, lift, pigment) || active
-  }
   const section = refrain.getBoundingClientRect()
   const hold = section.height - refrainStage.offsetHeight
   const stickyTop = (stage.clientHeight - refrainStage.offsetHeight) / 2
@@ -63,8 +99,8 @@ function draw(now: number) {
     next = 0,
     blend = 0
   const transitions = [
-    [0.08, 0.45],
-    [0.53, 0.93],
+    [0, 0.5],
+    [0.5, 1],
   ]
   for (let i = 0; i < transitions.length; i++) {
     const [start, end] = transitions[i]
@@ -78,7 +114,7 @@ function draw(now: number) {
     }
   }
   refrain.dataset.active = String(blend < 0.5 ? index : next)
-  active = refrainInk.draw(now, index, next, blend, scrolling, lift, pigment) || active
+  active = refrainInk.draw(now, index, next, blend, scrolling) || active
   if (!reduced.matches || active) request()
 }
 function request() {
@@ -104,18 +140,6 @@ if (!abort.signal.aborted) {
       .join('')
   refrain.dataset.ready = 'true'
   fitRefrain()
-  surfaces = highlights.map((host) => {
-    const ink = createTypeSurface(
-      host.querySelector('canvas')!,
-      [host.querySelector('[data-ink]')!],
-      abort.signal,
-      request,
-      false,
-    )
-    ink.resize()
-    host.dataset.ready = 'true'
-    return { host, ink }
-  })
   refrainInk = createTypeSurface(
     document.querySelector('.refrain-canvas')!,
     phrases.map((p) => p.querySelector('[data-ink]')!),
@@ -130,16 +154,6 @@ if (!abort.signal.aborted) {
   const observer = new ResizeObserver(resize)
   observer.observe(firstPair)
   observer.observe(stage)
-  on(document.querySelector('[data-lift]')!, 'input', ((event: Event) => {
-    const value = (event.target as HTMLInputElement).value
-    lift = Number(value) / 100
-    document.querySelector('[data-lift-label]')!.textContent = `${value} %`
-    request()
-  }) as EventListener)
-  on(document.querySelector('[data-pigment]')!, 'input', (event) => {
-    pigment = (event.target as HTMLInputElement).value
-    request()
-  })
   on(document.querySelector('[data-copy-color]')!, 'input', (event) => {
     document.body.style.setProperty('--copy-color', (event.target as HTMLInputElement).value)
   })

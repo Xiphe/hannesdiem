@@ -132,7 +132,6 @@ export function createTypeSurface(
   inkElements: HTMLElement[],
   signal: AbortSignal,
   invalidate: () => void,
-  interactive = true,
 ) {
   const context = canvas.getContext('2d')!
   const mask = document.createElement('canvas')
@@ -174,6 +173,7 @@ export function createTypeSurface(
     const groups = wordElements.length ? wordElements : [element]
     const wordBounds: { x: number; y: number; width: number; height: number }[] = []
     for (const group of groups) {
+      const firstGlyph = glyphs.length
       const node = group.firstChild!
       const range = document.createRange()
       const text = node.textContent!
@@ -202,14 +202,18 @@ export function createTypeSurface(
         })
       }
       for (const line of lines) ink.fillText(line.text.trimEnd(), line.x, line.baseline)
-      const bounds = group.getBoundingClientRect()
-      const x = Math.max(0, bounds.left - hostRect.left - 8)
-      const y = Math.max(0, bounds.top - hostRect.top - 8)
+      const wordGlyphs = glyphs.slice(firstGlyph)
+      const left = Math.min(...wordGlyphs.map((g) => g.x))
+      const top = Math.min(...wordGlyphs.map((g) => g.y))
+      const right = Math.max(...wordGlyphs.map((g) => g.x + g.width))
+      const bottom = Math.max(...wordGlyphs.map((g) => g.y + g.height))
+      const x = Math.max(0, left - 4),
+        y = Math.max(0, top - 4)
       wordBounds.push({
         x,
         y,
-        width: Math.min(width - x, bounds.width + 16),
-        height: Math.min(height - y, bounds.height + 16),
+        width: Math.min(width - x, right + 4 - x),
+        height: Math.min(height - y, bottom + 4 - y),
       })
     }
     const words = wordBounds.map((bounds) => {
@@ -294,7 +298,7 @@ export function createTypeSurface(
   canvas.parentElement!.addEventListener(
     'pointermove',
     (event) => {
-      if (!interactive || event.pointerType === 'touch') return
+      if (event.pointerType === 'touch') return
       const now = performance.now()
       lastInput = now
       if (now - lastPointer < (reduced.matches ? 180 : 65)) return
@@ -313,15 +317,7 @@ export function createTypeSurface(
     { signal },
   )
 
-  function draw(
-    now: number,
-    index = 0,
-    next = index,
-    blend = 0,
-    scrolling = false,
-    lift = 0.42,
-    pigment = '#e8dfcc',
-  ) {
+  function draw(now: number, index = 0, next = index, blend = 0, scrolling = false) {
     const rect = canvas.getBoundingClientRect()
     if (rect.bottom < 0 || rect.top > innerHeight || rect.width === 0) return false
     const a = layers[index],
@@ -347,17 +343,23 @@ export function createTypeSurface(
         maskInk.globalAlpha = alpha
         maskInk.drawImage(word.surface, word.x + dx, word.y, word.width, word.height)
       }
-      // Each outgoing/arriving word has its own timing and its own natural place.
-      a.words.forEach((word, i) => {
-        const start = variation(index * 43 + i * 11) * 0.55
-        const duration = 0.12 + variation(i + index * 37 + 900) * 0.26
-        part(word, Math.min(1, (1 - smooth((blend - start) / duration)) * 1.5))
-      })
-      b.words.forEach((word, i) => {
-        const start = variation(index * 59 + i * 17 + 400) * 0.55
-        const duration = 0.1 + variation(i + index * 29 + 800) * 0.28
-        part(word, Math.min(1, smooth((blend - start) / duration) * 1.5))
-      })
+      // One word starts at lock; the last word resolves exactly at release.
+      const wordPhases = (count: number, salt: number) => {
+        const order = Array.from({ length: count }, (_, i) => i).sort(
+          (a, b) => variation(a * 13 + salt) - variation(b * 13 + salt),
+        )
+        return Array.from({ length: count }, (_, i) => {
+          const rank = order.indexOf(i)
+          const start = count === 1 ? 0 : (rank / (count - 1)) * 0.58
+          const end =
+            rank === count - 1 ? 1 : Math.min(0.94, start + 0.18 + variation(i + salt + 81) * 0.25)
+          return smooth((blend - start) / (end - start))
+        })
+      }
+      const departing = wordPhases(a.words.length, index * 43)
+      const arriving = wordPhases(b.words.length, index * 59 + 400)
+      a.words.forEach((word, i) => part(word, 1 - departing[i]))
+      b.words.forEach((word, i) => part(word, arriving[i]))
       const beat = Math.floor(blend * 120 + index * 29)
       for (let patch = 0; patch < 9; patch++) {
         maskInk.save()
@@ -394,7 +396,7 @@ export function createTypeSurface(
     }
     maskInk.globalAlpha = 1
     if (scrolling) lastInput = now
-    if (interactive && !reduced.matches && now > nextIdle && now - lastInput > 800) {
+    if (!reduced.matches && now > nextIdle && now - lastInput > 800) {
       const l = layers[current]
       if (l.glyphs.length) addEvent(l, Math.floor(Math.random() * l.glyphs.length), true, now)
       nextIdle = now + 950 + Math.random() * 1350
@@ -424,10 +426,6 @@ export function createTypeSurface(
         forestBounds.width,
         forestBounds.height,
       )
-    context.globalAlpha = lift
-    context.fillStyle = pigment
-    context.fillRect(0, 0, width, height)
-    context.globalAlpha = 1
     context.globalCompositeOperation = 'destination-in'
     context.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, width, height)
     context.globalCompositeOperation = 'source-over'

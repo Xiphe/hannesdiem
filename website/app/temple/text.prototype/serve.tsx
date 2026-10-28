@@ -46,6 +46,12 @@ const scene = await build({
             // Local black-ground study: keep the forest inside type, including after title exit.
             .replace('veilContext.globalAlpha = 1 - s.reveal', 'veilContext.globalAlpha = 1')
             .replaceAll("'#030503'", "'#000000'")
+            // Final face exits at the same 1px-per-scroll-pixel rate as the next headline.
+            .replace(
+              'const y = clamp((progress - 1.05) / 0.95) * height',
+              'const y = Math.max(0, scroll - height * 0.1575)',
+            )
+            .replace('const overlayOpacity = 0.11', 'const overlayOpacity = 0')
             .replace(
               'import { createForest }',
               "import { captureForest, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { createForest }",

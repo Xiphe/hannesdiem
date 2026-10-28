@@ -10,16 +10,8 @@ export const refrain = [
   { text: 'I’m faithful and held.', display: 'I’M FAITHFUL AND HELD.', face: 'unbounded' },
 ] as const
 
-function MaskedText(handle: Handle<{ text: string; class?: string }>) {
-  return () => (
-    <span
-      class={`masked-type ${handle.props.class ?? ''}`}
-      data-mask
-    >
-      <span data-ink>{handle.props.text}</span>
-      <canvas aria-hidden="true" />
-    </span>
-  )
+function Emphasis(handle: Handle<{ text: string; class?: string }>) {
+  return () => <span class={`type-emphasis ${handle.props.class ?? ''}`}>{handle.props.text}</span>
 }
 
 export function Review(_handle: Handle) {
@@ -69,13 +61,13 @@ export function Review(_handle: Handle) {
             <div class="verse-copy">
               <p class="verse-opening">
                 <strong>
-                  <MaskedText text="I’m in love with humanity." />
+                  <Emphasis text="I’m in love with humanity." />
                 </strong>
               </p>
               <p>With the brave spirits I meet, witness, and sense.</p>
               <p>
                 <strong>
-                  <MaskedText
+                  <Emphasis
                     text="I’m so deeply touched"
                     class="accent"
                   />
@@ -85,7 +77,7 @@ export function Review(_handle: Handle) {
               <p>
                 Those willing to build villages rooted in{' '}
                 <strong>
-                  <MaskedText
+                  <Emphasis
                     text="trust and connection."
                     class="accent"
                   />
@@ -108,11 +100,18 @@ export function Review(_handle: Handle) {
                       data-ink
                       aria-hidden="true"
                     >
-                      {display.split(' ').map((word, i) => (
-                        <>
-                          {i > 0 ? ' ' : ''}
-                          <span data-word>{word}</span>
-                        </>
+                      {(face === 'bricolage'
+                        ? [display.split(' ').slice(0, 2), display.split(' ').slice(2)]
+                        : [display.split(' ')]
+                      ).map((words) => (
+                        <span data-line={face === 'bricolage' ? '' : undefined}>
+                          {words.map((word, i) => (
+                            <>
+                              {i > 0 ? ' ' : ''}
+                              <span data-word>{word}</span>
+                            </>
+                          ))}
+                        </span>
                       ))}
                     </span>
                   </p>
@@ -126,7 +125,7 @@ export function Review(_handle: Handle) {
             <div class="verse-copy verse-coda">
               <p>
                 <strong>
-                  <MaskedText
+                  <Emphasis
                     text="I’m loved"
                     class="accent"
                   />
@@ -178,25 +177,6 @@ export function Review(_handle: Handle) {
             </button>
           </div>
           <div class="review-adjustments">
-            <label>
-              Tönung{' '}
-              <input
-                type="range"
-                data-lift
-                min="0"
-                max="100"
-                defaultValue="42"
-              />
-              <output data-lift-label>42 %</output>
-            </label>
-            <label>
-              Pigment{' '}
-              <input
-                type="color"
-                data-pigment
-                defaultValue="#e8dfcc"
-              />
-            </label>
             <label>
               Lesetext{' '}
               <input
