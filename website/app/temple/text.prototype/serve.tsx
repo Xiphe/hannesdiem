@@ -52,13 +52,14 @@ const scene = await build({
               'const y = Math.max(0, scroll - height * 0.1575)',
             )
             .replace('const overlayOpacity = 0.11', 'const overlayOpacity = 0')
+            .replace('  resize()\n}', '  setForestInvalidation(requestDraw)\n  resize()\n}')
             .replace(
               'import { createForest }',
-              "import { captureForest, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { createForest }",
+              "import { captureForest, setForestInvalidation, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { createForest }",
             )
             .replace(
               'paintForest(context, width, height, elapsed)',
-              'paintForest(context, width, height, elapsed); captureForest(canvas)',
+              'paintForest(context, width, height, elapsed); captureForest(canvas, elapsed)',
             )
             .replace(
               /  function roughBand\([\s\S]*?\n  function compose\(/,

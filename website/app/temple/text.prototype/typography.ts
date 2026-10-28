@@ -1,3 +1,4 @@
+import { paintEdgeMist } from './atmosphere.ts'
 // Shared with the pinned opener in the local browser bundle. No production edits.
 export type Glyph = {
   x: number
@@ -17,7 +18,16 @@ export const hash = (value: number) => {
 export const forestFrame = document.createElement('canvas')
 export let forestBounds = { left: 0, top: 0, width: 0, height: 0 }
 const forestInk = forestFrame.getContext('2d')!
-export function captureForest(source: HTMLCanvasElement) {
+let redrawForest = () => {}
+export function setForestInvalidation(redraw: () => void) {
+  redrawForest = redraw
+}
+export function invalidateForest() {
+  redrawForest()
+}
+export function captureForest(source: HTMLCanvasElement, seconds: number) {
+  const bounds = source.getBoundingClientRect()
+  paintEdgeMist(source.getContext('2d')!, bounds.width, bounds.height, seconds)
   forestBounds = source.getBoundingClientRect()
   if (forestFrame.width !== source.width || forestFrame.height !== source.height) {
     forestFrame.width = source.width

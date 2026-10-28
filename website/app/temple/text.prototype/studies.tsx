@@ -14,6 +14,18 @@ function Emphasis(handle: Handle<{ text: string; class?: string }>) {
   return () => <span class={`type-emphasis ${handle.props.class ?? ''}`}>{handle.props.text}</span>
 }
 
+function GlitchHeading(handle: Handle<{ text: string }>) {
+  return () => (
+    <span
+      class="type-emphasis single-face-heading"
+      data-heading-mask
+    >
+      <span data-ink>{handle.props.text}</span>
+      <canvas aria-hidden="true" />
+    </span>
+  )
+}
+
 export function Review(_handle: Handle) {
   return () => (
     <html
@@ -61,7 +73,7 @@ export function Review(_handle: Handle) {
             <div class="verse-copy">
               <p class="verse-opening">
                 <strong>
-                  <Emphasis text="I’m in love with humanity." />
+                  <GlitchHeading text="I’m in love with humanity." />
                 </strong>
               </p>
               <p>With the brave spirits I meet, witness, and sense.</p>
@@ -130,7 +142,7 @@ export function Review(_handle: Handle) {
                     class="accent"
                   />
                 </strong>
-                , and in awe of what those kindred souls have built into this realm.
+                , and in awe of what you kindred souls have built into this realm.
               </p>
             </div>
           </article>
@@ -177,6 +189,46 @@ export function Review(_handle: Handle) {
             </button>
           </div>
           <div class="review-adjustments">
+            <label>
+              Nebel-Farbe{' '}
+              <input
+                class="warm-hue"
+                type="range"
+                data-mist-hue
+                min="0"
+                max="60"
+                defaultValue="22"
+              />
+              <output
+                data-mist-swatch
+                style="color:rgb(255,94,8)"
+              >
+                ●
+              </output>
+            </label>
+            <label>
+              Nebel-Stärke{' '}
+              <input
+                type="range"
+                data-mist-intensity
+                min="0"
+                max="100"
+                defaultValue="45"
+              />
+              <output data-mist-intensity-label>45 %</output>
+            </label>
+            <label>
+              Text-Farbspiel{' '}
+              <input
+                type="range"
+                data-copy-temperature
+                min="0"
+                max="100"
+                defaultValue="40"
+              />
+              <output data-copy-temperature-label>40 %</output>
+            </label>
+
             <label>
               Lesetext{' '}
               <input

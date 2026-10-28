@@ -1,7 +1,9 @@
 // THROWAWAY. Native text flow with a compact, centred refrain hold.
 import { mountOpening } from '../scene.ts'
 import { openingProps } from './context-props.ts'
-import { createTypeSurface } from './typography.ts'
+import { createTypeSurface, invalidateForest } from './typography.ts'
+import { mist } from './atmosphere.ts'
+import { colourCopy } from './copy-colour.ts'
 
 const root = document.querySelector<HTMLElement>('.temple-opening')!
 const stage = root.querySelector<HTMLElement>('.temple-stage')!
@@ -9,6 +11,8 @@ const firstPair = document.querySelector<HTMLElement>('.first-pair')!
 const refrain = document.querySelector<HTMLElement>('.refrain-composition')!
 const refrainStage = document.querySelector<HTMLElement>('.refrain-stage')!
 const phrases = [...document.querySelectorAll<HTMLElement>('.refrain-phrase')]
+const heading = document.querySelector<HTMLElement>('[data-heading-mask]')!
+const copyColour = colourCopy(firstPair)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
 const abort = new AbortController()
 const on = (target: EventTarget, event: string, listener: EventListener) =>
@@ -16,6 +20,7 @@ const on = (target: EventTarget, event: string, listener: EventListener) =>
 let raf = 0,
   lastScroll = -Infinity
 let refrainInk: ReturnType<typeof createTypeSurface>
+let headingInk: ReturnType<typeof createTypeSurface>
 
 const measure = document.createElement('canvas').getContext('2d')!
 function inkBounds(phrase: HTMLElement) {
@@ -83,6 +88,7 @@ function fitRefrain() {
 function resize() {
   fitRefrain()
   refrainInk.resize()
+  headingInk.resize()
   request()
 }
 function draw(now: number) {
@@ -90,7 +96,8 @@ function draw(now: number) {
   const progress = scrollY / stage.clientHeight
   root.classList.toggle('reading-backdrop', progress >= 0.3)
   const scrolling = now - lastScroll < 140
-  let active = false
+  let active = headingInk.draw(now)
+  copyColour.draw(now, reduced.matches)
   const section = refrain.getBoundingClientRect()
   const hold = section.height - refrainStage.offsetHeight
   const stickyTop = (stage.clientHeight - refrainStage.offsetHeight) / 2
@@ -138,6 +145,14 @@ if (!abort.signal.aborted) {
       .slice(0, 3)
       .map((n) => Number(n).toString(16).padStart(2, '0'))
       .join('')
+  headingInk = createTypeSurface(
+    heading.querySelector('canvas')!,
+    [heading.querySelector('[data-ink]')!],
+    abort.signal,
+    request,
+  )
+  headingInk.resize()
+  heading.dataset.ready = 'true'
   refrain.dataset.ready = 'true'
   fitRefrain()
   refrainInk = createTypeSurface(
@@ -155,7 +170,30 @@ if (!abort.signal.aborted) {
   observer.observe(firstPair)
   observer.observe(stage)
   on(document.querySelector('[data-copy-color]')!, 'input', (event) => {
-    document.body.style.setProperty('--copy-color', (event.target as HTMLInputElement).value)
+    const value = (event.target as HTMLInputElement).value
+    document.body.style.setProperty('--copy-color', value)
+    copyColour.setBase(value)
+    request()
+  })
+  on(document.querySelector('[data-mist-hue]')!, 'input', (event) => {
+    mist.hue = Number((event.target as HTMLInputElement).value)
+    invalidateForest()
+    document.querySelector<HTMLElement>('[data-mist-swatch]')!.style.color =
+      `rgb(255,${Math.round((255 * mist.hue) / 60)},8)`
+    request()
+  })
+  on(document.querySelector('[data-mist-intensity]')!, 'input', (event) => {
+    const value = (event.target as HTMLInputElement).value
+    mist.intensity = Number(value) / 100
+    invalidateForest()
+    document.querySelector('[data-mist-intensity-label]')!.textContent = `${value} %`
+    request()
+  })
+  on(document.querySelector('[data-copy-temperature]')!, 'input', (event) => {
+    const value = (event.target as HTMLInputElement).value
+    copyColour.setStrength(Number(value) / 100)
+    document.querySelector('[data-copy-temperature-label]')!.textContent = `${value} %`
+    request()
   })
   document.querySelectorAll<HTMLButtonElement>('[data-accent-choice]').forEach((button) =>
     on(button, 'click', async () => {
