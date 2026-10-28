@@ -31,7 +31,7 @@ export default function Content() {
           <br />
           I’m faithful and held.
           <br />
-          I’m loved, and in awe of what my ancestors and kindred souls have built upon this land.
+          I’m loved, and in awe of what you kindred souls have built onto this sphere.
         </p>
       </PoemOpening>
       <hr />

@@ -1,4 +1,3 @@
-import { paintEdgeMist } from './atmosphere.ts'
 // Shared with the pinned opener in the local browser bundle. No production edits.
 export type Glyph = {
   x: number
@@ -15,25 +14,24 @@ export const hash = (value: number) => {
   const n = Math.sin(value * 127.1 + 311.7) * 43758.5453
   return n - Math.floor(n)
 }
-export const forestFrame = document.createElement('canvas')
-export let forestBounds = { left: 0, top: 0, width: 0, height: 0 }
-const forestInk = forestFrame.getContext('2d')!
+export type TypeFrame = { ink: CanvasRenderingContext2D; bounds: DOMRect }
 let redrawForest = () => {}
+let drawType = (_now: number, _frame: TypeFrame) => false
 export function setForestInvalidation(redraw: () => void) {
   redrawForest = redraw
 }
 export function invalidateForest() {
   redrawForest()
 }
-export function captureForest(source: HTMLCanvasElement, seconds: number) {
-  const bounds = source.getBoundingClientRect()
-  paintEdgeMist(source.getContext('2d')!, bounds.width, bounds.height, seconds)
-  forestBounds = source.getBoundingClientRect()
-  if (forestFrame.width !== source.width || forestFrame.height !== source.height) {
-    forestFrame.width = source.width
-    forestFrame.height = source.height
-  }
-  forestInk.drawImage(source, 0, 0)
+export function setTypeFrame(draw: typeof drawType) {
+  drawType = draw
+}
+export function drawTypeFrame(
+  ink: CanvasRenderingContext2D,
+  source: HTMLCanvasElement,
+  now: number,
+) {
+  return drawType(now, { ink, bounds: source.getBoundingClientRect() })
 }
 
 export function roughBand(
@@ -143,7 +141,6 @@ export function createTypeSurface(
   signal: AbortSignal,
   invalidate: () => void,
 ) {
-  const context = canvas.getContext('2d')!
   const mask = document.createElement('canvas')
   const maskInk = mask.getContext('2d')!
   const measure = document.createElement('canvas').getContext('2d')!
@@ -286,7 +283,6 @@ export function createTypeSurface(
     ratio = Math.min(devicePixelRatio, 1.5)
     canvas.width = mask.width = Math.max(1, Math.round(width * ratio))
     canvas.height = mask.height = Math.max(1, Math.round(height * ratio))
-    context.setTransform(ratio, 0, 0, ratio, 0, 0)
     maskInk.setTransform(ratio, 0, 0, ratio, 0, 0)
     events.clear()
     tiles.clear()
@@ -327,7 +323,14 @@ export function createTypeSurface(
     { signal },
   )
 
-  function draw(now: number, index = 0, next = index, blend = 0, scrolling = false) {
+  function draw(
+    frame: TypeFrame,
+    now: number,
+    index = 0,
+    next = index,
+    blend = 0,
+    scrolling = false,
+  ) {
     const rect = canvas.getBoundingClientRect()
     if (rect.bottom < 0 || rect.top > innerHeight || rect.width === 0) return false
     const a = layers[index],
@@ -422,23 +425,21 @@ export function createTypeSurface(
       const alt = tile(letter.char, face.family, face.weight, event.layer.size)
       drawDisturbance(maskInk, width, ratio, letter, alt, { ...event, age, y: 0 }, reduced.matches)
     }
-    context.clearRect(0, 0, width, height)
-    // Crop the SAME live forest+glimmers frame before the opener's veil is applied.
-    if (forestFrame.width)
-      context.drawImage(
-        forestFrame,
-        0,
-        0,
-        forestFrame.width,
-        forestFrame.height,
-        forestBounds.left - rect.left,
-        forestBounds.top - rect.top,
-        forestBounds.width,
-        forestBounds.height,
-      )
-    context.globalCompositeOperation = 'destination-in'
-    context.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, width, height)
-    context.globalCompositeOperation = 'source-over'
+    // Move only the mask over one viewport-fixed material. No full-screen copies
+    // into independently scrolling canvases, and no frame-old forest texture.
+    frame.ink.save()
+    frame.ink.drawImage(
+      mask,
+      0,
+      0,
+      mask.width,
+      mask.height,
+      rect.left - frame.bounds.left,
+      rect.top - frame.bounds.top,
+      width,
+      height,
+    )
+    frame.ink.restore()
     return events.size > 0
   }
   return { resize, draw }

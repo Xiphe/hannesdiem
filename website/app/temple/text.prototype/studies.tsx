@@ -7,24 +7,12 @@ import { defaults } from './defaults.ts'
 // New wording/paragraphs supplied and confirmed by the artist, 2026-10-28.
 export const refrain = [
   { text: 'I’m playful and inspired.', display: 'I’m pLAYFuL aNd INSpIReD.', face: 'cinzel' },
-  { text: 'I’m breathing in and out.', display: 'I’M BREATHING IN AND OUT.', face: 'bricolage' },
+  { text: 'I’m breathing in and out.', display: 'i’M BREATHiNG iN AND OUT.', face: 'bricolage' },
   { text: 'I’m faithful and held.', display: 'I’M FAITHFUL AND HELD.', face: 'unbounded' },
 ] as const
 
 function Emphasis(handle: Handle<{ text: string; class?: string }>) {
   return () => <span class={`type-emphasis ${handle.props.class ?? ''}`}>{handle.props.text}</span>
-}
-
-function GlitchHeading(handle: Handle<{ text: string }>) {
-  return () => (
-    <span
-      class="type-emphasis single-face-heading"
-      data-heading-mask
-    >
-      <span data-ink>{handle.props.text}</span>
-      <canvas aria-hidden="true" />
-    </span>
-  )
 }
 
 export function Review(_handle: Handle) {
@@ -74,7 +62,7 @@ export function Review(_handle: Handle) {
             <div class="verse-copy">
               <p class="verse-opening">
                 <strong>
-                  <GlitchHeading text="I’m in love with humanity." />
+                  <Emphasis text="I’m in love with humanity." />
                 </strong>
               </p>
               <p>With the brave spirits I meet, witness, and sense.</p>
@@ -143,7 +131,7 @@ export function Review(_handle: Handle) {
                     class="accent"
                   />
                 </strong>
-                , and in awe of what you kindred souls have built into this realm.
+                , and in awe of what you kindred souls have built onto this sphere.
               </p>
             </div>
           </article>

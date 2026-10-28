@@ -31,52 +31,63 @@ export function noise(x: number, y: number) {
     values[((iy + 1) & 127) * size + ((ix + 1) & 127)] * sx
   return a * (1 - sy) + b * sy
 }
-let frame: ImageData,
-  last = -Infinity,
-  signature = ''
-function paintField(width: number, height: number, seconds: number) {
-  const w = Math.min(384, Math.round(width)),
-    h = Math.max(1, Math.min(512, Math.round((w * height) / width)))
-  const key = `${w}/${h}/${mist.hues.join('/')}/${mist.intensity}`
-  if (key === signature && Math.abs(seconds - last) < 1 / 15) return
-  signature = key
-  last = seconds
-  if (!frame || field.width !== w || field.height !== h) {
-    field.width = w
-    field.height = h
-    frame = ink.createImageData(w, h)
-  }
-  const colours = mist.hues.map((hue) => [255, (255 * hue) / 60, 10 + (30 * hue) / 60])
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      const u = x / w,
-        v = y / h
-      // Domain-warped folds, with smaller filaments across broad cloud banks.
-      const wx = (noise(u * 1.1 + 7 + seconds * 0.018, v * 0.9 + 3) - 0.5) * 0.85
-      const wy = (noise(u * 0.9 + 19, v * 1.2 + seconds * 0.014) - 0.5) * 0.65
-      const broad = noise(u * 2.4 + wx + seconds * 0.012, v * 2.1 + wy + 11)
-      const detail = noise(u * 13 + wx * 3 - seconds * 0.009, v * 11 + wy * 3 + 29)
-      const fine = noise(u * 38 + wx * 4, v * 29 + wy * 4 + 53)
+// Prepare cloud structure once. Animation only moves/blends these small textures;
+// no per-pixel noise calculation in the scroll/render loop.
+const clouds = mist.hues.map(() => {
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 256
+  const context = canvas.getContext('2d')!
+  const pixels = context.createImageData(256, 256)
+  const ox = Math.random() * 100,
+    oy = Math.random() * 100
+  for (let y = 0; y < 256; y++)
+    for (let x = 0; x < 256; x++) {
+      const u = x / 256,
+        v = y / 256
+      const wx = (noise(u * 1.1 + ox, v * 0.9 + oy) - 0.5) * 0.85
+      const wy = (noise(u * 0.9 + ox + 19, v * 1.2 + oy) - 0.5) * 0.65
+      const broad = noise(u * 4.8 + wx + ox, v * 4.2 + wy + oy + 11)
+      const detail = noise(u * 26 + wx * 3 + ox, v * 22 + wy * 3 + oy + 29)
+      const fine = noise(u * 76 + wx * 4 + ox, v * 58 + wy * 4 + oy + 53)
       const cloud = smooth((broad * 0.58 + detail * 0.3 + fine * 0.12 - 0.2) / 0.56)
       const billows = smooth((detail - 0.25) / 0.55)
       const wisps = (1 - Math.abs((detail * 0.6 + fine * 0.4) * 2 - 1)) ** 5
       const density = smooth((cloud * (0.35 + 0.65 * billows) * (0.55 + 0.45 * wisps) - 0.12) / 0.4)
-      // Reach across the interior, preserving the photographic light source.
-      const reach = 0.75 + 0.25 * Math.abs(u * 2 - 1) ** 0.6
-      const sun = 1 - 0.6 * Math.exp(-((u - 0.5) ** 2 + (v - 0.5) ** 2) * 36)
-      const palette = Math.max(
-        0,
-        Math.min(2, (noise(u * 2 + wx + 43 + seconds * 0.008, v * 1.8 + wy + 61) - 0.2) * 3.4),
-      )
-      const index = Math.min(1, Math.floor(palette)),
-        mix = smooth(palette - index)
-      const at = (y * w + x) * 4
-      for (let c = 0; c < 3; c++)
-        frame.data[at + c] = Math.round(colours[index][c] * (1 - mix) + colours[index + 1][c] * mix)
-      // Even the maximum setting retains at least64% of image contrast.
-      frame.data[at + 3] = Math.round(255 * mist.intensity * (0.12 + 0.24 * density) * reach * sun)
+      pixels.data[(y * 256 + x) * 4 + 3] = Math.round(255 * (0.04 + 0.095 * density))
     }
-  ink.putImageData(frame, 0, 0)
+  return { canvas, context, pixels, hue: -1, x: ox, y: oy }
+})
+function paintField(width: number, height: number, seconds: number) {
+  const w = Math.min(256, Math.round(width)),
+    h = Math.max(1, Math.min(512, Math.round((w * height) / width)))
+  if (field.width !== w || field.height !== h) {
+    field.width = w
+    field.height = h
+  }
+  ink.clearRect(0, 0, w, h)
+  clouds.forEach((cloud, i) => {
+    const hue = mist.hues[i]
+    if (cloud.hue !== hue) {
+      cloud.hue = hue
+      const colour = [255, (255 * hue) / 60, 10 + (30 * hue) / 60]
+      for (let at = 0; at < cloud.pixels.data.length; at += 4)
+        for (let c = 0; c < 3; c++) cloud.pixels.data[at + c] = Math.round(colour[c])
+      cloud.context.putImageData(cloud.pixels, 0, 0)
+    }
+    // Each colour follows its own non-repeating route; no colour owns a side.
+    const x = (noise(cloud.x + seconds * 0.1, cloud.y) - 0.5) * w
+    const y = (noise(cloud.x + 31, cloud.y + seconds * 0.085) - 0.5) * h
+    ink.drawImage(cloud.canvas, -w / 2 + x, -h / 2 + y, w * 2, h * 2)
+  })
+  // Three overlapping layers stay below36% opacity; protect the photographic sun.
+  ink.save()
+  ink.globalCompositeOperation = 'destination-out'
+  const sun = ink.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.min(w, h) * 0.32)
+  sun.addColorStop(0, '#0009')
+  sun.addColorStop(1, '#0000')
+  ink.fillStyle = sun
+  ink.fillRect(0, 0, w, h)
+  ink.restore()
 }
 // Local light flecks drift inside the outer fog instead of radiating from the sun.
 const light = document.createElement('canvas')
@@ -138,7 +149,7 @@ export function paintEdgeMist(
     paintField(width, height, seconds)
     context.save()
     context.globalCompositeOperation = 'screen'
-    context.globalAlpha = 1
+    context.globalAlpha = mist.intensity
     context.drawImage(field, 0, 0, field.width, field.height, 0, 0, width, height)
     context.restore()
   }

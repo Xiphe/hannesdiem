@@ -52,14 +52,23 @@ const scene = await build({
               'const y = Math.max(0, scroll - height * 0.1575)',
             )
             .replace('const overlayOpacity = 0.11', 'const overlayOpacity = 0')
+            .replace('particle.brightness * fade', 'particle.brightness * 1.25 * fade')
             .replace('  resize()\n}', '  setForestInvalidation(requestDraw)\n  resize()\n}')
             .replace(
               'import { createForest }',
-              "import { captureForest, setForestInvalidation, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { createForest }",
+              "import { drawTypeFrame, setForestInvalidation, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { paintEdgeMist } from './text.prototype/atmosphere.ts';\nimport { createForest }",
             )
             .replace(
               'paintForest(context, width, height, elapsed)',
-              'paintForest(context, width, height, elapsed); captureForest(canvas, elapsed)',
+              'paintForest(context, width, height, elapsed); paintEdgeMist(context, width, height, elapsed)',
+            )
+            .replace(
+              'compose(s, now)',
+              'compose(s, now); const typeActive = drawTypeFrame(maskContext, canvas, now)',
+            )
+            .replace(
+              '!reduced.matches || disturbances.size',
+              '!reduced.matches || disturbances.size || typeActive',
             )
             .replace(
               /  function roughBand\([\s\S]*?\n  function compose\(/,

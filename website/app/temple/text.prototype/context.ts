@@ -1,7 +1,7 @@
 // THROWAWAY. Native text flow with a compact, centred refrain hold.
 import { mountOpening } from '../scene.ts'
 import { openingProps } from './context-props.ts'
-import { createTypeSurface, invalidateForest } from './typography.ts'
+import { createTypeSurface, invalidateForest, setTypeFrame, type TypeFrame } from './typography.ts'
 import { mist } from './atmosphere.ts'
 import { colourCopy } from './copy-colour.ts'
 
@@ -11,16 +11,13 @@ const firstPair = document.querySelector<HTMLElement>('.first-pair')!
 const refrain = document.querySelector<HTMLElement>('.refrain-composition')!
 const refrainStage = document.querySelector<HTMLElement>('.refrain-stage')!
 const phrases = [...document.querySelectorAll<HTMLElement>('.refrain-phrase')]
-const heading = document.querySelector<HTMLElement>('[data-heading-mask]')!
 const copyColour = colourCopy(firstPair)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
 const abort = new AbortController()
 const on = (target: EventTarget, event: string, listener: EventListener) =>
   target.addEventListener(event, listener, { signal: abort.signal })
-let raf = 0,
-  lastScroll = -Infinity
+let lastScroll = -Infinity
 let refrainInk: ReturnType<typeof createTypeSurface>
-let headingInk: ReturnType<typeof createTypeSurface>
 
 const measure = document.createElement('canvas').getContext('2d')!
 function inkBounds(phrase: HTMLElement) {
@@ -88,15 +85,10 @@ function fitRefrain() {
 function resize() {
   fitRefrain()
   refrainInk.resize()
-  headingInk.resize()
   request()
 }
-function draw(now: number) {
-  raf = 0
-  const progress = scrollY / stage.clientHeight
-  root.classList.toggle('reading-backdrop', progress >= 0.3)
+function draw(now: number, frame: TypeFrame) {
   const scrolling = now - lastScroll < 140
-  let active = headingInk.draw(now)
   copyColour.draw(now, reduced.matches)
   const section = refrain.getBoundingClientRect()
   const hold = section.height - refrainStage.offsetHeight
@@ -106,8 +98,8 @@ function draw(now: number) {
     next = 0,
     blend = 0
   const transitions = [
-    [0, 0.5],
-    [0.5, 1],
+    [0, 0.36],
+    [0.64, 1],
   ]
   for (let i = 0; i < transitions.length; i++) {
     const [start, end] = transitions[i]
@@ -121,11 +113,10 @@ function draw(now: number) {
     }
   }
   refrain.dataset.active = String(blend < 0.5 ? index : next)
-  active = refrainInk.draw(now, index, next, blend, scrolling) || active
-  if (!reduced.matches || active) request()
+  return refrainInk.draw(frame, now, index, next, blend, scrolling)
 }
 function request() {
-  if (!raf && !document.hidden && !abort.signal.aborted) raf = requestAnimationFrame(draw)
+  if (!document.hidden && !abort.signal.aborted) invalidateForest()
 }
 function toggleUI() {
   document.body.dataset.ui = document.body.dataset.ui === 'hidden' ? 'visible' : 'hidden'
@@ -145,14 +136,6 @@ if (!abort.signal.aborted) {
       .slice(0, 3)
       .map((n) => Number(n).toString(16).padStart(2, '0'))
       .join('')
-  headingInk = createTypeSurface(
-    heading.querySelector('canvas')!,
-    [heading.querySelector('[data-ink]')!],
-    abort.signal,
-    request,
-  )
-  headingInk.resize()
-  heading.dataset.ready = 'true'
   refrain.dataset.ready = 'true'
   fitRefrain()
   refrainInk = createTypeSurface(
@@ -250,18 +233,15 @@ if (!abort.signal.aborted) {
     if (event.key.toLowerCase() === 'h') toggleUI()
   }) as EventListener)
   on(document, 'visibilitychange', () => {
-    if (document.hidden) {
-      cancelAnimationFrame(raf)
-      raf = 0
-    } else request()
+    if (!document.hidden) request()
   })
   on(window, 'pagehide', () => {
     abort.abort()
     observer.disconnect()
-    cancelAnimationFrame(raf)
   })
   on(reduced, 'change', request)
-  // The shared forest frame is captured before the approved opener's veil.
+  // All masks and material share the opener's one animation frame.
+  setTypeFrame(draw)
   await mountOpening(root, openingProps, abort.signal)
   request()
 }
