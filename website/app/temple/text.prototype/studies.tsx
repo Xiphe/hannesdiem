@@ -5,9 +5,9 @@ import { openingProps } from './context-props.ts'
 
 // New wording/paragraphs supplied and confirmed by the artist, 2026-10-28.
 export const refrain = [
-  { text: 'I’m playful and inspired.', face: 'cinzel' },
-  { text: 'I’m breathing in and out.', face: 'bricolage' },
-  { text: 'I’m faithful and held.', face: 'unbounded' },
+  { text: 'I’m playful and inspired.', display: 'I’m pLAYFuL aNd INSpIReD.', face: 'cinzel' },
+  { text: 'I’m breathing in and out.', display: 'I’M BREATHING IN AND OUT.', face: 'bricolage' },
+  { text: 'I’m faithful and held.', display: 'I’M FAITHFUL AND HELD.', face: 'unbounded' },
 ] as const
 
 function MaskedText(handle: Handle<{ text: string; class?: string }>) {
@@ -40,7 +40,7 @@ export function Review(_handle: Handle) {
         />
         <title>Temple of Sound / First pair</title>
         <noscript>
-          <style>{'.first-pair{visibility:visible!important;margin-top:0!important}'}</style>
+          <style>{'.first-pair{margin-top:0!important}'}</style>
         </noscript>
         <link
           rel="icon"
@@ -97,13 +97,24 @@ export function Review(_handle: Handle) {
               aria-label="Refrain"
             >
               <div class="refrain-stage">
-                {refrain.map(({ text, face }, index) => (
+                {refrain.map(({ text, display, face }, index) => (
                   <p
                     class="refrain-phrase"
                     data-face={face}
                     data-phrase={index}
                   >
-                    <span data-ink>{text}</span>
+                    <span class="semantic-text">{text}</span>
+                    <span
+                      data-ink
+                      aria-hidden="true"
+                    >
+                      {display.split(' ').map((word, i) => (
+                        <>
+                          {i > 0 ? ' ' : ''}
+                          <span data-word>{word}</span>
+                        </>
+                      ))}
+                    </span>
                   </p>
                 ))}
                 <canvas
@@ -194,18 +205,10 @@ export function Review(_handle: Handle) {
                 defaultValue="#d2d0c8"
               />
             </label>
-            <label>
-              Hintergrund{' '}
-              <input
-                type="range"
-                data-veil
-                min="0"
-                max="100"
-                defaultValue="84"
-              />
-            </label>
           </div>
-          <p>Normaler Textfluss · Refrain scrollt mit und wechselt · H versteckt die Bedienung.</p>
+          <p>
+            Normaler Textfluss · Refrain hält zum Wechseln in der Mitte · H versteckt die Bedienung.
+          </p>
         </nav>
         <button
           class="restore-controls"

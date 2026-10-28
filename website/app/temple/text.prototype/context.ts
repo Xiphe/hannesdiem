@@ -1,4 +1,4 @@
-// THROWAWAY. Native verse flow; the refrain also scrolls with the document.
+// THROWAWAY. Native text flow with a compact, centred refrain hold.
 import { mountOpening } from '../scene.ts'
 import { openingProps } from './context-props.ts'
 import { createTypeSurface } from './typography.ts'
@@ -23,7 +23,7 @@ let refrainInk: ReturnType<typeof createTypeSurface>
 
 function fitRefrain() {
   const width = refrainStage.clientWidth * 0.9
-  const maxHeight = refrainStage.clientHeight * 0.5
+  const maxHeight = innerHeight * 0.5
   for (const phrase of phrases) {
     const size = Math.min(190, width / 5.9, maxHeight / 2.6)
     phrase.style.fontSize = `${size}px`
@@ -35,6 +35,8 @@ function fitRefrain() {
       phrase.style.fontSize = `${parseFloat(phrase.style.fontSize) * scale}px`
     }
   }
+  const contentHeight = Math.max(...phrases.map((p) => p.offsetHeight)) + 32
+  refrain.style.setProperty('--refrain-height', `${contentHeight}px`)
 }
 function resize() {
   fitRefrain()
@@ -46,8 +48,6 @@ function draw(now: number) {
   raf = 0
   const progress = scrollY / stage.clientHeight
   root.classList.toggle('reading-backdrop', progress >= 0.3)
-  if (progress >= 0.14) document.body.dataset.reading = 'true'
-  else delete document.body.dataset.reading
   const scrolling = now - lastScroll < 140
   let active = false
   for (const { host, ink } of surfaces) {
@@ -55,14 +55,16 @@ function draw(now: number) {
       continue
     active = ink.draw(now, 0, 0, 0, scrolling, lift, pigment) || active
   }
-  const rect = refrainStage.getBoundingClientRect()
-  const position = Math.max(0, Math.min(1, (innerHeight - rect.top) / (innerHeight + rect.height)))
+  const section = refrain.getBoundingClientRect()
+  const hold = section.height - refrainStage.offsetHeight
+  const stickyTop = (stage.clientHeight - refrainStage.offsetHeight) / 2
+  const position = Math.max(0, Math.min(1, (stickyTop - section.top) / hold))
   let index = 0,
     next = 0,
     blend = 0
   const transitions = [
-    [0.38, 0.46],
-    [0.54, 0.62],
+    [0.08, 0.45],
+    [0.53, 0.93],
   ]
   for (let i = 0; i < transitions.length; i++) {
     const [start, end] = transitions[i]
@@ -93,12 +95,6 @@ await Promise.all([
   document.fonts.load('400 100px Germania'),
 ])
 if (!abort.signal.aborted) {
-  const light = matchMedia('(prefers-color-scheme: light)').matches
-  pigment = light ? '#172415' : '#e8dfcc'
-  lift = light ? 0.7 : 0.42
-  document.querySelector<HTMLInputElement>('[data-pigment]')!.value = pigment
-  document.querySelector<HTMLInputElement>('[data-lift]')!.value = String(Math.round(lift * 100))
-  document.querySelector('[data-lift-label]')!.textContent = `${Math.round(lift * 100)} %`
   const copy = getComputedStyle(document.querySelector('.verse-copy')!).color.match(/\d+/g)!
   document.querySelector<HTMLInputElement>('[data-copy-color]')!.value =
     '#' +
@@ -114,6 +110,7 @@ if (!abort.signal.aborted) {
       [host.querySelector('[data-ink]')!],
       abort.signal,
       request,
+      false,
     )
     ink.resize()
     host.dataset.ready = 'true'
@@ -146,12 +143,6 @@ if (!abort.signal.aborted) {
   on(document.querySelector('[data-copy-color]')!, 'input', (event) => {
     document.body.style.setProperty('--copy-color', (event.target as HTMLInputElement).value)
   })
-  on(document.querySelector('[data-veil]')!, 'input', (event) => {
-    document.body.style.setProperty(
-      '--reading-veil',
-      String(Number((event.target as HTMLInputElement).value) / 100),
-    )
-  })
   document.querySelectorAll<HTMLButtonElement>('[data-accent-choice]').forEach((button) =>
     on(button, 'click', async () => {
       document.body.dataset.accent = button.dataset.accentChoice!
@@ -169,7 +160,10 @@ if (!abort.signal.aborted) {
   )
   on(document.querySelector('[data-refrain]')!, 'click', () =>
     scrollTo({
-      top: scrollY + refrainStage.getBoundingClientRect().top - innerHeight * 0.25,
+      top:
+        scrollY +
+        refrain.getBoundingClientRect().top -
+        (stage.clientHeight - refrainStage.offsetHeight) / 2,
       behavior: 'instant',
     }),
   )

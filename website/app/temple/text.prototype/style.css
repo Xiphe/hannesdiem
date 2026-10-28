@@ -8,13 +8,24 @@
 * {
   box-sizing: border-box;
 }
-html {
+html[data-layout='temple'] {
   overflow-anchor: none;
+  color-scheme: dark;
+}
+html[data-layout='temple'],
+html[data-layout='temple'] body {
+  background: #000;
+  color: #d2d0c8;
+}
+.temple-opening {
+  background: #000;
+}
+.temple-fallback-image {
+  opacity: 0;
 }
 body {
   margin: 0;
-  --copy-color: light-dark(#1e241b, #d2d0c8);
-  --reading-veil: 0.84;
+  --copy-color: #d2d0c8;
 }
 .temple-opening.reading-backdrop .temple-stage {
   position: fixed;
@@ -24,21 +35,7 @@ body {
 .first-pair {
   position: relative;
   z-index: 2;
-  margin-top: -78svh;
-  padding-top: 6svh;
-  visibility: hidden;
-}
-body[data-reading] .first-pair {
-  visibility: visible;
-}
-.first-pair::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(transparent, light-dark(#f7ecdf, #030503) 230px);
-  opacity: var(--reading-veil);
+  margin-top: -30svh;
 }
 .verse-copy {
   width: min(100% - 48px, 900px);
@@ -107,7 +104,7 @@ body[data-accent='unbounded'] .accent {
 }
 /* Without enhancement, all three sentences remain ordinary visible document text. */
 .refrain-composition {
-  margin-block: 6svh;
+  margin-block: 1.4em;
 }
 .refrain-stage {
   position: relative;
@@ -140,12 +137,13 @@ body[data-accent='unbounded'] .accent {
   display: none;
 }
 .refrain-composition[data-ready] {
-  height: 100svh;
-  margin-block: 3svh;
+  height: calc(var(--refrain-height, 50svh) + 52svh);
+  margin-block: clamp(24px, 3vw, 40px);
 }
 .refrain-composition[data-ready] .refrain-stage {
-  position: relative;
-  height: 100svh;
+  position: sticky;
+  top: calc(50svh - var(--refrain-height, 50svh) / 2);
+  height: var(--refrain-height, 50svh);
 }
 .refrain-composition[data-ready] .refrain-phrase {
   position: absolute;
@@ -271,4 +269,17 @@ body[data-ui='hidden'] .restore-controls {
   .review-adjustments input[type='range'] {
     width: 65px;
   }
+}
+
+.semantic-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-word] {
+  display: inline-block;
 }

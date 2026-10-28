@@ -43,6 +43,9 @@ const scene = await build({
           contents: gitFile(`website/app/temple/${args.path.split(/[/\\]/).pop()}`)
             .toString()
             .replace('observer.observe(root)', 'observer.observe(stage)')
+            // Local black-ground study: keep the forest inside type, including after title exit.
+            .replace('veilContext.globalAlpha = 1 - s.reveal', 'veilContext.globalAlpha = 1')
+            .replaceAll("'#030503'", "'#000000'")
             .replace(
               'import { createForest }',
               "import { captureForest, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { createForest }",

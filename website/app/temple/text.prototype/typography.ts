@@ -109,7 +109,13 @@ export const faces = [
   { family: 'UnboundedCopy', weight: 650 },
 ] as const
 
-type Layer = { surface: HTMLCanvasElement; glyphs: (Glyph & { char: string })[]; size: number }
+type Word = { surface: HTMLCanvasElement; x: number; y: number; width: number; height: number }
+type Layer = {
+  surface: HTMLCanvasElement
+  words: Word[]
+  glyphs: (Glyph & { char: string })[]
+  size: number
+}
 type Event = {
   start: number
   glyph: number
@@ -126,6 +132,7 @@ export function createTypeSurface(
   inkElements: HTMLElement[],
   signal: AbortSignal,
   invalidate: () => void,
+  interactive = true,
 ) {
   const context = canvas.getContext('2d')!
   const mask = document.createElement('canvas')
@@ -134,6 +141,9 @@ export function createTypeSurface(
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const events = new Map<number, Event>()
   const tiles = new Map<string, Glyph>()
+  // Fresh per visit; fixed across reverse scrolling and resize.
+  const seed = Math.random() * 10000
+  const variation = (n: number) => hash(n + seed)
   let width = 0,
     height = 0,
     ratio = 1,
@@ -159,36 +169,69 @@ export function createTypeSurface(
     ink.fillStyle = '#fff'
     measure.font = ink.font
     const fm = measure.measureText('Hg')
-    const node = element.firstChild!
-    const range = document.createRange()
-    const text = node.textContent!
     const glyphs: Layer['glyphs'] = []
-    const lines: { text: string; x: number; baseline: number; y: number }[] = []
-    for (let i = 0; i < text.length; i++) {
-      range.setStart(node, i)
-      range.setEnd(node, i + 1)
-      const rect = range.getBoundingClientRect()
-      const baseline = rect.top - hostRect.top + fm.fontBoundingBoxAscent
-      let line = lines.find((line) => Math.abs(line.y - rect.top) < 2)
-      if (!line) {
-        line = { text: '', x: rect.left - hostRect.left, baseline, y: rect.top }
-        lines.push(line)
+    const wordElements = [...element.querySelectorAll<HTMLElement>('[data-word]')]
+    const groups = wordElements.length ? wordElements : [element]
+    const wordBounds: { x: number; y: number; width: number; height: number }[] = []
+    for (const group of groups) {
+      const node = group.firstChild!
+      const range = document.createRange()
+      const text = node.textContent!
+      const lines: { text: string; x: number; baseline: number; y: number }[] = []
+      for (let i = 0; i < text.length; i++) {
+        range.setStart(node, i)
+        range.setEnd(node, i + 1)
+        const rect = range.getBoundingClientRect()
+        const baseline = rect.top - hostRect.top + fm.fontBoundingBoxAscent
+        let line = lines.find((line) => Math.abs(line.y - rect.top) < 2)
+        if (!line) {
+          line = { text: '', x: rect.left - hostRect.left, baseline, y: rect.top }
+          lines.push(line)
+        }
+        line.text += text[i]
+        if (!text[i].trim()) continue
+        const metrics = ink.measureText(text[i])
+        const glyph = tile(text[i], style.fontFamily, Number(style.fontWeight), size)
+        glyphs.push({
+          ...glyph,
+          char: text[i],
+          origin: rect.left - hostRect.left,
+          baseline,
+          x: rect.left - hostRect.left - metrics.actualBoundingBoxLeft,
+          y: baseline - metrics.actualBoundingBoxAscent,
+        })
       }
-      line.text += text[i]
-      if (!text[i].trim()) continue
-      const metrics = ink.measureText(text[i])
-      const glyph = tile(text[i], style.fontFamily, Number(style.fontWeight), size)
-      glyphs.push({
-        ...glyph,
-        char: text[i],
-        origin: rect.left - hostRect.left,
-        baseline,
-        x: rect.left - hostRect.left - metrics.actualBoundingBoxLeft,
-        y: baseline - metrics.actualBoundingBoxAscent,
+      for (const line of lines) ink.fillText(line.text.trimEnd(), line.x, line.baseline)
+      const bounds = group.getBoundingClientRect()
+      const x = Math.max(0, bounds.left - hostRect.left - 8)
+      const y = Math.max(0, bounds.top - hostRect.top - 8)
+      wordBounds.push({
+        x,
+        y,
+        width: Math.min(width - x, bounds.width + 16),
+        height: Math.min(height - y, bounds.height + 16),
       })
     }
-    for (const line of lines) ink.fillText(line.text.trimEnd(), line.x, line.baseline)
-    return { surface, glyphs, size }
+    const words = wordBounds.map((bounds) => {
+      const word = document.createElement('canvas')
+      word.width = Math.max(1, Math.ceil(bounds.width * ratio))
+      word.height = Math.max(1, Math.ceil(bounds.height * ratio))
+      word
+        .getContext('2d')!
+        .drawImage(
+          surface,
+          bounds.x * ratio,
+          bounds.y * ratio,
+          bounds.width * ratio,
+          bounds.height * ratio,
+          0,
+          0,
+          word.width,
+          word.height,
+        )
+      return { ...bounds, surface: word }
+    })
+    return { surface, words, glyphs, size }
   }
 
   function tile(char: string, family: string, weight: number, size: number): Glyph {
@@ -251,7 +294,7 @@ export function createTypeSurface(
   canvas.parentElement!.addEventListener(
     'pointermove',
     (event) => {
-      if (event.pointerType === 'touch') return
+      if (!interactive || event.pointerType === 'touch') return
       const now = performance.now()
       lastInput = now
       if (now - lastPointer < (reduced.matches ? 180 : 65)) return
@@ -295,28 +338,63 @@ export function createTypeSurface(
       layer(a, 1 - blend)
       layer(b, blend)
     } else {
+      const smooth = (n: number) => {
+        const t = Math.max(0, Math.min(1, n))
+        return t * t * (3 - 2 * t)
+      }
       const pressure = Math.sin(blend * Math.PI)
-      layer(a, Math.min(1, (1 - blend) * 1.45))
-      layer(b, Math.min(1, blend * 1.45))
-      // Scroll supplies the cut positions; stopping does not keep scrambling the sentence.
-      const beat = Math.floor(blend * 100 + index * 29)
-      for (let patch = 0; patch < 5; patch++) {
+      const part = (word: Word, alpha: number, dx = 0) => {
+        maskInk.globalAlpha = alpha
+        maskInk.drawImage(word.surface, word.x + dx, word.y, word.width, word.height)
+      }
+      // Each outgoing/arriving word has its own timing and its own natural place.
+      a.words.forEach((word, i) => {
+        const start = variation(index * 43 + i * 11) * 0.55
+        const duration = 0.12 + variation(i + index * 37 + 900) * 0.26
+        part(word, Math.min(1, (1 - smooth((blend - start) / duration)) * 1.5))
+      })
+      b.words.forEach((word, i) => {
+        const start = variation(index * 59 + i * 17 + 400) * 0.55
+        const duration = 0.1 + variation(i + index * 29 + 800) * 0.28
+        part(word, Math.min(1, smooth((blend - start) / duration) * 1.5))
+      })
+      const beat = Math.floor(blend * 120 + index * 29)
+      for (let patch = 0; patch < 9; patch++) {
         maskInk.save()
         roughBand(
           maskInk,
           width,
-          height * (0.15 + hash(beat + patch) * 0.7),
-          9 + hash(patch + 4) * 35,
+          height * variation(beat + patch * 3),
+          10 + variation(patch + 4) * 48,
           beat + patch,
         )
-        maskInk.globalCompositeOperation = patch === 4 ? 'destination-out' : 'source-over'
-        layer(patch % 2 ? a : b, pressure * 0.72, (hash(beat + patch) - 0.5) * 38 * pressure)
+        maskInk.globalCompositeOperation = patch === 8 ? 'destination-out' : 'source-over'
+        layer(patch % 2 ? a : b, pressure * 0.9, (variation(beat + patch) - 0.5) * 76 * pressure)
         maskInk.restore()
+      }
+      // Past/future words cut briefly through the current phrase while scrolling.
+      if (scrolling && variation(Math.floor(now / 42) + 700) > 0.25) {
+        const frame = Math.floor(now / 42)
+        for (let flash = 0; flash < 2; flash++) {
+          const source = layers[Math.floor(variation(frame + flash * 17) * layers.length)]
+          const word = source.words[Math.floor(variation(frame + flash + 91) * source.words.length)]
+          maskInk.save()
+          if (variation(frame + flash + 55) > 0.3)
+            roughBand(
+              maskInk,
+              width,
+              word.y + word.height * variation(frame + 5),
+              Math.max(10, word.height * 0.28),
+              frame + flash,
+            )
+          part(word, 0.95 * pressure, (variation(frame + flash + 20) - 0.5) * 64)
+          maskInk.restore()
+        }
       }
     }
     maskInk.globalAlpha = 1
     if (scrolling) lastInput = now
-    if (!reduced.matches && now > nextIdle && now - lastInput > 800) {
+    if (interactive && !reduced.matches && now > nextIdle && now - lastInput > 800) {
       const l = layers[current]
       if (l.glyphs.length) addEvent(l, Math.floor(Math.random() * l.glyphs.length), true, now)
       nextIdle = now + 950 + Math.random() * 1350
