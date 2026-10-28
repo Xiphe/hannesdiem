@@ -5,7 +5,10 @@ export function colourCopy(root: HTMLElement) {
   const groups: { paragraph: HTMLElement; letters: { node: HTMLSpanElement; index: number }[] }[] =
     []
   let index = 0,
-    strength = 0.4,
+    variance = 0.4,
+    speed = 1,
+    phase = 0,
+    clock = performance.now(),
     base = [210, 208, 200],
     last = -Infinity
   for (const paragraph of root.querySelectorAll<HTMLElement>(
@@ -52,24 +55,29 @@ export function colourCopy(root: HTMLElement) {
       base = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
       last = -Infinity
     },
-    setStrength(value: number) {
-      strength = value
+    setVariance(value: number) {
+      variance = value
+      last = -Infinity
+    },
+    setSpeed(value: number) {
+      speed = value
       last = -Infinity
     },
     draw(now: number, reduced: boolean) {
       if (!reduced && now - last < 100) return
       last = now
-      const time = reduced ? 0 : now / 1000
+      if (!reduced) phase += Math.min(0.25, (now - clock) / 1000) * speed
+      clock = now
+      const time = phase
       for (const { paragraph, letters } of groups) {
         const rect = paragraph.getBoundingClientRect()
         if (rect.bottom < 0 || rect.top > innerHeight) continue
         for (const { node, index } of letters) {
           const temperature =
-            (noise(index * 0.12 + time * 0.035) * 0.74 +
-              noise(index * 0.43 - time * 0.025) * 0.26) *
-            strength
+            (noise(index * 0.12 + time * 0.18) * 0.74 + noise(index * 0.43 - time * 0.13) * 0.26) *
+            variance
           const rgb = base.map((v, i) =>
-            Math.max(0, Math.min(255, Math.round(v + temperature * [15, -2.5, -20][i]))),
+            Math.max(0, Math.min(255, Math.round(v + temperature * [50, -8, -65][i]))),
           )
           node.style.color = `rgb(${rgb.join(',')})`
         }

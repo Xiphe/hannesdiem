@@ -189,23 +189,25 @@ export function Review(_handle: Handle) {
             </button>
           </div>
           <div class="review-adjustments">
-            <label>
-              Nebel-Farbe{' '}
-              <input
-                class="warm-hue"
-                type="range"
-                data-mist-hue
-                min="0"
-                max="60"
-                defaultValue="22"
-              />
-              <output
-                data-mist-swatch
-                style="color:rgb(255,94,8)"
-              >
-                ●
-              </output>
-            </label>
+            {[4, 25, 52].map((hue, i) => (
+              <label>
+                Nebel {i + 1}{' '}
+                <input
+                  class="warm-hue"
+                  type="range"
+                  data-mist-color={i}
+                  min="0"
+                  max="60"
+                  defaultValue={hue}
+                />
+                <output
+                  data-mist-swatch={i}
+                  style={`color:rgb(255,${Math.round((255 * hue) / 60)},8)`}
+                >
+                  ●
+                </output>
+              </label>
+            ))}
             <label>
               Nebel-Stärke{' '}
               <input
@@ -213,22 +215,33 @@ export function Review(_handle: Handle) {
                 data-mist-intensity
                 min="0"
                 max="100"
-                defaultValue="45"
+                defaultValue="65"
               />
-              <output data-mist-intensity-label>45 %</output>
+              <output data-mist-intensity-label>65 %</output>
             </label>
             <label>
-              Text-Farbspiel{' '}
+              Text-Varianz{' '}
               <input
                 type="range"
-                data-copy-temperature
+                data-copy-variance
                 min="0"
                 max="100"
                 defaultValue="40"
               />
-              <output data-copy-temperature-label>40 %</output>
+              <output data-copy-variance-label>40 %</output>
             </label>
 
+            <label>
+              Text-Tempo{' '}
+              <input
+                type="range"
+                data-copy-speed
+                min="0"
+                max="100"
+                defaultValue="25"
+              />
+              <output data-copy-speed-label>1.0×</output>
+            </label>
             <label>
               Lesetext{' '}
               <input

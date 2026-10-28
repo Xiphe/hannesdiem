@@ -175,13 +175,17 @@ if (!abort.signal.aborted) {
     copyColour.setBase(value)
     request()
   })
-  on(document.querySelector('[data-mist-hue]')!, 'input', (event) => {
-    mist.hue = Number((event.target as HTMLInputElement).value)
-    invalidateForest()
-    document.querySelector<HTMLElement>('[data-mist-swatch]')!.style.color =
-      `rgb(255,${Math.round((255 * mist.hue) / 60)},8)`
-    request()
-  })
+  document.querySelectorAll<HTMLInputElement>('[data-mist-color]').forEach((input) =>
+    on(input, 'input', () => {
+      const index = Number(input.dataset.mistColor),
+        hue = Number(input.value)
+      mist.hues[index] = hue
+      document.querySelector<HTMLElement>(`[data-mist-swatch="${index}"]`)!.style.color =
+        `rgb(255,${Math.round((255 * hue) / 60)},8)`
+      invalidateForest()
+      request()
+    }),
+  )
   on(document.querySelector('[data-mist-intensity]')!, 'input', (event) => {
     const value = (event.target as HTMLInputElement).value
     mist.intensity = Number(value) / 100
@@ -189,10 +193,16 @@ if (!abort.signal.aborted) {
     document.querySelector('[data-mist-intensity-label]')!.textContent = `${value} %`
     request()
   })
-  on(document.querySelector('[data-copy-temperature]')!, 'input', (event) => {
+  on(document.querySelector('[data-copy-variance]')!, 'input', (event) => {
     const value = (event.target as HTMLInputElement).value
-    copyColour.setStrength(Number(value) / 100)
-    document.querySelector('[data-copy-temperature-label]')!.textContent = `${value} %`
+    copyColour.setVariance(Number(value) / 100)
+    document.querySelector('[data-copy-variance-label]')!.textContent = `${value} %`
+    request()
+  })
+  on(document.querySelector('[data-copy-speed]')!, 'input', (event) => {
+    const speed = Number((event.target as HTMLInputElement).value) / 25
+    copyColour.setSpeed(speed)
+    document.querySelector('[data-copy-speed-label]')!.textContent = `${speed.toFixed(1)}×`
     request()
   })
   document.querySelectorAll<HTMLButtonElement>('[data-accent-choice]').forEach((button) =>
