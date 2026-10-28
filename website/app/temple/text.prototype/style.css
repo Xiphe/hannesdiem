@@ -1,3 +1,30 @@
+@font-face {
+  font-family: Newsreader;
+  src: url('/fonts/newsreader.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: Newsreader;
+  src: url('/fonts/newsreader-italic.ttf') format('truetype');
+  font-style: italic;
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: SourceSansText;
+  src: url('/fonts/source-sans.ttf') format('truetype');
+  font-weight: 200 900;
+  font-display: swap;
+}
+/* The existing opener declares its specific Unbounded cut; keep that untouched. */
+@font-face {
+  font-family: UnboundedText;
+  src: url('/fonts/unbounded.ttf') format('truetype');
+  font-weight: 200 900;
+  font-display: swap;
+}
 * {
   box-sizing: border-box;
 }
@@ -10,183 +37,105 @@ html {
 body {
   margin: 0;
 }
-/* After its accepted title sequence, only the forest remains anchored.
-   Every poem block below keeps a normal, measurable document position. */
 .temple-opening.reading-backdrop .temple-stage {
   position: fixed;
   inset: 0;
   z-index: 0;
 }
-.document-poem {
+/* A shared physical reading column isolates typography rather than inventing scenes. */
+.reading-study {
+  --body-size: 28px;
+  visibility: hidden;
   position: relative;
   z-index: 2;
+  padding: 6svh max(24px, calc((100vw - 768px) / 2)) max(160px, 18svh);
   margin-top: -78svh;
-  padding-top: 6svh;
-  padding-bottom: clamp(140px, 18svh, 240px);
-  color: #f7ecdf;
+  color: #e9e5dc;
   font-family: Bricolage, sans-serif;
-  font-weight: 600;
+  font-size: calc(var(--body-size) * var(--reading-scale, 1));
+  font-weight: var(--reading-weight, 400);
   font-optical-sizing: none;
+  font-variation-settings:
+    'opsz' 14,
+    'wdth' 100;
+  font-synthesis: none;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+.reading-study::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, #030503e0 220px, #030503eb);
+  opacity: var(--reading-veil, 0);
+}
+.reading-study p {
+  margin: 0;
+  text-wrap: pretty;
+}
+.reading-opening {
+  font-family: Bricolage, sans-serif;
+  font-size: clamp(42px, 7.4vw, 96px);
+  font-weight: 600;
   font-variation-settings:
     'opsz' 48,
     'wdth' 100;
-  font-synthesis: none;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.65em !important;
+}
+.reading-body p + p {
+  margin-top: 0.85em;
+}
+.reading-refrain {
+  margin-top: 1.4em;
+  font-size: 1.04em;
+  line-height: 1.42;
+  font-weight: 450;
+}
+.reading-refrain p + p {
+  margin-top: 0.2em;
+}
+.reading-refrain p:last-child {
+  margin-top: 0.6em;
+}
+.reading-study[data-study='newsreader'] {
+  --body-size: 32px;
+  font-family: Newsreader, serif;
+  font-optical-sizing: auto;
+  font-variation-settings: normal;
+  line-height: 1.43;
+}
+[data-study='newsreader'] .reading-refrain {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.06em;
+  line-height: 1.36;
+}
+.reading-study[data-study='source'] {
+  font-family: SourceSansText, sans-serif;
+  font-variation-settings: normal;
+  line-height: 1.55;
+}
+[data-study='source'] .reading-opening {
+  font-family: UnboundedText, sans-serif;
+  font-variation-settings: normal;
+  font-weight: 400;
+  font-size: clamp(36px, 5.2vw, 72px);
+  line-height: 1.12;
   letter-spacing: -0.025em;
 }
-.document-poem::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent, #030503b8 300px, #030503d4);
-  opacity: var(--reading-veil, 0);
+[data-study='source'] .reading-refrain {
+  font-family: UnboundedText, sans-serif;
+  font-variation-settings: normal;
+  font-weight: 350;
+  font-size: 0.82em;
+  line-height: 1.6;
+  letter-spacing: -0.015em;
 }
-.document-poem p {
-  margin: 0;
-  position: relative;
-  text-wrap: pretty;
-  overflow: clip;
-  overflow-clip-margin: 0.15em;
-}
-/* A: a large opening, a smaller direct address, a dense body, then a close rhythm. */
-.type-flow {
-  padding-inline: max(24px, calc((100vw - 1280px) / 2));
-}
-.type-opening {
-  font-size: clamp(48px, 11.11vw, 160px);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-}
-.type-address {
-  font-size: clamp(30px, 5vw, 72px);
-  line-height: 1.15;
-  max-width: 25ch;
-  margin-top: clamp(42px, 8svh, 100px) !important;
-  margin-left: 8% !important;
-}
-.type-body {
-  font-size: clamp(30px, 4.3vw, 62px);
-  line-height: 1.15;
-  max-width: 32ch;
-  margin-top: clamp(64px, 12svh, 130px) !important;
-  margin-left: auto !important;
-}
-.type-refrain {
-  margin-top: clamp(64px, 12svh, 130px);
-  max-width: 29ch;
-  font-size: clamp(34px, 5.4vw, 78px);
-  line-height: 1.08;
-}
-.type-refrain p + p {
-  margin-top: 0.32em;
-}
-.type-refrain p:last-child {
-  margin-top: 0.65em;
-}
-/* B: independent image fields cross the native text path; source order is unchanged. */
-.woven-flow {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 0 clamp(8px, 1.6vw, 24px);
-  padding-inline: max(24px, calc((100vw - 1440px) / 2));
-  text-shadow:
-    0 2px 24px #030503d9,
-    0 1px 3px #030503;
-}
-.woven-flow::before {
-  background: linear-gradient(to bottom, transparent, #030503c9 320px, #030503e8);
-}
-.woven-flow p {
-  z-index: 2;
-}
-.woven-opening {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  font-size: clamp(48px, 11.11vw, 160px);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  margin-bottom: 5svh !important;
-}
-.woven-image {
-  opacity: var(--reading-veil, 0);
-  margin: 0;
-  min-width: 0;
-  min-height: 0;
-  position: relative;
-  overflow: hidden;
-  z-index: 0;
-}
-.woven-image img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.woven-canopy {
-  grid-column: 5 / 13;
-  grid-row: 2 / 4;
-  margin-top: 2svh;
-  margin-bottom: 4svh;
-}
-.woven-canopy img {
-  object-position: 33% 45%;
-  filter: brightness(0.87);
-}
-.woven-address {
-  grid-column: 1 / 10;
-  grid-row: 2;
-  font-size: clamp(32px, 5.2vw, 75px);
-  line-height: 1.08;
-  margin-top: 9svh !important;
-  margin-bottom: 7svh !important;
-}
-.woven-body {
-  grid-column: 3 / 12;
-  grid-row: 3;
-  font-size: clamp(30px, 4vw, 58px);
-  line-height: 1.16;
-  margin-top: 6svh !important;
-  margin-bottom: 8svh !important;
-}
-.woven-ground {
-  grid-column: 1 / 9;
-  grid-row: 4 / 8;
-  margin-top: 6svh;
-  margin-bottom: 10svh;
-}
-.woven-ground img {
-  object-position: 70% 85%;
-  filter: brightness(0.72);
-}
-.woven-refrain {
-  font-size: clamp(34px, 5.2vw, 75px);
-  line-height: 1.07;
-  padding-block: 1.5svh;
-}
-.woven-line-0 {
-  grid-column: 3 / 13;
-  grid-row: 4;
-  margin-top: 12svh !important;
-}
-.woven-line-1 {
-  grid-column: 5 / 13;
-  grid-row: 5;
-}
-.woven-line-2 {
-  grid-column: 2 / 12;
-  grid-row: 6;
-}
-.woven-line-3 {
-  grid-column: 4 / 13;
-  grid-row: 7;
-  margin-top: 5svh !important;
-  margin-bottom: 12svh !important;
-  font-size: clamp(30px, 4vw, 58px);
-  line-height: 1.13;
-}
-/* Review UI, kept outside artist prose. */
+/* Review controls are outside the artist's prose. */
 .review-controls,
 .restore-controls {
   position: fixed;
@@ -203,10 +152,11 @@ body {
   bottom: max(12px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  width: min(690px, calc(100% - 24px));
+  width: min(770px, calc(100% - 24px));
   padding: 9px 10px;
 }
-.review-heading {
+.review-heading,
+.reading-adjustments {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -217,7 +167,7 @@ body {
   text-decoration: none;
 }
 .review-heading a,
-.review-heading button {
+.review-controls button {
   padding: 7px;
   min-height: 30px;
   background: transparent;
@@ -232,13 +182,36 @@ body {
   color: #171c18;
 }
 .review-controls p {
-  margin: 8px 4px 0;
+  margin: 8px 4px;
 }
 .review-note {
   color: #b5bbb0;
   font-size: 11px;
 }
-:where(button, a):focus-visible {
+.reading-adjustments {
+  margin-block: 10px 4px;
+}
+.reading-adjustments label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.reading-adjustments input {
+  min-width: 32px;
+  width: 100%;
+  accent-color: #cbd5c8;
+}
+.reading-adjustments output {
+  font-variant-numeric: tabular-nums;
+  min-width: 35px;
+}
+.reading-adjustments button {
+  border: 1px solid #51594b;
+  white-space: nowrap;
+}
+:where(button, a, input):focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 3px;
 }
@@ -256,79 +229,36 @@ body[data-ui='hidden'] .restore-controls {
   display: block;
 }
 @media (max-width: 640px) {
-  .type-address {
-    margin-left: 0 !important;
+  .reading-study {
+    --body-size: 24px;
   }
-  .type-body {
-    max-width: 100%;
+  .reading-study[data-study='newsreader'] {
+    --body-size: 27px;
   }
-  .type-refrain {
-    font-size: clamp(30px, 7.5vw, 48px);
-  }
-  .woven-flow {
-    column-gap: 4px;
-  }
-  .woven-address {
-    grid-column: 1 / 12;
-    font-size: clamp(32px, 7.8vw, 48px);
-  }
-  .woven-body {
-    grid-column: 2 / 13;
-    font-size: clamp(28px, 7vw, 42px);
-  }
-  .woven-canopy {
-    grid-column: 3 / 13;
-  }
-  .woven-ground {
-    grid-column: 1 / 12;
-  }
-  .woven-line-0,
-  .woven-line-1,
-  .woven-line-2 {
-    grid-column: 1 / 13;
-    font-size: clamp(32px, 8vw, 48px);
-  }
-  .woven-line-1 {
-    padding-left: 7%;
-  }
-  .woven-line-3 {
-    grid-column: 2 / 13;
-    font-size: clamp(28px, 7vw, 42px);
+  .reading-opening {
+    margin-bottom: 0.75em !important;
   }
   .review-controls {
     font-size: 10px;
     padding: 6px;
   }
   .review-heading {
-    gap: 1px;
+    gap: 0;
   }
   .review-heading a,
-  .review-heading button {
+  .review-controls button {
     padding: 5px;
+  }
+  .reading-adjustments {
+    flex-wrap: wrap;
+  }
+  .reading-adjustments label {
+    flex-basis: 40%;
+  }
+  .reading-adjustments button {
+    flex: 1;
   }
   .review-note {
     font-size: 10px;
   }
-}
-
-/* Adapted mechanisms from Codrops OnScrollTypographyAnimations, effects 2/7.
-   See codrops-LICENSE.txt. Letter transforms cannot enlarge the document box. */
-.motion-word {
-  display: inline-block;
-  white-space: nowrap;
-  perspective: 2000px;
-}
-.motion-char {
-  display: inline-block;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-.type-flow .motion-char {
-  transform-origin: 50% 0%;
-}
-.woven-flow .motion-char {
-  transform-origin: 100% 50%;
-}
-.woven-image img {
-  will-change: transform;
 }

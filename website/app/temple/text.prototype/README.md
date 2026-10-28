@@ -1,43 +1,47 @@
-# Parked: Codrops letter-motion probes
+# Reading voices / typography exploration
 
-Artist rejected both effects and the headline-only typography on 2026-10-28. This server preserves the rejected checkpoint for recovery; next exploration concerns reading typography and hierarchy before more motion. See the current [collaboration record](../docs/collaboration.md).
+Expansion, local only. The artist rejected both Codrops effects and the headline-only setting at `dc355ec`. They declined supplying a reference and explicitly requested `$explore`: make concrete comparisons instead of turning a reference into a prerequisite. No specimen selected; only the approved opener is public.
 
 `npm run prototype:temple-text`; user access: `sand tunnel 8790`.
 
-- **A · Aufrichten / Effect 2:** `http://localhost:8790/temple-of-sound?layout=type`
-- **B · Aufklappen / Effect 7:** `http://localhost:8790/temple-of-sound?layout=woven`
+- **A · Bricolage:** `http://localhost:8790/temple-of-sound?study=bricolage`
+- **B · Newsreader:** `http://localhost:8790/temple-of-sound?study=newsreader`
+- **C · Source Sans:** `http://localhost:8790/temple-of-sound?study=source`
 
-The artist rejected the verse's pinned scroll model (`6dfe338`): the scrollbar must retain a tangible relationship to the document. They requested exploring both large typographic flow and interwoven text/image composition before choosing a direction. Both studies remain in Expansion.
+## Question and specimens
 
-## Current correction
+Explore a reading voice, emphasis and refrain together, before more poem motion. The earlier accepted Bricolage specimen does not authorize display settings throughout. Its observed limitation here is the previous headline-only texture, not a claimed emotional property of the family.
 
-The artist rejected the low-amplitude result at `531c222` as boring, expects the actual linked Codrops experiments and wants the first line during the opener exit without a blank screen.
+Common fixture: original seven semantic units in order, one responsive column (768px maximum), actual opener/forest context, native document flow, no poem animation. Different typography naturally changes wrapping and document height; this is not a layout or width survey. Initial statement stays larger; the longer address/body gets a reading setting; the refrain has a separate typographic role. These role assignments are proposals.
 
-Mechanisms adapted from [Codrops OnScrollTypographyAnimations](https://github.com/codrops/OnScrollTypographyAnimations/blob/main/src/js/index.js), **effects 2 and 7**; MIT notice retained in [codrops-LICENSE.txt](codrops-LICENSE.txt). No GSAP/Splitting dependency added.
+| Specimen | Reading body                      | Initial statement     | Refrain               |
+| -------- | --------------------------------- | --------------------- | --------------------- |
+| A        | Bricolage 400, opsz14, 28px / 1.5 | Bricolage 600, opsz48 | Bricolage 450         |
+| B        | Newsreader 400, 32px / 1.43       | Bricolage 600         | Newsreader italic 400 |
+| C        | Source Sans 3 400, 28px / 1.55    | Unbounded 400         | Unbounded 350         |
 
-- **A / effect 2:** characters rise from y120%, stretched vertically 2.3× and narrowed 0.7×, into native proportions. Compact ease-out and intra-word staggering replace the source's bouncing ease/long ranges.
-- **B / effect 7:** characters rotate from Y -90° and -300px depth around their right edge, with reverse character staggering. Existing image fields remain behind the text.
-- All seven original units participate. Local motion follows words' real viewport positions; no sentence timeline or pinning.
-- First sentence starts at document y0.58 viewport. Letter entry runs across scroll 0.13–0.27, overlapping title exit: visible by 0.16, complete by 0.24 on tested desktop/phone sizes.
-- Clipped paragraph ink keeps document height constant despite large transforms. Native proportional character widths, Bricolage 600 and original wording/order remain.
-- Reduced motion shows settled text; no-JS displays the prose in normal flow after the opener.
+Body sizes reduce on phones. Normal proportional spacing; no per-letter splitting, particle coupling, verse timeline, pinning, fake scroll range or wheel interception. First statement starts at document y0.58 viewport and becomes visible at scroll0.14, overlapping the opener's exit. This handoff fixture is not a proposed verse effect.
 
-These are stronger motion probes, not accepted artwork. Setting, easing and material remain open for review.
+## Participation
 
-## Actual document and opener
+A/B/C links or ←/→ switch near the current passage and update `?study=`. Different document lengths can limit scroll restoration near the bottom. **Lesesatz** scales body/refrain to 85–125%; **Gewicht** changes body weight300–550. Accent/refrain role weights remain fixed. Reset restores100%/400; reload resets adjustments, retains the URL specimen. **Zum Opener** returns to the beginning. H/× hides controls; ↔ restores them. Input fields retain native keyboard controls. Review UI is outside the artist's prose; hidden alternatives are excluded from rendering/accessibility.
 
-All verse text has natural content height. No fake scroll range, active-sentence timeline, text pinning, forced dwell, wheel interception, or `scrollTo` in scroll handling. Paragraph document coordinates and total page height remain stable across the entry frames; their screen displacement follows native scrolling.
+## Context / provenance
 
-The accepted opener retains its 130svh document box and title sequence. After title exit its stage stays fixed behind the reading area. Local esbuild uses renderer/CSS/fonts from main `3b839491bf4743f05bce54b9f8a00c64de29ad08`; one visibility adaptation observes the actual stage rather than the departed opener root. This keeps ambient glimmers alive without changing title visuals or production code. Reduced motion removes letter/image movement and freezes ambient particles.
+The actual approved opener retains its 130svh document box and title sequence. After title exit, its stage stays fixed behind the reading area. Local esbuild reads renderer/CSS/fonts from main `3b839491bf4743f05bce54b9f8a00c64de29ad08`; one visibility adaptation observes the actual stage rather than the departed root. No production source edits. Reduced motion freezes ambient particles; reading text is static in all modes. No-JS displays the prose in ordinary flow after the opener.
 
-The source photo is prepared with accepted pipeline settings (rotate, 1920px, WebP quality 80; hash prefix `6f60f5b1a39bdac4`). No CDN dependency or new package. Text comes from `content/temple-of-sound/draft.tsx`, or `content/drafts/temple-of-sound.tsx` on this older branch. Source prose/order unchanged.
+Source photo: accepted rotate → 1920px → WebP80 preparation, hash prefix `6f60f5b1a39bdac4`. Text: `content/temple-of-sound/draft.tsx`, fallback `content/drafts/temple-of-sound.tsx` on this older branch. No prose changes or new npm dependency.
 
-## Review controls
+Existing Bricolage/Unbounded are reused. Two additional reading faces are prototype assets, not publication decisions:
 
-A/B links or ←/→ switch at the currently read passage and update `?layout=`. URL survives reload; no saved preference. Native scrolling keys otherwise retain their behaviour. **Zum Anfang** returns to the opener. H/× hides controls; ↔ restores them. Hidden alternative is excluded from rendering/accessibility. Review UI is outside artist prose. Reload/restart the local server after bundled client edits.
+- [Newsreader, Production Type](https://github.com/productiontype/Newsreader): designed for continuous on-screen reading; normal and italic variable files.
+- [Source Sans 3, Adobe](https://github.com/adobe-fonts/source-sans): designed for UI environments; humanist sans comparison.
+- Files from Google Fonts `ofl/newsreader` and `ofl/sourcesans3`; OFL notices retained beside them. Local serving, no runtime font CDN. SHA256 prefixes: Newsreader `8a08d13f8a6c0d51`, italic `796668611f80b64d`, Source Sans `042fe2cc0b933e32`.
 
-## Validation / boundary
+Client bundle is generated at server startup; restart after editing `context.ts` (touch `serve.tsx` for node watch).
 
-Scoped TypeScript and Prettier. Browser-checked first-word visibility through the handoff (0, 0.16, 0.24, 0.32 viewport), constant document height/paragraph coordinates, original seven units, desktop/390px phone bounds, final-unit visibility, reduced-motion identity transforms and a real no-JS browser context. No permanent visual tests, CI polling, Worker/publication changes or deployment. Only the opener remains public.
+## Validation / recovery
 
-Recovery: `6dfe338` pinned first-pair sequence; `4013e89` liked first-sentence close view; `c1d9879` rejected isolated traces; `551612d` parked glyph coupling. [Shared context](../docs/collaboration.md).
+Scoped TypeScript, Prettier and browser inspection at1440×960/390×844. All three computed reading faces/weights, original seven units, no horizontal overflow, size/weight controls/reset, passage switching, reduced-motion rendering and real no-JS fallback checked. No CI polling, Worker changes or deployment.
+
+Rejected Codrops implementations/license remain in `dc355ec`; removed from this current specimen. Recovery: `6dfe338` rejected pinned sequence; `4013e89` liked close first sentence; `c1d9879` rejected detached traces; `551612d` parked glyph coupling. [Shared decision record](../docs/collaboration.md).

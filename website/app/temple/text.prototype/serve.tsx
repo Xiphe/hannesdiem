@@ -21,6 +21,9 @@ const fontNames = ['bricolage.ttf', 'germaniaone.ttf', 'cinzeldecorative-bold.tt
 const fonts = new Map(
   fontNames.map((name) => [`/fonts/${name}`, gitFile(`website/app/temple/assets/${name}`)]),
 )
+for (const name of ['newsreader.ttf', 'newsreader-italic.ttf', 'source-sans.ttf']) {
+  fonts.set(`/fonts/${name}`, readFileSync(new URL(`fonts/${name}`, root)))
+}
 // Same photograph and 1920px preparation as the approved scene; no CDN dependency.
 const forest = await sharp(fileURLToPath(new URL('../../../../content/media/IMG_6257.JPG', root)))
   .rotate()
@@ -71,7 +74,7 @@ createServer(async (request, response) => {
     response.setHeader('Content-Type', 'text/html; charset=utf-8')
     response.end(
       '<!doctype html>' +
-        (await renderToString(<Review layout={url.searchParams.get('layout') ?? 'type'} />)),
+        (await renderToString(<Review study={url.searchParams.get('study') ?? 'bricolage'} />)),
     )
   } else {
     response.writeHead(404)
