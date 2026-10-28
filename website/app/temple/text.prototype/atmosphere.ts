@@ -1,5 +1,10 @@
 // THROWAWAY: broad, mixed-colour cloud field with bounded optical density.
-export const mist = { hues: [4, 25, 52], intensity: 0.65 }
+import { defaults } from './defaults.ts'
+export const mist = {
+  hues: [...defaults.mistHues],
+  intensity: defaults.mistIntensity,
+  highlights: 0.65,
+}
 const field = document.createElement('canvas')
 const ink = field.getContext('2d')!
 const size = 128
@@ -13,7 +18,7 @@ const smooth = (n: number) => {
   const t = Math.max(0, Math.min(1, n))
   return t * t * (3 - 2 * t)
 }
-function noise(x: number, y: number) {
+export function noise(x: number, y: number) {
   const ix = Math.floor(x),
     iy = Math.floor(y),
     sx = smooth(x - ix),
@@ -73,17 +78,69 @@ function paintField(width: number, height: number, seconds: number) {
     }
   ink.putImageData(frame, 0, 0)
 }
+// Local light flecks drift inside the outer fog instead of radiating from the sun.
+const light = document.createElement('canvas')
+light.width = light.height = 96
+const lightInk = light.getContext('2d')!
+const lightPixels = lightInk.createImageData(96, 96)
+for (let y = 0; y < 96; y++)
+  for (let x = 0; x < 96; x++) {
+    const u = x / 48 - 1,
+      v = y / 48 - 1
+    const radius = u * u + v * v
+    const broken = smooth((noise(x * 0.13 + 31, y * 0.13 + 17) - 0.26) / 0.5)
+    const core = Math.exp(-radius * 35)
+    const glow = Math.exp(-radius * 4.5) * (0.15 + 0.85 * broken)
+    const at = (y * 96 + x) * 4
+    lightPixels.data[at] = 255
+    lightPixels.data[at + 1] = 248
+    lightPixels.data[at + 2] = 230
+    lightPixels.data[at + 3] = Math.round(Math.min(1, core * 0.8 + glow * 0.65) * 255)
+  }
+lightInk.putImageData(lightPixels, 0, 0)
+const flecks = Array.from({ length: 180 }, (_, i) => {
+  const random = (n: number) => values[(i * 47 + n * 191) % values.length]
+  const side = i % 2
+  return {
+    u: side === 0 ? random(0) * 0.42 : 0.58 + random(0) * 0.42,
+    v: random(1),
+    phase: random(2) * Math.PI * 2,
+    scale: i % 3 === 0 ? 20 + random(3) * 56 : 4 + random(3) ** 2 * 16,
+    brightness: 0.65 + random(4) ** 2 * 0.35,
+  }
+})
+function paintHighlights(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  seconds: number,
+) {
+  if (mist.highlights <= 0) return
+  context.save()
+  context.globalCompositeOperation = 'screen'
+  for (const fleck of flecks) {
+    const x = (fleck.u + Math.sin(seconds * 0.07 + fleck.phase) * 0.025) * width
+    const y = (fleck.v + Math.sin(seconds * 0.05 + fleck.phase * 2) * 0.035) * height
+    const breath = 0.8 + 0.2 * Math.sin(seconds * 0.3 + fleck.phase) ** 2
+    const size = fleck.scale * Math.max(0.7, Math.min(width, height) / 850)
+    context.globalAlpha = Math.min(1, mist.highlights * 1.7 * fleck.brightness * breath)
+    context.drawImage(light, x - size / 2, y - size / 2, size, size)
+  }
+  context.restore()
+}
 export function paintEdgeMist(
   context: CanvasRenderingContext2D,
   width: number,
   height: number,
   seconds: number,
 ) {
-  if (mist.intensity <= 0) return
-  paintField(width, height, seconds)
-  context.save()
-  context.globalCompositeOperation = 'screen'
-  context.globalAlpha = 1
-  context.drawImage(field, 0, 0, field.width, field.height, 0, 0, width, height)
-  context.restore()
+  if (mist.intensity > 0) {
+    paintField(width, height, seconds)
+    context.save()
+    context.globalCompositeOperation = 'screen'
+    context.globalAlpha = 1
+    context.drawImage(field, 0, 0, field.width, field.height, 0, 0, width, height)
+    context.restore()
+  }
+  paintHighlights(context, width, height, seconds)
 }

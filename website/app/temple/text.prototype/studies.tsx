@@ -2,6 +2,7 @@
 import type { Handle } from 'remix/component'
 import { Opening } from '../opening.tsx'
 import { openingProps } from './context-props.ts'
+import { defaults } from './defaults.ts'
 
 // New wording/paragraphs supplied and confirmed by the artist, 2026-10-28.
 export const refrain = [
@@ -189,7 +190,7 @@ export function Review(_handle: Handle) {
             </button>
           </div>
           <div class="review-adjustments">
-            {[4, 25, 52].map((hue, i) => (
+            {defaults.mistHues.map((hue, i) => (
               <label>
                 Nebel {i + 1}{' '}
                 <input
@@ -215,10 +216,38 @@ export function Review(_handle: Handle) {
                 data-mist-intensity
                 min="0"
                 max="100"
+                defaultValue={defaults.mistIntensity * 100}
+              />
+              <output data-mist-intensity-label>{defaults.mistIntensity * 100} %</output>
+            </label>
+            <label>
+              Lichtpunkte{' '}
+              <input
+                type="range"
+                data-mist-highlights
+                min="0"
+                max="100"
                 defaultValue="65"
               />
-              <output data-mist-intensity-label>65 %</output>
+              <output data-mist-highlights-label>65 %</output>
             </label>
+            <span class="copy-mode-choices">
+              <span>Text-Farbe</span>
+              <button
+                type="button"
+                data-copy-mode="letters"
+                aria-pressed="true"
+              >
+                Buchstaben
+              </button>
+              <button
+                type="button"
+                data-copy-mode="clouds"
+                aria-pressed="false"
+              >
+                Farbwolken
+              </button>
+            </span>
             <label>
               Text-Varianz{' '}
               <input
@@ -226,9 +255,9 @@ export function Review(_handle: Handle) {
                 data-copy-variance
                 min="0"
                 max="100"
-                defaultValue="40"
+                defaultValue={defaults.copyVariance * 100}
               />
-              <output data-copy-variance-label>40 %</output>
+              <output data-copy-variance-label>{defaults.copyVariance * 100} %</output>
             </label>
 
             <label>
@@ -238,16 +267,16 @@ export function Review(_handle: Handle) {
                 data-copy-speed
                 min="0"
                 max="100"
-                defaultValue="25"
+                defaultValue={defaults.copySpeed * 25}
               />
-              <output data-copy-speed-label>1.0×</output>
+              <output data-copy-speed-label>{defaults.copySpeed.toFixed(1)}×</output>
             </label>
             <label>
               Lesetext{' '}
               <input
                 type="color"
                 data-copy-color
-                defaultValue="#d2d0c8"
+                defaultValue={defaults.copyColor}
               />
             </label>
           </div>
