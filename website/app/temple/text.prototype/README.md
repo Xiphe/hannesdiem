@@ -1,4 +1,6 @@
-# Codrops letter motion — immediate opener-to-verse handoff
+# Parked: Codrops letter-motion probes
+
+Artist rejected both effects and the headline-only typography on 2026-10-28. This server preserves the rejected checkpoint for recovery; next exploration concerns reading typography and hierarchy before more motion. See the current [collaboration record](../docs/collaboration.md).
 
 `npm run prototype:temple-text`; user access: `sand tunnel 8790`.
 
