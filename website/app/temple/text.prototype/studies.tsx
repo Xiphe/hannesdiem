@@ -1,66 +1,28 @@
-// THROWAWAY: reading voices and their accents, in the accepted opener's context.
-import { existsSync, readFileSync } from 'node:fs'
+// THROWAWAY: artist-directed typography and bounded refrain composition.
 import type { Handle } from 'remix/component'
 import { Opening } from '../opening.tsx'
 import { openingProps } from './context-props.ts'
 
-export function firstPair() {
-  const source = existsSync('content/temple-of-sound/draft.tsx')
-    ? 'content/temple-of-sound/draft.tsx'
-    : 'content/drafts/temple-of-sound.tsx'
-  const opening = readFileSync(source, 'utf8').match(
-    /<PoemOpening\b[^>]*>([\s\S]*?)<\/PoemOpening>/,
-  )![1]
-  return [...opening.matchAll(/<p>([\s\S]*?)<\/p>/g)].flatMap((paragraph) =>
-    paragraph[1].split(/<br\s*\/>/).map((line) => line.replace(/\s+/g, ' ').trim()),
-  )
-}
-const studies = {
-  bricolage: {
-    label: 'A · Bricolage',
-    description: 'Eine Familie: Bricolage 400 im Lesesatz, 600 als Akzent, 450 im Refrain.',
-  },
-  newsreader: {
-    label: 'B · Newsreader',
-    description: 'Bricolage als Akzent, Newsreader 400 im Lesesatz, kursiv im Refrain.',
-  },
-  source: {
-    label: 'C · Source Sans',
-    description: 'Source Sans 3 im Lesesatz, Unbounded 400 als Akzent und 350 im Refrain.',
-  },
-} as const
+// New wording/paragraphs supplied and confirmed by the artist, 2026-10-28.
+export const refrain = [
+  { text: 'I’m playful and inspired.', face: 'cinzel' },
+  { text: 'I’m breathing in and out.', face: 'bricolage' },
+  { text: 'I’m faithful and held.', face: 'unbounded' },
+] as const
 
-function ReadingStudy(handle: Handle<{ units: string[]; study: string; hidden: boolean }>) {
+function MaskedText(handle: Handle<{ text: string; class?: string }>) {
   return () => (
-    <article
-      class="reading-study"
-      data-study={handle.props.study}
-      hidden={handle.props.hidden}
-      aria-label="Erstes Strophen-Refrain-Paar"
+    <span
+      class={`masked-type ${handle.props.class ?? ''}`}
+      data-mask
     >
-      <p
-        class="reading-opening"
-        data-unit="0"
-      >
-        {handle.props.units[0]}
-      </p>
-      <div class="reading-body">
-        <p data-unit="1">{handle.props.units[1]}</p>
-        <p data-unit="2">{handle.props.units[2]}</p>
-      </div>
-      <div class="reading-refrain">
-        {handle.props.units.slice(3).map((unit, index) => (
-          <p data-unit={index + 3}>{unit}</p>
-        ))}
-      </div>
-    </article>
+      <span data-ink>{handle.props.text}</span>
+      <canvas aria-hidden="true" />
+    </span>
   )
 }
-export function Review(handle: Handle<{ study: string }>) {
-  const study = Object.hasOwn(studies, handle.props.study)
-    ? (handle.props.study as keyof typeof studies)
-    : 'bricolage'
-  const units = firstPair()
+
+export function Review(_handle: Handle) {
   return () => (
     <html
       lang="en"
@@ -76,11 +38,9 @@ export function Review(handle: Handle<{ study: string }>) {
           name="robots"
           content="noindex,nofollow"
         />
-        <title>Temple of Sound / Lesestimmen</title>
+        <title>Temple of Sound / First pair</title>
         <noscript>
-          <style>
-            {'.reading-study{visibility:visible!important;margin-top:0;--reading-veil:1}'}
-          </style>
+          <style>{'.first-pair{visibility:visible!important;margin-top:0!important}'}</style>
         </noscript>
         <link
           rel="icon"
@@ -99,86 +59,92 @@ export function Review(handle: Handle<{ study: string }>) {
           src="/context.js"
         ></script>
       </head>
-      <body data-reading={study}>
+      <body data-accent="cinzel">
         <main class="temple-page">
           <Opening {...openingProps} />
-          {Object.keys(studies).map((key) => (
-            <ReadingStudy
-              units={units}
-              study={key}
-              hidden={study !== key}
-            />
-          ))}
+          <article
+            class="first-pair"
+            aria-label="First verse and refrain"
+          >
+            <div class="verse-copy">
+              <p class="verse-opening">
+                <strong>
+                  <MaskedText text="I’m in love with humanity." />
+                </strong>
+              </p>
+              <p>With the brave spirits I meet, witness, and sense.</p>
+              <p>
+                <strong>
+                  <MaskedText
+                    text="I’m so deeply touched"
+                    class="accent"
+                  />
+                </strong>{' '}
+                by those willing to feel, to unwind, to rest, to risk
+              </p>
+              <p>
+                Those willing to build villages rooted in{' '}
+                <strong>
+                  <MaskedText
+                    text="trust and connection."
+                    class="accent"
+                  />
+                </strong>
+              </p>
+            </div>
+            <section
+              class="refrain-composition"
+              aria-label="Refrain"
+            >
+              <div class="refrain-stage">
+                {refrain.map(({ text, face }, index) => (
+                  <p
+                    class="refrain-phrase"
+                    data-face={face}
+                    data-phrase={index}
+                  >
+                    <span data-ink>{text}</span>
+                  </p>
+                ))}
+                <canvas
+                  class="refrain-canvas"
+                  aria-hidden="true"
+                />
+              </div>
+            </section>
+            <div class="verse-copy verse-coda">
+              <p>
+                <strong>
+                  <MaskedText
+                    text="I’m loved"
+                    class="accent"
+                  />
+                </strong>
+                , and in awe of what those kindred souls have built into this realm.
+              </p>
+            </div>
+          </article>
         </main>
         <nav
           class="review-controls"
-          aria-label="Exploration: Lesestimme und Akzente"
+          aria-label="Typography workbench"
           lang="de"
         >
           <div class="review-heading">
+            <span>Hervorhebungen</span>
             <button
               type="button"
-              data-previous
-              aria-label="Vorherige Schriftprobe"
+              data-accent-choice="cinzel"
+              aria-pressed="true"
             >
-              ←
-            </button>
-            {Object.entries(studies).map(([key, item]) => (
-              <a
-                href={`?study=${key}`}
-                data-study-link={key}
-                aria-current={key === study ? 'page' : undefined}
-              >
-                {item.label}
-              </a>
-            ))}
-            <button
-              type="button"
-              data-next
-              aria-label="Nächste Schriftprobe"
-            >
-              →
+              Cinzel
             </button>
             <button
               type="button"
-              data-hide
-              aria-label="Bedienung ausblenden"
-              title="H"
+              data-accent-choice="unbounded"
+              aria-pressed="false"
             >
-              ×
-            </button>
-          </div>
-          <p data-description>{studies[study].description}</p>
-          <div class="reading-adjustments">
-            <label>
-              Lesesatz{' '}
-              <input
-                type="range"
-                data-size
-                min="85"
-                max="125"
-                step="5"
-                defaultValue="100"
-              />
-              <output data-size-label>100 %</output>
-            </label>
-            <label>
-              Gewicht{' '}
-              <input
-                type="range"
-                data-weight
-                min="300"
-                max="550"
-                step="25"
-                defaultValue="400"
-              />
-              <output data-weight-label>400</output>
-            </label>
-            <button
-              type="button"
-              data-reset
-            >
-              Zurücksetzen
+              Unbounded
             </button>
             <button
               type="button"
@@ -186,11 +152,60 @@ export function Review(handle: Handle<{ study: string }>) {
             >
               Zum Opener
             </button>
+            <button
+              type="button"
+              data-refrain
+            >
+              Zum Refrain
+            </button>
+            <button
+              type="button"
+              data-hide
+              aria-label="Bedienung ausblenden"
+            >
+              ×
+            </button>
           </div>
-          <p class="review-note">
-            Schriftbild ohne Strophenanimation. ← / → wechseln an derselben Passage. H versteckt die
-            Bedienung.
-          </p>
+          <div class="review-adjustments">
+            <label>
+              Tönung{' '}
+              <input
+                type="range"
+                data-lift
+                min="0"
+                max="100"
+                defaultValue="42"
+              />
+              <output data-lift-label>42 %</output>
+            </label>
+            <label>
+              Pigment{' '}
+              <input
+                type="color"
+                data-pigment
+                defaultValue="#e8dfcc"
+              />
+            </label>
+            <label>
+              Lesetext{' '}
+              <input
+                type="color"
+                data-copy-color
+                defaultValue="#d2d0c8"
+              />
+            </label>
+            <label>
+              Hintergrund{' '}
+              <input
+                type="range"
+                data-veil
+                min="0"
+                max="100"
+                defaultValue="84"
+              />
+            </label>
+          </div>
+          <p>Normaler Textfluss · Refrain scrollt mit und wechselt · H versteckt die Bedienung.</p>
         </nav>
         <button
           class="restore-controls"

@@ -1,124 +1,195 @@
-// THROWAWAY: compare actual reading typography, no poem/letter/image animation.
+// THROWAWAY. Native verse flow; the refrain also scrolls with the document.
 import { mountOpening } from '../scene.ts'
 import { openingProps } from './context-props.ts'
+import { createTypeSurface } from './typography.ts'
+
 const root = document.querySelector<HTMLElement>('.temple-opening')!
 const stage = root.querySelector<HTMLElement>('.temple-stage')!
-const studies = [...document.querySelectorAll<HTMLElement>('.reading-study')]
-const descriptions = {
-  bricolage: 'Eine Familie: Bricolage 400 im Lesesatz, 600 als Akzent, 450 im Refrain.',
-  newsreader: 'Bricolage als Akzent, Newsreader 400 im Lesesatz, kursiv im Refrain.',
-  source: 'Source Sans 3 im Lesesatz, Unbounded 400 als Akzent und 350 im Refrain.',
-}
-type Study = keyof typeof descriptions
-let study = document.body.dataset.reading as Study
-let frame = 0,
-  switchSerial = 0
+const firstPair = document.querySelector<HTMLElement>('.first-pair')!
+const refrain = document.querySelector<HTMLElement>('.refrain-composition')!
+const refrainStage = document.querySelector<HTMLElement>('.refrain-stage')!
+const phrases = [...document.querySelectorAll<HTMLElement>('.refrain-phrase')]
+const highlights = [...document.querySelectorAll<HTMLElement>('[data-mask]')]
+const reduced = matchMedia('(prefers-reduced-motion: reduce)')
 const abort = new AbortController()
 const on = (target: EventTarget, event: string, listener: EventListener) =>
   target.addEventListener(event, listener, { signal: abort.signal })
-const visibleArticle = () => studies.find((article) => !article.hidden)!
-function paint() {
-  frame = 0
-  const progress = scrollY / stage.clientHeight
-  root.classList.toggle('reading-backdrop', progress >= 0.3)
-  const entered = progress >= 0.14
-  // Only the one-time opener handoff changes visibility. Reading text stays static.
-  studies.forEach((article) => {
-    article.style.visibility = entered ? 'visible' : 'hidden'
-  })
-  document.body.style.setProperty('--reading-veil', entered ? '1' : '0')
-}
-function request() {
-  if (!frame) frame = requestAnimationFrame(paint)
-}
-const fonts: Record<Study, string[]> = {
-  bricolage: ['400 28px Bricolage'],
-  newsreader: ['400 32px Newsreader', 'italic 400 34px Newsreader'],
-  source: ['400 28px SourceSansText', '400 70px UnboundedText'],
-}
-async function change(next: Study) {
-  if (next === study) return
-  const serial = ++switchSerial
-  await Promise.all(fonts[next].map((font) => document.fonts.load(font)))
-  if (serial !== switchSerial || abort.signal.aborted) return
-  const units = [...visibleArticle().querySelectorAll<HTMLElement>('[data-unit]')]
-  const anchor =
-    units.find((unit) => unit.getBoundingClientRect().bottom > innerHeight * 0.2) ?? units.at(-1)!
-  const top = anchor.getBoundingClientRect().top
-  const inPoem = units[0].getBoundingClientRect().top < innerHeight * 0.8
-  study = next
-  document.body.dataset.reading = next
-  studies.forEach((article) => {
-    article.hidden = article.dataset.study !== next
-  })
-  document.querySelectorAll<HTMLAnchorElement>('[data-study-link]').forEach((link) => {
-    if (link.dataset.studyLink === next) link.setAttribute('aria-current', 'page')
-    else link.removeAttribute('aria-current')
-  })
-  document.querySelector('[data-description]')!.textContent = descriptions[next]
-  const url = new URL(location.href)
-  url.searchParams.delete('layout')
-  url.searchParams.set('study', next)
-  history.replaceState(null, '', url)
-  if (inPoem) {
-    const target = visibleArticle().querySelector<HTMLElement>(
-      `[data-unit="${anchor.dataset.unit}"]`,
-    )!
-    scrollTo({ top: scrollY + target.getBoundingClientRect().top - top, behavior: 'instant' })
+let raf = 0,
+  lastScroll = -Infinity,
+  lift = 0.42,
+  pigment = '#e8dfcc'
+let surfaces: { host: HTMLElement; ink: ReturnType<typeof createTypeSurface> }[] = []
+let refrainInk: ReturnType<typeof createTypeSurface>
+
+function fitRefrain() {
+  const width = refrainStage.clientWidth * 0.9
+  const maxHeight = refrainStage.clientHeight * 0.5
+  for (const phrase of phrases) {
+    const size = Math.min(190, width / 5.9, maxHeight / 2.6)
+    phrase.style.fontSize = `${size}px`
+    let scale = 1
+    for (let i = 0; i < 3; i++) {
+      const content = phrase.querySelector<HTMLElement>('[data-ink]')!
+      scale = Math.min(1, maxHeight / content.offsetHeight, width / content.scrollWidth)
+      if (scale >= 0.999) break
+      phrase.style.fontSize = `${parseFloat(phrase.style.fontSize) * scale}px`
+    }
   }
+}
+function resize() {
+  fitRefrain()
+  for (const { ink } of surfaces) ink.resize()
+  refrainInk.resize()
   request()
 }
-function cycle(direction: number) {
-  const keys = Object.keys(descriptions) as Study[]
-  void change(keys[(keys.indexOf(study) + direction + keys.length) % keys.length])
+function draw(now: number) {
+  raf = 0
+  const progress = scrollY / stage.clientHeight
+  root.classList.toggle('reading-backdrop', progress >= 0.3)
+  if (progress >= 0.14) document.body.dataset.reading = 'true'
+  else delete document.body.dataset.reading
+  const scrolling = now - lastScroll < 140
+  let active = false
+  for (const { host, ink } of surfaces) {
+    if (host.getBoundingClientRect().bottom < 0 || host.getBoundingClientRect().top > innerHeight)
+      continue
+    active = ink.draw(now, 0, 0, 0, scrolling, lift, pigment) || active
+  }
+  const rect = refrainStage.getBoundingClientRect()
+  const position = Math.max(0, Math.min(1, (innerHeight - rect.top) / (innerHeight + rect.height)))
+  let index = 0,
+    next = 0,
+    blend = 0
+  const transitions = [
+    [0.38, 0.46],
+    [0.54, 0.62],
+  ]
+  for (let i = 0; i < transitions.length; i++) {
+    const [start, end] = transitions[i]
+    if (position >= end) index = next = i + 1
+    else if (position > start) {
+      index = i
+      next = i + 1
+      const t = (position - start) / (end - start)
+      blend = t * t * (3 - 2 * t)
+      break
+    }
+  }
+  refrain.dataset.active = String(blend < 0.5 ? index : next)
+  active = refrainInk.draw(now, index, next, blend, scrolling, lift, pigment) || active
+  if (!reduced.matches || active) request()
+}
+function request() {
+  if (!raf && !document.hidden && !abort.signal.aborted) raf = requestAnimationFrame(draw)
 }
 function toggleUI() {
   document.body.dataset.ui = document.body.dataset.ui === 'hidden' ? 'visible' : 'hidden'
 }
-const size = document.querySelector<HTMLInputElement>('[data-size]')!
-const weight = document.querySelector<HTMLInputElement>('[data-weight]')!
-function adjust() {
-  document.body.style.setProperty('--reading-scale', String(Number(size.value) / 100))
-  document.body.style.setProperty('--reading-weight', weight.value)
-  document.querySelector('[data-size-label]')!.textContent = `${size.value} %`
-  document.querySelector('[data-weight-label]')!.textContent = weight.value
-}
-on(size, 'input', adjust)
-on(weight, 'input', adjust)
-on(document.querySelector('[data-reset]')!, 'click', () => {
-  size.value = '100'
-  weight.value = '400'
-  adjust()
-})
-document.querySelectorAll<HTMLAnchorElement>('[data-study-link]').forEach((link) =>
-  on(link, 'click', ((event: MouseEvent) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-    event.preventDefault()
-    void change(link.dataset.studyLink as Study)
-  }) as EventListener),
-)
-on(document.querySelector('[data-previous]')!, 'click', () => cycle(-1))
-on(document.querySelector('[data-next]')!, 'click', () => cycle(1))
-on(document.querySelector('[data-replay]')!, 'click', () => {
-  scrollTo({ top: 0, behavior: 'instant' })
+
+await Promise.all([
+  document.fonts.load('350 28px UnboundedCopy'),
+  document.fonts.load('700 80px CinzelDecorative'),
+  document.fonts.load('800 100px Bricolage'),
+  document.fonts.load('400 100px Germania'),
+])
+if (!abort.signal.aborted) {
+  const light = matchMedia('(prefers-color-scheme: light)').matches
+  pigment = light ? '#172415' : '#e8dfcc'
+  lift = light ? 0.7 : 0.42
+  document.querySelector<HTMLInputElement>('[data-pigment]')!.value = pigment
+  document.querySelector<HTMLInputElement>('[data-lift]')!.value = String(Math.round(lift * 100))
+  document.querySelector('[data-lift-label]')!.textContent = `${Math.round(lift * 100)} %`
+  const copy = getComputedStyle(document.querySelector('.verse-copy')!).color.match(/\d+/g)!
+  document.querySelector<HTMLInputElement>('[data-copy-color]')!.value =
+    '#' +
+    copy
+      .slice(0, 3)
+      .map((n) => Number(n).toString(16).padStart(2, '0'))
+      .join('')
+  refrain.dataset.ready = 'true'
+  fitRefrain()
+  surfaces = highlights.map((host) => {
+    const ink = createTypeSurface(
+      host.querySelector('canvas')!,
+      [host.querySelector('[data-ink]')!],
+      abort.signal,
+      request,
+    )
+    ink.resize()
+    host.dataset.ready = 'true'
+    return { host, ink }
+  })
+  refrainInk = createTypeSurface(
+    document.querySelector('.refrain-canvas')!,
+    phrases.map((p) => p.querySelector('[data-ink]')!),
+    abort.signal,
+    request,
+  )
+  refrainInk.resize()
+  on(window, 'scroll', () => {
+    lastScroll = performance.now()
+    request()
+  })
+  const observer = new ResizeObserver(resize)
+  observer.observe(firstPair)
+  observer.observe(stage)
+  on(document.querySelector('[data-lift]')!, 'input', ((event: Event) => {
+    const value = (event.target as HTMLInputElement).value
+    lift = Number(value) / 100
+    document.querySelector('[data-lift-label]')!.textContent = `${value} %`
+    request()
+  }) as EventListener)
+  on(document.querySelector('[data-pigment]')!, 'input', (event) => {
+    pigment = (event.target as HTMLInputElement).value
+    request()
+  })
+  on(document.querySelector('[data-copy-color]')!, 'input', (event) => {
+    document.body.style.setProperty('--copy-color', (event.target as HTMLInputElement).value)
+  })
+  on(document.querySelector('[data-veil]')!, 'input', (event) => {
+    document.body.style.setProperty(
+      '--reading-veil',
+      String(Number((event.target as HTMLInputElement).value) / 100),
+    )
+  })
+  document.querySelectorAll<HTMLButtonElement>('[data-accent-choice]').forEach((button) =>
+    on(button, 'click', async () => {
+      document.body.dataset.accent = button.dataset.accentChoice!
+      document
+        .querySelectorAll<HTMLButtonElement>('[data-accent-choice]')
+        .forEach((b) => b.setAttribute('aria-pressed', String(b === button)))
+      await document.fonts.ready
+      resize()
+    }),
+  )
+  on(document.querySelector('[data-hide]')!, 'click', toggleUI)
+  on(document.querySelector('[data-restore]')!, 'click', toggleUI)
+  on(document.querySelector('[data-replay]')!, 'click', () =>
+    scrollTo({ top: 0, behavior: 'instant' }),
+  )
+  on(document.querySelector('[data-refrain]')!, 'click', () =>
+    scrollTo({
+      top: scrollY + refrainStage.getBoundingClientRect().top - innerHeight * 0.25,
+      behavior: 'instant',
+    }),
+  )
+  on(window, 'keydown', ((event: KeyboardEvent) => {
+    if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
+    if (event.key.toLowerCase() === 'h') toggleUI()
+  }) as EventListener)
+  on(document, 'visibilitychange', () => {
+    if (document.hidden) {
+      cancelAnimationFrame(raf)
+      raf = 0
+    } else request()
+  })
+  on(window, 'pagehide', () => {
+    abort.abort()
+    observer.disconnect()
+    cancelAnimationFrame(raf)
+  })
+  on(reduced, 'change', request)
+  // The shared forest frame is captured before the approved opener's veil.
+  await mountOpening(root, openingProps, abort.signal)
   request()
-})
-on(document.querySelector('[data-hide]')!, 'click', toggleUI)
-on(document.querySelector('[data-restore]')!, 'click', toggleUI)
-on(window, 'keydown', ((event: KeyboardEvent) => {
-  if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
-  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-    event.preventDefault()
-    cycle(event.key === 'ArrowLeft' ? -1 : 1)
-  }
-  if (event.key.toLowerCase() === 'h') toggleUI()
-}) as EventListener)
-on(window, 'scroll', request)
-on(window, 'resize', request)
-on(window, 'pagehide', () => {
-  abort.abort()
-  cancelAnimationFrame(frame)
-})
-paint()
-await mountOpening(root, openingProps, abort.signal)
-request()
+}

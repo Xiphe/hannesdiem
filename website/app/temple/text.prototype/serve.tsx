@@ -21,9 +21,6 @@ const fontNames = ['bricolage.ttf', 'germaniaone.ttf', 'cinzeldecorative-bold.tt
 const fonts = new Map(
   fontNames.map((name) => [`/fonts/${name}`, gitFile(`website/app/temple/assets/${name}`)]),
 )
-for (const name of ['newsreader.ttf', 'newsreader-italic.ttf', 'source-sans.ttf']) {
-  fonts.set(`/fonts/${name}`, readFileSync(new URL(`fonts/${name}`, root)))
-}
 // Same photograph and 1920px preparation as the approved scene; no CDN dependency.
 const forest = await sharp(fileURLToPath(new URL('../../../../content/media/IMG_6257.JPG', root)))
   .rotate()
@@ -45,7 +42,31 @@ const scene = await build({
           // visible stage rather than the departed root, preserving ambient motion.
           contents: gitFile(`website/app/temple/${args.path.split(/[/\\]/).pop()}`)
             .toString()
-            .replace('observer.observe(root)', 'observer.observe(stage)'),
+            .replace('observer.observe(root)', 'observer.observe(stage)')
+            .replace(
+              'import { createForest }',
+              "import { captureForest, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { createForest }",
+            )
+            .replace(
+              'paintForest(context, width, height, elapsed)',
+              'paintForest(context, width, height, elapsed); captureForest(canvas)',
+            )
+            .replace(
+              /  function roughBand\([\s\S]*?\n  function compose\(/,
+              `  function roughBand(ink, y, h, seed, offset = 0) { sharedBand(ink, width, y, h, seed, offset) }\n  function compose(`,
+            )
+            .replace(
+              /  function disturb\([\s\S]*?\n  function requestDraw\(/,
+              `  function disturb(event, s, now) {
+              const age = now - event.start
+              const duration = event.idle ? event.duration : reduced.matches ? 220 : 680
+              if (age >= duration) return false
+              const letter = layers[event.layer].glyphs[event.glyph]
+              const alt = layers[(event.layer + 1 + (event.glyph % 2)) % 4].glyphs[event.glyph]
+              drawDisturbance(maskContext, width, ratio, letter, alt, { ...event, age, duration, y: s.y }, reduced.matches)
+              return true
+            }\n  function requestDraw(`,
+            ),
           loader: 'ts',
           resolveDir: dirname(args.path),
         }))
@@ -72,10 +93,7 @@ createServer(async (request, response) => {
     response.end(forest)
   } else if (url.pathname === '/' || url.pathname === '/temple-of-sound') {
     response.setHeader('Content-Type', 'text/html; charset=utf-8')
-    response.end(
-      '<!doctype html>' +
-        (await renderToString(<Review study={url.searchParams.get('study') ?? 'bricolage'} />)),
-    )
+    response.end('<!doctype html>' + (await renderToString(<Review />)))
   } else {
     response.writeHead(404)
     response.end()

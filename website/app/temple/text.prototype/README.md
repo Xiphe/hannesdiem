@@ -1,47 +1,41 @@
-# Reading voices / typography exploration
+# First-pair typography / moving refrain
 
-Expansion, local only. The artist rejected both Codrops effects and the headline-only setting at `dc355ec`. They declined supplying a reference and explicitly requested `$explore`: make concrete comparisons instead of turning a reference into a prerequisite. No specimen selected; only the approved opener is public.
+Local exploration, `codex/temple-first-text-studies`. Only the opener is approved for publication. No production source/Worker changes or deployment.
 
-`npm run prototype:temple-text`; user access: `sand tunnel 8790`.
+Run `npm run prototype:temple-text`; user access: `sand tunnel 8790` → [preview](http://localhost:8790/temple-of-sound).
 
-- **A · Bricolage:** `http://localhost:8790/temple-of-sound?study=bricolage`
-- **B · Newsreader:** `http://localhost:8790/temple-of-sound?study=newsreader`
-- **C · Source Sans:** `http://localhost:8790/temple-of-sound?study=source`
+## Artist direction / scope
 
-## Question and specimens
+The artist rejected the reading-face survey at `62ca132`, forbade additional fonts and supplied new wording with explicit emphasis/face assignments. Grilling Q1–8 confirmed the treatment; their subsequent correction supersedes the proposed sticky refrain: **the refrain moves with the document and changes sentences during that movement**. This implements that experiment, not acceptance of a finished scene.
 
-Explore a reading voice, emphasis and refrain together, before more poem motion. The earlier accepted Bricolage specimen does not authorize display settings throughout. Its observed limitation here is the previous headline-only texture, not a claimed emotional property of the family.
+- Unbounded 350 copy; first statement in Cinzel Decorative Bold.
+- Marked emphasis: Cinzel by default; switch to Unbounded for comparison. Position/size/colour remain exploratory.
+- Cinzel uses the live forest/glimmers as a mask, with pointer/idle disturbances and brief alternate-face glyph fragments; no whole-passage face swapping.
+- Three refrain sentences replace each other in a single normally scrolling 100svh composition. Fixed associations: playful → Cinzel; breathing → Bricolage; faithful → Unbounded. Each has independent native setting/fit. Scroll transitions overlap whole sentences and ragged fragments; no fixed character slots or word mapping.
+- New prose is recorded verbatim in `studies.tsx`; the explicitly approved correction removes the duplicate “to”. No prose invented. Existing draft elsewhere is not rewritten by this local experiment.
 
-Common fixture: original seven semantic units in order, one responsive column (768px maximum), actual opener/forest context, native document flow, no poem animation. Different typography naturally changes wrapping and document height; this is not a layout or width survey. Initial statement stays larger; the longer address/body gets a reading setting; the refrain has a separate typographic role. These role assignments are proposals.
+## Mechanics / shared effect
 
-| Specimen | Reading body                      | Initial statement     | Refrain               |
-| -------- | --------------------------------- | --------------------- | --------------------- |
-| A        | Bricolage 400, opsz14, 28px / 1.5 | Bricolage 600, opsz48 | Bricolage 450         |
-| B        | Newsreader 400, 32px / 1.43       | Bricolage 600         | Newsreader italic 400 |
-| C        | Source Sans 3 400, 28px / 1.55    | Unbounded 400         | Unbounded 350         |
+The actual accepted opener is pinned to main `3b839491bf4743f05bce54b9f8a00c64de29ad08`; original fonts, title shaping, sequence, theme and forest preparation remain. Server's esbuild adapter observes the actual stage after its root leaves the viewport. It extracts the opener's **unchanged** ragged-band and glyph-disturbance algorithms into shared `typography.ts` calls. This is a prototype adapter against a pinned source, not a production refactor. Opener and poem therefore use the same disturbance primitives, not a newly approximated CSS glitch.
 
-Body sizes reduce on phones. Normal proportional spacing; no per-letter splitting, particle coupling, verse timeline, pinning, fake scroll range or wheel interception. First statement starts at document y0.58 viewport and becomes visible at scroll0.14, overlapping the opener's exit. This handoff fixture is not a proposed verse effect.
+The opener captures its combined forest/glimmers canvas before its opaque veil. All poem masks sample that same live frame at their actual viewport coordinates. No duplicated particle system or unrelated photograph crop. Source photo: IMG_6257.JPG → rotate/1920px/WebP80, hash prefix `6f60f5b1a39bdac4`.
 
-## Participation
+Native DOM typography determines wrapping and glyph positions. Cached masks preserve natural proportions/spacing. Refrain position is `(viewportHeight - stage.top) / (viewportHeight + stage.height)`; working transition ranges .38–.46 and .54–.62, reversible. Stage is `position: relative`; there is no text pinning, wheel interception, fake spacer, automatic advancement or scroll-handler seeking. Sentence fitting caps ink layout height at 50% viewport so the entire sentence remains visible while its containing block moves.
 
-A/B/C links or ←/→ switch near the current passage and update `?study=`. Different document lengths can limit scroll restoration near the bottom. **Lesesatz** scales body/refrain to 85–125%; **Gewicht** changes body weight300–550. Accent/refrain role weights remain fixed. Reset restores100%/400; reload resets adjustments, retains the URL specimen. **Zum Opener** returns to the beginning. H/× hides controls; ↔ restores them. Input fields retain native keyboard controls. Review UI is outside the artist's prose; hidden alternatives are excluded from rendering/accessibility.
+Immediate opener handoff retained: first statement document top0.58 viewport, visibility at scroll0.14. Only opener stage stays behind the document. Foreground contrast and spacing are working settings, not approved scene decisions.
 
-## Context / provenance
+## Controls / fallback
 
-The actual approved opener retains its 130svh document box and title sequence. After title exit, its stage stays fixed behind the reading area. Local esbuild reads renderer/CSS/fonts from main `3b839491bf4743f05bce54b9f8a00c64de29ad08`; one visibility adaptation observes the actual stage rather than the departed root. No production source edits. Reduced motion freezes ambient particles; reading text is static in all modes. No-JS displays the prose in ordinary flow after the opener.
+- Cinzel / Unbounded changes the three secondary emphasis passages; initial statement and refrain associations remain fixed.
+- Tönung, pigment, copy colour, background veil: live contrast exploration; theme-specific initial pigment (cream42% dark / dark green70% light), veil84%. No saved preferences.
+- Zum Opener / Zum Refrain seek explicitly; H/× hides controls; ↔ restores them. All UI is outside artist prose.
+- No-JS: original text and all three refrain sentences in ordinary flow. Canvas hidden until enhanced; semantic text remains present once enhanced.
+- Reduced motion: frozen ambient frame, simple crossfades rather than bands, no idle disturbance; pointer response is weaker/shorter. RAF stops with inactive tabs or page disposal.
 
-Source photo: accepted rotate → 1920px → WebP80 preparation, hash prefix `6f60f5b1a39bdac4`. Text: `content/temple-of-sound/draft.tsx`, fallback `content/drafts/temple-of-sound.tsx` on this older branch. No prose changes or new npm dependency.
-
-Existing Bricolage/Unbounded are reused. Two additional reading faces are prototype assets, not publication decisions:
-
-- [Newsreader, Production Type](https://github.com/productiontype/Newsreader): designed for continuous on-screen reading; normal and italic variable files.
-- [Source Sans 3, Adobe](https://github.com/adobe-fonts/source-sans): designed for UI environments; humanist sans comparison.
-- Files from Google Fonts `ofl/newsreader` and `ofl/sourcesans3`; OFL notices retained beside them. Local serving, no runtime font CDN. SHA256 prefixes: Newsreader `8a08d13f8a6c0d51`, italic `796668611f80b64d`, Source Sans `042fe2cc0b933e32`.
-
-Client bundle is generated at server startup; restart after editing `context.ts` (touch `serve.tsx` for node watch).
+No new dependencies. Only four original font files; rejected Newsreader/Source Sans assets removed (recoverable at `62ca132`). Browser bundle is generated at startup; touch `serve.tsx` after client edits for node watch.
 
 ## Validation / recovery
 
-Scoped TypeScript, Prettier and browser inspection at1440×960/390×844. All three computed reading faces/weights, original seven units, no horizontal overflow, size/weight controls/reset, passage switching, reduced-motion rendering and real no-JS fallback checked. No CI polling, Worker changes or deployment.
+Scoped TypeScript/Prettier; browser desktop1440×960 and phone390×844, dark/light, all three states forward/backward, original new wording/order, accent switch and contrast controls, no overflow. Refrain moves100px after100px scroll; document height constant through transition. Reduced-motion canvas pixel checks confirm pointer disturbance changes then returns exactly to baseline. Actual no-JS context checked. No permanent visual tests or CI polling.
 
-Rejected Codrops implementations/license remain in `dc355ec`; removed from this current specimen. Recovery: `6dfe338` rejected pinned sequence; `4013e89` liked close first sentence; `c1d9879` rejected detached traces; `551612d` parked glyph coupling. [Shared decision record](../docs/collaboration.md).
+Recovery: `62ca132` rejected reading-face survey; `dc355ec` rejected Codrops effects; `6dfe338` rejected pinned verse timeline; `4013e89` liked first-sentence close view. [Decision record](../docs/collaboration.md).
