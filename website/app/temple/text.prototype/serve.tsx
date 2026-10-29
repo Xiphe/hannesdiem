@@ -1,4 +1,4 @@
-// LOCAL THROWAWAY SERVER. No Worker/router/publication entry.
+// Local review server. No Worker/router/publication entry.
 import { createServer } from 'node:http'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -93,8 +93,12 @@ const scene = await build({
               'layers = faces.map(makeLayer); for (const layer of layers) for (const row of layer.rows) cachePortal(row.surface)',
             )
             .replace(
-              "if (!root.hasAttribute('data-ready'))",
-              "drawEscapes(context, elapsed, reduced.matches); if (!root.hasAttribute('data-ready'))",
+              "if (!root.hasAttribute('data-ready')) root.dataset.ready = 'true'",
+              `drawEscapes(context, elapsed, reduced.matches);
+              if (!root.hasAttribute('data-ready')) {
+                root.dataset.ready = 'true';
+                document.body.dataset.sceneReady = 'true';
+              }`,
             )
             .replace(
               '!reduced.matches || disturbances.size',

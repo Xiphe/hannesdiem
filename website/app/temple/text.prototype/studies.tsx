@@ -40,8 +40,20 @@ export function Review(_handle: Handle) {
           content="noindex,nofollow"
         />
         <title>Temple of Sound / First pair</title>
+        <style>
+          {`
+            html, body { background: #000; margin: 0; }
+            body:not([data-scene-ready]) .temple-page,
+            body:not([data-scene-ready]) .review-controls { visibility: hidden; }
+          `}
+        </style>
         <noscript>
-          <style>{'.first-pair{margin-top:0!important}'}</style>
+          <style>
+            {`
+              body:not([data-scene-ready]) .temple-page { visibility: visible; }
+              .first-pair { margin-top: 0 !important; }
+            `}
+          </style>
         </noscript>
         <link
           rel="icon"
