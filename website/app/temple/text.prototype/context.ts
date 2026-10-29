@@ -20,6 +20,7 @@ const copyColour = colourCopy(firstPair, abort.signal, request)
 const on = (target: EventTarget, event: string, listener: EventListener) =>
   target.addEventListener(event, listener, { signal: abort.signal })
 let lastScroll = -Infinity
+let needsResize = false
 let refrainInk: ReturnType<typeof createTypeSurface>
 
 const measure = document.createElement('canvas').getContext('2d')!
@@ -93,6 +94,10 @@ function resize() {
   request()
 }
 function draw(now: number, frame: TypeFrame) {
+  if (needsResize) {
+    needsResize = false
+    resize()
+  }
   const scrolling = now - lastScroll < 140
   copyColour.draw(now, reduced.matches)
   const section = refrain.getBoundingClientRect()
@@ -156,7 +161,12 @@ if (!abort.signal.aborted) {
     lastScroll = performance.now()
     request()
   })
-  const observer = new ResizeObserver(resize)
+  // Fit in the shared frame, not inside ResizeObserver's delivery cycle: fitting
+  // changes the observed section's height and otherwise loops in WebKit.
+  const observer = new ResizeObserver(() => {
+    needsResize = true
+    request()
+  })
   observer.observe(firstPair)
   observer.observe(stage)
   on(document.querySelector('[data-copy-color]')!, 'input', (event) => {

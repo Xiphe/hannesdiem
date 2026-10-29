@@ -298,11 +298,16 @@ body[data-ui='hidden'] .review-controls {
   inset: 0 auto auto 0;
   pointer-events: none;
 }
+.copy-highlight-glyph {
+  position: absolute;
+  pointer-events: none;
+}
 .verse-copy > p[data-copy-cloud] {
   color: transparent;
 }
 @media print, (forced-colors: active) {
-  .copy-cloud-canvas {
+  .copy-cloud-canvas,
+  .copy-highlight-glyph {
     display: none;
   }
   .verse-copy > p[data-copy-cloud] {
