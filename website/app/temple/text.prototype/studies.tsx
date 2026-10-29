@@ -43,6 +43,7 @@ export function Review(_handle: Handle) {
         <style>
           {`
             html, body { background: #000; margin: 0; }
+            body:not([data-scene-ready]) { background: #000 !important; }
             body:not([data-scene-ready]) .temple-page,
             body:not([data-scene-ready]) .review-controls { visibility: hidden; }
           `}
@@ -50,6 +51,7 @@ export function Review(_handle: Handle) {
         <noscript>
           <style>
             {`
+              body:not([data-scene-ready]) { background: light-dark(#f7ecdf, #000) !important; }
               body:not([data-scene-ready]) .temple-page { visibility: visible; }
               .first-pair { margin-top: 0 !important; }
             `}
@@ -57,7 +59,8 @@ export function Review(_handle: Handle) {
         </noscript>
         <link
           rel="icon"
-          href="data:,"
+          href="/temple-mark.svg"
+          type="image/svg+xml"
         />
         <link
           rel="stylesheet"

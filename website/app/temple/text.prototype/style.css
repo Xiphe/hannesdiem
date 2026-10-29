@@ -10,22 +10,22 @@
 }
 html[data-layout='temple'] {
   overflow-anchor: none;
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 html[data-layout='temple'],
 html[data-layout='temple'] body {
-  background: #000;
-  color: #d2d0c8;
+  background: light-dark(#f7ecdf, #000);
+  color: light-dark(#11120b, #d2d0c8);
 }
 .temple-opening {
-  background: #000;
+  background: light-dark(#f7ecdf, #000);
 }
 .temple-fallback-image {
   opacity: 0;
 }
 body {
   margin: 0;
-  --copy-color: #d2d0c8;
+  --copy-color: light-dark(#11120b, #d2d0c8);
 }
 .temple-opening .temple-stage {
   position: fixed;

@@ -17,6 +17,7 @@ const root = new URL('./', import.meta.url)
 const openingCss = gitFile('website/app/temple/style.css')
   .toString()
   .replaceAll("url('./assets/", "url('/fonts/")
+const templeMark = readFileSync(new URL('../assets/mark.svg', root))
 const fontNames = ['bricolage.ttf', 'germaniaone.ttf', 'cinzeldecorative-bold.ttf', 'unbounded.ttf']
 const fonts = new Map(
   fontNames.map((name) => [`/fonts/${name}`, gitFile(`website/app/temple/assets/${name}`)]),
@@ -133,6 +134,9 @@ createServer(async (request, response) => {
   if (url.pathname === '/context.js') {
     response.setHeader('Content-Type', 'text/javascript')
     response.end(scene.outputFiles[0].contents)
+  } else if (url.pathname === '/temple-mark.svg') {
+    response.setHeader('Content-Type', 'image/svg+xml')
+    response.end(templeMark)
   } else if (url.pathname === '/opening.css' || url.pathname === '/style.css') {
     response.setHeader('Content-Type', 'text/css')
     response.end(

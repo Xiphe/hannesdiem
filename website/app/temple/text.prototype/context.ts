@@ -15,6 +15,7 @@ const refrainStage = document.querySelector<HTMLElement>('.refrain-stage')!
 const phrases = [...document.querySelectorAll<HTMLElement>('.refrain-phrase')]
 const fitBlocks = blockType(firstPair)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+const appearance = matchMedia('(prefers-color-scheme: dark)')
 const abort = new AbortController()
 const copyColour = colourCopy(firstPair, abort.signal, request)
 const on = (target: EventTarget, event: string, listener: EventListener) =>
@@ -131,6 +132,18 @@ function request() {
 function toggleUI() {
   document.body.dataset.ui = document.body.dataset.ui === 'hidden' ? 'visible' : 'hidden'
 }
+function syncCopyAppearance() {
+  const copy = getComputedStyle(document.querySelector('.verse-copy')!).color.match(/\d+/g)!
+  const hex =
+    '#' +
+    copy
+      .slice(0, 3)
+      .map((n) => Number(n).toString(16).padStart(2, '0'))
+      .join('')
+  document.querySelector<HTMLInputElement>('[data-copy-color]')!.value = hex
+  copyColour.setBase(hex)
+  request()
+}
 
 await Promise.all([
   document.fonts.load('350 28px UnboundedCopy'),
@@ -139,13 +152,7 @@ await Promise.all([
   document.fonts.load('400 100px Germania'),
 ])
 if (!abort.signal.aborted) {
-  const copy = getComputedStyle(document.querySelector('.verse-copy')!).color.match(/\d+/g)!
-  document.querySelector<HTMLInputElement>('[data-copy-color]')!.value =
-    '#' +
-    copy
-      .slice(0, 3)
-      .map((n) => Number(n).toString(16).padStart(2, '0'))
-      .join('')
+  syncCopyAppearance()
   refrain.dataset.ready = 'true'
   fitBlocks()
   fitRefrain()
@@ -243,6 +250,10 @@ if (!abort.signal.aborted) {
     observer.disconnect()
   })
   on(reduced, 'change', request)
+  on(appearance, 'change', () => {
+    document.body.style.removeProperty('--copy-color')
+    syncCopyAppearance()
+  })
   // All masks and material share the opener's one animation frame.
   setTypeFrame(draw)
   await mountOpening(root, openingProps, abort.signal)

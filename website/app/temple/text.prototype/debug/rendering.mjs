@@ -52,10 +52,30 @@ try {
   )
   report.revealed = true
   await startup.close()
+  const staticPage = await browser.newPage({ javaScriptEnabled: false, colorScheme: 'light' })
+  await staticPage.goto(process.env.TEMPLE_URL ?? 'http://localhost:8790/temple-of-sound')
+  assert.equal(
+    await staticPage.locator('.temple-page').evaluate((e) => getComputedStyle(e).visibility),
+    'visible',
+  )
+  assert.equal(
+    await staticPage.evaluate(() => getComputedStyle(document.body).backgroundColor),
+    'rgb(247, 236, 223)',
+  )
+  assert.equal(
+    await staticPage
+      .locator('.verse-copy')
+      .first()
+      .evaluate((e) => getComputedStyle(e).color),
+    'rgb(17, 18, 11)',
+  )
+  report.noScriptLightReadable = true
+  await staticPage.close()
 
   const page = await browser.newPage({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
+    colorScheme: 'dark',
     reducedMotion: 'reduce',
   })
   const errors = []
@@ -211,6 +231,43 @@ try {
   assert.equal(await page.evaluate(() => window.__cloudPaints), offscreen)
   report.offscreenFrozen = true
   await page.evaluate(() => document.querySelector('#test-spacer').remove())
+  await page.evaluate(() => scrollTo(0, innerHeight - 40))
+  report.themes = []
+  for (const [scheme, background, base] of [
+    ['light', 'rgb(247, 236, 223)', '#11120b'],
+    ['dark', 'rgb(0, 0, 0)', '#d2d0c8'],
+  ]) {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
+    await page.waitForFunction(
+      (base) => document.querySelector('[data-copy-color]').value === base,
+      base,
+    )
+    await page.waitForTimeout(100)
+    assert.equal(
+      await page.evaluate(() => getComputedStyle(document.body).backgroundColor),
+      background,
+    )
+    const brightness = await paragraph.evaluate((p) => {
+      const canvas = p.querySelector('canvas')
+      const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+      let sum = 0,
+        count = 0
+      for (let at = 0; at < pixels.length; at += 4)
+        if (pixels[at + 3] > 200) {
+          sum += (pixels[at] + pixels[at + 1] + pixels[at + 2]) / 3
+          count++
+        }
+      return sum / count
+    })
+    assert.ok(scheme === 'light' ? brightness < 100 : brightness > 150)
+    report.themes.push(scheme)
+  }
+  const iconPath = await page.locator('link[rel="icon"]').getAttribute('href')
+  const icon = await page.request.get(new URL(iconPath, page.url()).href)
+  assert.equal(icon.status(), 200)
+  assert.match(icon.headers()['content-type'], /image\/svg\+xml/)
+  assert.match(await icon.text(), /prefers-color-scheme: dark/)
+  report.themedFavicon = true
   await page.emulateMedia({ forcedColors: 'active' })
   assert.equal(
     await paragraph.evaluate((p) => getComputedStyle(p.querySelector('canvas')).display),
