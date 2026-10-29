@@ -1,4 +1,5 @@
 // Shared with the pinned opener in the local browser bundle. No production edits.
+import { addPortal, cachePortal } from './escapes.ts'
 export type Glyph = {
   x: number
   y: number
@@ -287,6 +288,7 @@ export function createTypeSurface(
     events.clear()
     tiles.clear()
     layers = inkElements.map(makeLayer)
+    for (const layer of layers) cachePortal(layer.surface)
   }
 
   function addEvent(layer: Layer, glyph: number, idle: boolean, now: number) {
@@ -337,6 +339,15 @@ export function createTypeSurface(
       b = layers[next]
     if (!a || !b) return false
     current = blend < 0.5 ? index : next
+    // Stable letter faces provide an emission boundary; skip torn transition frames.
+    if (blend <= 0.08 || blend >= 0.92)
+      addPortal(
+        layers[current].surface,
+        rect.left - frame.bounds.left,
+        rect.top - frame.bounds.top,
+        width,
+        height,
+      )
     maskInk.clearRect(0, 0, width, height)
     const layer = (value: Layer, alpha = 1, dx = 0) => {
       maskInk.globalAlpha = alpha

@@ -11,8 +11,16 @@ export const refrain = [
   { text: 'I’m faithful and held.', display: 'I’M FAITHFUL AND HELD.', face: 'unbounded' },
 ] as const
 
-function Emphasis(handle: Handle<{ text: string; class?: string }>) {
-  return () => <span class={`type-emphasis ${handle.props.class ?? ''}`}>{handle.props.text}</span>
+function TypeLine(handle: Handle<{ text: string; face?: 'cinzel' | 'spaced' }>) {
+  return () => (
+    <span
+      class="block-line"
+      data-type-line
+      data-lettering={handle.props.face ?? 'copy'}
+    >
+      {handle.props.text}
+    </span>
+  )
 }
 
 export function Review(_handle: Handle) {
@@ -52,7 +60,7 @@ export function Review(_handle: Handle) {
           src="/context.js"
         ></script>
       </head>
-      <body data-accent="cinzel">
+      <body data-ui="hidden">
         <main class="temple-page">
           <Opening {...openingProps} />
           <article
@@ -60,29 +68,30 @@ export function Review(_handle: Handle) {
             aria-label="First verse and refrain"
           >
             <div class="verse-copy">
-              <p class="verse-opening">
-                <strong>
-                  <Emphasis text="Humanity! I’m in love." />
-                </strong>
-              </p>
-              <p>With the brave spirits I meet, witness, and sense.</p>
               <p>
-                <strong>
-                  <Emphasis
-                    text="I’m so deeply touched"
-                    class="accent"
-                  />
-                </strong>{' '}
-                by those willing to feel, to unwind, to rest, to risk
+                <TypeLine
+                  text="H U M A N I T Y !"
+                  face="spaced"
+                />{' '}
+                <TypeLine
+                  text="I’m in love"
+                  face="cinzel"
+                />{' '}
+                <TypeLine text="with the brave spirits I meet, witness, and sense." />
               </p>
               <p>
-                Those willing to build villages rooted in{' '}
-                <strong>
-                  <Emphasis
-                    text="trust and connection."
-                    class="accent"
-                  />
-                </strong>
+                <TypeLine
+                  text="I’m so deeply touched"
+                  face="cinzel"
+                />{' '}
+                <TypeLine text="by those willing to feel, to unwind, to rest, to risk." />
+              </p>
+              <p>
+                <TypeLine text="By those willing to build villages rooted in" />{' '}
+                <TypeLine
+                  text="trust and connection"
+                  face="cinzel"
+                />
               </p>
             </div>
             <section
@@ -125,13 +134,11 @@ export function Review(_handle: Handle) {
             </section>
             <div class="verse-copy verse-coda">
               <p>
-                <strong>
-                  <Emphasis
-                    text="I’m loved"
-                    class="accent"
-                  />
-                </strong>
-                , and in awe of what you kindred souls have built onto this sphere.
+                <TypeLine
+                  text="I’m loved,"
+                  face="cinzel"
+                />{' '}
+                <TypeLine text="and in awe of what you kindred souls have built onto this sphere." />
               </p>
             </div>
           </article>
@@ -142,21 +149,6 @@ export function Review(_handle: Handle) {
           lang="de"
         >
           <div class="review-heading">
-            <span>Hervorhebungen</span>
-            <button
-              type="button"
-              data-accent-choice="cinzel"
-              aria-pressed="true"
-            >
-              Cinzel
-            </button>
-            <button
-              type="button"
-              data-accent-choice="unbounded"
-              aria-pressed="false"
-            >
-              Unbounded
-            </button>
             <button
               type="button"
               data-replay
@@ -220,6 +212,17 @@ export function Review(_handle: Handle) {
               <output data-mist-highlights-label>{defaults.mistHighlights * 100} %</output>
             </label>
             <label>
+              Glimmer vorn{' '}
+              <input
+                type="range"
+                data-escape-strength
+                min="0"
+                max="100"
+                defaultValue="85"
+              />
+              <output data-escape-label>85 %</output>
+            </label>
+            <label>
               Text-Varianz{' '}
               <input
                 type="range"
@@ -255,14 +258,6 @@ export function Review(_handle: Handle) {
             Normaler Textfluss · Refrain hält zum Wechseln in der Mitte · H versteckt die Bedienung.
           </p>
         </nav>
-        <button
-          class="restore-controls"
-          type="button"
-          data-restore
-          aria-label="Bedienung einblenden"
-        >
-          ↔
-        </button>
       </body>
     </html>
   )

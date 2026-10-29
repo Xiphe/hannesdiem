@@ -4,6 +4,8 @@ import { openingProps } from './context-props.ts'
 import { createTypeSurface, invalidateForest, setTypeFrame, type TypeFrame } from './typography.ts'
 import { mist } from './atmosphere.ts'
 import { colourCopy } from './copy-colour.ts'
+import { blockType } from './block-type.ts'
+import { escapeLight } from './escapes.ts'
 
 const root = document.querySelector<HTMLElement>('.temple-opening')!
 const stage = root.querySelector<HTMLElement>('.temple-stage')!
@@ -12,6 +14,7 @@ const refrain = document.querySelector<HTMLElement>('.refrain-composition')!
 const refrainStage = document.querySelector<HTMLElement>('.refrain-stage')!
 const phrases = [...document.querySelectorAll<HTMLElement>('.refrain-phrase')]
 const copyColour = colourCopy(firstPair)
+const fitBlocks = blockType(firstPair)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
 const abort = new AbortController()
 const on = (target: EventTarget, event: string, listener: EventListener) =>
@@ -83,6 +86,7 @@ function fitRefrain() {
 }
 
 function resize() {
+  fitBlocks()
   fitRefrain()
   refrainInk.resize()
   request()
@@ -137,6 +141,7 @@ if (!abort.signal.aborted) {
       .map((n) => Number(n).toString(16).padStart(2, '0'))
       .join('')
   refrain.dataset.ready = 'true'
+  fitBlocks()
   fitRefrain()
   refrainInk = createTypeSurface(
     document.querySelector('.refrain-canvas')!,
@@ -195,18 +200,13 @@ if (!abort.signal.aborted) {
     document.querySelector('[data-copy-speed-label]')!.textContent = `${speed.toFixed(1)}×`
     request()
   })
-  document.querySelectorAll<HTMLButtonElement>('[data-accent-choice]').forEach((button) =>
-    on(button, 'click', async () => {
-      document.body.dataset.accent = button.dataset.accentChoice!
-      document
-        .querySelectorAll<HTMLButtonElement>('[data-accent-choice]')
-        .forEach((b) => b.setAttribute('aria-pressed', String(b === button)))
-      await document.fonts.ready
-      resize()
-    }),
-  )
+  on(document.querySelector('[data-escape-strength]')!, 'input', (event) => {
+    const value = (event.target as HTMLInputElement).value
+    escapeLight.intensity = Number(value) / 100
+    document.querySelector('[data-escape-label]')!.textContent = `${value} %`
+    request()
+  })
   on(document.querySelector('[data-hide]')!, 'click', toggleUI)
-  on(document.querySelector('[data-restore]')!, 'click', toggleUI)
   on(document.querySelector('[data-replay]')!, 'click', () =>
     scrollTo({ top: 0, behavior: 'instant' }),
   )

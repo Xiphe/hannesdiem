@@ -53,10 +53,27 @@ const scene = await build({
             )
             .replace('const overlayOpacity = 0.11', 'const overlayOpacity = 0')
             .replace('particle.brightness * fade', 'particle.brightness * 1.25 * fade')
+            .replace(
+              'export function createForest',
+              "import { setGlimmerSprite, trackGlimmer } from './text.prototype/escapes.ts';\nexport function createForest",
+            )
+            .replace(
+              'Array.from({ length: 980 }, () => {',
+              'Array.from({ length: 980 }, (_, id) => {',
+            )
+            .replace('angle: angle +', 'id, angle: angle +')
+            .replace(
+              'brush.fillRect(0, 0, 48, 48)',
+              'brush.fillRect(0, 0, 48, 48); setGlimmerSprite(sprite)',
+            )
+            .replace(
+              'const size = particle.size * 8',
+              'const size = particle.size * 8; trackGlimmer(particle.id, px, py, context.globalAlpha, size, seconds)',
+            )
             .replace('  resize()\n}', '  setForestInvalidation(requestDraw)\n  resize()\n}')
             .replace(
               'import { createForest }',
-              "import { drawTypeFrame, setForestInvalidation, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { paintEdgeMist } from './text.prototype/atmosphere.ts';\nimport { createForest }",
+              "import { drawTypeFrame, setForestInvalidation, roughBand as sharedBand, drawDisturbance } from './text.prototype/typography.ts';\nimport { paintEdgeMist } from './text.prototype/atmosphere.ts';\nimport { beginPortals, cachePortal, addPortal, drawEscapes } from './text.prototype/escapes.ts';\nimport { createForest }",
             )
             .replace(
               'paintForest(context, width, height, elapsed)',
@@ -64,7 +81,20 @@ const scene = await build({
             )
             .replace(
               'compose(s, now)',
-              'compose(s, now); const typeActive = drawTypeFrame(maskContext, canvas, now)',
+              `compose(s, now); beginPortals();
+              for (const phase of s.rows) if (phase.blend <= 0.08 || phase.blend >= 0.92) {
+                const row = layers[s.rowFaces[phase.row]].rows[phase.row];
+                addPortal(row.surface, row.x, row.y - s.y, row.width, row.height);
+              }
+              const typeActive = drawTypeFrame(maskContext, canvas, now)`,
+            )
+            .replace(
+              'layers = faces.map(makeLayer)',
+              'layers = faces.map(makeLayer); for (const layer of layers) for (const row of layer.rows) cachePortal(row.surface)',
+            )
+            .replace(
+              "if (!root.hasAttribute('data-ready'))",
+              "drawEscapes(context, elapsed, reduced.matches); if (!root.hasAttribute('data-ready'))",
             )
             .replace(
               '!reduced.matches || disturbances.size',

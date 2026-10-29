@@ -38,52 +38,67 @@ body {
   margin-top: -30svh;
 }
 .verse-copy {
+  --ink-gap: clamp(8px, 1vw, 12px);
   width: min(100% - 48px, 900px);
   margin-inline: auto;
   font-family: UnboundedCopy, sans-serif;
   font-weight: 350;
-  font-size: clamp(18px, 2.1vw, 28px);
-  line-height: 1.75;
+  font-size: 20px;
+  line-height: 1.16;
   color: var(--copy-color);
 }
 .verse-copy p {
   margin: 0;
-  text-wrap: pretty;
+  font-size: 0;
 }
 .verse-copy p + p {
-  margin-top: 1.4em;
+  margin-top: clamp(32px, 4.5vw, 64px);
 }
-.verse-copy strong {
-  font-weight: inherit;
+.block-line {
+  display: block;
+  font-size: clamp(18px, 3vw, 32px);
+  line-height: 1.18;
 }
-.type-emphasis {
-  display: inline-block;
-  position: relative;
-  max-width: 100%;
-  vertical-align: baseline;
+.block-line + .block-line {
+  margin-top: var(--ink-gap);
+}
+.block-line[data-lettering='cinzel'] {
   font-family: CinzelDecorative, serif;
   font-weight: 700;
-  line-height: 1.12;
-  font-size: 1.4em;
-  color: var(--copy-color);
+  line-height: 1.02;
 }
-.verse-opening {
-  font-size: clamp(42px, 6.6vw, 90px);
-  line-height: 1.08;
-  letter-spacing: -0.025em;
-  margin-bottom: 0.2em !important;
-}
-.verse-copy .verse-opening + p {
-  margin-top: 0.35em;
-}
-.verse-opening .type-emphasis {
-  font-size: 1em;
-}
-body[data-accent='unbounded'] .accent {
+.block-line[data-lettering='spaced'] {
   font-family: UnboundedCopy, sans-serif;
-  font-weight: 650;
-  font-size: 1.28em;
-  letter-spacing: -0.025em;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  line-height: 1.06;
+}
+.block-line[data-fitted] {
+  font-size: 0;
+}
+.block-row {
+  display: block;
+  position: relative;
+  line-height: inherit;
+}
+.block-row + .block-row {
+  margin-top: var(--ink-gap);
+}
+.block-row-ink {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: pre;
+  line-height: inherit;
+}
+.block-baseline {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  font-size: 0;
+  line-height: 0;
+  vertical-align: baseline;
 }
 .verse-coda {
   padding-block: 0 max(180px, 25svh);
@@ -91,6 +106,7 @@ body[data-accent='unbounded'] .accent {
 /* Without enhancement, all three sentences remain ordinary visible document text. */
 .refrain-composition {
   margin-block: 1.4em;
+  overflow-x: clip;
 }
 .refrain-stage {
   position: relative;
@@ -150,8 +166,7 @@ body[data-accent='unbounded'] .accent {
   touch-action: pan-y;
 }
 /* Factual workbench UI, outside the artist's prose. */
-.review-controls,
-.restore-controls {
+.review-controls {
   position: fixed;
   z-index: 20;
   border: 1px solid #686c5e;
@@ -222,26 +237,12 @@ body[data-accent='unbounded'] .accent {
   outline: 2px solid currentColor;
   outline-offset: 3px;
 }
-.restore-controls {
-  display: none;
-  right: 16px;
-  bottom: 16px;
-  padding: 8px 12px;
-  cursor: pointer;
-}
 body[data-ui='hidden'] .review-controls {
-  visibility: hidden;
-}
-body[data-ui='hidden'] .restore-controls {
-  display: block;
+  display: none;
 }
 @media (max-width: 640px) {
   .verse-copy {
     width: calc(100% - 40px);
-    line-height: 1.7;
-  }
-  .verse-opening {
-    font-size: clamp(38px, 10vw, 54px);
   }
   .review-controls {
     font-size: 10px;
@@ -294,9 +295,6 @@ body[data-ui='hidden'] .restore-controls {
 .verse-copy > p[data-copy-cloud] {
   background-clip: text;
   -webkit-background-clip: text;
-  color: transparent;
-}
-.verse-copy > p[data-copy-cloud] .type-emphasis {
   color: transparent;
 }
 ::selection {

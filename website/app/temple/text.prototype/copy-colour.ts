@@ -15,8 +15,10 @@ export function colourCopy(root: HTMLElement) {
   function paintClouds(time: number) {
     const cssWidth = paragraphs[0].clientWidth,
       cssHeight = root.scrollHeight
-    const w = 192,
-      h = Math.max(1, Math.min(768, Math.ceil((cssHeight / cssWidth) * w)))
+    // These are broad colour clouds, not glyph detail. Keep the texture small as
+    // the fitted poster blocks make the document taller; glyphs remain native.
+    const w = 128,
+      h = Math.max(1, Math.min(512, Math.ceil((cssHeight / cssWidth) * w)))
     if (!frame || canvas.width !== w || canvas.height !== h) {
       canvas.width = w
       canvas.height = h
