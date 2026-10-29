@@ -18,10 +18,8 @@ export default function Content() {
           <br />
           With the brave spirits I meet, witness, and sense.
         </p>
-        <p>
-          I’m so deeply touched by those willing to feel, to unwind, to rest, to risk — to build
-          villages rooted in trust and connection.
-        </p>
+        <p>I’m so deeply touched by those willing to feel, to unwind, to rest, to risk.</p>
+        <p>By those willing to build villages rooted in trust and connection</p>
 
         {/* Chorus 1 */}
         <p>
