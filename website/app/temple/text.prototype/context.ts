@@ -1,4 +1,4 @@
-// THROWAWAY. Native text flow with a compact, centred refrain hold.
+// Native text flow with a compact, centred refrain hold.
 import { mountOpening } from '../scene.ts'
 import { openingProps } from './context-props.ts'
 import { createTypeSurface, invalidateForest, setTypeFrame, type TypeFrame } from './typography.ts'
@@ -13,10 +13,10 @@ const firstPair = document.querySelector<HTMLElement>('.first-pair')!
 const refrain = document.querySelector<HTMLElement>('.refrain-composition')!
 const refrainStage = document.querySelector<HTMLElement>('.refrain-stage')!
 const phrases = [...document.querySelectorAll<HTMLElement>('.refrain-phrase')]
-const copyColour = colourCopy(firstPair)
 const fitBlocks = blockType(firstPair)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
 const abort = new AbortController()
+const copyColour = colourCopy(firstPair, abort.signal, request)
 const on = (target: EventTarget, event: string, listener: EventListener) =>
   target.addEventListener(event, listener, { signal: abort.signal })
 let lastScroll = -Infinity
@@ -89,6 +89,7 @@ function resize() {
   fitBlocks()
   fitRefrain()
   refrainInk.resize()
+  copyColour.resize()
   request()
 }
 function draw(now: number, frame: TypeFrame) {
@@ -150,6 +151,7 @@ if (!abort.signal.aborted) {
     request,
   )
   refrainInk.resize()
+  copyColour.resize()
   on(window, 'scroll', () => {
     lastScroll = performance.now()
     request()

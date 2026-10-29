@@ -48,6 +48,7 @@ body {
   color: var(--copy-color);
 }
 .verse-copy p {
+  position: relative;
   margin: 0;
   font-size: 0;
 }
@@ -291,11 +292,32 @@ body[data-ui='hidden'] .review-controls {
   background: linear-gradient(to right, #ff0008, #ff8008, #ffff08);
 }
 
-/* Set only once the first cloud texture is ready; plain text is the fallback. */
+/* Native text remains selectable; canvases are inert visual replacements only. */
+.copy-cloud-canvas {
+  position: absolute;
+  inset: 0 auto auto 0;
+  pointer-events: none;
+}
 .verse-copy > p[data-copy-cloud] {
-  background-clip: text;
-  -webkit-background-clip: text;
   color: transparent;
+}
+@media print, (forced-colors: active) {
+  .copy-cloud-canvas {
+    display: none;
+  }
+  .verse-copy > p[data-copy-cloud] {
+    color: CanvasText;
+  }
+}
+@media print {
+  html[data-layout='temple'],
+  html[data-layout='temple'] body {
+    background: #fff;
+  }
+  .verse-copy,
+  .verse-copy > p[data-copy-cloud] {
+    color: #000;
+  }
 }
 ::selection {
   color: #fff;
