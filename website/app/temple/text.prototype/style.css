@@ -38,7 +38,7 @@ body {
   margin-top: -30svh;
 }
 .verse-copy {
-  --ink-gap: clamp(8px, 1vw, 12px);
+  --ink-gap: calc(clamp(8px, 1vw, 12px) + 0.5rem);
   width: min(100% - 48px, 900px);
   margin-inline: auto;
   font-family: UnboundedCopy, sans-serif;
@@ -52,7 +52,7 @@ body {
   font-size: 0;
 }
 .verse-copy p + p {
-  margin-top: clamp(32px, 4.5vw, 64px);
+  margin-top: calc(clamp(32px, 4.5vw, 64px) + 1rem);
 }
 .block-line {
   display: block;
