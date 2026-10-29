@@ -3,7 +3,7 @@ import { defaults } from './defaults.ts'
 export const mist = {
   hues: [...defaults.mistHues],
   intensity: defaults.mistIntensity,
-  highlights: 0.65,
+  highlights: defaults.mistHighlights,
 }
 const field = document.createElement('canvas')
 const ink = field.getContext('2d')!

@@ -14,7 +14,7 @@ export default function Content() {
       >
         {/* Verse 1 */}
         <p>
-          I’m in love with humanity.
+          Humanity! I’m in love.
           <br />
           With the brave spirits I meet, witness, and sense.
         </p>

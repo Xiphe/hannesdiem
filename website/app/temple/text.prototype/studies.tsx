@@ -62,7 +62,7 @@ export function Review(_handle: Handle) {
             <div class="verse-copy">
               <p class="verse-opening">
                 <strong>
-                  <Emphasis text="I’m in love with humanity." />
+                  <Emphasis text="Humanity! I’m in love." />
                 </strong>
               </p>
               <p>With the brave spirits I meet, witness, and sense.</p>
@@ -215,9 +215,9 @@ export function Review(_handle: Handle) {
                 data-mist-highlights
                 min="0"
                 max="100"
-                defaultValue="65"
+                defaultValue={defaults.mistHighlights * 100}
               />
-              <output data-mist-highlights-label>65 %</output>
+              <output data-mist-highlights-label>{defaults.mistHighlights * 100} %</output>
             </label>
             <label>
               Text-Varianz{' '}

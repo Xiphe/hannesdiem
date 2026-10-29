@@ -2,7 +2,7 @@
 import { noise as cloudNoise } from './atmosphere.ts'
 import { defaults } from './defaults.ts'
 export function colourCopy(root: HTMLElement) {
-  const paragraphs = [...root.querySelectorAll<HTMLElement>('.verse-copy > p:not(.verse-opening)')]
+  const paragraphs = [...root.querySelectorAll<HTMLElement>('.verse-copy > p')]
   let variance = defaults.copyVariance,
     speed = defaults.copySpeed,
     phase = 0,

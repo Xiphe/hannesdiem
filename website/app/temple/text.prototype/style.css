@@ -296,6 +296,9 @@ body[data-ui='hidden'] .restore-controls {
   -webkit-background-clip: text;
   color: transparent;
 }
+.verse-copy > p[data-copy-cloud] .type-emphasis {
+  color: transparent;
+}
 ::selection {
   color: #fff;
   background: #655b43;
