@@ -146,7 +146,7 @@ export function paintEdgeMist(
   seconds: number,
 ) {
   if (mist.intensity > 0) {
-    paintField(width, height, seconds)
+    paintField(width, height, seconds * 0.7)
     context.save()
     context.globalCompositeOperation = 'screen'
     context.globalAlpha = mist.intensity
