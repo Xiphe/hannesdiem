@@ -2,7 +2,6 @@
 // encoding images or changing DOM styles during animation. Text stays selectable.
 import { noise as cloudNoise } from './atmosphere.ts'
 import { defaults } from './defaults.ts'
-import { highlightReveal } from './highlight-reveal.ts'
 export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () => void) {
   const paragraphs = [...root.querySelectorAll<HTMLElement>('.verse-copy > p')]
   const layers = paragraphs.map((paragraph) => {
@@ -23,12 +22,6 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
       revision: -1,
     }
   })
-  const reveals = paragraphs.map((paragraph, index) =>
-    highlightReveal(paragraph, signal, () => {
-      layers[index].revision = -1
-      request()
-    }),
-  )
   let variance = defaults.copyVariance,
     speed = defaults.copySpeed,
     phase = 0,
@@ -73,7 +66,7 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
     cssWidth = paragraphs[0].clientWidth
     cssHeight = root.scrollHeight
     const ratio = Math.min(3, devicePixelRatio || 1)
-    for (const [index, layer] of layers.entries()) {
+    for (const layer of layers) {
       const { paragraph, canvas, mask, maskInk } = layer
       const rect = paragraph.getBoundingClientRect()
       layer.width = rect.width
@@ -97,7 +90,6 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
       }
       layer.revision = -1
       if (!canvas.isConnected) paragraph.append(canvas)
-      reveals[index].resize(rect, ratio)
     }
     dirty = true
   }
@@ -147,7 +139,6 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
       dirty = true
     },
     draw(now: number, reduced: boolean) {
-      for (const reveal of reveals) reveal.setReduced(reduced)
       if (!reduced) phase += Math.min(0.25, (now - clock) / 1000) * speed
       clock = now
       if (!supported || signal.aborted || !cssWidth || !layers.some((layer) => layer.visible))
@@ -157,18 +148,16 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
         dirty = false
         last = now
       }
-      for (const [index, layer] of layers.entries()) {
+      for (const layer of layers) {
         if (!layer.visible || layer.revision === revision) continue
         const context = layer.ink!
         const ratio = layer.canvas.width / layer.width
         context.setTransform(ratio, 0, 0, layer.canvas.height / layer.height, 0, 0)
         context.globalCompositeOperation = 'copy'
         context.drawImage(layer.mask, 0, 0, layer.width, layer.height)
-        reveals[index].clearUnrevealed(context, layer.width)
         context.globalCompositeOperation = 'source-in'
         context.drawImage(canvas, 0, -layer.offset, cssWidth, cssHeight)
         context.globalCompositeOperation = 'source-over'
-        reveals[index].paint(canvas, cssWidth, cssHeight, layer.offset)
         layer.revision = revision
         if (!layer.paragraph.hasAttribute('data-copy-cloud')) layer.paragraph.dataset.copyCloud = ''
       }
