@@ -496,3 +496,72 @@ html[data-layout='temple'] body {
     text-align: center;
   }
 }
+
+/* Later pairs follow the reading document, without the opener handoff offset. */
+.first-pair + .first-pair {
+  margin-top: 0;
+  padding-top: 0;
+}
+.block-line[data-lettering='germania'] {
+  font-family: Germania, serif;
+  font-weight: 400;
+  line-height: 1.02;
+}
+
+/* A tighter reading rhythm for the second pair: internal rows stay together,
+   while paragraph breaks carry the larger pauses. */
+.first-pair + .first-pair .verse-copy {
+  --ink-gap: clamp(12px, 1.8vw, 18px);
+}
+.first-pair + .first-pair .verse-copy p + p {
+  margin-top: clamp(40px, 5vw, 64px);
+}
+.first-pair + .first-pair .block-row + .block-row {
+  margin-top: clamp(8px, 1.2vw, 12px);
+}
+.block-line[data-shape='sweep'][data-fitted] {
+  margin-top: max(-1rem, -2vw);
+}
+.block-line[data-lettering='copy'] + .block-line[data-lettering='copy'] {
+  margin-top: 0.65rem;
+}
+
+.refrain-phrase [data-line] {
+  display: block;
+}
+
+/* Enter with momentum, then decelerate over the lower 40% of the viewport.
+   Final geometry stays exactly as fitted; the address remains in normal flow. */
+.phrase-entry {
+  position: relative;
+  display: block;
+}
+@supports (animation-timeline: view()) {
+  .temple-artwork[data-state='ready'] .phrase-entry[data-entry] {
+    animation: temple-verse-entry linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+  @keyframes temple-verse-entry {
+    0% {
+      transform: translateY(clamp(44px, 10svh, 96px));
+      animation-timing-function: cubic-bezier(0.2, 0.65, 0.35, 1);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce), print, (forced-colors: active) {
+  .temple-artwork[data-state='ready'] .phrase-entry[data-entry] {
+    animation: none;
+    transform: none;
+  }
+}
+
+.phrase-entry + .phrase-entry {
+  margin-top: var(--ink-gap);
+}
+.phrase-entry:has([data-lettering='spaced']) + .phrase-entry {
+  margin-top: 0.6rem;
+}

@@ -15,7 +15,16 @@ try {
     window.__inkSamples = []
     const fill = CanvasRenderingContext2D.prototype.fillText
     CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...rest) {
-      window.__inkSamples.push({ text, y, width: this.canvas.width, height: this.canvas.height })
+      const transform = this.getTransform()
+      const baseline =
+        (transform.b * x + transform.d * y + transform.f) / Math.hypot(transform.a, transform.b)
+      window.__inkSamples.push({
+        text,
+        x: (transform.a * x + transform.c * y + transform.e) / Math.hypot(transform.a, transform.b),
+        y: baseline,
+        width: this.canvas.width,
+        height: this.canvas.height,
+      })
       return fill.call(this, text, x, y, ...rest)
     }
   })
@@ -23,13 +32,23 @@ try {
   await page.waitForSelector('.temple-artwork[data-state="ready"]')
   await page.waitForTimeout(200)
   const deltas = await page.evaluate(() =>
-    [...document.querySelectorAll('.verse-copy > p')].flatMap((p) => {
+    [...document.querySelectorAll('.phrase-entry')].flatMap((p) => {
       const canvas = p.querySelector('canvas')
-      const top = p.getBoundingClientRect().top
+      const bounds = p.getBoundingClientRect()
+      const top = bounds.top
       return [...p.querySelectorAll('.block-row-ink')].map((row) => {
+        const anchor = row.querySelector('.block-baseline').getBoundingClientRect()
+        const x =
+          (row.dataset.inkAngle !== undefined ? anchor.left : row.getBoundingClientRect().left) -
+          bounds.left
+        // Repeated letters share text and canvas dimensions; match their
+        // baseline origins too, rather than selecting the last same letter.
         const sample = window.__inkSamples.findLast(
           (s) =>
-            s.text === row.textContent && s.width === canvas.width && s.height === canvas.height,
+            s.text === row.textContent &&
+            s.width === canvas.width &&
+            s.height === canvas.height &&
+            Math.abs(s.x - x) < 0.75,
         )
         if (!sample) return Infinity
         const baseline = row.querySelector('.block-baseline').getBoundingClientRect().top - top

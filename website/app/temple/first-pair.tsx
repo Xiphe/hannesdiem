@@ -5,6 +5,7 @@ function TypeLine(handle: Handle<PoemLine>) {
     <span
       class="block-line"
       data-type-line
+      data-shape={handle.props.shape}
       data-lettering={handle.props.face ?? 'copy'}
     >
       {handle.props.text}
@@ -12,23 +13,56 @@ function TypeLine(handle: Handle<PoemLine>) {
   )
 }
 
-export function FirstPair(handle: Handle<{ pair: PoemPair }>) {
+function Phrase(handle: Handle<{ lines: readonly PoemLine[]; firstStatic?: boolean }>) {
   return () => {
-    const { pair } = handle.props
+    const lines = handle.props.lines
+    const groups = lines[0]?.face === 'spaced' ? [lines.slice(0, 1), lines.slice(1)] : [lines]
     return (
-      <article
-        class="first-pair"
-        aria-label="First verse and refrain"
-      >
-        <div class="verse-copy">
-          {pair.paragraphs.map((lines) => (
-            <p>
-              {lines.map((line, index) => (
+      <>
+        {groups
+          .filter((group) => group.length)
+          .map((group, groupIndex) => (
+            <span
+              class="phrase-entry"
+              data-entry={
+                group[0].face === 'spaced' ||
+                (handle.props.firstStatic && (lines[0]?.face !== 'spaced' || groupIndex === 0))
+                  ? undefined
+                  : ''
+              }
+            >
+              {group.map((line, index) => (
                 <>
                   {index > 0 ? ' ' : ''}
                   <TypeLine {...line} />
                 </>
               ))}
+            </span>
+          ))}
+      </>
+    )
+  }
+}
+
+export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
+  return () => {
+    const { pair } = handle.props
+    return (
+      <article
+        class="first-pair"
+        aria-label={
+          handle.props.index === 0
+            ? 'First verse and refrain'
+            : `Verse ${handle.props.index + 1} and refrain`
+        }
+      >
+        <div class="verse-copy">
+          {pair.paragraphs.map((lines, index) => (
+            <p>
+              <Phrase
+                lines={lines}
+                firstStatic={index === 0}
+              />
             </p>
           ))}
         </div>
@@ -37,7 +71,7 @@ export function FirstPair(handle: Handle<{ pair: PoemPair }>) {
           aria-label="Refrain"
         >
           <div class="refrain-stage">
-            {pair.refrain.map(({ text, display, face }, index) => (
+            {pair.refrain.map(({ text, display, face, lines }, index) => (
               <p
                 class="refrain-phrase"
                 data-face={face}
@@ -48,11 +82,13 @@ export function FirstPair(handle: Handle<{ pair: PoemPair }>) {
                   data-ink
                   aria-hidden="true"
                 >
-                  {(face === 'bricolage'
-                    ? [display.split(' ').slice(0, 2), display.split(' ').slice(2)]
-                    : [display.split(' ')]
+                  {(lines
+                    ? lines.map((line) => line.split(' '))
+                    : face === 'bricolage'
+                      ? [display.split(' ').slice(0, 2), display.split(' ').slice(2)]
+                      : [display.split(' ')]
                   ).map((words) => (
-                    <span data-line={face === 'bricolage' ? '' : undefined}>
+                    <span data-line={lines || face === 'bricolage' ? '' : undefined}>
                       {words.map((word, i) => (
                         <>
                           {i > 0 ? ' ' : ''}
@@ -71,14 +107,14 @@ export function FirstPair(handle: Handle<{ pair: PoemPair }>) {
           </div>
         </section>
         <div class="verse-copy verse-coda">
-          <p>
-            {pair.coda.map((line, index) => (
-              <>
-                {index > 0 ? ' ' : ''}
-                <TypeLine {...line} />
-              </>
-            ))}
-          </p>
+          {[pair.coda, ...(pair.continuation ?? [])].map((lines, index) => (
+            <p>
+              <Phrase
+                lines={lines}
+                firstStatic={index === 0}
+              />
+            </p>
+          ))}
         </div>
       </article>
     )

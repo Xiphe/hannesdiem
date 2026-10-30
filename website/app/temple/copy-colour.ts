@@ -12,7 +12,8 @@ export function colourCopy(
   date?: HTMLElement,
 ) {
   const paragraphs = [...root.querySelectorAll<HTMLElement>('.verse-copy > p')]
-  const elements = date ? [...paragraphs, date] : paragraphs
+  const lines = [...root.querySelectorAll<HTMLElement>('.phrase-entry')]
+  const elements = date ? [...lines, date] : lines
   const dateBaseline = document.createElement('span')
   dateBaseline.className = 'block-baseline'
   dateBaseline.ariaHidden = 'true'
@@ -68,6 +69,7 @@ export function colourCopy(
       dateBaseline.remove()
       for (const { element, canvas, mask } of layers) {
         element.removeAttribute('data-copy-cloud')
+        element.closest('p')?.removeAttribute('data-copy-cloud')
         canvas.remove()
         canvas.width = canvas.height = mask.width = mask.height = 0
       }
@@ -99,11 +101,20 @@ export function colourCopy(
       for (const row of rows) {
         const style = getComputedStyle(row)
         const position = row.getBoundingClientRect()
-        const baseline = row.querySelector('.block-baseline')!.getBoundingClientRect().top
+        const anchor = row.querySelector('.block-baseline')!.getBoundingClientRect()
+        const baseline = anchor.top
         maskInk!.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
         maskInk!.fontKerning = 'normal'
         maskInk!.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing
-        maskInk!.fillText(row.textContent!, position.left - rect.left, baseline - rect.top)
+        if (row.dataset.inkAngle !== undefined) {
+          maskInk!.save()
+          maskInk!.translate(anchor.left - rect.left, baseline - rect.top)
+          maskInk!.rotate(Number(row.dataset.inkAngle))
+          maskInk!.fillText(row.textContent!, 0, 0)
+          maskInk!.restore()
+        } else {
+          maskInk!.fillText(row.textContent!, position.left - rect.left, baseline - rect.top)
+        }
       }
       layer.revision = -1
       if (!canvas.isConnected) element.appendChild(canvas)
@@ -194,7 +205,11 @@ export function colourCopy(
         )
         context.globalCompositeOperation = 'source-over'
         layer.revision = revision
-        if (!layer.element.hasAttribute('data-copy-cloud')) layer.element.dataset.copyCloud = ''
+        if (!layer.element.hasAttribute('data-copy-cloud')) {
+          layer.element.dataset.copyCloud = ''
+          const paragraph = layer.element.closest('p')
+          if (paragraph) paragraph.dataset.copyCloud = ''
+        }
       }
     },
   }

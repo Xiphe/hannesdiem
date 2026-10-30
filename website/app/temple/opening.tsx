@@ -40,7 +40,7 @@ export function Opening(handle: Handle<OpeningProps>) {
     }
   })
   return () => {
-    const { title, dates, image, pair } = handle.props
+    const { title, dates, image, pair, pairs } = handle.props
     const format = (date: string) =>
       new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
         new Date(date + 'T12:00:00Z'),
@@ -88,7 +88,17 @@ export function Opening(handle: Handle<OpeningProps>) {
           class="temple-escapes"
           aria-hidden="true"
         />
-        {pair && <FirstPair pair={pair} />}
+
+        {(pairs?.length || pair) && (
+          <div class="poem-pairs">
+            {(pairs ?? [pair!]).map((pair, index) => (
+              <FirstPair
+                pair={pair}
+                index={index}
+              />
+            ))}
+          </div>
+        )}
       </div>
     )
   }

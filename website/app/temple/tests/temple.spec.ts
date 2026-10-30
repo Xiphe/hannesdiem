@@ -167,18 +167,23 @@ for (const scheme of ['light', 'dark'] as const) {
     await first.scrollIntoViewIfNeeded()
     await expect(first).toHaveAttribute('data-copy-cloud', '')
     const brightness = () =>
-      first.locator('canvas').evaluate((c) => {
-        const canvas = c as HTMLCanvasElement
-        const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
-        let sum = 0,
-          count = 0
-        for (let at = 0; at < pixels.length; at += 4)
-          if (pixels[at + 3] > 200) {
-            sum += (pixels[at] + pixels[at + 1] + pixels[at + 2]) / 3
-            count++
-          }
-        return sum / count
-      })
+      first
+        .locator('canvas')
+        .first()
+        .evaluate((c) => {
+          const canvas = c as HTMLCanvasElement
+          const pixels = canvas
+            .getContext('2d')!
+            .getImageData(0, 0, canvas.width, canvas.height).data
+          let sum = 0,
+            count = 0
+          for (let at = 0; at < pixels.length; at += 4)
+            if (pixels[at + 3] > 200) {
+              sum += (pixels[at] + pixels[at + 1] + pixels[at + 2]) / 3
+              count++
+            }
+          return sum / count
+        })
     await expect.poll(brightness).toBeGreaterThan(scheme === 'dark' ? 150 : 0)
     if (scheme === 'light') expect(await brightness()).toBeLessThan(100)
     expect(
@@ -194,7 +199,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme === 'light' ? 'dark' : 'light' })
     await expect.poll(brightness)[scheme === 'light' ? 'toBeGreaterThan' : 'toBeLessThan'](100)
     await page.emulateMedia({ forcedColors: 'active' })
-    await expect(first.locator('canvas')).toHaveCSS('display', 'none')
+    await expect(first.locator('canvas').first()).toHaveCSS('display', 'none')
     await expect(first).not.toHaveCSS('color', 'rgba(0, 0, 0, 0)')
     await page.emulateMedia({ forcedColors: 'none', media: 'print' })
     await expect(page.locator('.refrain-canvas')).toHaveCSS('display', 'none')
@@ -354,4 +359,108 @@ test('Temple shares one cloud clock, freezes reduced motion and resumes a cached
   expect((await counts()).draws).toBe(paused.draws)
   await page.evaluate(() => dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })))
   await expect.poll(async () => (await counts()).draws).toBeGreaterThan(paused.draws)
+})
+
+for (const width of [390, 1440]) {
+  test(`Temple keeps multiple choruses independent at ${width}px`, async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/temple-multiple')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const pairs = page.locator('.first-pair')
+    await expect(pairs).toHaveCount(2)
+    for (let i = 0; i < 2; i++) {
+      const chorus = pairs.nth(i).locator('.refrain-composition')
+      await expect(chorus).toHaveAttribute('data-ready', 'true')
+      for (const progress of [0, 1]) {
+        await chorus.evaluate((node, progress) => {
+          const stage = node.querySelector<HTMLElement>('.refrain-stage')!
+          const top = node.getBoundingClientRect().top + scrollY
+          const lock = (innerHeight - stage.offsetHeight) / 2
+          scrollTo(
+            0,
+            top - lock + (node.clientHeight - stage.offsetHeight) * progress + (progress ? 2 : -2),
+          )
+        }, progress)
+        await expect(chorus).toHaveAttribute(
+          'data-active',
+          String(progress ? (i === 0 ? 2 : 1) : 0),
+        )
+      }
+    }
+    const stacked = pairs.last().locator('[data-face="unbounded"] [data-line]')
+    await expect(stacked).toHaveCount(3)
+    const rowTops = await stacked.evaluateAll((rows) =>
+      rows.map((row) => row.getBoundingClientRect().top),
+    )
+    expect(rowTops[1]).toBeGreaterThan(rowTops[0])
+    expect(rowTops[2]).toBeGreaterThan(rowTops[1])
+    const sweep = pairs.last().locator('[data-shape="sweep"]')
+    const verticalRange = await sweep.locator('.block-row-ink').evaluateAll((letters) => {
+      const offsets = letters.map((letter) => parseFloat((letter as HTMLElement).style.top))
+      return Math.max(...offsets) - Math.min(...offsets)
+    })
+    expect(verticalRange).toBeGreaterThan(5)
+    const angles = await sweep
+      .locator('[data-ink-angle]')
+      .evaluateAll((letters) =>
+        letters.map((letter) => Number((letter as HTMLElement).dataset.inkAngle)),
+      )
+    expect(Math.min(...angles)).toBeLessThan(0)
+    expect(Math.max(...angles)).toBeGreaterThan(0)
+    await expect(sweep).toHaveText('A gently sweeping synthetic line')
+    const last = pairs.last().locator('.verse-coda p').last()
+    await last.scrollIntoViewIfNeeded()
+    await expect(last).toHaveAttribute('data-copy-cloud', '')
+    await expect(last).toHaveText('A final synthetic paragraph follows.')
+    await expect(pairs.last().locator('[data-lettering="germania"]')).toHaveCSS(
+      'font-family',
+      'Germania, serif',
+    )
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+    await page.getByRole('link', { name: 'Return to fixture' }).click()
+    await expect(pairs).toHaveCount(0)
+    expect(errors).toEqual([])
+  })
+}
+
+test('Temple verse phrases catch up into their original layout as they enter', async ({ page }) => {
+  await page.goto('/temple-multiple')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await expect(page.locator('.phrase-entry').first().locator('[data-type-line]')).toHaveCount(1)
+  await expect(page.locator('.phrase-entry').nth(1).locator('[data-type-line]')).toHaveCount(2)
+  await expect(page.locator('.phrase-entry').first()).not.toHaveAttribute('data-entry')
+  const secondPair = page.locator('.first-pair').last()
+  await expect(
+    secondPair.locator('.verse-copy').first().locator('.phrase-entry').first(),
+  ).not.toHaveAttribute('data-entry')
+  for (const pair of await page.locator('.first-pair').all()) {
+    await expect(pair.locator('.verse-coda .phrase-entry').first()).not.toHaveAttribute(
+      'data-entry',
+    )
+  }
+  const line = page.locator('.phrase-entry').nth(2)
+  const supported = await page.evaluate(() => CSS.supports('animation-timeline', 'view()'))
+  test.skip(!supported, 'Native scroll timelines unavailable')
+  const offset = () => line.evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).m42)
+  for (const [fraction, settled] of [
+    [0.96, false],
+    [0.4, true],
+  ] as const) {
+    await line.evaluate((node, fraction) => {
+      // The parent's origin is unanimated; the line is the first in this group.
+      const top = node.parentElement!.getBoundingClientRect().top + scrollY
+      scrollTo(0, top - innerHeight * fraction)
+    }, fraction)
+    if (settled) await expect.poll(offset).toBeLessThan(0.5)
+    else await expect.poll(offset).toBeGreaterThan(20)
+  }
+  await expect(line.locator('.copy-cloud-canvas')).toHaveCount(1)
+  for (const child of await line.locator('[data-type-line]').all()) {
+    await expect(child).toHaveCSS('transform', 'none')
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect.poll(offset).toBe(0)
 })

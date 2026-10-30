@@ -1,4 +1,4 @@
-import { templeContent } from '../app/temple/tests/fixture.ts'
+import { templeContent, multipleTempleContent } from '../app/temple/tests/fixture.ts'
 import assets from '../../.generated/assets.json' with { type: 'json' }
 import { CMX_DOCUMENT_SCHEMA, type CmxDocument } from '@cmx-tools/contracts'
 import type { PublishedDocuments, SiteMetadata } from '../../contracts/content.ts'
@@ -38,6 +38,10 @@ export const documents: PublishedDocuments = {
   'temple-of-sound': {
     ...structuredClone(page),
     content: { ...templeContent, metadata: { kind: 'temple' } },
+  },
+  'temple-multiple': {
+    ...structuredClone(page),
+    content: { ...multipleTempleContent, metadata: { kind: 'temple' } },
   },
   _redirects: {
     ...structuredClone(page),

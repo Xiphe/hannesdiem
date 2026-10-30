@@ -8,12 +8,19 @@ export interface PoemCanvasProps {
 }
 export interface PoemLine {
   text: string
-  face?: 'copy' | 'cinzel' | 'spaced'
+  shape?: 'sweep'
+  face?: 'copy' | 'cinzel' | 'germania' | 'spaced'
 }
 export interface PoemPair {
   paragraphs: readonly (readonly PoemLine[])[]
-  refrain: readonly { text: string; display: string; face: 'cinzel' | 'bricolage' | 'unbounded' }[]
+  refrain: readonly {
+    text: string
+    display: string
+    face: 'cinzel' | 'bricolage' | 'unbounded'
+    lines?: readonly string[]
+  }[]
   coda: readonly PoemLine[]
+  continuation?: readonly (readonly PoemLine[])[]
 }
 export interface PoemOpeningProps {
   id: string
@@ -22,6 +29,7 @@ export interface PoemOpeningProps {
   image: ImageSource
   lightSource: { x: number; y: number }
   pair?: PoemPair
+  pairs?: readonly PoemPair[]
   children?: RemixNode
 }
 export interface PoemSectionProps {

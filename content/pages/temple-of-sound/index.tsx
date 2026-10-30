@@ -35,6 +35,42 @@ export const firstPair = {
   ],
 } satisfies PoemPair
 
+export const secondPair = {
+  paragraphs: [
+    [
+      { text: "Yet I'm in deep hurt and grief with" },
+      { text: 'mankind and earth.', face: 'cinzel' },
+    ],
+    [
+      { text: 'Violent fear,', face: 'germania' },
+      { text: 'greed and mistrust rule and devour soil and seeds alike.' },
+    ],
+    [
+      { text: 'I understand we coexist in a storm held between' },
+      { text: 'chaotic rupture', face: 'germania' },
+      {
+        text: 'and the calm scent of a rose touching my heart like a midsummer sunset',
+        shape: 'sweep',
+      },
+    ],
+  ],
+  refrain: [
+    { text: "I'm playful and inspired", display: "I'm pLAYFuL aNd INSpIReD", face: 'cinzel' },
+    {
+      text: "I'm bursting and imploding",
+      display: "i'M BURSTiNG AND iMPLODiNG",
+      face: 'bricolage',
+    },
+    {
+      text: "I'm raging angry",
+      display: "I'M RAGING ANGRY",
+      face: 'unbounded',
+      lines: ["I'M", 'RAGING', 'ANGRY'],
+    },
+  ],
+  coda: [{ text: 'with those who mistreat willingly' }, { text: 'and myself for having done so.' }],
+} satisfies PoemPair
+
 export default function Content() {
   return (
     <PoemCanvas>
@@ -44,7 +80,7 @@ export default function Content() {
         dates={{ start: '2026-11-01', end: '2026-12-20' }}
         image={forest}
         lightSource={{ x: 53.24, y: 54.07 }}
-        pair={firstPair}
+        pairs={[firstPair, secondPair]}
       />
     </PoemCanvas>
   )

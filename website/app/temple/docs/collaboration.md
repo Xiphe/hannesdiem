@@ -2,6 +2,14 @@
 
 Research: 2026-10-22. Small collaborative steps accepted; opener prototype explicitly accepted on 2026-10-23.
 
+## Current release scope — 2026-10-30
+
+The artist approved cleanup and deployment of the opener and first two verse/refrain pairs: “lovely, aufräumen und deployen bitte”. The current wording and display roles live in `content/pages/temple-of-sound/index.tsx`; later poem sections remain unpublished. Preserve main’s native sticky artwork scrolling and additional50px before the first verse.
+
+Second pair: Germania highlights, a continuous Bézier baseline for the full rose sentence, lowercase `i` in the Bricolage refrain, and a three-line Unbounded “I’M / RAGING / ANGRY” third phrase. The standalone angry headline and final reaching/attacking sentence were removed at the artist’s request. Fixed curve points: `(0,0.016)`, `(0.496,-0.375)`, `(0.584,0.361)`, `(1,-0.119)`; controls removed.
+
+Entry animation moves semantic phrases together, not individual display rows. “HUMANITY!” is its own static phrase with the existing tighter gap. The first phrase of each verse and after each refrain stays static. Other phrases arrive with momentum and only decelerate across the lower40% of the viewport; no visible stationary hold or acceleration. Final typography is unchanged. Reduced motion and unavailable scroll timelines use native document flow.
+
 ## Current exploration rule
 
 The artist explicitly accepted the completed opener: “lass uns das bitte als opener scene festhalten. Prototype akzeptiert”. The accepted checkpoint is `76e9ca7`, default impressions treatment. The artist subsequently requested integration into the regular `/temple-of-sound` page. **Current integration approval (2026-10-30):** after reviewing the production integration and accepting the loading treatment, the artist requested “can we integrate into origin/main?”. Integrate the current opener, first verse/refrain and loading UI. Later poem sections and practicalities remain unpublished. Preserve the opener’s appearance and behaviour; new poem artwork remains separate work. For lettering, present existing, unmodified typefaces with unexpected, edgy character. Custom-font creation and glyph modification are outside the request.
