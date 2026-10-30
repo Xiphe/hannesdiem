@@ -148,4 +148,10 @@ export declare const Song: Component<SongProps>
 export declare const LinkTree: Component<LinkTreeProps>
 
 export { PoemCanvas, PoemOpening, PoemSection } from './temple.d.ts'
-export type { PoemCanvasProps, PoemOpeningProps, PoemSectionProps } from './temple.d.ts'
+export type {
+  PoemCanvasProps,
+  PoemOpeningProps,
+  PoemSectionProps,
+  PoemLine,
+  PoemPair,
+} from './temple.d.ts'

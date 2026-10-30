@@ -1,13 +1,19 @@
 // Canvas study of A's flight: pinned sun, uneven light, fade at viewport edges.
-export function createForest(image: HTMLImageElement, lightSource: { x: number; y: number }) {
+import type { Escapes } from './escapes.ts'
+export function createForest(
+  image: HTMLImageElement,
+  lightSource: { x: number; y: number },
+  { setGlimmerSprite, trackGlimmer }: Escapes,
+) {
   let seed = 8129
   function random() {
     seed = (Math.imul(seed, 1664525) + 1013904223) | 0
     return (seed >>> 0) / 4294967296
   }
-  const particles = Array.from({ length: 980 }, () => {
+  const particles = Array.from({ length: 980 }, (_, id) => {
     const angle = random() * Math.PI * 2
     return {
+      id,
       angle: angle + 0.27 * Math.sin(angle * 3),
       phase: random(),
       speed: 0.045 + random() * 0.055,
@@ -25,6 +31,7 @@ export function createForest(image: HTMLImageElement, lightSource: { x: number; 
   glow.addColorStop(1, '#ffb45b00')
   brush.fillStyle = glow
   brush.fillRect(0, 0, 48, 48)
+  setGlimmerSprite(sprite)
 
   return (context: CanvasRenderingContext2D, width: number, height: number, seconds: number) => {
     // Image-space light source from the archived forest study, centred exactly.
@@ -57,8 +64,9 @@ export function createForest(image: HTMLImageElement, lightSource: { x: number; 
         0.84 *
           Math.max(0, Math.sin(particle.angle * 4 + life * 5) * Math.cos(life * 8 - particle.angle))
       const shimmer = 0.68 + 0.32 * Math.sin(seconds * 0.4 + particle.phase * 24) ** 2
-      context.globalAlpha = Math.min(1, particle.brightness * fade * pocket * shimmer)
+      context.globalAlpha = Math.min(1, particle.brightness * 1.25 * fade * pocket * shimmer)
       const size = particle.size * 8
+      trackGlimmer(particle.id, px, py, context.globalAlpha, size, seconds)
       context.drawImage(sprite, px - size / 2, py - size / 2, size, size)
     }
     context.globalAlpha = 1

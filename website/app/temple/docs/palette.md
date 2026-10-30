@@ -2,20 +2,25 @@
 
 `/temple-of-sound`; system theme. Source: `content/media/IMG_6257.JPG` + glimmers.
 
-| Role                        | Light     | Dark      |
-| --------------------------- | --------- | --------- |
-| Background / canvas veil    | `#f7ecdf` | `#030503` |
-| Foreground / fallback title | `#11120b` | `#d2d0c8` |
-| Date / scroll indicator     | `#84442b` | `#343434` |
-| Date shadow                 | `#f7ecdf` | `#030503` |
-| Favicon: left top           | `#b46a49` | `#fff9df` |
-| Favicon: left bottom        | `#84442b` | `#bdb49c` |
-| Favicon: right top          | `#645b48` | `#f2ad78` |
-| Favicon: right bottom       | `#11120b` | `#b46a49` |
+| Role                        | Light          | Dark           |
+| --------------------------- | -------------- | -------------- |
+| Background / canvas veil    | `#f7ecdf`      | `#000000`      |
+| Foreground / fallback title | `#11120b`      | `#d2d0c8`      |
+| Scroll indicator            | `#84442b`      | `#343434`      |
+| Date                        | Copy cloud ink | Copy cloud ink |
+| Date shadow                 | None           | None           |
+| Favicon: left top           | `#b46a49`      | `#fff9df`      |
+| Favicon: left bottom        | `#84442b`      | `#bdb49c`      |
+| Favicon: right top          | `#645b48`      | `#f2ad78`      |
+| Favicon: right bottom       | `#11120b`      | `#b46a49`      |
 
-Lettering edge overlay: `#ff8800`, 11%.
+Current lettering material: forest, solar glimmers and mixed fog (hues4°/18°/42°, strength83%, flecks34%). The earlier `#ff8800`11% overlay is removed.
 
 UI: `website/app/temple/style.css`, `scene.ts`, `forest.ts`.
 Favicon: `website/app/temple/assets/mark.svg`; build: `website/build/assets.ts`; selection: `website/app/page.tsx`.
 
 Palette changes: update UI, both favicon variants and this table together.
+
+Working scene: restore system light/dark appearance for opener, poem colour clouds and refrain. Retain the artist’s pure-black dark ground. Native copy clouds use the corresponding foreground as their base. Startup remains black until assets and the first frame are ready. The original two favicon palettes remain unchanged.
+
+Integrated-scene update,2026-10-30: the date now shares the copy’s animated colour field in both themes, without a shadow or opacity flicker. Its position and scroll exit remain. The indicator keeps its established colours. Light-mode clouds mix towards warm `#8e441c` and cool `#245989` inks, halfway blended with the original channel-shift output after the artist found the first stronger range excessive. Dark copy output is unchanged. Zero variance restores the theme’s base foreground.

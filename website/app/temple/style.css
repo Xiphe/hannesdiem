@@ -1,5 +1,9 @@
 html[data-layout='temple'] {
   color-scheme: light dark;
+  --temple-ground-light: #f7ecdf;
+  --temple-ground-dark: #000000;
+  --copy-ink-light: #11120b;
+  --copy-ink-dark: #d2d0c8;
 }
 html[data-layout='temple'],
 html[data-layout='temple'] body {
@@ -13,6 +17,8 @@ html[data-layout='temple'] body {
   display: none;
 }
 .temple-section {
+  position: relative;
+  z-index: 2;
   width: 100%;
   padding: clamp(4rem, 8vw, 7rem) clamp(1.25rem, 6vw, 5rem);
   background: #101418;
@@ -155,5 +161,311 @@ html[data-layout='temple'] body {
 @media (prefers-reduced-motion: reduce) {
   .temple-scroll-hint svg {
     animation: none;
+  }
+}
+
+/* Only the four opener fonts; Unbounded's reading weights get an alias. */
+@font-face {
+  font-family: UnboundedCopy;
+  src: url('./assets/unbounded.ttf') format('truetype');
+  font-weight: 200 900;
+  font-display: swap;
+}
+.temple-artwork,
+.temple-artwork * {
+  box-sizing: border-box;
+}
+html[data-layout='temple'] {
+  overflow-anchor: none;
+  color-scheme: light dark;
+}
+html[data-layout='temple'],
+html[data-layout='temple'] body {
+  background: light-dark(#f7ecdf, #000);
+  color: light-dark(#11120b, #d2d0c8);
+}
+.temple-opening {
+  background: light-dark(#f7ecdf, #000);
+}
+.temple-fallback-image {
+  opacity: 0;
+}
+html[data-layout='temple'] body {
+  margin: 0;
+  --copy-color: light-dark(var(--copy-ink-light), var(--copy-ink-dark));
+}
+.temple-artwork:is([data-state='loading'], [data-state='ready']) .temple-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+.first-pair {
+  position: relative;
+  z-index: 2;
+  margin-top: -30svh;
+}
+.verse-copy {
+  /* Native advance boxes can extend beyond their fitted visible ink, especially
+     the widely tracked address. Keep those invisible tails out of document width. */
+  overflow-x: clip;
+  --ink-gap: calc(clamp(8px, 1vw, 12px) + 0.5rem);
+  width: min(100% - 48px, 900px);
+  margin-inline: auto;
+  font-family: UnboundedCopy, sans-serif;
+  font-weight: 350;
+  font-size: 20px;
+  line-height: 1.16;
+  color: var(--copy-color);
+}
+.verse-copy p {
+  position: relative;
+  margin: 0;
+  font-size: 0;
+}
+.verse-copy p + p {
+  margin-top: calc(clamp(32px, 4.5vw, 64px) + 1rem);
+}
+.block-line {
+  display: block;
+  font-size: clamp(18px, 3vw, 32px);
+  line-height: 1.18;
+}
+.block-line + .block-line {
+  margin-top: var(--ink-gap);
+}
+.block-line[data-lettering='spaced'] + .block-line {
+  margin-top: 0.6rem;
+}
+.block-line[data-lettering='cinzel'] {
+  font-family: CinzelDecorative, serif;
+  font-weight: 700;
+  line-height: 1.02;
+}
+.block-line[data-lettering='spaced'] {
+  font-family: UnboundedCopy, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  line-height: 1.06;
+}
+.block-line[data-fitted] {
+  font-size: 0;
+}
+.block-row {
+  display: block;
+  position: relative;
+  line-height: inherit;
+}
+.block-row + .block-row {
+  margin-top: var(--ink-gap);
+}
+.block-row-ink {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: pre;
+  line-height: inherit;
+}
+.block-baseline {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  font-size: 0;
+  line-height: 0;
+  vertical-align: baseline;
+}
+.verse-coda {
+  padding-block: 0 max(180px, 25svh);
+}
+/* Without enhancement, all three sentences remain ordinary visible document text. */
+.refrain-composition {
+  margin-block: 1.4em;
+  overflow-x: clip;
+}
+.refrain-stage {
+  position: relative;
+}
+.refrain-phrase {
+  margin: 1em auto;
+  width: min(90%, 1400px);
+  font-size: clamp(42px, 8vw, 140px);
+  text-align: center;
+  line-height: 1.02;
+  font-weight: 700;
+  color: var(--copy-color);
+  text-wrap: balance;
+}
+.refrain-phrase[data-face='cinzel'] {
+  font-family: CinzelDecorative, serif;
+}
+.refrain-phrase[data-face='bricolage'] {
+  width: 100%;
+  max-width: none;
+  font-family: Bricolage, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.085em;
+  line-height: 0.62;
+}
+.refrain-phrase[data-face='unbounded'] {
+  font-family: UnboundedCopy, sans-serif;
+  font-weight: 650;
+  letter-spacing: -0.04em;
+}
+.refrain-canvas {
+  display: none;
+}
+.refrain-composition[data-ready] {
+  height: calc(var(--refrain-height, 50svh) + 52svh);
+  margin-block: clamp(24px, 3vw, 40px);
+}
+.refrain-composition[data-ready] .refrain-stage {
+  position: sticky;
+  top: calc(50svh - var(--refrain-height, 50svh) / 2);
+  height: var(--refrain-height, 50svh);
+}
+.refrain-composition[data-ready] .refrain-phrase {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(calc(-50% + var(--ink-x, 0px)), calc(-50% + var(--ink-y, 0px)));
+  margin: 0;
+  color: transparent;
+}
+.refrain-composition[data-ready] .refrain-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+/* Factual workbench UI, outside the artist's prose. */
+@media (max-width: 640px) {
+  .verse-copy {
+    width: calc(100% - 40px);
+  }
+}
+
+.semantic-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-word] {
+  display: inline-block;
+}
+
+[data-face='bricolage'] [data-line] {
+  display: block;
+  white-space: nowrap;
+}
+@media (orientation: portrait) {
+  [data-face='bricolage'] [data-line]:first-child [data-word] {
+    display: block;
+  }
+  [data-face='bricolage'] [data-line]:last-child [data-word]:last-child {
+    display: block;
+  }
+}
+
+/* Native text remains selectable; canvases are inert visual replacements only. */
+.copy-cloud-canvas {
+  position: absolute;
+  inset: 0 auto auto 0;
+  pointer-events: none;
+}
+.verse-copy > p[data-copy-cloud],
+.temple-date[data-copy-cloud] {
+  color: transparent;
+}
+.temple-date .copy-cloud-canvas {
+  inset: 0 auto auto 0;
+}
+.temple-date[data-copy-cloud] {
+  text-shadow: none;
+}
+@media print, (forced-colors: active) {
+  .copy-cloud-canvas {
+    display: none;
+  }
+  .verse-copy > p[data-copy-cloud],
+  .temple-date[data-copy-cloud] {
+    color: CanvasText;
+  }
+}
+@media print {
+  html[data-layout='temple'],
+  html[data-layout='temple'] body {
+    background: #fff;
+  }
+  .verse-copy,
+  .verse-copy > p[data-copy-cloud],
+  .temple-date[data-copy-cloud] {
+    color: #000;
+  }
+}
+.temple-artwork ::selection {
+  color: #fff;
+  background: #655b43;
+}
+
+/* Asset failure/no-JS uses the same authored document in ordinary flow. */
+.temple-artwork:not([data-state]) .first-pair,
+.temple-artwork[data-state='fallback'] .first-pair {
+  margin-top: 0;
+}
+.temple-artwork[data-state='fallback'] .temple-opening {
+  height: 100svh;
+}
+.temple-artwork[data-state='fallback'] .temple-stage {
+  position: relative;
+}
+@media print, (forced-colors: active) {
+  .temple-artwork .temple-opening {
+    height: auto;
+  }
+  .temple-artwork .temple-stage {
+    position: relative !important;
+    height: auto;
+  }
+  .temple-artwork .temple-stage > canvas,
+  .refrain-canvas,
+  .temple-scroll-hint,
+  .temple-fallback-image {
+    display: none !important;
+  }
+  .temple-artwork .temple-fallback-title {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    white-space: normal;
+  }
+  .temple-artwork .first-pair {
+    margin-top: 0;
+  }
+  .refrain-composition[data-ready] {
+    height: auto;
+  }
+  .refrain-composition[data-ready] .refrain-stage {
+    position: static;
+    height: auto;
+  }
+  .refrain-composition[data-ready] .refrain-phrase {
+    position: static;
+    transform: none;
+    margin: 1em auto;
+    color: CanvasText;
+  }
+  .temple-date {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    text-align: center;
   }
 }

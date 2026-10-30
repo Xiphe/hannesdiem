@@ -6,12 +6,22 @@ type Component<Props> = (handle: Handle<Props>) => () => RemixNode
 export interface PoemCanvasProps {
   children?: RemixNode
 }
+export interface PoemLine {
+  text: string
+  face?: 'copy' | 'cinzel' | 'spaced'
+}
+export interface PoemPair {
+  paragraphs: readonly (readonly PoemLine[])[]
+  refrain: readonly { text: string; display: string; face: 'cinzel' | 'bricolage' | 'unbounded' }[]
+  coda: readonly PoemLine[]
+}
 export interface PoemOpeningProps {
   id: string
   title: string
   dates: { start: string; end: string }
   image: ImageSource
   lightSource: { x: number; y: number }
+  pair?: PoemPair
   children?: RemixNode
 }
 export interface PoemSectionProps {
