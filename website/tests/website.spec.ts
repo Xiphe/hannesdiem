@@ -244,10 +244,13 @@ test('Temple stays black while fonts load, then reveals the completed scene', as
       return getComputedStyle(document.body, '::before').opacity
     }, time)
   expect(await seekSpinner(299)).toBe('0')
+  await expect(page.getByRole('status')).toHaveCount(0)
   expect(await seekSpinner(300)).toBe('1')
+  await expect(page.getByRole('status')).toHaveText('loading')
   release()
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'visible')
+  await expect(page.getByRole('status')).toHaveCount(0)
   expect(await page.evaluate(() => getComputedStyle(document.body, '::before').content)).toBe(
     'none',
   )
