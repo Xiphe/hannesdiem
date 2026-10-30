@@ -11,7 +11,7 @@ Requested2026-10-30; implementation on `codex/temple-first-text-studies`. Scope:
 - [x] Remove workbench HTML, H shortcut, controls, seek handlers and their required selectors. The former workbench is recoverable from `7eeabb0`.
 - [x] Use the existing route’s title, canonical URL, social metadata and indexing through the normal document shell. No study title or study-only robots directives remain.
 - [x] Build the application and run behavioural checks against synthetic CMX input. Coverage includes delayed loading, asset failure, missing/no JS, live themes, native selection, forced colours/print, viewport changes, navigation and teardown. Chromium/WebKit viewport review and actual-route performance measurements are recorded below.
-- [ ] Review animation on physical mobile hardware. Browser emulation and headless software rendering cannot establish physical-device frame rate. This review needs a real visitor device; the agent machine has none attached.
+- [x] Artist reviewed current iOS Safari on mobile and confirms “scroll performance ist super jetzt!” after deployment. This is visitor feedback, not a measured frame-rate guarantee.
 
 ## Validation evidence
 

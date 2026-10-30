@@ -222,7 +222,7 @@ html[data-layout='temple'] body {
   /* Safari can expose the large viewport as its address bar retracts. Keep the
      first line below that edge, with a little room before the verse begins. */
   margin-top: calc(100lvh - 130svh);
-  padding-top: clamp(32px, 6svh, 64px);
+  padding-top: calc(clamp(32px, 6svh, 64px) + 50px);
 }
 .verse-copy {
   /* Native advance boxes can extend beyond their fitted visible ink, especially
