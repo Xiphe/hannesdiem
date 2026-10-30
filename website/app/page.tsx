@@ -44,6 +44,21 @@ export function Page(
               html[data-temple-loading] { background: #000; }
               html[data-layout='temple'][data-temple-loading] body { background: #000; animation: temple-load-ground 0s 8s forwards; }
               html[data-temple-loading] .temple-page { visibility: hidden; animation: temple-load-document 0s 8s forwards; }
+              html[data-temple-loading] body::before {
+                content: ''; position: fixed; z-index: 100; top: 50%; left: 50%;
+                box-sizing: border-box; width: 20px; height: 20px; margin: -10px 0 0 -10px;
+                border: 2px solid #d2d0c833; border-top-color: #d2d0c8; border-radius: 50%;
+                pointer-events: none; opacity: 0;
+                animation: temple-spinner-show 0s 300ms forwards, temple-spinner-hide 0s 8s forwards, temple-spinner-turn 800ms 300ms linear infinite;
+              }
+              @keyframes temple-spinner-show { to { opacity: 1; } }
+              @keyframes temple-spinner-hide { to { opacity: 0; } }
+              @keyframes temple-spinner-turn { to { transform: rotate(360deg); } }
+              @media (prefers-reduced-motion: reduce) {
+                html[data-temple-loading] body::before {
+                  animation: temple-spinner-show 0s 300ms forwards, temple-spinner-hide 0s 8s forwards;
+                }
+              }
               @keyframes temple-load-document { to { visibility: visible; } }
               @keyframes temple-load-ground { to { background: light-dark(#f7ecdf, #000); } }
             `}</style>
@@ -51,6 +66,7 @@ export function Page(
                 <style>{`
               html[data-temple-loading] body { background: light-dark(#f7ecdf, #000) !important; animation: none; }
               html[data-temple-loading] .temple-page { visibility: visible; animation: none; }
+              html[data-temple-loading] body::before { display: none; }
             `}</style>
               </noscript>
             </>

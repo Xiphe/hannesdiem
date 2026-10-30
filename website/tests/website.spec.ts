@@ -227,9 +227,30 @@ test('Temple stays black while fonts load, then reveals the completed scene', as
   await expect(page.locator('html')).toHaveAttribute('data-temple-loading', '')
   await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'hidden')
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(0, 0, 0)')
+  const seekSpinner = (time: number) =>
+    page.evaluate((time) => {
+      const animations = document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation instanceof CSSAnimation &&
+            animation.animationName.startsWith('temple-spinner-'),
+        )
+      if (!animations.length) throw new Error('Loading spinner animations missing')
+      for (const animation of animations) {
+        animation.pause()
+        animation.currentTime = time
+      }
+      return getComputedStyle(document.body, '::before').opacity
+    }, time)
+  expect(await seekSpinner(299)).toBe('0')
+  expect(await seekSpinner(300)).toBe('1')
   release()
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'visible')
+  expect(await page.evaluate(() => getComputedStyle(document.body, '::before').content)).toBe(
+    'none',
+  )
 })
 
 for (const failure of ['font', 'image'] as const) {
@@ -257,6 +278,7 @@ test('Temple loading watchdog also recovers when the browser entry cannot load',
   await page.goto('/temple-of-sound')
   await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'hidden')
   await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'visible', { timeout: 10_000 })
+  expect(await page.evaluate(() => getComputedStyle(document.body, '::before').opacity)).toBe('0')
   await expect(page.getByRole('heading', { name: 'Temple of Sound' })).toBeVisible()
 })
 
