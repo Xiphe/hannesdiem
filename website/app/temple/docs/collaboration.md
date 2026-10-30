@@ -107,6 +107,8 @@ Artist’s two spacing screenshots show that CSS line boxes still make gaps unev
 
 ## Evidence from this project
 
+**Date and light-mode clouds,2026-10-30.** Artist reports invisible light-mode copy clouds and asks for the same colour/effect on the date in both themes. Increase the light ink’s warm/cool range; after “a bit too much … middle of where we were”, blend halfway between the original and stronger output. Dark copy range stays unchanged. Date shares the existing cloud field, with native glyph masking and existing scroll exit. Latest instruction “remove the glitch from the date” supersedes its28ms opacity flicker for the working scene. No new prose, motif or publication.
+
 Whole-scene variants bundled typography, composition, imagery, motion and meaning. The artist could reject the bundle without having enough alternatives for any individual decision. Increasing the variant count repeated this problem. The artist wants smaller commitments and a creative role throughout. D’s masked typography and A’s forest/glimmers are promising evidence; neither is approval of a finished composition. Preserve the supplied prose and existing value/mood exploration.
 
 ## What the sources support

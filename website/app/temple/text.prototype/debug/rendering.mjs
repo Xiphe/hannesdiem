@@ -83,6 +83,12 @@ try {
   await page.addInitScript(() => {
     window.__encodes = 0
     window.__cloudPaints = 0
+    window.__dateAnimations = 0
+    const animate = HTMLElement.prototype.animate
+    HTMLElement.prototype.animate = function (...args) {
+      if (this.matches('.temple-date')) window.__dateAnimations++
+      return animate.apply(this, args)
+    }
     const encode = HTMLCanvasElement.prototype.toDataURL
     HTMLCanvasElement.prototype.toDataURL = function (...args) {
       window.__encodes++
@@ -96,6 +102,7 @@ try {
   })
   await page.goto(process.env.TEMPLE_URL ?? 'http://localhost:8790/temple-of-sound')
   await page.waitForSelector('body[data-scene-ready]')
+  await page.waitForSelector('.temple-date[data-copy-cloud]')
   await page.evaluate(() => scrollTo(0, innerHeight - 40))
   await page.waitForSelector('.verse-copy > p[data-copy-cloud]')
   await page.waitForTimeout(150)
@@ -261,7 +268,42 @@ try {
     })
     assert.ok(scheme === 'light' ? brightness < 100 : brightness > 150)
     report.themes.push(scheme)
+    await page.evaluate(() => scrollTo(0, 0))
+    await page.waitForTimeout(100)
+    const dateBrightness = await page.locator('.temple-date canvas').evaluate((canvas) => {
+      const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+      let sum = 0,
+        count = 0
+      for (let at = 0; at < pixels.length; at += 4)
+        if (pixels[at + 3] > 200) {
+          sum += (pixels[at] + pixels[at + 1] + pixels[at + 2]) / 3
+          count++
+        }
+      return sum / count
+    })
+    assert.ok(scheme === 'light' ? dateBrightness < 100 : dateBrightness > 150)
+    await page.evaluate(() => scrollTo(0, innerHeight - 40))
+    await page.waitForTimeout(100)
   }
+  await page.evaluate(() => scrollTo(0, 0))
+  await page.waitForTimeout(100)
+  const dateInk = () =>
+    page.locator('.temple-date canvas').evaluate((canvas) => {
+      const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+      let hash = 2166136261
+      for (const byte of pixels) hash = Math.imul(hash ^ byte, 16777619)
+      return hash
+    })
+  const frozenDate = await dateInk()
+  await page.waitForTimeout(250)
+  assert.equal(await dateInk(), frozenDate)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.waitForTimeout(1700)
+  assert.notEqual(await dateInk(), frozenDate)
+  assert.equal(await page.evaluate(() => window.__dateAnimations), 0)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  report.sharedDateClouds = true
+  report.dateWithoutFlicker = true
   const iconPath = await page.locator('link[rel="icon"]').getAttribute('href')
   const icon = await page.request.get(new URL(iconPath, page.url()).href)
   assert.equal(icon.status(), 200)

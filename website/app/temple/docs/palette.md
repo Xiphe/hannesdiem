@@ -21,3 +21,5 @@ Favicon: `website/app/temple/assets/mark.svg`; build: `website/build/assets.ts`;
 Palette changes: update UI, both favicon variants and this table together.
 
 Working scene: restore system light/dark appearance for opener, poem colour clouds and refrain. Retain the artist’s pure-black dark ground. Native copy clouds use the corresponding foreground as their base. Startup remains black until assets and the first frame are ready. The original two favicon palettes remain unchanged.
+
+Working-scene update,2026-10-30: the date now shares the copy’s animated colour field in both themes, without a shadow or opacity flicker. Its position and scroll exit remain. The date/indicator values above describe the published opener; the indicator keeps those colours. Light-mode clouds mix towards warm `#8e441c` and cool `#245989` inks, halfway blended with the original channel-shift output after the artist found the first stronger range excessive. Dark copy output is unchanged. Zero variance restores the theme’s base foreground.

@@ -2,15 +2,28 @@
 // encoding images or changing DOM styles during animation. Text stays selectable.
 import { noise as cloudNoise } from './atmosphere.ts'
 import { defaults } from './defaults.ts'
-export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () => void) {
+const warmInk = [142, 68, 28]
+const coolInk = [36, 89, 137]
+const darkRange = [50, -8, -65]
+export function colourCopy(
+  root: HTMLElement,
+  signal: AbortSignal,
+  request: () => void,
+  date?: HTMLElement,
+) {
   const paragraphs = [...root.querySelectorAll<HTMLElement>('.verse-copy > p')]
-  const layers = paragraphs.map((paragraph) => {
+  const elements = date ? [...paragraphs, date] : paragraphs
+  const dateBaseline = document.createElement('span')
+  dateBaseline.className = 'block-baseline'
+  dateBaseline.ariaHidden = 'true'
+  date?.append(dateBaseline)
+  const layers = elements.map((element) => {
     const canvas = document.createElement('canvas')
     canvas.className = 'copy-cloud-canvas'
     canvas.ariaHidden = 'true'
     const mask = document.createElement('canvas')
     return {
-      paragraph,
+      element,
       canvas,
       ink: canvas.getContext('2d'),
       mask,
@@ -29,6 +42,7 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
     base = [1, 3, 5].map((i) => parseInt(defaults.copyColor.slice(i, i + 2), 16)),
     last = -Infinity,
     dirty = true,
+    lightInk = false,
     revision = 0,
     cssWidth = 0,
     cssHeight = 0
@@ -39,20 +53,21 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        const layer = layers.find((layer) => layer.paragraph === entry.target)!
+        const layer = layers.find((layer) => layer.element === entry.target)!
         layer.visible = entry.isIntersecting
       }
       request()
     },
     { rootMargin: '160px' },
   )
-  if (supported) for (const { paragraph } of layers) observer.observe(paragraph)
+  if (supported) for (const { element } of layers) observer.observe(element)
   signal.addEventListener(
     'abort',
     () => {
       observer.disconnect()
-      for (const { paragraph, canvas, mask } of layers) {
-        paragraph.removeAttribute('data-copy-cloud')
+      dateBaseline.remove()
+      for (const { element, canvas, mask } of layers) {
+        element.removeAttribute('data-copy-cloud')
         canvas.remove()
         canvas.width = canvas.height = mask.width = mask.height = 0
       }
@@ -67,11 +82,11 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
     cssHeight = root.scrollHeight
     const ratio = Math.min(3, devicePixelRatio || 1)
     for (const layer of layers) {
-      const { paragraph, canvas, mask, maskInk } = layer
-      const rect = paragraph.getBoundingClientRect()
+      const { element, canvas, mask, maskInk } = layer
+      const rect = element.getBoundingClientRect()
       layer.width = rect.width
       layer.height = rect.height
-      layer.offset = rect.top - bounds.top
+      layer.offset = element === date ? 0 : rect.top - bounds.top
       layer.visible = rect.bottom > -160 && rect.top < innerHeight + 160
       canvas.width = mask.width = Math.ceil(rect.width * ratio)
       canvas.height = mask.height = Math.ceil(rect.height * ratio)
@@ -79,7 +94,9 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
       canvas.style.height = `${rect.height}px`
       maskInk!.setTransform(mask.width / rect.width, 0, 0, mask.height / rect.height, 0, 0)
       maskInk!.fillStyle = '#fff'
-      for (const row of paragraph.querySelectorAll<HTMLElement>('.block-row-ink')) {
+      const rows =
+        element === date ? [element] : [...element.querySelectorAll<HTMLElement>('.block-row-ink')]
+      for (const row of rows) {
         const style = getComputedStyle(row)
         const position = row.getBoundingClientRect()
         const baseline = row.querySelector('.block-baseline')!.getBoundingClientRect().top
@@ -89,7 +106,7 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
         maskInk!.fillText(row.textContent!, position.left - rect.left, baseline - rect.top)
       }
       layer.revision = -1
-      if (!canvas.isConnected) paragraph.append(canvas)
+      if (!canvas.isConnected) element.append(canvas)
     }
     dirty = true
   }
@@ -113,12 +130,23 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
         const cool = cloudNoise(u * 3.8 - wx + 43, v * 3.8 - wy - time * 0.08)
         const detail = cloudNoise(u * 11 + wx, v * 11 + wy + 71) - 0.5
         const temperature = Math.max(-1, Math.min(1, (warm - cool) * 1.7 + detail * 0.2)) * variance
+        // Near-black ink has no room for the old +/- shifts: channels clipped
+        // to zero. Mix towards bounded coloured inks on paper instead.
+        const tint = temperature >= 0 ? warmInk : coolInk
+        const amount = Math.min(1, Math.abs(temperature) * 2.4)
         const at = (y * w + x) * 4
-        for (let c = 0; c < 3; c++)
+        for (let c = 0; c < 3; c++) {
+          const original = Math.max(0, Math.min(255, base[c] + temperature * darkRange[c]))
           frame.data[at + c] = Math.max(
             0,
-            Math.min(255, Math.round(base[c] + temperature * [50, -8, -65][c])),
+            Math.min(
+              255,
+              Math.round(
+                lightInk ? (original + base[c] + (tint[c] - base[c]) * amount) / 2 : original,
+              ),
+            ),
           )
+        }
         frame.data[at + 3] = 255
       }
     ink!.putImageData(frame, 0, 0)
@@ -126,8 +154,9 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
   }
   return {
     resize,
-    setBase(hex: string) {
+    setBase(hex: string, useLightInk = lightInk) {
       base = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+      lightInk = useLightInk
       dirty = true
     },
     setVariance(value: number) {
@@ -156,10 +185,16 @@ export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () =
         context.globalCompositeOperation = 'copy'
         context.drawImage(layer.mask, 0, 0, layer.width, layer.height)
         context.globalCompositeOperation = 'source-in'
-        context.drawImage(canvas, 0, -layer.offset, cssWidth, cssHeight)
+        context.drawImage(
+          canvas,
+          layer.element === date ? (layer.width - cssWidth) / 2 : 0,
+          -layer.offset,
+          cssWidth,
+          cssHeight,
+        )
         context.globalCompositeOperation = 'source-over'
         layer.revision = revision
-        if (!layer.paragraph.hasAttribute('data-copy-cloud')) layer.paragraph.dataset.copyCloud = ''
+        if (!layer.element.hasAttribute('data-copy-cloud')) layer.element.dataset.copyCloud = ''
       }
     },
   }

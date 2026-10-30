@@ -17,7 +17,12 @@ const fitBlocks = blockType(firstPair)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
 const appearance = matchMedia('(prefers-color-scheme: dark)')
 const abort = new AbortController()
-const copyColour = colourCopy(firstPair, abort.signal, request)
+const copyColour = colourCopy(
+  firstPair,
+  abort.signal,
+  request,
+  root.querySelector<HTMLElement>('.temple-date')!,
+)
 const on = (target: EventTarget, event: string, listener: EventListener) =>
   target.addEventListener(event, listener, { signal: abort.signal })
 let lastScroll = -Infinity
@@ -141,7 +146,7 @@ function syncCopyAppearance() {
       .map((n) => Number(n).toString(16).padStart(2, '0'))
       .join('')
   document.querySelector<HTMLInputElement>('[data-copy-color]')!.value = hex
-  copyColour.setBase(hex)
+  copyColour.setBase(hex, !appearance.matches)
   request()
 }
 

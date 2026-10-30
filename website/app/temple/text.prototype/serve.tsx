@@ -44,6 +44,9 @@ const scene = await build({
           contents: gitFile(`website/app/temple/${args.path.split(/[/\\]/).pop()}`)
             .toString()
             .replace('observer.observe(root)', 'observer.observe(stage)')
+            // The date shares the copy's colour clouds without opacity glitches.
+            .replace('    nextDate = lastInputStart + 1400,\n', '')
+            .replace(/    if \(!reduced\.matches && now > nextDate\) \{[\s\S]*?\n    \}/, '')
             // Local black-ground study: keep the forest inside type, including after title exit.
             .replace('veilContext.globalAlpha = 1 - s.reveal', 'veilContext.globalAlpha = 1')
             .replaceAll("'#030503'", "'#000000'")
