@@ -1,9 +1,19 @@
-// THROWAWAY: native type fitted to one reading column, not fixed letter slots.
-export function blockType(root: HTMLElement) {
+// native type fitted to one reading column, not fixed letter slots.
+export function blockType(root: HTMLElement, signal: AbortSignal) {
   const lines = [...root.querySelectorAll<HTMLElement>('[data-type-line]')].map((element) => ({
     element,
     text: element.textContent!.trim(),
   }))
+  signal.addEventListener(
+    'abort',
+    () => {
+      for (const { element, text } of lines) {
+        element.textContent = text
+        element.removeAttribute('data-fitted')
+      }
+    },
+    { once: true },
+  )
   const measure = document.createElement('canvas').getContext('2d')!
   return () => {
     const copySizes = new Map<Element, number>()
@@ -91,11 +101,11 @@ export function blockType(root: HTMLElement) {
         const baseline = document.createElement('span')
         baseline.className = 'block-baseline'
         baseline.ariaHidden = 'true'
-        ink.append(baseline)
+        ink.appendChild(baseline)
         optical.push({ row, ink, baseline, ascent: metrics.actualBoundingBoxAscent })
         measure.font = `${style.fontWeight} 100px ${style.fontFamily}`
         measure.letterSpacing = `${tracking * 100}px`
-        row.append(ink)
+        row.appendChild(ink)
         fragment.append(row)
         if (element.dataset.lettering === 'copy')
           copySizes.set(paragraph, Math.max(copySizes.get(paragraph) ?? 0, size))

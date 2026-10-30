@@ -16,7 +16,7 @@ export function colourCopy(
   const dateBaseline = document.createElement('span')
   dateBaseline.className = 'block-baseline'
   dateBaseline.ariaHidden = 'true'
-  date?.append(dateBaseline)
+  date?.appendChild(dateBaseline)
   const layers = elements.map((element) => {
     const canvas = document.createElement('canvas')
     canvas.className = 'copy-cloud-canvas'
@@ -106,7 +106,7 @@ export function colourCopy(
         maskInk!.fillText(row.textContent!, position.left - rect.left, baseline - rect.top)
       }
       layer.revision = -1
-      if (!canvas.isConnected) element.append(canvas)
+      if (!canvas.isConnected) element.appendChild(canvas)
     }
     dirty = true
   }

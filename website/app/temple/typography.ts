@@ -1,5 +1,5 @@
-// Shared with the pinned opener in the local browser bundle. No production edits.
-import { addPortal, cachePortal } from './escapes.ts'
+// Shared native glyph disturbance for title and refrain.
+import type { Escapes } from './escapes.ts'
 export type Glyph = {
   x: number
   y: number
@@ -16,25 +16,6 @@ export const hash = (value: number) => {
   return n - Math.floor(n)
 }
 export type TypeFrame = { ink: CanvasRenderingContext2D; bounds: DOMRect }
-let redrawForest = () => {}
-let drawType = (_now: number, _frame: TypeFrame) => false
-export function setForestInvalidation(redraw: () => void) {
-  redrawForest = redraw
-}
-export function invalidateForest() {
-  redrawForest()
-}
-export function setTypeFrame(draw: typeof drawType) {
-  drawType = draw
-}
-export function drawTypeFrame(
-  ink: CanvasRenderingContext2D,
-  source: HTMLCanvasElement,
-  now: number,
-) {
-  return drawType(now, { ink, bounds: source.getBoundingClientRect() })
-}
-
 export function roughBand(
   ink: CanvasRenderingContext2D,
   width: number,
@@ -141,6 +122,7 @@ export function createTypeSurface(
   inkElements: HTMLElement[],
   signal: AbortSignal,
   invalidate: () => void,
+  { addPortal, cachePortal }: Escapes,
 ) {
   const mask = document.createElement('canvas')
   const maskInk = mask.getContext('2d')!
@@ -453,5 +435,15 @@ export function createTypeSurface(
     frame.ink.restore()
     return events.size > 0
   }
+  signal.addEventListener(
+    'abort',
+    () => {
+      events.clear()
+      tiles.clear()
+      layers = []
+      canvas.width = canvas.height = mask.width = mask.height = 0
+    },
+    { once: true },
+  )
   return { resize, draw }
 }

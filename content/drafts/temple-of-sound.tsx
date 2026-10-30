@@ -1,3 +1,4 @@
+import { firstPair } from '../pages/temple-of-sound.tsx'
 import { PoemCanvas, PoemOpening, PoemSection } from '@hannesdiem/content-components'
 
 export const title = 'Temple of Sound'
@@ -11,27 +12,8 @@ export default function Content() {
         dates={{ start: '2026-11-01', end: '2026-12-20' }}
         image="IMG_6257.JPG"
         lightSource={{ x: 53.24, y: 54.07 }}
-      >
-        {/* Verse 1 */}
-        <p>
-          Humanity! I’m in love.
-          <br />
-          With the brave spirits I meet, witness, and sense.
-        </p>
-        <p>I’m so deeply touched by those willing to feel, to unwind, to rest, to risk.</p>
-        <p>By those willing to build villages rooted in trust and connection</p>
-
-        {/* Chorus 1 */}
-        <p>
-          I’m playful and inspired.
-          <br />
-          I’m breathing in and out.
-          <br />
-          I’m faithful and held.
-          <br />
-          I’m loved, and in awe of what you kindred souls have built onto this sphere.
-        </p>
-      </PoemOpening>
+        pair={firstPair}
+      />
       <hr />
       <PoemSection
         id="verse-2"

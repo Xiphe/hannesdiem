@@ -30,6 +30,7 @@ export function Page(
       <html
         lang="en"
         data-layout={temple ? 'temple' : undefined}
+        data-temple-loading={temple ? '' : undefined}
       >
         <head>
           <meta charSet="utf-8" />
@@ -37,6 +38,23 @@ export function Page(
             name="viewport"
             content="width=device-width, initial-scale=1"
           />
+          {temple && (
+            <>
+              <style>{`
+              html[data-temple-loading] { background: #000; }
+              html[data-layout='temple'][data-temple-loading] body { background: #000; animation: temple-load-ground 0s 8s forwards; }
+              html[data-temple-loading] .temple-page { visibility: hidden; animation: temple-load-document 0s 8s forwards; }
+              @keyframes temple-load-document { to { visibility: visible; } }
+              @keyframes temple-load-ground { to { background: light-dark(#f7ecdf, #000); } }
+            `}</style>
+              <noscript>
+                <style>{`
+              html[data-temple-loading] body { background: light-dark(#f7ecdf, #000) !important; animation: none; }
+              html[data-temple-loading] .temple-page { visibility: visible; animation: none; }
+            `}</style>
+              </noscript>
+            </>
+          )}
           <title>{documentTitle}</title>
           <link
             rel="canonical"
@@ -126,7 +144,7 @@ export function Page(
           />
           <link
             rel="icon"
-            href={assets.mark}
+            href={temple ? assets.templeMark : assets.mark}
             type="image/svg+xml"
           />
           <link

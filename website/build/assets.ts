@@ -88,6 +88,9 @@ const entries = Object.fromEntries(
 const mark = await readFile('website/app/assets/mark.svg')
 entries.mark = `/assets/mark-${createHash('sha256').update(mark).digest('hex').slice(0, 16)}.svg`
 await writeFile(`dist${entries.mark}`, mark)
+const templeMark = await readFile('website/app/temple/assets/mark.svg')
+entries.templeMark = `/assets/temple-mark-${createHash('sha256').update(templeMark).digest('hex').slice(0, 16)}.svg`
+await writeFile(`dist${entries.templeMark}`, templeMark)
 await mkdir('dist/font', { recursive: true })
 await cp('website/app/assets/fuggles.woff2', 'dist/font/fuggles-v12-latin-regular.woff2')
 await cp('website/app/assets/googlef6f5b9a886cf5949.html', 'dist/googlef6f5b9a886cf5949.html')

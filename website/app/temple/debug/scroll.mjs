@@ -1,4 +1,4 @@
-// THROWAWAY browser diagnostic; not a content test or CI check.
+// Local browser performance diagnostic; not a content test or CI check.
 import { chromium } from '@playwright/test'
 
 const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] })
@@ -17,15 +17,23 @@ try {
       return (seed >>> 0) / 4294967296
     }
     window.__drawTimes = []
+    let draws = 0
+    const clear = CanvasRenderingContext2D.prototype.clearRect
+    CanvasRenderingContext2D.prototype.clearRect = function (...args) {
+      if (this.canvas.matches('.temple-stage > canvas')) draws++
+      return clear.apply(this, args)
+    }
     const raf = requestAnimationFrame
     window.requestAnimationFrame = (callback) =>
       raf((now) => {
         const start = performance.now()
+        const before = draws
         callback(now)
-        if (callback.name.startsWith('draw')) window.__drawTimes.push(performance.now() - start)
+        // Follow real scene paints, including minified production callbacks.
+        if (draws > before) window.__drawTimes.push(performance.now() - start)
       })
   })
-  await page.goto('http://localhost:8790/temple-of-sound')
+  await page.goto(process.env.TEMPLE_URL ?? 'http://localhost:8790/temple-of-sound')
   await page.waitForSelector('.temple-opening[data-ready]')
   await page.waitForTimeout(300)
   const result = await page.evaluate(async () => {
