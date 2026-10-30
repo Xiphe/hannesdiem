@@ -52,6 +52,10 @@ html[data-layout='temple'] body {
   height: 100svh;
   overflow: hidden;
 }
+.temple-title-track {
+  /* Native sticky positioning owns the exit after the four faces. */
+  height: 115.75svh;
+}
 .temple-stage canvas {
   position: absolute;
   inset: 0;
@@ -120,7 +124,7 @@ html[data-layout='temple'] body {
   z-index: 1;
   top: calc(env(safe-area-inset-top, 0px) + clamp(20px, 3.5svh, 36px));
   left: 50%;
-  transform: translate(-50%, var(--scene-exit, 0px));
+  transform: translateX(-50%);
   white-space: nowrap;
   color: light-dark(#84442b, #343434);
   font-family: 'Bricolage', sans-serif;
@@ -195,14 +199,30 @@ html[data-layout='temple'] body {
   --copy-color: light-dark(var(--copy-ink-light), var(--copy-ink-dark));
 }
 .temple-artwork:is([data-state='loading'], [data-state='ready']) .temple-stage {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+}
+.temple-escapes {
+  display: none;
   position: fixed;
   inset: 0;
-  z-index: 0;
+  width: 100%;
+  height: 100svh;
+  z-index: 3;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.temple-artwork[data-state='ready'] .temple-escapes {
+  display: block;
 }
 .first-pair {
   position: relative;
   z-index: 2;
-  margin-top: -30svh;
+  /* Safari can expose the large viewport as its address bar retracts. Keep the
+     first line below that edge, with a little room before the verse begins. */
+  margin-top: calc(100lvh - 130svh);
+  padding-top: clamp(32px, 6svh, 64px);
 }
 .verse-copy {
   /* Native advance boxes can extend beyond their fitted visible ink, especially
@@ -424,8 +444,14 @@ html[data-layout='temple'] body {
 .temple-artwork[data-state='fallback'] .temple-stage {
   position: relative;
 }
+.temple-artwork[data-state='fallback'] .temple-title-track {
+  height: 100svh;
+}
 @media print, (forced-colors: active) {
   .temple-artwork .temple-opening {
+    height: auto;
+  }
+  .temple-title-track {
     height: auto;
   }
   .temple-artwork .temple-stage {
@@ -433,6 +459,7 @@ html[data-layout='temple'] body {
     height: auto;
   }
   .temple-artwork .temple-stage > canvas,
+  .temple-escapes,
   .refrain-canvas,
   .temple-scroll-hint,
   .temple-fallback-image {

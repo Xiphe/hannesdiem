@@ -234,6 +234,7 @@ export async function mountArtwork(
           escapes,
           paintMist,
           drawType: draw,
+          paintType: (frame) => refrainInk.paint(frame),
           ready,
         })) ?? (() => {})
       request()

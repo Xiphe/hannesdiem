@@ -56,32 +56,38 @@ export function Opening(handle: Handle<OpeningProps>) {
           class="temple-opening"
           aria-label={title}
         >
-          <div class="temple-stage">
-            <img
-              class="temple-fallback-image"
-              src={image.src}
-              width={image.width}
-              height={image.height}
-              alt=""
-              fetchPriority="high"
-            />
-            <h1 class="temple-fallback-title">{title}</h1>
-            <canvas aria-hidden="true" />
-            <div class="temple-date">
-              <time dateTime={dates.start}>{format(dates.start)}</time>
-              {' – '}
-              <time dateTime={dates.end}>
-                {format(dates.end)}, {dates.end.slice(0, 4)}
-              </time>
-            </div>
-            <div
-              class="temple-scroll-hint"
-              aria-hidden="true"
-            >
-              <ArrowDownIcon />
+          <div class="temple-title-track">
+            <div class="temple-stage">
+              <img
+                class="temple-fallback-image"
+                src={image.src}
+                width={image.width}
+                height={image.height}
+                alt=""
+                fetchPriority="high"
+              />
+              <h1 class="temple-fallback-title">{title}</h1>
+              <canvas aria-hidden="true" />
+              <div class="temple-date">
+                <time dateTime={dates.start}>{format(dates.start)}</time>
+                {' – '}
+                <time dateTime={dates.end}>
+                  {format(dates.end)}, {dates.end.slice(0, 4)}
+                </time>
+              </div>
+              <div
+                class="temple-scroll-hint"
+                aria-hidden="true"
+              >
+                <ArrowDownIcon />
+              </div>
             </div>
           </div>
         </section>
+        <canvas
+          class="temple-escapes"
+          aria-hidden="true"
+        />
         {pair && <FirstPair pair={pair} />}
       </div>
     )

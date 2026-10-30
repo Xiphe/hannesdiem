@@ -50,6 +50,7 @@ export async function mountOpening(
       seconds: number,
     ) => void
     drawType: (now: number, frame: TypeFrame) => boolean
+    paintType?: (frame: TypeFrame) => void
     ready: () => void
   },
 ) {
@@ -100,18 +101,16 @@ export async function mountOpening(
     ...faces.map((face) => document.fonts.load(`${face.weight} 100px "${face.family}"`)),
   ])
   if (signal.aborted) return
-  const paintForest = createForest(image, props.lightSource, effects.escapes)
+  const paintForest = createForest(image, props.lightSource, effects.escapes, signal)
   const context = canvas.getContext('2d')!
-  const mask = document.createElement('canvas'),
-    veil = document.createElement('canvas')
-  const maskContext = mask.getContext('2d')!,
-    veilContext = veil.getContext('2d')!
+  const foreground = root.parentElement!.querySelector<HTMLCanvasElement>('.temple-escapes')!
+  const foregroundInk = foreground.getContext('2d')!
+  const mask = document.createElement('canvas')
+  const maskContext = mask.getContext('2d')!
   const measure = document.createElement('canvas').getContext('2d')!
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const portrait = matchMedia('(orientation: portrait)')
   const appearance = matchMedia('(prefers-color-scheme: dark)')
-  let veilColor = getComputedStyle(root).backgroundColor
-  let appearanceChanged = false
   const words = props.title.toUpperCase().split(/\s+/)
   const lastInputStart = performance.now()
   let width = 0,
@@ -288,11 +287,11 @@ export async function mountOpening(
     width = rect.width
     height = rect.height
     ratio = Math.min(devicePixelRatio, 1.5)
-    for (const surface of [canvas, mask, veil]) {
+    for (const surface of [canvas, mask, foreground]) {
       surface.width = Math.round(width * ratio)
       surface.height = Math.round(height * ratio)
     }
-    for (const ink of [context, maskContext, veilContext])
+    for (const ink of [context, maskContext, foregroundInk])
       ink.setTransform(ratio, 0, 0, ratio, 0, 0)
     layers = faces.map(makeLayer)
     for (const layer of layers) for (const row of layer.rows) cachePortal(row.surface)
@@ -323,7 +322,9 @@ export async function mountOpening(
     const y = Math.max(0, scroll - height * 0.1575)
     return {
       scroll,
-      y,
+      // The browser scrolls the sticky canvas. Glyph masks stay in local space.
+      y: 0,
+      exit: y,
       rows,
       rowFaces: rows.map((row) => (row.blend > 0.5 ? row.next : row.index)),
       reveal: smooth((y / height - 0.08) / 0.8),
@@ -398,7 +399,7 @@ export async function mountOpening(
       !reduced.matches &&
       now - lastScroll < 145 &&
       s.scroll > 0 &&
-      s.y < height * 0.75 &&
+      s.exit < height * 0.75 &&
       variation(beat + 901) > 0.3
     if (fragment) {
       const count = variation(beat + 83) > 0.55 ? 2 : 1
@@ -453,33 +454,46 @@ export async function mountOpening(
   }
   function draw(now: number) {
     raf = 0
-    if (appearanceChanged) {
-      veilColor = getComputedStyle(root)
-        .getPropertyValue(appearance.matches ? '--temple-ground-dark' : '--temple-ground-light')
-        .trim()
-      appearanceChanged = false
-    }
     const dt = Math.min(0.05, (now - lastNow) / 1000)
     lastNow = now
     if (!reduced.matches) elapsed += dt
     const s = state()
-    const exit = `${-s.y}px`
-    if (date.style.getPropertyValue('--scene-exit') !== exit)
-      date.style.setProperty('--scene-exit', exit)
     const hintOpacity = String(1 - smooth(s.scroll / Math.min(36, height * 0.04)))
     if (scrollHint.style.opacity !== hintOpacity) scrollHint.style.opacity = hintOpacity
-    compose(s, now)
+    const titleBounds = canvas.getBoundingClientRect()
+    if (titleBounds.bottom > 0) compose(s, now)
     beginPortals()
     for (const phase of s.rows)
-      if (phase.blend <= 0.08 || phase.blend >= 0.92) {
+      if (titleBounds.bottom > 0 && (phase.blend <= 0.08 || phase.blend >= 0.92)) {
         const row = layers[s.rowFaces[phase.row]].rows[phase.row]
-        addPortal(row.surface, row.x, row.y - s.y, row.width, row.height)
+        addPortal(
+          row.surface,
+          row.x + titleBounds.left,
+          row.y + titleBounds.top,
+          row.width,
+          row.height,
+        )
       }
-    const typeActive = effects.drawType(now, {
-      ink: maskContext,
-      bounds: canvas.getBoundingClientRect(),
-    })
-    if (!reduced.matches && now > nextIdle && now - lastInput > 800 && !s.y) {
+    const frame: TypeFrame = {
+      bounds: new DOMRect(0, 0, width, height),
+      paintMaterial(ink, bounds) {
+        ink.save()
+        ink.translate(-bounds.left, -bounds.top)
+        const top = Math.max(0, bounds.top),
+          left = Math.max(0, bounds.left)
+        const clip = new DOMRect(
+          left,
+          top,
+          Math.max(0, Math.min(width, bounds.right) - left),
+          Math.max(0, Math.min(height, bounds.bottom) - top),
+        )
+        paintForest(ink, width, height, elapsed, clip)
+        effects.paintMist(ink, width, height, elapsed)
+        ink.restore()
+      },
+    }
+    const typeActive = effects.drawType(now, frame)
+    if (!reduced.matches && now > nextIdle && now - lastInput > 800 && !s.exit) {
       const glyph = Math.floor(variation(idleSerial + 71) * layers[0].glyphs.length)
       const row = layers[0].glyphs[glyph].row
       disturbances.set(`idle-${idleSerial}`, {
@@ -495,21 +509,16 @@ export async function mountOpening(
     }
     for (const [key, event] of disturbances) if (!disturb(event, s, now)) disturbances.delete(key)
 
-    context.clearRect(0, 0, width, height)
-    paintForest(context, width, height, elapsed)
-    effects.paintMist(context, width, height, elapsed)
-    // One opaque veil with openings over the *combined* photograph + particles.
-    veilContext.clearRect(0, 0, width, height)
-    veilContext.globalCompositeOperation = 'source-over'
-    veilContext.globalAlpha = 1
-    veilContext.fillStyle = veilColor
-    veilContext.fillRect(0, 0, width, height)
-    veilContext.globalAlpha = 1
-    veilContext.globalCompositeOperation = 'destination-out'
-    veilContext.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, width, height)
-    veilContext.globalCompositeOperation = 'source-over'
-    context.drawImage(veil, 0, 0, veil.width, veil.height, 0, 0, width, height)
-    drawEscapes(context, elapsed, reduced.matches)
+    if (titleBounds.bottom > 0) {
+      context.clearRect(0, 0, width, height)
+      frame.paintMaterial(context, titleBounds)
+      context.globalCompositeOperation = 'destination-in'
+      context.drawImage(mask, 0, 0, width, height)
+      context.globalCompositeOperation = 'source-over'
+    }
+    effects.paintType?.(frame)
+    foregroundInk.clearRect(0, 0, width, height)
+    drawEscapes(foregroundInk, elapsed, reduced.matches)
     if (!root.hasAttribute('data-ready')) {
       root.dataset.ready = 'true'
       effects.ready()
@@ -576,7 +585,6 @@ export async function mountOpening(
   appearance.addEventListener(
     'change',
     () => {
-      appearanceChanged = true
       requestDraw()
     },
     { signal },
@@ -634,7 +642,7 @@ export async function mountOpening(
       raf = 0
     }
   })
-  observer.observe(stage)
+  observer.observe(root.parentElement!)
   signal.addEventListener(
     'abort',
     () => {
@@ -643,7 +651,7 @@ export async function mountOpening(
       sizeObserver.disconnect()
       disturbances.clear()
       layers = []
-      canvas.width = canvas.height = mask.width = mask.height = veil.width = veil.height = 0
+      for (const surface of [canvas, mask, foreground]) surface.width = surface.height = 0
       root.removeAttribute('data-ready')
     },
     { once: true },

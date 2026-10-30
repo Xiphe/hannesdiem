@@ -15,7 +15,10 @@ export const hash = (value: number) => {
   const n = Math.sin(value * 127.1 + 311.7) * 43758.5453
   return n - Math.floor(n)
 }
-export type TypeFrame = { ink: CanvasRenderingContext2D; bounds: DOMRect }
+export type TypeFrame = {
+  bounds: DOMRect
+  paintMaterial: (ink: CanvasRenderingContext2D, bounds: DOMRect) => void
+}
 export function roughBand(
   ink: CanvasRenderingContext2D,
   width: number,
@@ -126,6 +129,7 @@ export function createTypeSurface(
 ) {
   const mask = document.createElement('canvas')
   const maskInk = mask.getContext('2d')!
+  const output = canvas.getContext('2d')!
   const measure = document.createElement('canvas').getContext('2d')!
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const events = new Map<number, Event>()
@@ -266,6 +270,7 @@ export function createTypeSurface(
     ratio = Math.min(devicePixelRatio, 1.5)
     canvas.width = mask.width = Math.max(1, Math.round(width * ratio))
     canvas.height = mask.height = Math.max(1, Math.round(height * ratio))
+    output.setTransform(ratio, 0, 0, ratio, 0, 0)
     maskInk.setTransform(ratio, 0, 0, ratio, 0, 0)
     events.clear()
     tiles.clear()
@@ -418,22 +423,18 @@ export function createTypeSurface(
       const alt = tile(letter.char, face.family, face.weight, event.layer.size)
       drawDisturbance(maskInk, width, ratio, letter, alt, { ...event, age, y: 0 }, reduced.matches)
     }
-    // Move only the mask over one viewport-fixed material. No full-screen copies
-    // into independently scrolling canvases, and no frame-old forest texture.
-    frame.ink.save()
-    frame.ink.drawImage(
-      mask,
-      0,
-      0,
-      mask.width,
-      mask.height,
-      rect.left - frame.bounds.left,
-      rect.top - frame.bounds.top,
-      width,
-      height,
-    )
-    frame.ink.restore()
     return events.size > 0
+  }
+  function paint(frame: TypeFrame) {
+    const rect = canvas.getBoundingClientRect()
+    if (rect.bottom < 0 || rect.top > frame.bounds.height) return
+    // The native sticky canvas owns motion. Only its material changes in RAF;
+    // a late paint can no longer leave the phrase behind during fast scrolling.
+    output.clearRect(0, 0, width, height)
+    frame.paintMaterial(output, rect)
+    output.globalCompositeOperation = 'destination-in'
+    output.drawImage(mask, 0, 0, width, height)
+    output.globalCompositeOperation = 'source-over'
   }
   signal.addEventListener(
     'abort',
@@ -445,5 +446,5 @@ export function createTypeSurface(
     },
     { once: true },
   )
-  return { resize, draw }
+  return { resize, draw, paint }
 }

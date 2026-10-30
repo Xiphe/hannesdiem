@@ -1,15 +1,25 @@
 // Local browser performance diagnostic; not a content test or CI check.
-import { chromium } from '@playwright/test'
+import { chromium, webkit } from '@playwright/test'
 
-const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] })
+const engine = process.env.ENGINE ?? 'chromium'
+if (engine !== 'chromium' && engine !== 'webkit') throw new Error('Unknown browser engine')
+const browser = await { chromium, webkit }[engine].launch({ headless: true })
 try {
   const page = await browser.newPage({
     viewport: {
       width: Number(process.env.WIDTH || 960),
       height: Number(process.env.HEIGHT || 540),
     },
-    deviceScaleFactor: 1,
+    deviceScaleFactor: Number(process.env.DPR ?? 1),
+    isMobile: process.env.MOBILE === 'true',
+    hasTouch: process.env.MOBILE === 'true',
   })
+  const cpu = Number(process.env.CPU ?? 1)
+  if (cpu !== 1) {
+    if (engine !== 'chromium') throw new Error('CPU throttling requires Chromium')
+    const session = await page.context().newCDPSession(page)
+    await session.send('Emulation.setCPUThrottlingRate', { rate: cpu })
+  }
   await page.addInitScript(() => {
     let seed = 14519
     Math.random = () => {
@@ -20,7 +30,7 @@ try {
     let draws = 0
     const clear = CanvasRenderingContext2D.prototype.clearRect
     CanvasRenderingContext2D.prototype.clearRect = function (...args) {
-      if (this.canvas.matches('.temple-stage > canvas')) draws++
+      if (this.canvas.matches('.temple-escapes')) draws++
       return clear.apply(this, args)
     }
     const raf = requestAnimationFrame
@@ -70,6 +80,8 @@ try {
   console.log(
     JSON.stringify(
       {
+        engine,
+        cpu,
         ...result,
         mainThreadBudget: appPass ? 'PASS' : 'FAIL',
         frameBudget: framePass ? 'PASS' : 'FAIL',

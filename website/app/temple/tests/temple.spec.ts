@@ -1,5 +1,50 @@
 import { expect, test } from '@playwright/test'
 
+test('Temple leaves room after the opening and scrolls its title independently of repainting', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/temple-of-sound')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const first = await page.locator('.verse-copy').first().boundingBox()
+  expect(first!.y).toBeGreaterThanOrEqual(844 + 32)
+  // Pause enhancement frames. The browser must still move the lettering with
+  // the document, rather than leaving a viewport-fixed drawing behind.
+  await page.evaluate(() => {
+    window.requestAnimationFrame = () => 0
+    scrollTo(0, innerHeight * 0.6)
+  })
+  await expect
+    .poll(async () => (await page.locator('.temple-stage > canvas').boundingBox())!.y)
+    .toBeLessThan(-300)
+})
+
+test('Temple paints the chorus in its native scrolling canvas', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/temple-of-sound')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const chorus = page.locator('.refrain-composition')
+  await chorus.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 600))
+  const canvas = chorus.locator('canvas')
+  await expect
+    .poll(() =>
+      canvas.evaluate((node) => {
+        const canvas = node as HTMLCanvasElement
+        const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+        return pixels.some((value, i) => i % 4 === 3 && value > 0)
+      }),
+    )
+    .toBe(true)
+  const before = (await canvas.boundingBox())!.y
+  await page.evaluate(() => {
+    window.requestAnimationFrame = () => 0
+    scrollBy(0, 40)
+  })
+  await expect.poll(async () => (await canvas.boundingBox())!.y).toBeCloseTo(before - 40, 0)
+})
+
 test('Temple opening enhances only its island and leaves static verse unchanged', async ({
   page,
 }) => {

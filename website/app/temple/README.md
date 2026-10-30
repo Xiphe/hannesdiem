@@ -8,7 +8,7 @@ CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `te
 
 - `content/pages/temple-of-sound/index.tsx` owns the typed first pair, including display casing and font roles. The unpublished draft reuses it. The browser never imports content modules or CMX runtime.
 - `poem.tsx` resolves the immutable1920px media variant and passes serializable data to `Opening`. `first-pair.tsx` renders native paragraphs and selectable source text; no duplicated authored copy or workbench controls.
-- `opening.tsx` owns the Remix task and cancellation. `artwork.ts` coordinates fitted text, copy colour and the bounded refrain. `scene.ts` owns the shared RAF, viewport material, title mask and pointer/idle disturbances.
+- `opening.tsx` owns the Remix task and cancellation. `artwork.ts` coordinates fitted text, copy colour and the bounded refrain. `scene.ts` owns the shared RAF, title mask and pointer/idle disturbances. Native sticky canvases own the opener exit and chorus travel; a delayed animation frame cannot leave their geometry behind. The same viewport-aligned material paints directly into each visible canvas; escaped glimmers use one inert foreground layer.
 - `atmosphere.ts` and `escapes.ts` create instance-owned textures, coverage maps and particles. Only immutable noise samples/functions live at module scope. There are no import-time DOM reads, cross-instance rendering callbacks or Git source patches.
 - `block-type.ts` fits native ink rows after fonts load. Resize work watches only width/viewport inputs and runs in the shared frame; derived section height never feeds back into fitting. Wait for native baseline layout before caching glyphs (a two-frame startup barrier, and deferred masks on resize), including WebKit. `copy-colour.ts` caches native glyph masks and paints a shared128px colour field at most10Hz. Offscreen text pauses; no PNG encoding or per-frame DOM colour styles.
 - Black startup gates the document until the first completed frame. A centred broken-arc indicator and the artist-requested “loading” label appear after300ms. They share the warm/cool ink palette, with a system font so loading never depends on font assets. Motion is stepped rotation plus slowly drifting colour. The accessible status stays hidden before the delay and on readiness/fallback. Reduced motion freezes both effects; no-JavaScript content shows no indicator. Font/photo failures abort partial enhancement and restore the styled native document. An8-second island timeout and independent CSS watchdog cover hanging assets and missing JavaScript. Without JavaScript, native content is immediately readable. Reduced motion freezes ambient work; print/forced colours use native ink.
@@ -17,11 +17,11 @@ CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `te
 
 ## Review and verification
 
-Run `npm run dev` (default8787), then `sand tunnel 8787`. The current review session uses8790: `sand tunnel 8790`.
+Run `npm run dev` (default8787), then `sand tunnel 8787`. The mobile scrolling follow-up uses8796: `sand tunnel 8796`;8790 remains available for the separate content work.
 
 `npm run check:website` checks application behaviour against synthetic CMX input, independent of authored prose. Browser coverage includes startup, failure fallback, themes, selectable text, responsive fitting, navigation/disposal and the no-JavaScript document.
 
-`node website/app/temple/debug/scroll.mjs` measures synthetic-route draw time and total-frame intervals separately. Set `WIDTH`/`HEIGHT` for viewport comparisons. Software-browser results are not a physical-device60fps guarantee. [Release preparation and remaining hardware check](docs/production-readiness.md).
+`node website/app/temple/debug/scroll.mjs` measures synthetic-route draw time and total-frame intervals separately. Set `WIDTH`/`HEIGHT` for viewport comparisons, `DPR` and `MOBILE=true` for phone emulation, or `ENGINE=webkit`. `CPU=4` enables Chromium CPU throttling. Software-browser results are not a physical-device60fps guarantee. [Release preparation and remaining hardware check](docs/production-readiness.md).
 
 The removed workbench is recoverable at `7eeabb0:website/app/temple/text.prototype/`. [Artist decisions and rejected studies](docs/collaboration.md) remain the source of artistic rationale.
 
