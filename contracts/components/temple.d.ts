@@ -9,15 +9,21 @@ export interface PoemCanvasProps {
 export interface PoemLine {
   text: string
   shape?: 'sweep'
+  smallLines?: readonly string[]
+  nowrap?: boolean
+  /** Fraction of the reading column available for this line (default1). */
+  width?: number
   face?: 'copy' | 'cinzel' | 'germania' | 'spaced'
 }
 export interface PoemPair {
   paragraphs: readonly (readonly PoemLine[])[]
+  repetition?: readonly { statement: readonly PoemLine[]; reflection: PoemLine }[]
   refrain: readonly {
     text: string
     display: string
-    face: 'cinzel' | 'bricolage' | 'unbounded'
+    face: 'cinzel' | 'bricolage' | 'unbounded' | 'germania'
     lines?: readonly string[]
+    smallLines?: readonly string[]
   }[]
   coda: readonly PoemLine[]
   continuation?: readonly (readonly PoemLine[])[]

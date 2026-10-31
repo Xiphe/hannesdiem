@@ -464,3 +464,221 @@ test('Temple verse phrases catch up into their original layout as they enter', a
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await expect.poll(offset).toBe(0)
 })
+
+for (const width of [390, 1440]) {
+  test(`Temple resolves all four chorus phrases at ${width}px`, async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const pair = page.locator('.first-pair').last()
+    const chorus = pair.locator('.refrain-composition')
+    await expect(chorus.locator('.refrain-phrase')).toHaveCount(4)
+    await expect(chorus.locator('[data-face="bricolage"] [data-line]')).toHaveCount(
+      width <= 900 ? 4 : 2,
+    )
+    await expect(chorus.locator('[data-face="germania"]')).toHaveCSS(
+      'font-family',
+      'Germania, serif',
+    )
+    for (let index = 0; index < 4; index++) {
+      await chorus.evaluate((node, progress) => {
+        const stage = node.querySelector<HTMLElement>('.refrain-stage')!
+        const top = node.getBoundingClientRect().top + scrollY
+        scrollTo(
+          0,
+          top -
+            (innerHeight - stage.offsetHeight) / 2 +
+            (node.clientHeight - stage.offsetHeight) * progress +
+            2,
+        )
+      }, index / 3)
+      await expect(chorus).toHaveAttribute('data-active', String(index))
+    }
+    await pair.locator('.verse-coda').scrollIntoViewIfNeeded()
+    await expect(pair.locator('.verse-coda .phrase-entry')).not.toHaveAttribute('data-entry')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+    expect(errors).toEqual([])
+  })
+}
+
+test('mobile curved copy keeps two rows without editor controls', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/temple-multiple')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await expect(page.locator('[data-shape="sweep"] .block-row')).toHaveCount(2)
+  await expect(page.locator('input, .small-curve-controls')).toHaveCount(0)
+})
+
+for (const width of [390, 1440]) {
+  test(`Temple repetition holds, reveals and yields at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const tracks = page.locator('.repetition-track')
+    await expect(tracks).toHaveCount(3)
+    const first = tracks.first()
+    const stage = first.locator('.repetition-stage')
+    const geometry = await first.evaluate((node) => {
+      const stage = node.querySelector<HTMLElement>('.repetition-stage')!
+      return {
+        start: scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top),
+        hold: node.getBoundingClientRect().height - stage.offsetHeight,
+      }
+    })
+    await page.evaluate((y) => scrollTo(0, y), geometry.start)
+    await expect(first.locator('.repetition-reflection')).toHaveCSS('opacity', '0')
+    const center = await stage.locator('.repetition-statement').boundingBox()
+    expect(center!.y + center!.height / 2).toBeCloseTo(450, 0)
+    await page.evaluate((y) => scrollTo(0, y), geometry.start + geometry.hold * 0.6)
+    await expect(first.locator('.repetition-reflection')).toHaveCSS('opacity', '1')
+    const held = await stage.boundingBox()
+    expect(held!.y).toBeCloseTo(center!.y, 0)
+    await expect(first.locator('.repetition-statement .phrase-entry')).toHaveAttribute(
+      'data-entry',
+      '',
+    )
+    const collision = await tracks.nth(1).evaluate((node) => {
+      const current = node.querySelector<HTMLElement>('.repetition-stage')!
+      const previous = node.previousElementSibling!.querySelector<HTMLElement>('.repetition-stage')!
+      const lock = parseFloat(getComputedStyle(previous).top)
+      const contactY = lock + previous.offsetHeight + 8
+      return {
+        scroll: scrollY + node.getBoundingClientRect().top - contactY,
+        distance: contactY - parseFloat(getComputedStyle(current).top),
+      }
+    })
+    await page.evaluate((y) => scrollTo(0, y), collision.scroll)
+    await expect
+      .poll(async () => {
+        const upper = (await stage.boundingBox())!
+        const lower = (await tracks.nth(1).locator('.repetition-stage').boundingBox())!
+        return Math.abs(lower.y - (upper.y + upper.height) - 8)
+      })
+      .toBeLessThan(2)
+    const beforeImpact = (await stage.boundingBox())!
+    const incomingStage = tracks.nth(1).locator('.repetition-stage')
+    const incomingAtContact = (await incomingStage.boundingBox())!
+
+    await page.evaluate((y) => scrollTo(0, y), collision.scroll + 5)
+    await expect.poll(async () => (await stage.boundingBox())!.y).toBeLessThan(beforeImpact.y - 9)
+    expect((await stage.boundingBox())!.height).toBeCloseTo(beforeImpact.height, 0)
+    expect((await incomingStage.boundingBox())!.y).toBeCloseTo(incomingAtContact.y - 10, 0)
+    await page.evaluate((y) => scrollTo(0, y), collision.scroll + collision.distance + 240)
+    await expect(tracks.nth(1).locator('.repetition-reflection')).toHaveCSS('opacity', '1')
+    const settled = await incomingStage.locator('.repetition-statement').boundingBox()
+    expect(settled!.y + settled!.height / 2).toBeCloseTo(450, 0)
+
+    await page.evaluate((y) => scrollTo(0, y), collision.scroll + collision.distance * 2)
+    await expect.poll(async () => (await stage.boundingBox())!.y).toBeLessThan(held!.y - 50)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  })
+}
+
+for (const width of [390, 1440]) {
+  test(`Temple repetition never overlaps during the full handoff at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const result = await page.evaluate(async () => {
+      const tracks = [...document.querySelectorAll<HTMLElement>('.repetition-track')]
+      const stages = tracks.map((t) => t.querySelector<HTMLElement>('.repetition-stage')!)
+      const start = scrollY + tracks[0].getBoundingClientRect().top - innerHeight / 2
+      const end = scrollY + tracks.at(-1)!.getBoundingClientRect().bottom - innerHeight / 2
+      const stops = Array.from({ length: 81 }, (_, i) => start + ((end - start) * i) / 80)
+      let smallest = Infinity
+      let idleReadingFrames = 0
+      for (const y of [...stops, ...stops.reverse()]) {
+        scrollTo(0, y)
+        await new Promise(requestAnimationFrame)
+        await new Promise(requestAnimationFrame)
+        const boxes = stages.map((s) => s.getBoundingClientRect())
+        for (let i = 1; i < stages.length; i++) {
+          const atCentre = Math.abs(boxes[i].top - parseFloat(getComputedStyle(stages[i]).top)) < 1
+          const next =
+            boxes[i + 1] ??
+            document
+              .querySelectorAll('.refrain-composition')[2]
+              .querySelector('.refrain-phrase')!
+              .getBoundingClientRect()
+          const previousGone = boxes[i - 1].bottom <= 0
+          if (atCentre && previousGone && next.top > innerHeight + 24) {
+            const opacity = Number(
+              getComputedStyle(stages[i].querySelector('.repetition-reflection')!).opacity,
+            )
+            if (opacity >= 1) idleReadingFrames++
+          }
+        }
+
+        for (let i = 1; i < boxes.length; i++) {
+          if (boxes[i].top < innerHeight && boxes[i - 1].bottom > 0) {
+            smallest = Math.min(smallest, boxes[i].top - boxes[i - 1].bottom)
+          }
+        }
+      }
+      return { smallest, idleReadingFrames }
+    })
+    expect(result.smallest).toBeGreaterThanOrEqual(7)
+    expect(result.idleReadingFrames).toBe(0)
+  })
+}
+
+for (const width of [390, 1440]) {
+  test(`Temple final reflection stays in motion throughout its hold at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const track = page.locator('.repetition-track').last()
+    const range = await track.evaluate((node) => {
+      const stage = node.querySelector<HTMLElement>('.repetition-stage')!
+      return {
+        start: scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top),
+        hold: (node as HTMLElement).offsetHeight - stage.offsetHeight,
+      }
+    })
+    const reflection = track.locator('.repetition-reflection')
+    const values = []
+    for (const fraction of [0.2, 0.4, 0.6, 0.8]) {
+      await page.evaluate((y) => scrollTo(0, y), range.start + range.hold * fraction)
+      await page.evaluate(() => new Promise(requestAnimationFrame))
+      await page.evaluate(() => new Promise(requestAnimationFrame))
+      values.push(Number(await reflection.evaluate((n) => getComputedStyle(n).opacity)))
+    }
+    for (let i = 1; i < values.length; i++) expect(values[i]).toBeGreaterThan(values[i - 1] + 0.01)
+  })
+}
+
+test('Temple responsive chorus rows update across the breakpoint', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const rows = page.locator('[data-small-refrain-lines] [data-line]')
+  await expect(rows).toHaveCount(4)
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: 1000 })
+    await expect(rows).toHaveCount(4)
+    await expect
+      .poll(() =>
+        rows.evaluateAll((elements) =>
+          elements.every((row) => {
+            const words = [...row.querySelectorAll('[data-word]')].map((word) =>
+              word.getBoundingClientRect(),
+            )
+            return words.every((word) => Math.abs(word.top - words[0].top) < 2)
+          }),
+        ),
+      )
+      .toBe(true)
+  }
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await expect(rows).toHaveCount(2)
+  await page.setViewportSize({ width: 390, height: 900 })
+  await expect(rows).toHaveCount(4)
+})

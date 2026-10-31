@@ -5,7 +5,12 @@ function TypeLine(handle: Handle<PoemLine>) {
     <span
       class="block-line"
       data-type-line
+      style={
+        handle.props.width === undefined ? undefined : { width: `${handle.props.width * 100}%` }
+      }
       data-shape={handle.props.shape}
+      data-small-lines={handle.props.smallLines?.join('\n')}
+      data-nowrap={handle.props.nowrap ? '' : undefined}
       data-lettering={handle.props.face ?? 'copy'}
     >
       {handle.props.text}
@@ -66,16 +71,40 @@ export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
             </p>
           ))}
         </div>
+        {pair.repetition && (
+          <div class="verse-copy repetition-stack">
+            {pair.repetition.map(({ statement, reflection }, index) => (
+              <section class="repetition-track">
+                <div class="repetition-stage">
+                  <p class="repetition-statement">
+                    <Phrase
+                      lines={statement}
+                      firstStatic={index !== 0}
+                    />
+                  </p>
+                  <p class="repetition-reflection">
+                    <Phrase
+                      lines={[reflection]}
+                      firstStatic
+                    />
+                  </p>
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
         <section
           class="refrain-composition"
           aria-label="Refrain"
         >
           <div class="refrain-stage">
-            {pair.refrain.map(({ text, display, face, lines }, index) => (
+            {pair.refrain.map(({ text, display, face, lines, smallLines }, index) => (
               <p
                 class="refrain-phrase"
                 data-face={face}
                 data-phrase={index}
+                data-small-refrain-lines={smallLines?.join('\n')}
+                data-wide-refrain-lines={smallLines ? (lines ?? [display]).join('\n') : undefined}
               >
                 <span class="semantic-text">{text}</span>
                 <span

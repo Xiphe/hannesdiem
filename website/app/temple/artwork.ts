@@ -1,3 +1,4 @@
+import { createRepetition } from './repetition.ts'
 import { mountOpening } from './scene.ts'
 import type { OpeningProps } from './types.ts'
 import { createTypeSurface, type TypeFrame } from './typography.ts'
@@ -47,6 +48,7 @@ export async function mountArtwork(
     ])
   })
   const fitBlocks = blockType(poem, abort.signal)
+  const repetition = createRepetition(poem, abort.signal)
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const appearance = matchMedia('(prefers-color-scheme: dark)')
   const escapes = createEscapes(abort.signal)
@@ -95,6 +97,29 @@ export async function mountArtwork(
       const width = refrainStage.clientWidth * 0.9
       const maxHeight = innerHeight * 0.5
       for (const phrase of phrases) {
+        if (phrase.dataset.smallRefrainLines) {
+          const mode = matchMedia('(max-width: 900px)').matches ? 'small' : 'wide'
+          if (phrase.dataset.lineLayout !== mode) {
+            const text =
+              mode === 'small' ? phrase.dataset.smallRefrainLines : phrase.dataset.wideRefrainLines
+            const ink = phrase.querySelector<HTMLElement>('[data-ink]')!
+            ink.replaceChildren(
+              ...text!.split('\n').map((line) => {
+                const row = document.createElement('span')
+                row.dataset.line = ''
+                line.split(' ').forEach((word, index) => {
+                  if (index) row.append(' ')
+                  const span = document.createElement('span')
+                  span.dataset.word = ''
+                  span.textContent = word
+                  row.appendChild(span)
+                })
+                return row
+              }),
+            )
+            phrase.dataset.lineLayout = mode
+          }
+        }
         phrase.style.removeProperty('--ink-x')
         phrase.style.removeProperty('--ink-y')
         if (phrase.dataset.face === 'bricolage') {
@@ -126,12 +151,18 @@ export async function mountArtwork(
       const contentHeight =
         Math.max(...phrases.map((p) => Math.max(p.offsetHeight, inkBounds(p).height))) + 32
       refrain.style.setProperty('--refrain-height', `${contentHeight}px`)
+      const lastInkHeight = inkBounds(phrases[phrases.length - 1]).height
+      refrain.parentElement!.style.setProperty(
+        '--refrain-tail-gap',
+        `${Math.max(0, (contentHeight - lastInkHeight) / 2)}px`,
+      )
     }
   }
 
   function resize() {
     fitBlocks()
     fitRefrain()
+    repetition.resize()
     // WebKit settles native baseline probes after painting the newly fitted DOM.
     // Rebuilding masks immediately caches old baselines and clips later rows.
     maskResizeFrames = 2
@@ -150,6 +181,7 @@ export async function mountArtwork(
     }
     const scrolling = now - lastScroll < 140
     copyColour.draw(now, reduced.matches)
+    repetition.draw(reduced.matches)
     let activeFrame = false
     for (const [chorusIndex, { refrain, refrainStage, ink }] of refrains.entries()) {
       const transitions = timings[chorusIndex]
@@ -203,6 +235,7 @@ export async function mountArtwork(
       for (const { refrain } of refrains) refrain.dataset.ready = 'true'
       fitBlocks()
       fitRefrain()
+      repetition.resize()
       await settledLayout(abort.signal)
       if (abort.signal.aborted) return
       for (const item of refrains) {

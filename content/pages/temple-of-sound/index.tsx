@@ -21,7 +21,7 @@ export const firstPair = {
     ],
     [
       { text: 'By those willing to build villages rooted in' },
-      { text: 'trust and connection', face: 'cinzel' },
+      { text: 'trust and connection.', face: 'cinzel' },
     ],
   ],
   refrain: [
@@ -39,7 +39,7 @@ export const secondPair = {
   paragraphs: [
     [
       { text: "Yet I'm in deep hurt and grief with" },
-      { text: 'mankind and earth.', face: 'cinzel' },
+      { text: 'mankind and earth.', face: 'cinzel', smallLines: ['mankind', 'and earth.'] },
     ],
     [
       { text: 'Violent fear,', face: 'germania' },
@@ -49,16 +49,17 @@ export const secondPair = {
       { text: 'I understand we coexist in a storm held between' },
       { text: 'chaotic rupture', face: 'germania' },
       {
-        text: 'and the calm scent of a rose touching my heart like a midsummer sunset',
+        text: 'and the calm scent of a rose touching my heart like a midsummer sunset.',
+        smallLines: ['and the calm scent of a rose touching', 'my heart like a midsummer sunset.'],
         shape: 'sweep',
       },
     ],
   ],
   refrain: [
-    { text: "I'm playful and inspired", display: "I'm pLAYFuL aNd INSpIReD", face: 'cinzel' },
+    { text: "I'm playful and inspired.", display: "I'm pLAYFuL aNd INSpIReD.", face: 'cinzel' },
     {
-      text: "I'm bursting and imploding",
-      display: "i'M BURSTiNG AND iMPLODiNG",
+      text: "I'm bursting and imploding.",
+      display: "i'M BURSTiNG AND iMPLODiNG.",
       face: 'bricolage',
     },
     {
@@ -68,7 +69,67 @@ export const secondPair = {
       lines: ["I'M", 'RAGING', 'ANGRY'],
     },
   ],
-  coda: [{ text: 'with those who mistreat willingly' }, { text: 'and myself for having done so.' }],
+  coda: [
+    { text: 'with those who mistreat willingly' },
+    { text: 'and with myself for taking part.' },
+  ],
+} satisfies PoemPair
+
+export const thirdPair = {
+  paragraphs: [
+    [
+      { text: 'I will not accept that my' },
+      { text: 'love gets dimmed.', face: 'cinzel' },
+      { text: 'I have not grown this tall to get extinguished.' },
+    ],
+  ],
+  repetition: [
+    {
+      statement: [
+        { text: 'I see them speak my words for their', nowrap: true },
+        { text: 'shadowed beliefs.', nowrap: true, face: 'germania' },
+      ],
+      reflection: { text: 'I know because I have done so.', nowrap: true, width: 0.7 },
+    },
+    {
+      statement: [
+        { text: 'I see them claim my truth for their', nowrap: true },
+        { text: 'egoistic gain and play.', nowrap: true, face: 'germania' },
+      ],
+      reflection: { text: 'I know because I have done so.', nowrap: true, width: 0.7 },
+    },
+    {
+      statement: [
+        { text: 'I see them twist my soul for their', nowrap: true },
+        { text: 'rigged games.', nowrap: true, face: 'germania' },
+      ],
+      reflection: { text: 'I know because I have done so.', nowrap: true, width: 0.7 },
+    },
+  ],
+  refrain: [
+    { text: 'I am playful.', display: 'I am pLAYFuL.', face: 'cinzel' },
+    { text: 'I am inspired.', display: 'I am INSpIReD.', face: 'cinzel' },
+    {
+      text: 'I explode and collapse 15 times per minute.',
+      display: 'i EXPLODE AND COLLAPSE 15 TiMES PER MiNUTE.',
+      face: 'bricolage',
+      lines: ['i EXPLODE AND', 'COLLAPSE 15 TiMES', 'PER MiNUTE.'],
+      smallLines: ['i EXPLODE', 'AND COLLAPSE', '15 TiMES', 'PER MiNUTE.'],
+    },
+    {
+      text: 'I pump 6 liters of glorified pain in my veins,',
+      display: 'I PUMP 6 LITERS OF GLORIFIED PAIN IN MY VEINS,',
+      face: 'germania',
+    },
+  ],
+  coda: [{ text: 'and carry a love so deep I can not fathom.' }],
+  continuation: [
+    [
+      { text: 'And I will not accept this hatred machinery to eat up' },
+      { text: 'the flowers', face: 'cinzel' },
+      { text: 'that I so long to see out there on the fields of life.' },
+    ],
+  ],
 } satisfies PoemPair
 
 export default function Content() {
@@ -80,7 +141,7 @@ export default function Content() {
         dates={{ start: '2026-11-01', end: '2026-12-20' }}
         image={forest}
         lightSource={{ x: 53.24, y: 54.07 }}
-        pairs={[firstPair, secondPair]}
+        pairs={[firstPair, secondPair, thirdPair]}
       />
     </PoemCanvas>
   )

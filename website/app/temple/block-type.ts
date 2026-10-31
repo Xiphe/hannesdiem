@@ -1,4 +1,4 @@
-import { verseCurve } from './curve.ts'
+import { verseCurve, mobileCurve } from './curve.ts'
 
 // native type fitted to one reading column, not fixed letter slots.
 export function blockType(root: HTMLElement, signal: AbortSignal) {
@@ -44,10 +44,16 @@ export function blockType(root: HTMLElement, signal: AbortSignal) {
             : width <= 640
               ? Math.max(36, (copySizes.get(paragraph) ?? 18) * 1.3)
               : 24
-      let rows = [words]
+      const fixedRows =
+        matchMedia('(max-width: 640px)').matches && element.dataset.smallLines
+          ? element.dataset.smallLines.split('\n').map((line) => line.split(' '))
+          : undefined
+      let rows = fixedRows ?? [words]
       // Split semantic lines only when fitting them would make phone text tiny.
       for (
         let count = 2;
+        !fixedRows &&
+        !element.hasAttribute('data-nowrap') &&
         rows.some((row) => (width * 100) / extent(row.join(' ')) < minSize);
         count++
       ) {
@@ -132,9 +138,17 @@ export function blockType(root: HTMLElement, signal: AbortSignal) {
           measure.font = `${style.fontWeight} ${size}px ${style.fontFamily}`
           const total = measure.measureText(text).width
           const amplitude = width * 0.25
-          const coordinates = { x: verseCurve.map((p) => p.x), y: verseCurve.map((p) => p.y) }
-          const cubic = (t: number, axis: 'x' | 'y') => {
-            const p = coordinates[axis]
+          const points =
+            matchMedia('(max-width: 640px)').matches && row === optical.at(-1)!.row
+              ? mobileCurve
+              : verseCurve
+          const segments = points.length === 7 ? [points.slice(0, 4), points.slice(3)] : [points]
+          const coordinates = segments.map((segment) => ({
+            x: segment.map((p) => p.x),
+            y: segment.map((p) => p.y),
+          }))
+          const cubic = (t: number, axis: 'x' | 'y', segment = 0) => {
+            const p = coordinates[segment][axis]
             return (
               (1 - t) ** 3 * p[0] +
               3 * (1 - t) ** 2 * t * p[1] +
@@ -142,15 +156,17 @@ export function blockType(root: HTMLElement, signal: AbortSignal) {
               t ** 3 * p[3]
             )
           }
-          const derivative = (t: number, axis: 'x' | 'y') => {
-            const p = coordinates[axis]
+          const derivative = (t: number, axis: 'x' | 'y', segment = 0) => {
+            const p = coordinates[segment][axis]
             return (
               3 * (1 - t) ** 2 * (p[1] - p[0]) +
               6 * (1 - t) * t * (p[2] - p[1]) +
               3 * t * t * (p[3] - p[2])
             )
           }
-          const samples = Array.from({ length: 101 }, (_, i) => cubic(i / 100, 'y'))
+          const samples = segments.flatMap((_, segment) =>
+            Array.from({ length: 101 }, (_, i) => cubic(i / 100, 'y', segment)),
+          )
           const minimum = Math.min(...samples)
           const range = amplitude * (Math.max(...samples) - minimum)
           const origin = parseFloat(ink.style.top)
@@ -160,17 +176,19 @@ export function blockType(root: HTMLElement, signal: AbortSignal) {
           // with its tangent; geometry is cached until the next layout refit.
           for (let i = 0; i < text.length; i++) {
             const x = measure.measureText(text.slice(0, i)).width
+            const segment = points.length === 7 && x / total > points[3].x ? 1 : 0
             let low = 0,
               high = 1
             for (let step = 0; step < 20; step++) {
               const mid = (low + high) / 2
-              if (cubic(mid, 'x') < x / total) low = mid
+              if (cubic(mid, 'x', segment) < x / total) low = mid
               else high = mid
             }
             const t = (low + high) / 2
-            const y = 4 + amplitude * (cubic(t, 'y') - minimum)
+            const y = 4 + amplitude * (cubic(t, 'y', segment) - minimum)
             const slope =
-              ((amplitude / total) * derivative(t, 'y')) / Math.max(0.001, derivative(t, 'x'))
+              ((amplitude / total) * derivative(t, 'y', segment)) /
+              Math.max(0.001, derivative(t, 'x', segment))
             const glyph = document.createElement('span')
             glyph.className = 'block-row-ink'
             glyph.style.fontSize = `${size}px`

@@ -2,17 +2,21 @@
 
 Research: 2026-10-22. Small collaborative steps accepted; opener prototype explicitly accepted on 2026-10-23.
 
-## Current release scope — 2026-10-30
+## Current release scope — 2026-10-31
 
-The artist approved cleanup and deployment of the opener and first two verse/refrain pairs: “lovely, aufräumen und deployen bitte”. The current wording and display roles live in `content/pages/temple-of-sound/index.tsx`; later poem sections remain unpublished. Preserve main’s native sticky artwork scrolling and additional50px before the first verse.
+The artist approved committing and publishing the opener and first three verse/refrain pairs: “ok, lass uns das so committen und live bringen bitte”. The authored wording, punctuation and font roles live in `content/pages/temple-of-sound/index.tsx`; later sections remain unpublished. Preserve main’s native sticky artwork scrolling and additional50px before the first verse.
 
-Second pair: Germania highlights, a continuous Bézier baseline for the full rose sentence, lowercase `i` in the Bricolage refrain, and a three-line Unbounded “I’M / RAGING / ANGRY” third phrase. The standalone angry headline and final reaching/attacking sentence were removed at the artist’s request. Fixed curve points: `(0,0.016)`, `(0.496,-0.375)`, `(0.584,0.361)`, `(1,-0.119)`; controls removed.
+Third pair: three angry statements hold at the same centred reading position. Smaller70%-width reflections reveal after arrival; compact50/50 handoffs push the earlier block upwards while the incoming block decelerates. No compression, and no overlap: resolve visible positions together with at least8px separation. Later reflection reveals fill the stationary reading intervals; the final reveal spans its sticky hold through native release. Preserve delayed entry on the first recurrence.
 
-Entry animation moves semantic phrases together, not individual display rows. “HUMANITY!” is its own static phrase with the existing tighter gap. The first phrase of each verse and after each refrain stays static. Other phrases arrive with momentum and only decelerate across the lower40% of the viewport; no visible stationary hold or acceleration. Final typography is unchanged. Reduced motion and unavailable scroll timelines use native document flow.
+The Bricolage third-pair refrain uses four explicit rows through900px: “i EXPLODE” / “AND COLLAPSE” / “15 TiMES” / “PER MiNUTE.” Legacy portrait word breaks do not override explicit rows. The final refrain’s visible ink determines the tighter gap to “and carry…”, reduced by another1.5rem. The closing paragraph highlights “the flowers” in Cinzel; surrounding copy remains Unbounded.
+
+Second pair: the full rose sentence uses one desktop Bézier and exactly two mobile rows. Selected mobile7-point curve is recorded in `curve.ts`; editors removed. “and earth.” stays on one mobile row. The three-line angry refrain and the supplied replacement coda keep their latest wording and punctuation.
+
+Phrase entries still move semantic phrases together. The first phrase of each verse and after each refrain stays static; the first recurrence of the third-pair repetition keeps its delayed entry. Reduced motion, print and unavailable scroll timelines retain readable native text.
 
 ## Current exploration rule
 
-The artist explicitly accepted the completed opener: “lass uns das bitte als opener scene festhalten. Prototype akzeptiert”. The accepted checkpoint is `76e9ca7`, default impressions treatment. The artist subsequently requested integration into the regular `/temple-of-sound` page. **Current integration approval (2026-10-30):** after reviewing the production integration and accepting the loading treatment, the artist requested “can we integrate into origin/main?”. Integrate the current opener, first verse/refrain and loading UI. Later poem sections and practicalities remain unpublished. Preserve the opener’s appearance and behaviour; new poem artwork remains separate work. For lettering, present existing, unmodified typefaces with unexpected, edgy character. Custom-font creation and glyph modification are outside the request.
+The artist explicitly accepted the completed opener: “lass uns das bitte als opener scene festhalten. Prototype akzeptiert”. The accepted checkpoint is `76e9ca7`, default impressions treatment. The artist subsequently requested integration into the regular `/temple-of-sound` page. **Current integration approval (2026-10-30):** the initial main integration covered the opener, first verse/refrain and loading UI. The latest release scope above supersedes that boundary for the second and third pairs; subsequent poem sections and practicalities remain unpublished. Preserve the opener’s appearance and behaviour; new poem artwork remains separate work. For lettering, present existing, unmodified typefaces with unexpected, edgy character. Custom-font creation and glyph modification are outside the request.
 
 ## Process / current decision state — 2026-10-28
 
@@ -134,3 +138,29 @@ Whole-scene variants bundled typography, composition, imagery, motion and meanin
 **Mobile refinement requested,2026-10-30.** Artist reports the first verse showing immediately below the opener on current iOS Safari, welcomes more space before the first line, and asks to improve fast-scroll performance of opener and chorus. Keep wording and selected effects. Add a small initial buffer and use native sticky movement for the existing masks so scroll geometry no longer depends on the animation frame. This is a local mobile fix pending iPhone review; no new scene or prose is introduced. Evidence and performance limits: [production follow-up](production-readiness.md#mobile-scrolling-follow-up2026-10-30).
 
 **Live mobile review,2026-10-30.** Artist confirms “scroll performance ist super jetzt!” after deployment. Add another50px before the first line on every screen, on top of the responsive buffer. Preserve the accepted native scrolling and effects.
+
+**Tricolon collision experiment,2026-10-30.** Artist requests more impact: brief vertical compression followed by momentum transfer, accelerating the earlier block upwards while the next decelerates into the centre. Increase inter-block travel; preserve the first delayed entry and later remorse reveal. Move “their” into the third statement’s first line, keeping “for their” together. This local experiment remains pending review.
+
+**Collision refinement.** Artist clarifies billiard-ball contact: blocks must almost touch before compression and transfer. Current trial holds the earlier block until an8px stage gap, limits vertical compression to8%, then accelerates its exit while the incoming block decelerates to rest. Synthetic browser checks measure the contact gap at390px and1440px. Pending artist review.
+
+**No overlap constraint,2026-10-31.** Artist reports and forbids any overlap between the repetition blocks. The full forward/reverse scroll sweep reproduced intersecting independently calculated trajectories. Resolve all block positions together from bottom to top, constraining each outgoing bottom to at least8px above the next scaled visible top; include offscreen blocks. Existing collision and new full-handoff regression checks pass at390px and1440px.
+
+**Compression direction.** Artist requires pressure from below: top-anchored vertical compression moves the lower edge upwards rather than pulling the upper edge down. The separation constraint uses the scaled outgoing height and next top. Regression checks include compression direction as well as the full non-overlap sweep.
+
+**Compression removed,2026-10-31.** Artist asks to remove the squash for now. Preserve collision travel, incoming deceleration and non-overlap spacing; block height stays unchanged throughout the handoff.
+
+**Full billiard transfer.** Artist rejects the shared-motion interval. At contact the incoming block now stops completely while the outgoing block alone takes the impulse; the incoming block resumes its settling movement after the earlier block clears. Synthetic checks assert the incoming position stays fixed during the outgoing departure, alongside unchanged height and non-overlap.
+
+**Transfer tuned to80/20.** Artist requests partial rather than total transfer: outgoing block receives80% of travel while incoming retains20% during clearance. No compression; minimum8px separation stays enforced.
+
+**Short50/50 trial.** Artist wants to try a faster exchange with50/50 initial impulse. Replace clearance wait and later catch-up with one compact contact-to-centre trajectory: equal initial outgoing/incoming velocity, incoming immediately decelerates to the identical centred reading position. Preserve the separate reflection-reading interval, no squash and minimum8px spacing. Synthetic checks cover initial equal displacement, full reflection while centred and complete forward/reverse non-overlap. Pending review.
+
+**Remove later idle scroll.** Artist accepts the first repetition pacing but reports idle scrolling at the later centred statements. Keep the first hold unchanged; shorten later tracks to34svh and the second-to-third gap to6svh. Later reflection reveals fill the otherwise-stationary interval until the following block enters view. Preserve50/50 transfer, centre alignment, no squash and no overlap.
+
+**Final repetition idle fix.** Artist still sees the last statement freeze. A dedicated full-hold test reproduces the reflection completing early at390px and1440px. The last reflection now spans the native sticky hold to release, rather than using the following chorus container as an arrival proxy. Earlier repetition timing stays unchanged.
+
+**Third-pair ending.** Artist requests less space between the final chorus ink and “and carry a love…”. Compensate the shared chorus canvas tail using the final phrase’s measured ink height, scoped to the repetition pair. Ending paragraph now starts “And I will not accept this hatred machinery to eat up”, highlights “the flowers” in Cinzel, then continues the supplied final sentence in copy. No new wording.
+
+**Mobile stacked refrain.** At640px and below, the third pair’s Bricolage phrase uses four rows: “i EXPLODE” / “AND COLLAPSE” / “15 TiMES” / “PER MiNUTE.” Preserve existing lettering and punctuation. Wide rows stay unchanged. Typed refrain smallLines are applied only on layout/breakpoint changes, before ink fitting and mask rebuild.
+
+**Mobile row correction.** The portrait-only Bricolage word-break rule overrode explicit rows. Exclude phrases with smallLines from that legacy rule; apply their small layout through900px to cover narrow tablet views. Geometry checks now ensure multiword first/last rows stay on a single baseline at390px and768px, including resize back to desktop.

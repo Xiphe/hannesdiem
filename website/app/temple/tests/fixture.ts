@@ -42,8 +42,12 @@ const secondPair = {
   paragraphs: [
     [
       { text: 'Second section introduction' },
-      { text: 'Distinct highlight', face: 'germania' },
-      { text: 'A gently sweeping synthetic line', shape: 'sweep' },
+      { text: 'Distinct highlight', face: 'germania', nowrap: true },
+      {
+        text: 'A gently sweeping synthetic line',
+        shape: 'sweep',
+        smallLines: ['A gently sweeping', 'synthetic line'],
+      },
     ],
   ],
   refrain: [
@@ -95,3 +99,37 @@ function fixtureContent(pairs?: readonly PoemPair[]): CmxDocument['content'] {
 }
 export const templeContent = fixtureContent()
 export const multipleTempleContent = fixtureContent([firstPair, secondPair])
+
+const thirdPair = {
+  paragraphs: [
+    [
+      { text: 'A third synthetic introduction' },
+      { text: 'An expressive highlight', face: 'germania' },
+    ],
+  ],
+  repetition: [1, 2, 3].map((number) => ({
+    statement: [
+      { text: `Recurring synthetic statement ${number}`, nowrap: true },
+      { text: 'An expressive conclusion.', face: 'germania' as const, nowrap: true },
+    ],
+    reflection: { text: 'A quieter synthetic reflection.', nowrap: true, width: 0.7 },
+  })),
+  refrain: [
+    { text: 'First short phrase', display: 'First short phrase', face: 'cinzel' },
+    { text: 'Second short phrase', display: 'Second short phrase', face: 'cinzel' },
+    {
+      text: 'A third stacked phrase',
+      display: 'A THIRD STACKED PHRASE',
+      face: 'bricolage',
+      lines: ['A THIRD', 'STACKED PHRASE'],
+      smallLines: ['A THIRD', 'STACKED', 'SYNTHETIC', 'PHRASE END'],
+    },
+    {
+      text: 'A fourth synthetic phrase long enough to wrap on narrower viewports',
+      display: 'A FOURTH SYNTHETIC PHRASE LONG ENOUGH TO WRAP ON NARROWER VIEWPORTS',
+      face: 'germania',
+    },
+  ],
+  coda: [{ text: 'Synthetic continuation after four phrases.' }],
+} satisfies PoemPair
+export const fourPhraseTempleContent = fixtureContent([firstPair, secondPair, thirdPair])

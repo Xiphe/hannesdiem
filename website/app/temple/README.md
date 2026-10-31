@@ -1,12 +1,13 @@
 # Temple of Sound
 
-The opener and first two verse/refrain pairs render through the regular CMX document and Remix island at `/temple-of-sound`. Later poem sections remain in `content/pages/temple-of-sound/_draft.tsx` and are not published.
+The opener and first three verse/refrain pairs render through the regular CMX document and Remix island at `/temple-of-sound`. Later poem sections remain in `content/pages/temple-of-sound/_draft.tsx` and are not published.
 
 CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `tests/`; fonts/favicon: `assets/`.
 
 ## Content and rendering
 
-- `content/pages/temple-of-sound/index.tsx` owns both typed verse/refrain pairs, including display casing and font roles. The unpublished draft reuses it. The browser never imports content modules or CMX runtime.
+- `repetition.ts` coordinates the third verse’s centred statements, delayed reflections and compact50/50 handoffs. Resolve positions together to maintain8px separation; no compression. Reduced motion uses native document flow.
+- `content/pages/temple-of-sound/index.tsx` owns the typed verse/refrain pairs, including display casing and font roles. The unpublished draft reuses it. The browser never imports content modules or CMX runtime.
 - `poem.tsx` resolves the immutable1920px media variant and passes serializable data to `Opening`. `first-pair.tsx` renders native paragraphs and selectable source text; no duplicated authored copy or workbench controls.
 - `opening.tsx` owns the Remix task and cancellation. `artwork.ts` coordinates fitted text, copy colour and each bounded refrain. `scene.ts` owns the shared RAF, title mask and pointer/idle disturbances. Native sticky canvases own the opener exit and chorus travel; a delayed animation frame cannot leave their geometry behind. The same viewport-aligned material paints directly into each visible canvas; escaped glimmers use one inert foreground layer.
 - `atmosphere.ts` and `escapes.ts` create instance-owned textures, coverage maps and particles. Only immutable noise samples/functions live at module scope. There are no import-time DOM reads, cross-instance rendering callbacks or Git source patches.
