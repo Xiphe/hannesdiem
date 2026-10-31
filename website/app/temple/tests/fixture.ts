@@ -36,6 +36,7 @@ const firstPair = {
     { text: 'Synthetic coda', face: 'cinzel' },
     { text: 'The native document continues after the bounded hold.' },
   ],
+  action: { label: 'Explore fixture', href: '/fixture', seed: 'fixture-action' },
 } satisfies PoemPair
 
 const secondPair = {

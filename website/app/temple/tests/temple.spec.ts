@@ -99,6 +99,10 @@ test('Temple keeps the title and static verse readable without JavaScript', asyn
     expect((await page.goto('/temple-of-sound'))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Temple of Sound' })).toBeVisible()
     await expect(page.locator('[data-poem-text]')).toContainText('Static verse fixture')
+    await expect(page.getByRole('link', { name: 'Explore fixture' })).toHaveAttribute(
+      'href',
+      '/fixture',
+    )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
       'https://hannesdiem.de/temple-of-sound',
@@ -681,4 +685,75 @@ test('Temple responsive chorus rows update across the breakpoint', async ({ page
   await expect(rows).toHaveCount(2)
   await page.setViewportSize({ width: 390, height: 900 })
   await expect(rows).toHaveCount(4)
+})
+
+test('Temple renders the authored action after the first pair with theme-aware fragments and native keyboard navigation', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
+  await page.goto('/temple-multiple')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const pairs = page.locator('.first-pair')
+  const stage = pairs.first().locator('.fragment-action-stage')
+  await expect(stage).toHaveAttribute('data-fragments-ready', '')
+  await expect(pairs.nth(1).locator('.fragment-action-stage')).toHaveCount(0)
+  const link = stage.getByRole('link', { name: 'Explore fixture' })
+  await expect(link).toHaveAttribute('href', '/fixture')
+  await expect(stage.locator('[data-piece]')).toHaveCount(8)
+  await stage.scrollIntoViewIfNeeded()
+  const shapes = () =>
+    stage.locator('path').evaluateAll((nodes) => nodes.map((n) => n.getAttribute('d')))
+  const paths = await shapes()
+  const dark = await stage
+    .locator('[data-piece]')
+    .first()
+    .evaluate((n) => getComputedStyle(n).fill)
+  await page.emulateMedia({ colorScheme: 'light' })
+  await expect
+    .poll(() =>
+      stage
+        .locator('[data-piece]')
+        .first()
+        .evaluate((n) => getComputedStyle(n).fill),
+    )
+    .not.toBe(dark)
+  expect(await shapes()).toEqual(paths)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await stage.scrollIntoViewIfNeeded()
+  expect(await shapes()).toEqual(paths)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await link.focus()
+  await link.press('Enter')
+  await expect(page).toHaveURL(/\/fixture$/)
+  await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
+})
+
+test('Temple action scatters on click and zooms the same pieces back to full size', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/temple-of-sound')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const stage = page.locator('.fragment-action-stage')
+  await stage.scrollIntoViewIfNeeded()
+  await expect(stage).toHaveAttribute('data-fragments-ready', '')
+  const board = stage.locator('svg')
+  const scales = () =>
+    stage
+      .locator('[data-piece]')
+      .evaluateAll((nodes) =>
+        nodes.map((n) => Number(n.getAttribute('transform')!.match(/scale\(([^)]+)\)/)![1])),
+      )
+  const base = await scales()
+  const link = stage.getByRole('link', { name: 'Explore fixture' })
+  // Exercise the actual click effect while keeping this synthetic link on screen.
+  await link.evaluate((n) => n.addEventListener('click', (e) => e.preventDefault(), { once: true }))
+  await link.click()
+  await expect(board).toHaveAttribute('data-border-burst', '')
+  await expect.poll(async () => (await scales()).every((s) => s === 0)).toBe(true)
+  await expect.poll(async () => (await scales()).some((s, i) => s > 0 && s < base[i])).toBe(true)
+  await expect(board).not.toHaveAttribute('data-border-burst', '')
+  expect(await scales()).toEqual(base)
+  await page.getByRole('link', { name: 'Return to fixture' }).click()
+  await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
 })

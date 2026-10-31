@@ -31,3 +31,5 @@ The removed workbench is recoverable at `7eeabb0:website/app/temple/text.prototy
 `node website/app/temple/debug/ink.mjs` compares all cached copy baselines with the settled native DOM in WebKit; `ENGINE=chromium` runs the same check in Chromium. It uses synthetic route content only. This guards against pre-paint baseline caching and clipped/doubled text.
 
 For diagnostics, start the synthetic Worker separately: `WEBSITE_TEST=true npx wrangler dev website/tests/worker.ts --config website/wrangler.jsonc --port 8791`. The diagnostic defaults target that fixture server, keeping automated assertions independent of authored content and media. Use the actual content route only for visual review.
+
+The first pair now supports an optional typed `action`; the selected [fragment button](fragment-button/README.md) renders in its final pause. Its native contact link and decorative SVG share the existing Opening island, with per-instance seeds and lifetime/visibility guards.
