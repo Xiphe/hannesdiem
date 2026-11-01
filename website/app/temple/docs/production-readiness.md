@@ -82,3 +82,13 @@ Prepare chorus masks one stage beyond the measured viewport and paint their comp
 The strengthened synthetic pixel check now compares the entire glyph mask, including off-viewport rows; it fails before the sampling correction. Geometry checks at390px and440px verify ordinary-flow entry and return, and a native centred hold with animation frames paused. They fail against the always-sticky renderer and pass with the workaround. These checks validate the mechanism, not the iOS browser chrome: the artist’s iPhone recheck remains the final pass/fail signal for the reported cut.
 
 Validation: app build, formatting, root and website TypeScript,60 Node checks, the complete106-test Chromium suite and15 targeted WebKit checks pass. The browser geometry checks cover entry, return and native lock at390px and the recording’s440px width. Physical iOS confirmation is still pending.
+
+## Scope the workaround to detected iOS Safari, 2026-11-02
+
+The artist asks to apply the toolbar fix only on detected iOS Safari. Gate ordinary-flow entry, overscan, complete-canvas material sampling and large-viewport escaped light on the same detector. Other browsers retain their original sticky entry, viewport culling and material crop.
+
+Identify iPhone/iPad/iPod Safari by its WebKit and Version/Safari tokens, excluding identifiable alternative iOS browsers and web views. iPadOS can present a desktop Mac user agent, so include `MacIntel` with more than one touch point; Mac Safari without touch remains on the original path. See [WebKit’s iPad desktop-user-agent announcement](https://webkit.org/blog/9674/new-webkit-features-in-safari-13/). This detection scopes a browser-UI workaround, not general touch support. Owned DOM markers are removed on teardown.
+
+Detection coverage includes iPhone/iPad Safari, desktop-mode iPad, Mac Safari, iOS Chrome/Firefox/Edge/Opera/DuckDuckGo/Google, iPad desktop-mode Chrome, web views and Android. Browser checks run the positive iPhone path and compare desktop Safari, desktop-mode iPad Safari and iOS Chrome. UA emulation verifies branching; it does not emulate Safari’s toolbar compositor.
+
+Validation: app build, formatting, both TypeScript checks,73 Node checks (including13 detection cases), all109 Chromium checks and18 targeted WebKit checks pass.

@@ -1,3 +1,4 @@
+import { isIOSSafari } from './ios-safari.ts'
 import { createBridgeLinger } from './bridge-linger.ts'
 import { createBridgeCloud } from './bridge-cloud.ts'
 import { createBridgePages } from './bridge-pages.ts'
@@ -16,8 +17,13 @@ export async function mountArtwork(
   signal: AbortSignal,
   ready: () => void,
 ) {
+  const safariToolbar = isIOSSafari(navigator)
   const abort = new AbortController()
   signal.addEventListener('abort', () => abort.abort(), { once: true })
+  host.toggleAttribute('data-safari-toolbar', safariToolbar)
+  abort.signal.addEventListener('abort', () => host.removeAttribute('data-safari-toolbar'), {
+    once: true,
+  })
   const root = host.querySelector<HTMLElement>('.temple-opening')!
   const stage = root.querySelector<HTMLElement>('.temple-stage')!
   const poem = host.querySelector<HTMLElement>('.poem-pairs')!
@@ -224,11 +230,14 @@ export async function mountArtwork(
       const stickyTop = (stage.clientHeight - stageHeight) / 2
       // Arm sticky before lock, once the whole stage clears the toolbar area.
       // Both positioning modes have identical geometry until reaching lock.
-      const sticky = section.top <= Math.max(stickyTop, stage.clientHeight - stageHeight)
-      if (refrain.hasAttribute('data-sticky') !== sticky)
-        refrain.toggleAttribute('data-sticky', sticky)
-      // Prepare one stage ahead: Safari can reveal content behind its controls.
-      if (section.bottom < -stageHeight || section.top > frame.bounds.height + stageHeight) continue
+      if (safariToolbar) {
+        const sticky = section.top <= Math.max(stickyTop, stage.clientHeight - stageHeight)
+        if (refrain.hasAttribute('data-sticky') !== sticky)
+          refrain.toggleAttribute('data-sticky', sticky)
+      }
+      // Prepare one stage ahead only for Safari's floating controls on iOS.
+      const margin = safariToolbar ? stageHeight : 0
+      if (section.bottom < -margin || section.top > frame.bounds.height + margin) continue
       const hold = section.height - stageHeight
       const position = Math.max(0, Math.min(1, (stickyTop - section.top) / hold))
       let index = 0,
@@ -273,7 +282,10 @@ export async function mountArtwork(
     ])
     if (!abort.signal.aborted) {
       syncCopyAppearance()
-      for (const { refrain } of refrains) refrain.dataset.ready = 'true'
+      for (const { refrain } of refrains) {
+        refrain.toggleAttribute('data-safari-toolbar', safariToolbar)
+        refrain.dataset.ready = 'true'
+      }
       fitBlocks()
       fitRefrain()
       repetition.resize(reduced.matches)
@@ -319,6 +331,7 @@ export async function mountArtwork(
             refrain.removeAttribute('data-ready')
             refrain.removeAttribute('data-active')
             refrain.removeAttribute('data-sticky')
+            refrain.removeAttribute('data-safari-toolbar')
             refrain.style.removeProperty('--refrain-height')
             for (const phrase of phrases) phrase.removeAttribute('style')
           }

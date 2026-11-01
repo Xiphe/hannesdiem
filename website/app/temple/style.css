@@ -210,10 +210,13 @@ html[data-layout='temple'] body {
   position: fixed;
   inset: 0;
   width: 100%;
-  height: 100lvh;
+  height: 100svh;
   z-index: 3;
   pointer-events: none;
   mix-blend-mode: screen;
+}
+.temple-artwork[data-safari-toolbar] .temple-escapes {
+  height: 100lvh;
 }
 .temple-artwork[data-state='ready'] .temple-escapes {
   display: block;
@@ -340,16 +343,16 @@ html[data-layout='temple'] body {
   height: calc(var(--refrain-height, 50svh) + 52svh);
   margin-block: clamp(24px, 3vw, 40px);
 }
-/* Enter in document flow: iOS clips sticky layers at its floating toolbar,
-   including their not-yet-stuck content behind the transparent controls. */
 .refrain-composition[data-ready] .refrain-stage {
-  position: relative;
-  top: 0;
-  height: var(--refrain-height, 50svh);
-}
-.refrain-composition[data-sticky] .refrain-stage {
   position: sticky;
   top: calc(50svh - var(--refrain-height, 50svh) / 2);
+  height: var(--refrain-height, 50svh);
+}
+/* Only detected iOS Safari enters in document flow, avoiding its toolbar clip.
+   :where keeps print/forced-colour overrides at their existing specificity. */
+.refrain-composition[data-ready]:where([data-safari-toolbar]:not([data-sticky])) .refrain-stage {
+  position: relative;
+  top: 0;
 }
 .refrain-composition[data-ready] .refrain-phrase {
   position: absolute;

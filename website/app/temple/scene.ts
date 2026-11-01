@@ -1,5 +1,6 @@
 import { roughBand as sharedBand, drawDisturbance, type TypeFrame } from './typography.ts'
 import type { Escapes } from './escapes.ts'
+import { isIOSSafari } from './ios-safari.ts'
 import { createForest } from './forest.ts'
 import type { OpeningProps } from './types.ts'
 type Face = { id: string; family: string; weight: number }
@@ -54,6 +55,7 @@ export async function mountOpening(
     ready: () => void
   },
 ) {
+  const safariToolbar = isIOSSafari(navigator)
   const { beginPortals, cachePortal, addPortal, drawEscapes } = effects.escapes
   const clamp = (value: number) => Math.max(0, Math.min(1, value))
   const smooth = (value: number) => {
@@ -498,6 +500,10 @@ export async function mountOpening(
     const frame: TypeFrame = {
       bounds: new DOMRect(0, 0, width, materialHeight),
       paintMaterial(ink, bounds) {
+        if (!safariToolbar) {
+          paintMaterial(ink, bounds, materialHeight)
+          return
+        }
         // Paint the complete native canvas, including the part Safari exposes
         // behind its controls. Keep viewport alignment once it is fully inside.
         const paintHeight = Math.max(materialHeight, bounds.height)

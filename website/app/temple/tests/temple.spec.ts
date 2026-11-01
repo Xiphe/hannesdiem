@@ -1,6 +1,25 @@
 import { parseBridgeText } from '../bridge-text.tsx'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { bridgeGlyphScale } from '../bridge-reveal.ts'
+
+const iphoneSafari = {
+  userAgent:
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1',
+  platform: 'iPhone',
+  maxTouchPoints: 5,
+}
+const desktopSafari = {
+  userAgent:
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15',
+  platform: 'MacIntel',
+  maxTouchPoints: 0,
+}
+async function identifyBrowser(page: Page, browser: typeof iphoneSafari) {
+  await page.addInitScript((browser) => {
+    for (const [key, value] of Object.entries(browser))
+      Object.defineProperty(navigator, key, { value, configurable: true })
+  }, browser)
+}
 
 test('Temple leaves room after the opening and scrolls its title independently of repainting', async ({
   page,
@@ -25,6 +44,7 @@ test('Temple leaves room after the opening and scrolls its title independently o
 test('Temple paints complete entering chorus ink across viewport and toolbar boundaries', async ({
   page,
 }) => {
+  await identifyBrowser(page, iphoneSafari)
   const smallHeight = 700
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -107,6 +127,7 @@ for (const width of [390, 440]) {
   test(`Temple enters in document flow and keeps its native chorus hold at ${width}px`, async ({
     page,
   }) => {
+    await identifyBrowser(page, iphoneSafari)
     await page.setViewportSize({ width, height: 956 })
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.addInitScript(() => {
@@ -159,6 +180,30 @@ for (const width of [390, 440]) {
     const held = (await stage.boundingBox())!.y
     await page.evaluate(() => scrollBy(0, 80))
     await expect.poll(async () => (await stage.boundingBox())!.y).toBeCloseTo(held, 1)
+  })
+}
+
+for (const [name, browser, workaround] of [
+  ['desktop Safari', desktopSafari, false],
+  ['desktop-mode iPad Safari', { ...desktopSafari, maxTouchPoints: 5 }, true],
+  ['iOS Chrome', { ...iphoneSafari, userAgent: iphoneSafari.userAgent + ' CriOS/140.0' }, false],
+] as const) {
+  test(`Temple scopes the toolbar workaround for ${name}`, async ({ page }) => {
+    await identifyBrowser(page, browser)
+    await page.setViewportSize({ width: 440, height: 956 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/temple-of-sound')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const chorus = page.locator('.refrain-composition')
+    await chorus.evaluate((node) =>
+      scrollTo(0, scrollY + node.getBoundingClientRect().top - (innerHeight - 60)),
+    )
+    await expect(chorus.locator('.refrain-stage')).toHaveCSS(
+      'position',
+      workaround ? 'relative' : 'sticky',
+    )
+    if (workaround) await expect(chorus).toHaveAttribute('data-safari-toolbar', '')
+    else await expect(chorus).not.toHaveAttribute('data-safari-toolbar')
   })
 }
 

@@ -1,4 +1,5 @@
 // Shared native glyph disturbance for title and refrain.
+import { isIOSSafari } from './ios-safari.ts'
 import type { Escapes } from './escapes.ts'
 export type Glyph = {
   x: number
@@ -127,6 +128,7 @@ export function createTypeSurface(
   invalidate: () => void,
   { addPortal, cachePortal }: Escapes,
 ) {
+  const safariToolbar = isIOSSafari(navigator)
   const mask = document.createElement('canvas')
   const maskInk = mask.getContext('2d')!
   const output = canvas.getContext('2d')!
@@ -321,7 +323,9 @@ export function createTypeSurface(
     scrolling = false,
   ) {
     const rect = canvas.getBoundingClientRect()
-    if (rect.bottom < -height || rect.top > frame.bounds.height + height || rect.width === 0)
+    const margin = safariToolbar ? height : 0
+    const viewportHeight = safariToolbar ? frame.bounds.height : innerHeight
+    if (rect.bottom < -margin || rect.top > viewportHeight + margin || rect.width === 0)
       return false
     const a = layers[index],
       b = layers[next]
@@ -428,7 +432,8 @@ export function createTypeSurface(
   }
   function paint(frame: TypeFrame) {
     const rect = canvas.getBoundingClientRect()
-    if (rect.bottom < -height || rect.top > frame.bounds.height + height) return
+    const margin = safariToolbar ? height : 0
+    if (rect.bottom < -margin || rect.top > frame.bounds.height + margin) return
     // The native sticky canvas owns motion. Only its material changes in RAF;
     // a late paint can no longer leave the phrase behind during fast scrolling.
     output.clearRect(0, 0, width, height)
