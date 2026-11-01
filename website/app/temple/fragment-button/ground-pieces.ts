@@ -11,6 +11,8 @@ export function paintGroundPieces(
 ) {
   const material = groundMaterial(host)
   if (!material) return
+  // The desktop-sized forms otherwise merge into a solid surface on a phone.
+  const compact = Math.min(1, host.clientWidth / 1200)
   const ns = 'http://www.w3.org/2000/svg'
   const probe = document.createElementNS(ns, 'svg')
   probe.style.position = 'absolute'
@@ -26,7 +28,10 @@ export function paintGroundPieces(
       const available = space.end - space.start
       if (available < 160) continue
       // A fuller assembly, retaining the large scale and irregular overlaps.
-      const count = Math.max(2, Math.round((host.clientWidth * available * 3.2) / (1920 * 1600)))
+      const count = Math.max(
+        compact < 0.6 ? 1 : 2,
+        Math.round((host.clientWidth * available * 3.2 * compact) / (1920 * 1600)),
+      )
       for (let slot = 0; slot < count; slot++) {
         const random = randomFrom(`${material.seed}/sculpture/${layer}/${band}/${slot}`)
         const index = (band * 3 + layer + slot * 5) % material.pieces.length
@@ -43,13 +48,24 @@ export function paintGroundPieces(
         const h = bounds.height + 4
         // Uniformly fit the intact shape into its space; never cut an outline
         // or compress it vertically to manufacture a hole for a chorus.
-        const scale = Math.min((piece.size * 24) / 28, available / h)
+        const scale = Math.min(
+          (piece.size * 24 * compact) / 28,
+          available / h,
+          compact < 1 ? (host.clientWidth * 1.5) / width : Infinity,
+        )
         const tone = Math.round(7 + random() * 8)
         const x = host.clientWidth * (0.1 + random() * 0.8) - (width * scale) / 2
         const slack = available - h * scale
         // Hold the assembly's ends against the intended gap. Random placement
         // alone can leave another large empty interval beside the last verse.
-        const offset = slot === 0 ? 0 : slot === count - 1 ? slack : random() * slack
+        const offset =
+          count === 1
+            ? (slack * layer) / 2
+            : slot === 0
+              ? 0
+              : slot === count - 1
+                ? slack
+                : random() * slack
         const y = space.start + offset
         const svg = document.createElementNS(ns, 'svg')
         svg.classList.add('fragment-ground-piece')

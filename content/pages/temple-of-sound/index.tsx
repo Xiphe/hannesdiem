@@ -143,6 +143,44 @@ export default function Content() {
         image={forest}
         lightSource={{ x: 53.24, y: 54.07 }}
         pairs={[firstPair, secondPair, thirdPair]}
+        bridge={[
+          [
+            {
+              text: 'I\u2003W I L L\u2003N O T\u2003B E N D\u2003F U R T H E R !',
+              face: 'spaced',
+              nowrap: true,
+            },
+            { text: 'I have trusted and accepted,' },
+            { text: 'waited patiently,', face: 'cinzel' },
+            { text: 'given space and opportunity to rest and resource.' },
+          ],
+        ]}
+        bridgeBody={[
+          {
+            wideBreaksAfter: ['hide your shame,', 'painfully limited'],
+            text: `But I see you **numbing**, **disconnecting** and **fleeing**.
+I see you **frightened** and **scared**, my child.
+I see you hold your tears, cage your anger, hide your shame, swallow your disgust and betray your pride.
+
+I see us **trapped** and **helpless**.
+Painfully limited by routine and a **lack of belonging**.`,
+          },
+          `It **breaks my heart** to see you like this, my child.
+I want you to know that I'm here and that you are **not alone anymore**.
+I want you to understand that I can **stay with you** no matter what.
+
+Oh yes, I know...
+it's not easy, and **trust is hard to gift** when it has been taken so often.
+That's ok. There is nothing to do for you, I understand it's **my responsibility** to show you.`,
+          {
+            linger: 'my child.',
+            text: `I painfully know that I will screw this up.
+And I also came to know that **I'm capable** of carrying and catering a wound further and further until it becomes something **wider** then a moment and **deeper** then a scene.
+
+**I am so willing** to practice and keep on practicing the art of showing up
+and **staying with you**, my child.`,
+          },
+        ]}
       />
     </PoemCanvas>
   )

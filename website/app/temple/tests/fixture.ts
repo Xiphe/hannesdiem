@@ -1,5 +1,5 @@
 import type { CmxDocument } from '@cmx-tools/contracts'
-import type { PoemPair } from '@hannesdiem/content-components'
+import type { PoemPair, PoemLine, PoemOpeningProps } from '@hannesdiem/content-components'
 
 const firstPair = {
   paragraphs: [
@@ -64,7 +64,11 @@ const secondPair = {
   continuation: [[{ text: 'A final synthetic paragraph follows.' }]],
 } satisfies PoemPair
 
-function fixtureContent(pairs?: readonly PoemPair[]): CmxDocument['content'] {
+function fixtureContent(
+  pairs?: readonly PoemPair[],
+  bridge?: readonly (readonly PoemLine[])[],
+  bridgeBody?: PoemOpeningProps['bridgeBody'],
+): CmxDocument['content'] {
   return {
     title: 'Temple of Sound',
     default: {
@@ -83,6 +87,8 @@ function fixtureContent(pairs?: readonly PoemPair[]): CmxDocument['content'] {
             image: 'fixture-image',
             lightSource: { x: 50, y: 50 },
             ...(pairs ? { pairs } : { pair: firstPair }),
+            ...(bridge ? { bridge } : {}),
+            ...(bridgeBody ? { bridgeBody } : {}),
           },
           children: [
             { type: 'element', tag: 'p', children: ['Static verse fixture'] },
@@ -133,4 +139,27 @@ const thirdPair = {
   ],
   coda: [{ text: 'Synthetic continuation after four phrases.' }],
 } satisfies PoemPair
-export const fourPhraseTempleContent = fixtureContent([firstPair, secondPair, thirdPair])
+export const fourPhraseTempleContent = fixtureContent(
+  [firstPair, secondPair, thirdPair],
+  [
+    [
+      { text: 'S Y N T H E T I C B R I D G E', face: 'spaced', nowrap: true },
+      { text: 'A synthetic introductory sentence,' },
+      { text: 'a distinct emphasis,', face: 'cinzel' },
+      { text: 'and a final line of supporting copy.' },
+    ],
+  ],
+  [
+    'Please read **several bold words** and *some italic words* in this synthetic paragraph, with enough native lines to examine a scroll-driven letter reveal. The document keeps its ordinary geometry while cached glyphs grow into their readable form.',
+    {
+      linger: 'presentation.',
+      text:
+        'A second synthetic paragraph continues the reading flow.\n' +
+        '**' +
+        'A supplied *synthetic* sentence remains in its original paragraph while responsive pages divide only its presentation. '
+          .repeat(10)
+          .trimEnd() +
+        '**',
+    },
+  ],
+)

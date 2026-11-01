@@ -1,3 +1,6 @@
+import { createBridgeLinger } from './bridge-linger.ts'
+import { createBridgeCloud } from './bridge-cloud.ts'
+import { createBridgePages } from './bridge-pages.ts'
 import { createRepetition } from './repetition.ts'
 import { mountOpening } from './scene.ts'
 import type { OpeningProps } from './types.ts'
@@ -51,6 +54,16 @@ export async function mountArtwork(
   mountFragmentGround(host, refrains, abort.signal)
   const fitBlocks = blockType(poem, abort.signal)
   const repetition = createRepetition(poem, abort.signal)
+  const bridgePages = createBridgePages(poem, abort.signal)
+  const bridgeLinger = createBridgeLinger(poem, abort.signal)
+  const bridgeGround = document.createElement('div')
+  bridgeGround.className = 'temple-bridge-ground'
+  bridgeGround.ariaHidden = 'true'
+  const bridgeBody = poem.querySelector<HTMLElement>('.bridge-body')
+  if (bridgeBody) host.appendChild(bridgeGround)
+  let bridgeCooling = -1
+  const bridgeCloud = createBridgeCloud(bridgeBody, bridgeGround, abort.signal)
+  abort.signal.addEventListener('abort', () => bridgeGround.remove(), { once: true })
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const appearance = matchMedia('(prefers-color-scheme: dark)')
   const escapes = createEscapes(abort.signal)
@@ -165,6 +178,7 @@ export async function mountArtwork(
     fitBlocks()
     fitRefrain()
     repetition.resize()
+    bridgePages.resize(reduced.matches)
     // WebKit settles native baseline probes after painting the newly fitted DOM.
     // Rebuilding masks immediately caches old baselines and clips later rows.
     maskResizeFrames = 2
@@ -179,12 +193,30 @@ export async function mountArtwork(
       if (--maskResizeFrames === 0) {
         for (const { ink } of refrains) ink!.resize()
         copyColour.resize()
+        bridgeLinger.resize(reduced.matches)
       } else request()
+    }
+    if (bridgeBody) {
+      const progress = Math.max(
+        0,
+        Math.min(1, 1 - bridgeBody.getBoundingClientRect().top / innerHeight),
+      )
+      const cooling = progress * progress * (3 - 2 * progress)
+      if (cooling !== bridgeCooling) {
+        bridgeGround.style.setProperty('--bridge-cooling', String(cooling))
+        bridgeCooling = cooling
+      }
     }
     const scrolling = now - lastScroll < 140
     copyColour.draw(now, reduced.matches)
     repetition.draw(reduced.matches)
-    let activeFrame = false
+    bridgeLinger.draw(reduced.matches)
+    let activeFrame = bridgeCloud.draw(
+      now,
+      reduced.matches,
+      copyColour.bridgeBounds(),
+      !appearance.matches,
+    )
     for (const [chorusIndex, { refrain, refrainStage, ink }] of refrains.entries()) {
       const transitions = timings[chorusIndex]
       const section = refrain.getBoundingClientRect()
@@ -238,6 +270,7 @@ export async function mountArtwork(
       fitBlocks()
       fitRefrain()
       repetition.resize()
+      bridgePages.resize(reduced.matches)
       await settledLayout(abort.signal)
       if (abort.signal.aborted) return
       for (const item of refrains) {
@@ -251,6 +284,7 @@ export async function mountArtwork(
         item.ink.resize()
       }
       copyColour.resize()
+      bridgeLinger.resize(reduced.matches)
       on(window, 'scroll', () => {
         lastScroll = performance.now()
         request()
@@ -283,7 +317,10 @@ export async function mountArtwork(
         },
         { once: true },
       )
-      on(reduced, 'change', request)
+      on(reduced, 'change', () => {
+        needsResize = true
+        request()
+      })
       on(appearance, 'change', () => {
         syncCopyAppearance()
       })

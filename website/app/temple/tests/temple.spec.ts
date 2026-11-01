@@ -1,4 +1,6 @@
+import { parseBridgeText } from '../bridge-text.tsx'
 import { expect, test } from '@playwright/test'
+import { bridgeGlyphScale } from '../bridge-reveal.ts'
 
 test('Temple leaves room after the opening and scrolls its title independently of repainting', async ({
   page,
@@ -121,6 +123,14 @@ for (const width of [390, 1440]) {
       )
     await seek(0)
     await expect.poll(clear).toBe(true)
+    if (width < 1200) {
+      // Narrow screens retain discrete forms rather than a full-width slab.
+      expect(
+        await pieces.evaluateAll((nodes) =>
+          nodes.every((node) => node.getBoundingClientRect().width <= innerWidth * 1.5 + 1),
+        ),
+      ).toBe(true)
+    }
     const scenes = await ranges()
     const verse = Math.round((900 * 0.3 + scenes[0].start) / 2)
     await seek(verse)
@@ -471,16 +481,21 @@ for (const scheme of ['light', 'dark'] as const) {
         })
     await expect.poll(brightness).toBeGreaterThan(scheme === 'dark' ? 150 : 0)
     if (scheme === 'light') expect(await brightness()).toBeLessThan(100)
-    expect(
-      await first.evaluate((p) => {
-        const range = document.createRange()
-        range.selectNodeContents(p)
-        const selection = getSelection()!
-        selection.removeAllRanges()
-        selection.addRange(range)
-        return selection.toString().replace(/\s/g, '') === p.textContent!.replace(/\s/g, '')
-      }),
-    ).toBe(true)
+    const source = (await first.textContent())!.replace(/\s/g, '')
+    // Native selection can initially be empty while fitted layout settles.
+    // Retry the actual selection, preserving the complete-text assertion.
+    await expect
+      .poll(() =>
+        first.evaluate((p) => {
+          const range = document.createRange()
+          range.selectNodeContents(p)
+          const selection = getSelection()!
+          selection.removeAllRanges()
+          selection.addRange(range)
+          return selection.toString().replace(/\s/g, '')
+        }),
+      )
+      .toBe(source)
     await page.emulateMedia({ colorScheme: scheme === 'light' ? 'dark' : 'light' })
     await expect.poll(brightness)[scheme === 'light' ? 'toBeGreaterThan' : 'toBeLessThan'](100)
     await page.emulateMedia({ forcedColors: 'active' })
@@ -1053,3 +1068,654 @@ test('Temple action scatters on click and zooms the same pieces back to full siz
   await page.getByRole('link', { name: 'Return to fixture' }).click()
   await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
 })
+
+for (const width of [390, 1440]) {
+  test(`Temple bridge reveals sequential lines then scrolls each page away at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const pages = page.locator('.bridge-page')
+    expect(await pages.count()).toBeGreaterThan(2)
+    const source = await page.locator('.bridge-paragraph').allTextContents()
+    const first = pages.first()
+    const copy = first.locator('.bridge-body-copy')
+    const geometry = await first.evaluate((node) => ({
+      top: scrollY + node.getBoundingClientRect().top,
+      hold: parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')),
+      rows: Number((node as HTMLElement).dataset.rows),
+    }))
+    const inkInRow = (row: number) =>
+      copy.locator('canvas').evaluate((node, row) => {
+        const canvas = node as HTMLCanvasElement
+        const ratio = canvas.height / canvas.getBoundingClientRect().height
+        const lineHeight = parseFloat(getComputedStyle(canvas.parentElement!).lineHeight)
+        const y = Math.floor(row * lineHeight * ratio)
+        const h = Math.min(canvas.height - y, Math.floor(lineHeight * ratio))
+        const data = canvas.getContext('2d')!.getImageData(0, y, canvas.width, h).data
+        let count = 0
+        for (let i = 3; i < data.length; i += 4) if (data[i] > 100) count++
+        return count
+      }, row)
+    await page.evaluate((y) => scrollTo(0, y), geometry.top - 80)
+    await expect.poll(() => inkInRow(0)).toBe(0)
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + (geometry.hold * 0.5) / geometry.rows)
+    await expect(copy).toHaveAttribute('data-copy-cloud', '')
+    await expect.poll(() => inkInRow(0)).toBeGreaterThan(0)
+    expect(await inkInRow(1)).toBe(0)
+    const firstPartial = await inkInRow(0)
+    const before = (await copy.boundingBox())!.y
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + (geometry.hold * 1.5) / geometry.rows)
+    await expect.poll(() => inkInRow(1)).toBeGreaterThan(0)
+    expect(await inkInRow(0)).toBeGreaterThan(firstPartial)
+    if (geometry.rows > 2) expect(await inkInRow(2)).toBe(0)
+    expect((await copy.boundingBox())!.y).toBeCloseTo(before, 0)
+    const fullFirstRow = await inkInRow(0)
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + (geometry.hold * 1.8) / geometry.rows)
+    expect(await inkInRow(0)).toBe(fullFirstRow)
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + (geometry.hold * 0.5) / geometry.rows)
+    await expect.poll(() => inkInRow(1)).toBe(0)
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold - 1)
+    await expect.poll(() => inkInRow(0)).toBeGreaterThan(0)
+    expect((await copy.boundingBox())!.y).toBeCloseTo(before, 0)
+    await pages
+      .nth(1)
+      .evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top + 48))
+    const outgoing = (await copy.boundingBox())!
+    const incoming = (await pages.nth(1).locator('.bridge-body-copy').boundingBox())!
+    expect(outgoing.y + outgoing.height).toBeLessThan(incoming.y)
+    await expect(pages.nth(1).locator('.bridge-page-stage')).toBeVisible()
+    expect(
+      await page
+        .locator('.bridge-body-copy')
+        .evaluateAll((nodes) =>
+          nodes.every((n) => n.getBoundingClientRect().height <= innerHeight * 0.65),
+        ),
+    ).toBe(true)
+    await page
+      .locator('.bridge-page[data-final]')
+      .evaluate((node) =>
+        scrollTo(
+          0,
+          scrollY +
+            node.getBoundingClientRect().top +
+            parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')),
+        ),
+      )
+    await expect
+      .poll(() =>
+        page.locator('.bridge-page[data-final] canvas').evaluate((node) => {
+          const canvas = node as HTMLCanvasElement
+          const pixels = canvas
+            .getContext('2d')!
+            .getImageData(0, 0, canvas.width, canvas.height).data
+          return pixels.some((alpha, index) => index % 4 === 3 && alpha > 100)
+        }),
+      )
+      .toBe(true)
+    await page.setViewportSize({ width: width === 390 ? 1440 : 390, height: 900 })
+    await expect.poll(() => page.locator('.bridge-paragraph').allTextContents()).toEqual(source)
+    // Source text is unchanged during resize; wait for the deferred glyph-mask
+    // rebuild before checking the settled document width.
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth > innerWidth))
+      .toBe(false)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(page.locator('.bridge-page')).toHaveCount(0)
+    await expect(page.locator('.bridge-body-copy')).toHaveCount(2)
+    expect(await page.locator('.bridge-body-copy').allTextContents()).toEqual(source)
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect(page.locator('.bridge-page').first()).toBeAttached()
+    await page.evaluate(() => {
+      ;(window as any).oldBridgeBody = document.querySelector('.bridge-body')
+    })
+    await page.getByRole('link', { name: 'Return to fixture' }).click()
+    await expect(page.locator('.temple-artwork')).toHaveCount(0)
+    const restored = await page.evaluate(() => {
+      const body = (window as any).oldBridgeBody as HTMLElement
+      return {
+        text: [...body.querySelectorAll('.bridge-body-copy')].map((p) => p.textContent),
+        masks: body.querySelectorAll('canvas, [data-copy-cloud]').length,
+      }
+    })
+    expect(restored).toEqual({ text: source, masks: 0 })
+  })
+}
+
+test('Temple bridge remains readable without JavaScript', async ({ browser }) => {
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 900 },
+  })
+  const page = await context.newPage()
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.bridge-body-copy')).toHaveCount(2)
+  await expect(page.locator('.bridge-body-copy').first()).toBeVisible()
+  await expect(page.locator('.bridge-body-copy').first()).not.toHaveCSS('font-size', '0px')
+  await expect(page.locator('.bridge-body-copy canvas')).toHaveCount(0)
+  await expect(page.locator('.bridge-body strong').first()).toHaveText('several bold words')
+  await expect(page.locator('.bridge-body em').first()).toHaveText('some italic words')
+  await context.close()
+})
+
+test('Temple bridge limits the moving front to seven glyphs', () => {
+  for (const count of [1, 6, 7, 8, 31, 53, 100]) {
+    for (let step = 0; step <= (count + 6) * 10; step++) {
+      const scales = Array.from({ length: count }, (_, index) => bridgeGlyphScale(step / 10, index))
+      expect(scales.filter((scale) => scale > 0 && scale < 1).length).toBeLessThanOrEqual(7)
+      const firstChanging = scales.findIndex((scale) => scale < 1)
+      if (firstChanging >= 0)
+        expect(scales.slice(firstChanging + 7).every((scale) => scale === 0)).toBe(true)
+    }
+    expect(bridgeGlyphScale(count + 6, count - 1)).toBe(1)
+  }
+})
+
+for (const colorScheme of ['dark', 'light'] as const) {
+  test(`Temple bridge uses solid ink over cloud backgrounds in ${colorScheme} mode`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const first = page.locator('.bridge-page').first()
+    await first.evaluate((node) =>
+      scrollTo(
+        0,
+        scrollY +
+          node.getBoundingClientRect().top +
+          parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')) * 0.9,
+      ),
+    )
+    const blueLead = () =>
+      first.locator('canvas').evaluate((node) => {
+        const canvas = node as HTMLCanvasElement
+        const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+        let sum = 0,
+          count = 0
+        for (let i = 0; i < pixels.length; i += 4)
+          if (pixels[i + 3] > 230) {
+            sum += pixels[i + 2] - pixels[i]
+            count++
+          }
+        return count ? sum / count : 0
+      })
+    await expect.poll(blueLead).toBeGreaterThan(10)
+    const solidColors = await first.locator('canvas').evaluate((node) => {
+      const canvas = node as HTMLCanvasElement
+      const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+      const colors = new Set<string>()
+      for (let i = 0; i < pixels.length; i += 4)
+        if (pixels[i + 3] === 255) colors.add(`${pixels[i]},${pixels[i + 1]},${pixels[i + 2]}`)
+      return colors.size
+    })
+    expect(solidColors).toBe(1)
+    const cloudColors = await page.locator('.bridge-cloud-canvas').evaluate((node) => {
+      const canvas = node as HTMLCanvasElement
+      const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+      const colors = new Set<string>()
+      for (let i = 0; i < pixels.length; i += 4)
+        colors.add(`${pixels[i]},${pixels[i + 1]},${pixels[i + 2]}`)
+      return colors.size
+    })
+    expect(cloudColors).toBeGreaterThan(5)
+    const coolingGround = await page
+      .locator('.temple-bridge-ground')
+      .evaluate((node) => getComputedStyle(node, '::before').backgroundColor)
+    expect(coolingGround).toBe(colorScheme === 'light' ? 'rgb(231, 237, 242)' : 'rgba(0, 0, 0, 0)')
+    if (colorScheme === 'light') {
+      await expect
+        .poll(() =>
+          page
+            .locator('.temple-bridge-ground')
+            .evaluate((node) => getComputedStyle(node, '::before').opacity),
+        )
+        .toBe('1')
+      const darkEnough = await page.locator('.bridge-cloud-canvas').evaluate((node) => {
+        const c = node as HTMLCanvasElement
+        const pixels = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (
+            pixels[i + 3] > 10 &&
+            (pixels[i] >= 231 || pixels[i + 1] >= 237 || pixels[i + 2] >= 242)
+          )
+            return false
+        }
+        return true
+      })
+      expect(darkEnough).toBe(true)
+    }
+
+    await expect
+      .poll(() =>
+        page.locator('.bridge-cloud-canvas').evaluate((node) => {
+          const c = node as HTMLCanvasElement
+          return c
+            .getContext('2d')!
+            .getImageData(0, 0, c.width, c.height)
+            .data.reduce(
+              (peak, value, index) => (index % 4 === 3 ? Math.max(peak, value) : peak),
+              0,
+            )
+        }),
+      )
+      .toBeGreaterThan(30)
+    await expect(page.locator('.temple-bridge-ground')).toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
+    )
+  })
+}
+
+test('Temple bridge selection preserves the unfinished reveal', async ({ page }) => {
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const copy = page.locator('.bridge-page').first().locator('.bridge-body-copy')
+  await copy.evaluate((node) => {
+    const track = node.closest('.bridge-page') as HTMLElement
+    scrollTo(
+      0,
+      scrollY +
+        track.getBoundingClientRect().top +
+        parseFloat(track.style.getPropertyValue('--bridge-hold')) * 0.1,
+    )
+  })
+  await expect(copy).toHaveAttribute('data-copy-cloud', '')
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  )
+  const inkCount = () =>
+    copy.locator('canvas').evaluate((node) => {
+      const canvas = node as HTMLCanvasElement
+      return canvas
+        .getContext('2d')!
+        .getImageData(0, 0, canvas.width, canvas.height)
+        .data.reduce((sum, value, index) => sum + (index % 4 === 3 ? value : 0), 0)
+    })
+  const beforeSelection = await inkCount()
+  expect(beforeSelection).toBeGreaterThan(0)
+  const selection = await copy.evaluate((node) => {
+    const range = document.createRange()
+    range.setStart(node.firstChild!, 0)
+    range.setEnd(node.firstChild!, 12)
+    const r = range.getBoundingClientRect()
+    return { x: r.x, y: r.y + r.height / 2, end: r.right, text: range.toString() }
+  })
+  await page.mouse.move(selection.x, selection.y)
+  await page.mouse.down()
+  await page.mouse.move(selection.end, selection.y, { steps: 12 })
+  await page.mouse.up()
+  expect(await page.evaluate(() => getSelection()?.toString())).toBe(selection.text)
+  await expect(copy.locator('canvas')).toBeVisible()
+  await expect(copy).not.toHaveAttribute('data-copy-selected', '')
+  expect(await copy.evaluate((node) => getComputedStyle(node, '::selection').color)).toBe(
+    'rgba(0, 0, 0, 0)',
+  )
+  expect(await inkCount()).toBe(beforeSelection)
+  // Even selecting the entire source must not expose unfinished letters.
+  await copy.evaluate((node) => {
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    getSelection()!.removeAllRanges()
+    getSelection()!.addRange(range)
+  })
+  expect(await inkCount()).toBe(beforeSelection)
+  for (const tag of ['strong', 'em']) {
+    expect(
+      await copy
+        .locator(tag)
+        .first()
+        .evaluate((node) => getComputedStyle(node, '::selection').color),
+    ).toBe('rgba(0, 0, 0, 0)')
+  }
+  await page.evaluate(() => getSelection()?.removeAllRanges())
+  await expect(copy.locator('canvas')).toBeVisible()
+})
+
+test('Temple bridge vapor forms locally without moving or scaling its canvas', async ({ page }) => {
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const track = page.locator('.bridge-page').first()
+  const geometry = await track.evaluate((node) => ({
+    top: scrollY + node.getBoundingClientRect().top,
+    hold: parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')),
+  }))
+  const cloud = page.locator('.bridge-cloud-canvas')
+  const field = () =>
+    cloud.evaluate((node) => {
+      const canvas = node as HTMLCanvasElement
+      const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+      let mass = 0,
+        weightedY = 0
+      for (let y = 0; y < canvas.height; y++)
+        for (let x = 0; x < canvas.width; x++) {
+          const a = pixels[(y * canvas.width + x) * 4 + 3]
+          mass += a
+          weightedY += ((a * y) / canvas.height) * innerHeight
+        }
+      return { mass, y: mass ? weightedY / mass : 0 }
+    })
+  await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold * 0.05)
+  await expect.poll(async () => (await field()).mass).toBeGreaterThan(10000)
+  const initial = await field()
+  const rect = await cloud.boundingBox()
+  await expect(cloud).toHaveCSS('transform', 'none')
+  await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold)
+  await expect.poll(async () => (await field()).mass).toBeGreaterThan(initial.mass * 1.3)
+  // Sample the simulation over time: an irregular field need not have the
+  // same centroid as its source text, but it should settle before departure.
+  await expect
+    .poll(async () => {
+      const earlier = await field()
+      await page.waitForTimeout(200)
+      const later = await field()
+      return Math.abs(later.mass - earlier.mass) / Math.max(1, earlier.mass)
+    })
+    .toBeLessThan(0.05)
+  const before = await field()
+  await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold + 120)
+  await expect.poll(async () => (await field()).y).toBeLessThan(before.y - 35)
+  expect(await cloud.boundingBox()).toEqual(rect)
+  await expect(cloud).toHaveCSS('transform', 'none')
+})
+
+test('Temple bridge vapor reaches the viewport edge as text leaves', async ({ page }) => {
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const first = page.locator('.bridge-page').first()
+  const geometry = await first.evaluate((node) => ({
+    top: scrollY + node.getBoundingClientRect().top,
+    hold: parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')),
+  }))
+  await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold)
+  const copyTop = (await first.locator('.bridge-body-copy').boundingBox())!.y
+  await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold + copyTop + 80)
+  await expect
+    .poll(() =>
+      page.locator('.bridge-cloud-canvas').evaluate((node) => {
+        const canvas = node as HTMLCanvasElement
+        const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, 1).data
+        let alpha = 0
+        for (let i = 3; i < pixels.length; i += 4) alpha += pixels[i]
+        return alpha
+      }),
+    )
+    .toBeGreaterThan(50)
+})
+
+test('Temple bridge glimmer dust appears with the vapor, away from the opener', async ({
+  page,
+}) => {
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const dust = page.locator('.bridge-dust-canvas')
+  const amount = () =>
+    dust.evaluate((node) => {
+      const c = node as HTMLCanvasElement
+      if (!c.width || !c.height) return 0
+      return c
+        .getContext('2d')!
+        .getImageData(0, 0, c.width, c.height)
+        .data.reduce((sum, value, index) => sum + (index % 4 === 3 ? value : 0), 0)
+    })
+  expect(await amount()).toBe(0)
+  await page
+    .locator('.bridge-page')
+    .first()
+    .evaluate((node) =>
+      scrollTo(
+        0,
+        scrollY +
+          node.getBoundingClientRect().top +
+          parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')),
+      ),
+    )
+  await expect.poll(amount).toBeGreaterThan(10)
+  await expect(dust).toHaveAttribute('aria-hidden', 'true')
+  await expect(dust).toHaveCSS('pointer-events', 'none')
+  await page.getByRole('link', { name: 'Return to fixture' }).click()
+  await expect(page.locator('.bridge-dust-canvas')).toHaveCount(0)
+})
+
+test('Temple light-mode glimmers have visible contrast against the cloud', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await page
+    .locator('.bridge-page')
+    .first()
+    .evaluate((node) =>
+      scrollTo(
+        0,
+        scrollY +
+          node.getBoundingClientRect().top +
+          parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')),
+      ),
+    )
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const dust = document.querySelector<HTMLCanvasElement>('.bridge-dust-canvas')!
+        const cloud = document.querySelector<HTMLCanvasElement>('.bridge-cloud-canvas')!
+        if (!dust.width || !cloud.width) return 0
+        const d = dust.getContext('2d')!.getImageData(0, 0, dust.width, dust.height).data
+        const c = cloud.getContext('2d')!.getImageData(0, 0, cloud.width, cloud.height).data
+        let visible = 0
+        for (let y = 0; y < dust.height; y++)
+          for (let x = 0; x < dust.width; x++) {
+            const i = (y * dust.width + x) * 4,
+              a = d[i + 3] / 255
+            if (a < 0.02) continue
+            const j =
+              (Math.floor((y / dust.height) * cloud.height) * cloud.width +
+                Math.floor((x / dust.width) * cloud.width)) *
+              4
+            const ca = c[j + 3] / 255
+            const ground = [231, 237, 242],
+              weight = [0.2126, 0.7152, 0.0722]
+            let contrast = 0
+            for (let k = 0; k < 3; k++)
+              contrast += (d[i + k] - (c[j + k] * ca + ground[k] * (1 - ca))) * a * weight[k]
+            if (contrast > 12) visible++
+          }
+        return visible
+      }),
+    )
+    .toBeGreaterThan(12)
+})
+
+test('Temple bridge inline emphasis preserves literal text and nested formatting', () => {
+  const runs = parseBridgeText('Plain **bold** and *italic* and ***both***.')
+  expect(runs.map((run) => run.text).join('')).toBe('Plain bold and italic and both.')
+  expect(runs.find((run) => run.text === 'bold')).toMatchObject({ bold: true, italic: false })
+  expect(runs.find((run) => run.text === 'italic')).toMatchObject({ bold: false, italic: true })
+  expect(runs.find((run) => run.text === 'both')).toMatchObject({ bold: true, italic: true })
+  expect(parseBridgeText('**bold *and italic* bold**')).toEqual([
+    { text: 'bold ', bold: true, italic: false },
+    { text: 'and italic', bold: true, italic: true },
+    { text: ' bold', bold: true, italic: false },
+  ])
+  expect(parseBridgeText('unfinished **stars')).toEqual([
+    { text: 'unfinished **stars', bold: false, italic: false },
+  ])
+  expect(parseBridgeText(String.raw`escaped \*stars\*`)).toEqual([
+    { text: 'escaped *stars*', bold: false, italic: false },
+  ])
+  expect(parseBridgeText('<strong>literal HTML</strong>')[0].text).toBe(
+    '<strong>literal HTML</strong>',
+  )
+})
+
+for (const width of [390, 1440])
+  test(`Temple bridge preserves bold and italic across pages at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const body = page.locator('.bridge-body')
+    await expect(body.getByText('several bold words', { exact: true })).toHaveCSS(
+      'font-weight',
+      '700',
+    )
+    await expect(body.getByText('some italic words', { exact: true })).toHaveCSS(
+      'font-style',
+      'italic',
+    )
+    expect(await body.textContent()).not.toContain('*')
+    const repeated = body.locator('.bridge-paragraph').nth(1)
+    const pages = repeated.locator('.bridge-page')
+    expect(await pages.count()).toBeGreaterThan(1)
+    for (let i = 0; i < (await pages.count()); i++)
+      expect(await pages.nth(i).locator('strong').count()).toBeGreaterThan(0)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(body.locator('.bridge-page')).toHaveCount(0)
+    await expect(body.getByText('several bold words', { exact: true })).toHaveCSS(
+      'font-weight',
+      '700',
+    )
+    await expect(body.getByText('some italic words', { exact: true })).toHaveCSS(
+      'font-style',
+      'italic',
+    )
+  })
+
+test('Temple bridge canvas paints the native bold and italic fonts', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const first = page.locator('.bridge-page').first()
+  await first.evaluate((node) =>
+    scrollTo(
+      0,
+      scrollY +
+        node.getBoundingClientRect().top +
+        parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')),
+    ),
+  )
+  for (const tag of ['strong', 'em']) {
+    // This check compares one complete native run; pagination and wrapped
+    // emphasis are exercised separately. Keep its fixture unwrapped.
+    expect(
+      await first
+        .locator(tag)
+        .first()
+        .evaluate((node) => node.getClientRects().length),
+    ).toBe(1)
+    await expect
+      .poll(() =>
+        first
+          .locator(tag)
+          .first()
+          .evaluate((node) => {
+            const parent = node.closest('.bridge-body-copy') as HTMLElement
+            const actual = parent.querySelector('canvas')!
+            const expected = document.createElement('canvas')
+            expected.width = actual.width
+            expected.height = actual.height
+            const context = expected.getContext('2d')!
+            const p = parent.getBoundingClientRect(),
+              r = node.getBoundingClientRect(),
+              style = getComputedStyle(node)
+            const ratioX = actual.width / p.width,
+              ratioY = actual.height / p.height
+            context.setTransform(ratioX, 0, 0, ratioY, 0, 0)
+            context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+            const range = document.createRange()
+            range.selectNodeContents(node)
+            const textRect = range.getBoundingClientRect()
+            context.fillText(
+              node.textContent!,
+              r.left - p.left,
+              textRect.top - p.top + context.measureText('Hg').fontBoundingBoxAscent,
+            )
+            const x = Math.floor((r.left - p.left) * ratioX),
+              y = Math.floor((r.top - p.top) * ratioY)
+            const w = Math.min(actual.width - x, Math.ceil(r.width * ratioX)),
+              h = Math.min(actual.height - y, Math.ceil(r.height * ratioY))
+            const a = actual.getContext('2d')!.getImageData(x, y, w, h).data
+            const b = context.getImageData(x, y, w, h).data
+            let difference = 0,
+              ink = 0
+            for (let i = 3; i < a.length; i += 4) {
+              difference += Math.abs(a[i] - b[i])
+              ink += b[i]
+            }
+            return difference / Math.max(1, ink)
+          }),
+      )
+      .toBeLessThan(0.06)
+  }
+})
+
+for (const width of [390, 1440])
+  test(`Temple bridge final address lingers and fades at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const final = page.locator('.bridge-page[data-final]')
+    const source = final.locator('[data-bridge-linger]')
+    const ghost = page.locator('.bridge-linger')
+    const geometry = await final.evaluate((node) => ({
+      top: scrollY + node.getBoundingClientRect().top,
+      hold: parseFloat((node as HTMLElement).style.getPropertyValue('--bridge-hold')),
+    }))
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold - 1)
+    await expect(ghost).toBeHidden()
+    const rangeRect = (selector: string) =>
+      page.locator(selector).evaluate((node) => {
+        const r = document.createRange()
+        r.selectNodeContents(node)
+        return r.getBoundingClientRect().toJSON()
+      })
+    const before = await rangeRect('.bridge-page[data-final] [data-bridge-linger]')
+    const ink = () =>
+      source.evaluate((node) => {
+        const p = node.closest('.bridge-body-copy')!,
+          c = p.querySelector('canvas')!,
+          r = node.getBoundingClientRect(),
+          pr = p.getBoundingClientRect()
+        const rx = c.width / pr.width,
+          ry = c.height / pr.height
+        const d = c
+          .getContext('2d')!
+          .getImageData(
+            Math.ceil((r.left - pr.left) * rx),
+            Math.ceil((r.top - pr.top) * ry),
+            Math.floor(r.width * rx),
+            Math.floor(r.height * ry),
+          ).data
+        return d.reduce((sum, value, index) => sum + (index % 4 === 3 ? value : 0), 0)
+      })
+    await expect.poll(ink).toBeGreaterThan(100)
+    const originalInk = await ink()
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold + 5)
+    await expect(ghost).toBeVisible()
+    const fixed = await rangeRect('.bridge-linger')
+    expect(fixed.x).toBeCloseTo(before.x, 0)
+    expect(fixed.y).toBeCloseTo(before.y, 0)
+    await expect.poll(ink).toBeLessThan(originalInk * 0.1)
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold + 495)
+    await expect
+      .poll(async () => Number(await ghost.evaluate((node) => getComputedStyle(node).opacity)))
+      .toBeLessThan(0.85)
+    expect(Number(await ghost.evaluate((node) => getComputedStyle(node).opacity))).toBeGreaterThan(
+      0.3,
+    )
+    expect((await rangeRect('.bridge-linger')).y).toBeCloseTo(before.y, 0)
+    expect((await source.boundingBox())!.y).toBeLessThan(before.y - 400)
+    const paused = await ghost.evaluate((node) => getComputedStyle(node).opacity)
+    await page.waitForTimeout(200)
+    expect(await ghost.evaluate((node) => getComputedStyle(node).opacity)).toBe(paused)
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold + 990)
+    await expect(ghost).toBeHidden()
+    await page.evaluate((y) => scrollTo(0, y), geometry.top + geometry.hold - 1)
+    await expect.poll(ink).toBeGreaterThan(originalInk * 0.9)
+    await expect(ghost).toBeHidden()
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(page.locator('.bridge-linger')).toHaveCount(0)
+    await expect(page.locator('.bridge-page')).toHaveCount(0)
+  })

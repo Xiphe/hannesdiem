@@ -1,4 +1,5 @@
 // Canvas study of A's flight: pinned sun, uneven light, fade at viewport edges.
+import { createGlimmerSprite } from './glimmer-sprite.ts'
 import type { Escapes } from './escapes.ts'
 export function createForest(
   image: HTMLImageElement,
@@ -24,16 +25,7 @@ export function createForest(
       size: 0.45 + random() ** 2 * 2.1,
     }
   })
-  const sprite = document.createElement('canvas')
-  sprite.width = sprite.height = 48
-  const brush = sprite.getContext('2d')!
-  const glow = brush.createRadialGradient(24, 24, 0, 24, 24, 24)
-  glow.addColorStop(0, '#fff9df')
-  glow.addColorStop(0.1, '#ffeac6e0')
-  glow.addColorStop(0.3, '#ffd19365')
-  glow.addColorStop(1, '#ffb45b00')
-  brush.fillStyle = glow
-  brush.fillRect(0, 0, 48, 48)
+  const sprite = createGlimmerSprite()
   setGlimmerSprite(sprite)
   signal.addEventListener(
     'abort',
