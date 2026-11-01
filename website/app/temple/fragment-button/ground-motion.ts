@@ -26,6 +26,15 @@ export function createGroundMotion(
     const height = host.querySelector<HTMLElement>('.temple-stage')!.clientHeight
     const distance = Math.max(1, document.documentElement.scrollHeight - innerHeight)
     const origin = scrollY + host.getBoundingClientRect().top
+    const bridge = host.querySelector<HTMLElement>('.bridge-body')
+    const firstReading = bridge?.querySelector<HTMLElement>(
+      '.bridge-page-stage > .bridge-body-copy',
+    )
+    // The body's first page has empty space above its centred reading area.
+    // Its child offset stays stable while the sticky stage itself moves.
+    const bridgeStart = bridge
+      ? scrollY + bridge.getBoundingClientRect().top + (firstReading?.offsetTop ?? 0)
+      : undefined
     const depths = [-0.12, -0.26, -0.42]
     field.style.setProperty('--ground-parallax-pad', `${Math.ceil(distance * 0.42)}px`)
     const holds = refrains.map(({ refrain, refrainStage }) => {
@@ -45,7 +54,14 @@ export function createGroundMotion(
     // No opacity, masks, sideways exits or scroll-time layout writes are needed.
     const bands = depths.map((depth) => {
       const available: GroundBand[] = []
-      const end = host.clientHeight - distance * depth
+      // Keep the bridge introduction textured; stop before the body’s first visible
+      // edge, accounting for parallax and float, rather than hiding placed pieces.
+      const end = Math.min(
+        host.clientHeight - distance * depth,
+        bridgeStart === undefined
+          ? Infinity
+          : (1 - depth) * bridgeStart + depth * innerHeight - origin - 64,
+      )
       // Keep the initial viewport empty; forms emerge below it as the opener
       // leaves. These planes travel slightly faster than the foreground, giving
       // even the short first verse room for large forms and a clear chorus reading area.
@@ -57,7 +73,8 @@ export function createGroundMotion(
           0,
           (1 - depth) * (hold.start + hold.length * 0.35) + hold.top - origin - 64,
         )
-        if (start > cursor) available.push({ start: cursor, end: Math.min(end, start) })
+        if (Math.min(end, start) > cursor)
+          available.push({ start: cursor, end: Math.min(end, start) })
         cursor = Math.max(
           cursor,
           (1 - depth) * (hold.start + hold.length * 0.65) + hold.top + hold.height - origin + 64,

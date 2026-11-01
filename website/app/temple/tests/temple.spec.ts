@@ -212,6 +212,82 @@ for (const width of [390, 1440]) {
   })
 }
 
+for (const width of [390, 1440]) {
+  test(`Temple keeps the bridge body clear of background pieces at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'no-preference' })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const bridge = page.locator('.bridge-body')
+    const top = () =>
+      bridge.evaluate(
+        (node) =>
+          scrollY +
+          node.getBoundingClientRect().top +
+          (node.querySelector<HTMLElement>('.bridge-page-stage > .bridge-body-copy')?.offsetTop ??
+            0),
+      )
+    const pieces = page.locator('.fragment-ground-piece')
+    const clearBridge = () =>
+      pieces.evaluateAll((nodes) => {
+        const bridge = document
+          .querySelector('.bridge-body .bridge-body-copy')!
+          .getBoundingClientRect()
+        return nodes.every((node) => {
+          const box = node.getBoundingClientRect()
+          return (
+            box.bottom <= Math.max(0, bridge.top) ||
+            box.top >= innerHeight ||
+            box.right <= 0 ||
+            box.left >= innerWidth
+          )
+        })
+      })
+    // Introductory typography remains within the textured sculpture.
+    const intro = page.locator('.bridge-copy [data-lettering="cinzel"]')
+    await intro.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 450))
+    await expect
+      .poll(() =>
+        pieces.evaluateAll((nodes) => {
+          const line = document
+            .querySelector('.bridge-copy [data-lettering="cinzel"]')!
+            .getBoundingClientRect()
+          return nodes.some((node) => {
+            const box = node.getBoundingClientRect()
+            return (
+              box.bottom > line.top &&
+              box.top < line.bottom &&
+              box.right > 0 &&
+              box.left < innerWidth
+            )
+          })
+        }),
+      )
+      .toBe(true)
+    const start = await top()
+    for (const y of [start - 675, start - 225, start, start + 900, start + 1800]) {
+      await page.evaluate((y) => scrollTo(0, y), y)
+      await expect.poll(clearBridge).toBe(true)
+    }
+    // The exclusion follows preceding layout changes and reverse seeking.
+    const oldPiece = await pieces.first().elementHandle()
+    await page
+      .locator('.verse-copy')
+      .first()
+      .evaluate((node) => {
+        ;(node as HTMLElement).style.paddingBottom = '300px'
+      })
+    await expect.poll(top).toBeGreaterThan(start + 290)
+    await expect.poll(() => oldPiece!.evaluate((node) => node.isConnected)).toBe(false)
+    for (const y of [await top(), (await top()) - 450]) {
+      await page.evaluate((y) => scrollTo(0, y), y)
+      await expect.poll(clearBridge).toBe(true)
+    }
+  })
+}
+
 test('Temple background drifts without animation frames and rests with reduced motion', async ({
   page,
 }) => {
