@@ -636,6 +636,12 @@ html[data-layout='temple'] body {
   }
 }
 
+@media (max-width: 900px) {
+  .first-pair:has(.refrain-phrase[data-face='unbounded']:last-of-type [data-line]) > .verse-coda {
+    margin-top: calc(-1 * var(--refrain-tail-gap, 0px));
+  }
+}
+
 .first-pair:has(> .repetition-stack) > .verse-coda {
   margin-top: calc(-1 * var(--refrain-tail-gap, 0px) - 0.5rem);
 }
