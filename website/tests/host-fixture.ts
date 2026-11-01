@@ -3,6 +3,7 @@ import {
   multipleTempleContent,
   fourPhraseTempleContent,
   riseTempleContent,
+  actionlessTempleContent,
 } from '../app/temple/tests/fixture.ts'
 import assets from '../../.generated/assets.json' with { type: 'json' }
 import { CMX_DOCUMENT_SCHEMA, type CmxDocument } from '@cmx-tools/contracts'
@@ -47,6 +48,10 @@ export const documents: PublishedDocuments = {
   'temple-multiple': {
     ...structuredClone(page),
     content: { ...multipleTempleContent, metadata: { kind: 'temple' } },
+  },
+  'temple-without-action': {
+    ...structuredClone(page),
+    content: { ...actionlessTempleContent, metadata: { kind: 'temple' } },
   },
   'temple-four-phrases': {
     ...structuredClone(page),

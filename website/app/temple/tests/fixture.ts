@@ -36,6 +36,7 @@ const firstPair = {
     { text: 'Synthetic coda', face: 'cinzel' },
     { text: 'The native document continues after the bounded hold.' },
   ],
+  action: { label: 'Explore fixture', href: '/fixture', seed: 'fixture-action' },
 } satisfies PoemPair
 
 const secondPair = {
@@ -91,17 +92,19 @@ function fixtureContent(
             ...(bridgeBody ? { bridgeBody } : {}),
             ...(finalVerse ? { finalVerse } : {}),
           },
-          children: finalVerse?.refrain
-            ? undefined
-            : [
-                { type: 'element', tag: 'p', children: ['Static verse fixture'] },
-                {
-                  type: 'element',
-                  tag: 'a',
-                  props: { href: '/fixture' },
-                  children: ['Return to fixture'],
-                },
-              ],
+          ...(finalVerse?.refrain
+            ? {}
+            : {
+                children: [
+                  { type: 'element', tag: 'p', children: ['Static verse fixture'] },
+                  {
+                    type: 'element',
+                    tag: 'a',
+                    props: { href: '/fixture' },
+                    children: ['Return to fixture'],
+                  },
+                ],
+              }),
         },
       ],
     },
@@ -125,6 +128,8 @@ export const riseTempleContent = fixtureContent([firstPair], undefined, undefine
     { text: 'The closing phrase', display: 'The closing phrase', face: 'cinzel' },
   ],
 })
+const { action: _action, ...actionlessPair } = firstPair
+export const actionlessTempleContent = fixtureContent([actionlessPair, secondPair])
 
 const thirdPair = {
   paragraphs: [

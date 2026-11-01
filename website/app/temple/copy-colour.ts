@@ -3,9 +3,7 @@
 import { noise as cloudNoise } from './atmosphere.ts'
 import { createBridgeReveal } from './bridge-reveal.ts'
 import { defaults } from './defaults.ts'
-const warmInk = [142, 68, 28]
-const coolInk = [36, 89, 137]
-const darkRange = [50, -8, -65]
+import { copyInkChannel } from './copy-palette.ts'
 const bridgeDark = { base: [192, 205, 226], purple: [211, 183, 224], blue: [156, 198, 238] }
 const bridgeLight = { base: [26, 33, 54], purple: [88, 44, 107], blue: [31, 79, 133] }
 export function colourCopy(
@@ -188,22 +186,12 @@ export function colourCopy(
         const temperature = Math.max(-1, Math.min(1, (warm - cool) * 1.7 + detail * 0.2)) * variance
         // Near-black ink has no room for the old +/- shifts: channels clipped
         // to zero. Mix towards bounded coloured inks on paper instead.
-        const tint = temperature >= 0 ? warmInk : coolInk
         const amount = Math.min(1, Math.abs(temperature) * 2.4)
         const bridgeTint = temperature >= 0 ? bridgePalette.purple : bridgePalette.blue
         const bridgeBlend = amount * (lightInk ? 0.75 : 1)
         const at = (y * w + x) * 4
         for (let c = 0; c < 3; c++) {
-          const original = Math.max(0, Math.min(255, base[c] + temperature * darkRange[c]))
-          frame.data[at + c] = Math.max(
-            0,
-            Math.min(
-              255,
-              Math.round(
-                lightInk ? (original + base[c] + (tint[c] - base[c]) * amount) / 2 : original,
-              ),
-            ),
-          )
+          frame.data[at + c] = copyInkChannel(base[c], temperature, c, lightInk)
           bridgeFrame.data[at + c] = Math.round(
             bridgePalette.base[c] + (bridgeTint[c] - bridgePalette.base[c]) * bridgeBlend,
           )

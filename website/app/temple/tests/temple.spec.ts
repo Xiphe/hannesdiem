@@ -1,6 +1,25 @@
 import { parseBridgeText } from '../bridge-text.tsx'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { bridgeGlyphScale } from '../bridge-reveal.ts'
+
+const iphoneSafari = {
+  userAgent:
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1',
+  platform: 'iPhone',
+  maxTouchPoints: 5,
+}
+const desktopSafari = {
+  userAgent:
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15',
+  platform: 'MacIntel',
+  maxTouchPoints: 0,
+}
+async function identifyBrowser(page: Page, browser: typeof iphoneSafari) {
+  await page.addInitScript((browser) => {
+    for (const [key, value] of Object.entries(browser))
+      Object.defineProperty(navigator, key, { value, configurable: true })
+  }, browser)
+}
 
 test('Temple leaves room after the opening and scrolls its title independently of repainting', async ({
   page,
@@ -21,6 +40,172 @@ test('Temple leaves room after the opening and scrolls its title independently o
     .poll(async () => (await page.locator('.temple-stage > canvas').boundingBox())!.y)
     .toBeLessThan(-300)
 })
+
+test('Temple paints complete entering chorus ink across viewport and toolbar boundaries', async ({
+  page,
+}) => {
+  await identifyBrowser(page, iphoneSafari)
+  const smallHeight = 700
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  // Desktop WebKit has no retractable toolbar. Preserve the small viewport's
+  // CSS geometry while exposing a taller visible viewport, as Safari does.
+  await page.route('**/templeStyle-*.css', async (route) => {
+    const response = await route.fetch()
+    const css = (await response.text()).replace(
+      /([\d.]+)svh\b/g,
+      (_, value) => `${(Number(value) * smallHeight) / 100}px`,
+    )
+    await route.fulfill({ response, body: css })
+  })
+  // The ordinary fixture uses a transparent logo. An opaque synthetic material
+  // lets the glyph mask independently tell us which ink should be painted.
+  await page.route('**/mark-*.svg', (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640"><rect width="640" height="640" fill="#5874a8"/></svg>',
+    }),
+  )
+  await page.addInitScript(() => {
+    const masks = new Map<HTMLCanvasElement, HTMLCanvasElement>()
+    ;(window as any).chorusMasks = masks
+    const draw = CanvasRenderingContext2D.prototype.drawImage
+    CanvasRenderingContext2D.prototype.drawImage = function (...args: any[]) {
+      if (
+        this.canvas.matches('.refrain-canvas') &&
+        this.globalCompositeOperation === 'destination-in'
+      ) {
+        masks.set(this.canvas, args[0])
+      }
+      return (draw as any).apply(this, args)
+    }
+  })
+  await page.goto('/temple-of-sound')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await expect(page.locator('.temple-stage')).toHaveCSS('height', `${smallHeight}px`)
+  for (const canvas of await page.locator('.refrain-canvas').all()) {
+    // Cover both first entry entirely below svh and a phrase straddling its edge.
+    for (const straddling of [false, true]) {
+      await canvas.evaluate(
+        (node, { height, straddling }) => {
+          const rect = node.getBoundingClientRect()
+          const top = straddling ? height - rect.height / 2 : height + 8
+          scrollTo(0, scrollY + rect.top - top)
+        },
+        { height: smallHeight, straddling },
+      )
+      const coverage = () =>
+        canvas.evaluate((node) => {
+          const canvas = node as HTMLCanvasElement
+          const mask = (window as any).chorusMasks.get(canvas) as HTMLCanvasElement | undefined
+          if (!mask) return { ink: 0, missing: 1 }
+          const source = mask.getContext('2d')!.getImageData(0, 0, mask.width, mask.height).data
+          const output = canvas
+            .getContext('2d')!
+            .getImageData(0, 0, canvas.width, canvas.height).data
+          let ink = 0,
+            missing = 0
+          // Safari can show page content behind its floating controls, beyond
+          // the measured viewport. The whole glyph mask must contain material.
+          for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+              const at = (y * canvas.width + x) * 4 + 3
+              if (source[at] < 240) continue
+              ink++
+              if (output[at] < source[at] * 0.9) missing++
+            }
+          }
+          return { ink, missing: ink ? missing / ink : 1 }
+        })
+      await expect.poll(async () => (await coverage()).ink).toBeGreaterThan(100)
+      await expect.poll(async () => (await coverage()).missing).toBeLessThan(0.01)
+    }
+  }
+})
+
+for (const width of [390, 440]) {
+  test(`Temple enters in document flow and keeps its native chorus hold at ${width}px`, async ({
+    page,
+  }) => {
+    await identifyBrowser(page, iphoneSafari)
+    await page.setViewportSize({ width, height: 956 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.addInitScript(() => {
+      const raf = window.requestAnimationFrame.bind(window)
+      window.requestAnimationFrame = (callback) =>
+        raf((time) => {
+          if (!(window as any).templeFramesPaused) callback(time)
+        })
+    })
+    await page.goto('/temple-of-sound')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const chorus = page.locator('.refrain-composition')
+    const stage = chorus.locator('.refrain-stage')
+    const enter = () =>
+      chorus.evaluate((node) =>
+        scrollTo(0, scrollY + node.getBoundingClientRect().top - (innerHeight - 60)),
+      )
+    const approach = () =>
+      chorus.evaluate((node) => {
+        const stage = node.querySelector<HTMLElement>('.refrain-stage')!
+        const lock =
+          (document.querySelector('.temple-stage')!.clientHeight - stage.offsetHeight) / 2
+        scrollTo(0, scrollY + node.getBoundingClientRect().top - (lock + 20))
+        return lock
+      })
+    // This verifies the workaround's geometry. Desktop WebKit has no Safari UI
+    // and cannot reproduce its clipping of sticky content behind the toolbar.
+    await enter()
+    await expect(stage).toHaveCSS('position', 'relative')
+    await approach()
+    await expect(stage).toHaveCSS('position', 'sticky')
+    // Returning to the toolbar area restores document flow without a jump.
+    await enter()
+    await expect(stage).toHaveCSS('position', 'relative')
+    await expect
+      .poll(async () => Math.abs((await stage.boundingBox())!.y - (956 - 60)))
+      .toBeLessThan(1.1)
+    const lock = await approach()
+    await expect(stage).toHaveCSS('position', 'sticky')
+    await expect
+      .poll(async () => Math.abs((await stage.boundingBox())!.y - (lock + 20)))
+      .toBeLessThan(1.1)
+    // Sticky is already armed before centre. Native scrolling must lock and
+    // hold it even when enhancement frames cannot run.
+    await page.evaluate(() => {
+      ;(window as any).templeFramesPaused = true
+      scrollBy(0, 40)
+    })
+    await expect.poll(async () => Math.abs((await stage.boundingBox())!.y - lock)).toBeLessThan(1.1)
+    const held = (await stage.boundingBox())!.y
+    await page.evaluate(() => scrollBy(0, 80))
+    await expect.poll(async () => (await stage.boundingBox())!.y).toBeCloseTo(held, 1)
+  })
+}
+
+for (const [name, browser, workaround] of [
+  ['desktop Safari', desktopSafari, false],
+  ['desktop-mode iPad Safari', { ...desktopSafari, maxTouchPoints: 5 }, true],
+  ['iOS Chrome', { ...iphoneSafari, userAgent: iphoneSafari.userAgent + ' CriOS/140.0' }, false],
+] as const) {
+  test(`Temple scopes the toolbar workaround for ${name}`, async ({ page }) => {
+    await identifyBrowser(page, browser)
+    await page.setViewportSize({ width: 440, height: 956 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/temple-of-sound')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const chorus = page.locator('.refrain-composition')
+    await chorus.evaluate((node) =>
+      scrollTo(0, scrollY + node.getBoundingClientRect().top - (innerHeight - 60)),
+    )
+    await expect(chorus.locator('.refrain-stage')).toHaveCSS(
+      'position',
+      workaround ? 'relative' : 'sticky',
+    )
+    if (workaround) await expect(chorus).toHaveAttribute('data-safari-toolbar', '')
+    else await expect(chorus).not.toHaveAttribute('data-safari-toolbar')
+  })
+}
 
 test('Temple paints the chorus in its native scrolling canvas', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -45,6 +230,388 @@ test('Temple paints the chorus in its native scrolling canvas', async ({ page })
     scrollBy(0, 40)
   })
   await expect.poll(async () => (await canvas.boundingBox())!.y).toBeCloseTo(before - 40, 0)
+})
+
+for (const width of [390, 1440]) {
+  test(`Temple scrolls a spatial sculpture around dynamic chorus gaps at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'no-preference' })
+    await page.goto('/temple-multiple')
+    const ground = page.locator('.fragment-ground')
+    const planes = ground.locator('.fragment-ground-plane')
+    const pieces = ground.locator('.fragment-ground-piece')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await expect(planes).toHaveCount(3)
+    await expect(pieces.first()).toBeAttached()
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          let frames = 4
+          function settle() {
+            if (--frames === 0) resolve()
+            else requestAnimationFrame(settle)
+          }
+          requestAnimationFrame(settle)
+        }),
+    )
+    // Freeze only ambient float so scroll geometry can be compared precisely.
+    // Native scroll motion must keep working without enhancement frames.
+    await planes.evaluateAll((nodes) => {
+      for (const node of nodes)
+        for (const animation of node.getAnimations())
+          if (animation instanceof CSSAnimation) animation.pause()
+      window.requestAnimationFrame = () => 0
+    })
+    const ranges = () =>
+      page.locator('.refrain-composition').evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const stage = node.querySelector<HTMLElement>('.refrain-stage')!
+          return {
+            start:
+              scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top),
+            hold: node.getBoundingClientRect().height - stage.offsetHeight,
+            top: parseFloat(getComputedStyle(stage).top),
+            bottom: parseFloat(getComputedStyle(stage).top) + stage.offsetHeight,
+          }
+        }),
+      )
+    const seek = async (y: number) => {
+      y = Math.round(y)
+      await page.evaluate((value) => scrollTo(0, value), y)
+      await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(y, 0)
+      // WebKit samples native timelines after scrollY has already updated.
+      await expect
+        .poll(() =>
+          planes
+            .first()
+            .evaluate((node) => parseFloat(getComputedStyle(node).translate.split(' ').at(-1)!)),
+        )
+        .toBeCloseTo(-y * 0.12, 0)
+    }
+    const clear = () =>
+      pieces.evaluateAll((nodes) =>
+        nodes.every((node) => {
+          const box = node.getBoundingClientRect()
+          return (
+            box.bottom <= 0 || box.top >= innerHeight || box.right <= 0 || box.left >= innerWidth
+          )
+        }),
+      )
+    const positions = () =>
+      pieces.evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const box = node.getBoundingClientRect()
+          return { x: box.x, y: box.y, layer: Number(node.parentElement!.dataset.layer) }
+        }),
+      )
+    await seek(0)
+    await expect.poll(clear).toBe(true)
+    if (width < 1200) {
+      // Narrow screens retain discrete forms rather than a full-width slab.
+      expect(
+        await pieces.evaluateAll((nodes) =>
+          nodes.every((node) => node.getBoundingClientRect().width <= innerWidth * 1.5 + 1),
+        ),
+      ).toBe(true)
+    }
+    const scenes = await ranges()
+    const verse = Math.round((900 * 0.3 + scenes[0].start) / 2)
+    await seek(verse)
+    await expect.poll(clear).toBe(false)
+    const before = await positions()
+    await ground.evaluate((node) => {
+      ;(window as any).groundMutations = 0
+      new MutationObserver((records) => {
+        ;(window as any).groundMutations += records.length
+      }).observe(node, { attributes: true, subtree: true })
+    })
+    await seek(verse + 100)
+    const after = await positions()
+    for (const [index, piece] of after.entries()) {
+      expect(piece.x).toBeCloseTo(before[index].x, 1)
+      expect(piece.y - before[index].y).toBeCloseTo(-100 * (1 + [0.12, 0.26, 0.42][piece.layer]), 0)
+    }
+    expect(
+      await pieces.evaluateAll((nodes) =>
+        nodes.every(
+          (node) => node.getAnimations().length === 0 && getComputedStyle(node).opacity === '1',
+        ),
+      ),
+    ).toBe(true)
+    const chorusClear = (scene: { top: number; bottom: number }) =>
+      pieces.evaluateAll(
+        (nodes, area) =>
+          nodes.every((node) => {
+            const box = node.getBoundingClientRect()
+            return (
+              box.bottom <= area.top ||
+              box.top >= area.bottom ||
+              box.right <= 0 ||
+              box.left >= innerWidth
+            )
+          }),
+        scene,
+      )
+    // Only the chorus's actual reading area is reserved, leaving pieces behind
+    // neighbouring verse lines even when both scenes share the viewport.
+    // Only the central reading interval is clear; pieces can reach into
+    // chorus arrival/departure. Holes are spatial, without fades or exits.
+    for (const scene of scenes) {
+      for (const fraction of [0.35, 0.5, 0.65]) {
+        await seek(scene.start + scene.hold * fraction)
+        await expect.poll(() => chorusClear(scene)).toBe(true)
+      }
+    }
+    await seek(verse)
+    const reversed = await positions()
+    for (const [index, piece] of reversed.entries()) {
+      expect(piece.x).toBeCloseTo(before[index].x, 1)
+      expect(piece.y).toBeCloseTo(before[index].y, 0)
+    }
+    expect(await page.evaluate(() => (window as any).groundMutations)).toBe(0)
+    // Layout changes move the spaces with the actual content, not fixed lengths.
+    const oldPiece = await pieces.first().elementHandle()
+    await page
+      .locator('.verse-copy')
+      .first()
+      .evaluate((node) => {
+        ;(node as HTMLElement).style.paddingBottom = '300px'
+      })
+    await expect.poll(() => oldPiece!.evaluate((node) => node.isConnected)).toBe(false)
+    const shifted = await ranges()
+    expect(shifted[0].start).toBeGreaterThan(scenes[0].start + 290)
+    for (const scene of shifted) {
+      await seek(scene.start + scene.hold * 0.5)
+      await expect.poll(() => chorusClear(scene)).toBe(true)
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(page.locator('.fragment-ground-field')).toBeHidden()
+    await expect
+      .poll(() =>
+        planes.evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).translate)),
+      )
+      .toEqual(['none', 'none', 'none'])
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+  })
+}
+
+for (const width of [390, 1440]) {
+  test(`Temple keeps the bridge body clear of background pieces at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'no-preference' })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const bridge = page.locator('.bridge-body')
+    const top = () =>
+      bridge.evaluate(
+        (node) =>
+          scrollY +
+          node.getBoundingClientRect().top +
+          (node.querySelector<HTMLElement>('.bridge-page-stage > .bridge-body-copy')?.offsetTop ??
+            0),
+      )
+    const pieces = page.locator('.fragment-ground-piece')
+    const clearBridge = () =>
+      pieces.evaluateAll((nodes) => {
+        const bridge = document
+          .querySelector('.bridge-body .bridge-body-copy')!
+          .getBoundingClientRect()
+        return nodes.every((node) => {
+          const box = node.getBoundingClientRect()
+          return (
+            box.bottom <= Math.max(0, bridge.top) ||
+            box.top >= innerHeight ||
+            box.right <= 0 ||
+            box.left >= innerWidth
+          )
+        })
+      })
+    // Introductory typography remains within the textured sculpture.
+    const intro = page.locator('.bridge-copy [data-lettering="cinzel"]')
+    await intro.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 450))
+    await expect
+      .poll(() =>
+        pieces.evaluateAll((nodes) => {
+          const line = document
+            .querySelector('.bridge-copy [data-lettering="cinzel"]')!
+            .getBoundingClientRect()
+          return nodes.some((node) => {
+            const box = node.getBoundingClientRect()
+            return (
+              box.bottom > line.top &&
+              box.top < line.bottom &&
+              box.right > 0 &&
+              box.left < innerWidth
+            )
+          })
+        }),
+      )
+      .toBe(true)
+    const start = await top()
+    for (const y of [start - 675, start - 225, start, start + 900, start + 1800]) {
+      await page.evaluate((y) => scrollTo(0, y), y)
+      await expect.poll(clearBridge).toBe(true)
+    }
+    // The exclusion follows preceding layout changes and reverse seeking.
+    const oldPiece = await pieces.first().elementHandle()
+    await page
+      .locator('.verse-copy')
+      .first()
+      .evaluate((node) => {
+        ;(node as HTMLElement).style.paddingBottom = '300px'
+      })
+    await expect.poll(top).toBeGreaterThan(start + 290)
+    await expect.poll(() => oldPiece!.evaluate((node) => node.isConnected)).toBe(false)
+    for (const y of [await top(), (await top()) - 450]) {
+      await page.evaluate((y) => scrollTo(0, y), y)
+      await expect.poll(clearBridge).toBe(true)
+    }
+  })
+}
+
+test('Temple background drifts without animation frames and rests with reduced motion', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/temple-multiple')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const planes = page.locator('.fragment-ground-ink .fragment-ground-plane')
+  await expect(planes).toHaveCount(3)
+  // These surfaces span the reading document. Full-page filtered/pulsing
+  // overlays caused a measured raster/compositing regression and visible blinking.
+  expect(
+    await planes.evaluateAll((nodes) =>
+      nodes.every(
+        (node) =>
+          [
+            getComputedStyle(node),
+            getComputedStyle(node, '::before'),
+            getComputedStyle(node, '::after'),
+          ].every((style) => style.filter === 'none') &&
+          node
+            .getAnimations({ subtree: true })
+            .every(
+              (animation) =>
+                !(animation.effect instanceof KeyframeEffect) ||
+                animation.effect.target !== node ||
+                animation.effect
+                  .getKeyframes()
+                  .every((frame) => !('filter' in frame) && !('opacity' in frame)),
+            ),
+      ),
+    ),
+  ).toBe(true)
+  const positions = () =>
+    planes.evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).transform))
+  await expect.poll(positions).not.toEqual(['none', 'none', 'none'])
+  await page.evaluate(() => {
+    window.requestAnimationFrame = () => 0
+  })
+  const before = await positions()
+  await expect.poll(positions).not.toEqual(before)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect.poll(positions).toEqual(['none', 'none', 'none'])
+  await expect
+    .poll(() =>
+      planes.evaluateAll((nodes) =>
+        nodes.every((node) =>
+          node.getAnimations().every((animation) => animation.timeline instanceof ViewTimeline),
+        ),
+      ),
+    )
+    .toBe(true)
+})
+
+test('Temple keeps the sculpture and traces without publishing an action', async ({ page }) => {
+  await page.clock.install()
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/temple-without-action')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
+  await expect(page.locator('.fragment-ground-piece').first()).toBeAttached()
+  await page.locator('.verse-copy').first().scrollIntoViewIfNeeded()
+  const signals = page.locator('.fragment-ground-signal')
+  for (let attempt = 0; attempt < 40 && (await signals.count()) === 0; attempt++)
+    await page.clock.runFor(300)
+  expect(await signals.count()).toBeGreaterThan(0)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(signals).toHaveCount(0)
+  await expect(page.locator('.fragment-ground-field')).toBeHidden()
+})
+
+test('Temple bounds concurrent edge traces and clears them for reduced motion and navigation', async ({
+  page,
+}) => {
+  await page.clock.install()
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/temple-multiple')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  // The opener stays clear; signals belong to the patterned reading ground.
+  const signals = page.locator('.fragment-ground-signal')
+  const expectTrace = async () => {
+    // A skipped launch is valid. Advance the seeded scheduler instead of
+    // requiring multiple traces at an arbitrary instant.
+    for (let attempt = 0; attempt < 20 && (await signals.count()) === 0; attempt++)
+      await page.clock.runFor(300)
+    expect(await signals.count()).toBeGreaterThan(0)
+    expect(await signals.count()).toBeLessThanOrEqual(6)
+  }
+  await expect(signals).toHaveCount(0)
+  await page
+    .locator('.fragment-action-stage')
+    .evaluate((node) => node.scrollIntoView({ block: 'center' }))
+  // The trace scheduler owns timers; foreground painting is irrelevant here.
+  await page.evaluate(() => {
+    window.requestAnimationFrame = () => 0
+  })
+  await page.clock.runFor(2000)
+  await expectTrace()
+  expect(
+    await signals.evaluateAll((nodes) => new Set(nodes.map((node) => node.parentElement)).size),
+  ).toBe(await signals.count())
+  const shapes = await page
+    .locator('.fragment-action-pieces [data-piece] path')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('d')))
+  for (const trace of await signals.all()) {
+    const original = await trace.evaluate((node) =>
+      node.parentElement!.querySelector(':scope > path')!.getAttribute('d'),
+    )
+    expect(shapes).toContain(original)
+    const tip = trace.locator('.fragment-signal-tip')
+    expect(await tip.getAttribute('d')).not.toBe(original)
+    const screenWidth = await tip.evaluate((node) => {
+      const matrix = (node as SVGPathElement).getScreenCTM()!
+      return parseFloat(getComputedStyle(node).strokeWidth) * Math.hypot(matrix.a, matrix.b)
+    })
+    expect(screenWidth).toBeCloseTo(3, 1)
+    await expect(tip).toHaveCSS('vector-effect', 'none')
+    await expect(trace).toHaveAttribute('aria-hidden', 'true')
+  }
+  await page.clock.runFor(4000)
+  await expectTrace()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(signals).toHaveCount(0)
+  await page.clock.fastForward(60000)
+  await expect(signals).toHaveCount(0)
+  await page.evaluate(() => {
+    ;(window as any).motionResumed = new Promise<void>((resolve) => {
+      matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => resolve(), {
+        once: true,
+      })
+    })
+  })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.evaluate(() => (window as any).motionResumed)
+  await page.clock.runFor(2000)
+  await expectTrace()
+  await page.getByRole('link', { name: 'Return to fixture' }).click()
+  await expect(page).toHaveURL(/\/fixture$/)
+  await page.clock.fastForward(60000)
+  await expect(signals).toHaveCount(0)
 })
 
 test('Temple opening enhances only its island and leaves static verse unchanged', async ({
@@ -101,6 +668,10 @@ test('Temple keeps the title and static verse readable without JavaScript', asyn
     expect((await page.goto('/temple-of-sound'))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Temple of Sound' })).toBeVisible()
     await expect(page.locator('[data-poem-text]')).toContainText('Static verse fixture')
+    await expect(page.getByRole('link', { name: 'Explore fixture' })).toHaveAttribute(
+      'href',
+      '/fixture',
+    )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
       'https://hannesdiem.de/temple-of-sound',
@@ -188,16 +759,21 @@ for (const scheme of ['light', 'dark'] as const) {
         })
     await expect.poll(brightness).toBeGreaterThan(scheme === 'dark' ? 150 : 0)
     if (scheme === 'light') expect(await brightness()).toBeLessThan(100)
-    expect(
-      await first.evaluate((p) => {
-        const range = document.createRange()
-        range.selectNodeContents(p)
-        const selection = getSelection()!
-        selection.removeAllRanges()
-        selection.addRange(range)
-        return selection.toString().replace(/\s/g, '') === p.textContent!.replace(/\s/g, '')
-      }),
-    ).toBe(true)
+    const source = (await first.textContent())!.replace(/\s/g, '')
+    // Native selection can initially be empty while fitted layout settles.
+    // Retry the actual selection, preserving the complete-text assertion.
+    await expect
+      .poll(() =>
+        first.evaluate((p) => {
+          const range = document.createRange()
+          range.selectNodeContents(p)
+          const selection = getSelection()!
+          selection.removeAllRanges()
+          selection.addRange(range)
+          return selection.toString().replace(/\s/g, '')
+        }),
+      )
+      .toBe(source)
     await page.emulateMedia({ colorScheme: scheme === 'light' ? 'dark' : 'light' })
     await expect.poll(brightness)[scheme === 'light' ? 'toBeGreaterThan' : 'toBeLessThan'](100)
     await page.emulateMedia({ forcedColors: 'active' })
@@ -515,6 +1091,195 @@ test('mobile curved copy keeps two rows without editor controls', async ({ page 
   await expect(page.locator('input, .small-curve-controls')).toHaveCount(0)
 })
 
+for (const [width, height] of [
+  [390, 844],
+  [430, 932],
+  [844, 390],
+  [1440, 844],
+]) {
+  test(`Temple repetition never dips down before contact at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const rises = await page.evaluate(async () => {
+      const tracks = [...document.querySelectorAll<HTMLElement>('.repetition-track')]
+      const stages = tracks.map((track) => track.querySelector<HTMLElement>('.repetition-stage')!)
+      const rises = []
+      for (const [index, stage] of stages.slice(0, -1).entries()) {
+        const lock = parseFloat(getComputedStyle(stage).top)
+        const release =
+          scrollY +
+          tracks[index].getBoundingClientRect().bottom -
+          stage.getBoundingClientRect().height -
+          lock
+        let lowest = Infinity
+        let rise = 0
+        // Resolve every pixel around native release; a coarse handoff sweep can
+        // step over a short down/up nudge between four-pixel animation samples.
+        for (let y = Math.floor(release) - 8; y <= release + 12; y++) {
+          scrollTo(0, y)
+          await new Promise(requestAnimationFrame)
+          await new Promise(requestAnimationFrame)
+          const top = stage
+            .querySelector<HTMLElement>('.repetition-statement .phrase-entry')!
+            .getBoundingClientRect().top
+          lowest = Math.min(lowest, top)
+          rise = Math.max(rise, top - lowest)
+        }
+        rises.push(rise)
+      }
+      return rises
+    })
+    for (const rise of rises) expect(rise).toBeLessThanOrEqual(0.05)
+  })
+}
+
+for (const width of [390, 1440]) {
+  test(`Temple repetition follows scrolling without scene frames at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.addInitScript(() => {
+      const raf = window.requestAnimationFrame.bind(window)
+      window.requestAnimationFrame = (callback) =>
+        raf((time) => {
+          if (!(window as any).templeFramesPaused) callback(time)
+        })
+    })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    for (const index of [1, 2]) {
+      const outgoing = page.locator('.repetition-stage').nth(index - 1)
+      const incoming = page.locator('.repetition-stage').nth(index)
+      const contact = await page
+        .locator('.repetition-track')
+        .nth(index)
+        .evaluate((node) => {
+          const previous =
+            node.previousElementSibling!.querySelector<HTMLElement>('.repetition-stage')!
+          const lock = parseFloat(getComputedStyle(previous).top)
+          return {
+            scroll: scrollY + node.getBoundingClientRect().top - (lock + previous.offsetHeight + 8),
+            lock,
+          }
+        })
+      await page.evaluate((y) => scrollTo(0, y + 10), contact.scroll)
+      const expected = contact.lock - 2 * ((await page.evaluate(() => scrollY)) - contact.scroll)
+      await expect.poll(async () => (await outgoing.boundingBox())!.y).toBeCloseTo(expected, 0)
+      const before = (await outgoing.boundingBox())!.y
+      await page.evaluate(() => {
+        ;(window as any).templeFramesPaused = true
+        scrollBy(0, 30)
+      })
+      await expect.poll(async () => (await outgoing.boundingBox())!.y).toBeLessThan(before - 50)
+      const upper = (await outgoing.boundingBox())!
+      const lower = (await incoming.boundingBox())!
+      expect(lower.y - upper.y - upper.height).toBeGreaterThanOrEqual(7)
+      await page.evaluate(() => scrollBy(0, -30))
+      await expect.poll(async () => (await outgoing.boundingBox())!.y).toBeCloseTo(before, 0)
+    }
+  })
+}
+
+test('Temple repetition rebuilds for resize and motion changes, then disposes its animations', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const stages = page.locator('.repetition-stage')
+  await stages.first().evaluate((node) => {
+    ;(window as any).repetitionAnimations = node
+      .getAnimations({ subtree: true })
+      .filter((animation) => !(animation instanceof CSSAnimation))
+  })
+  await page.setViewportSize({ width: 844, height: 390 })
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (window as any).repetitionAnimations.every(
+          (animation: Animation) => animation.playState === 'idle',
+        ),
+      ),
+    )
+    .toBe(true)
+  await page
+    .locator('.repetition-track')
+    .first()
+    .evaluate((node) => {
+      const stage = node.firstElementChild as HTMLElement
+      scrollTo(
+        0,
+        scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top) + 100,
+      )
+    })
+  const statement = stages.first().locator('.repetition-statement')
+  await expect
+    .poll(async () => {
+      const box = (await statement.boundingBox())!
+      return box.y + box.height / 2
+    })
+    .toBeCloseTo(195, 0)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect
+    .poll(() => stages.first().evaluate((node) => node.getAnimations({ subtree: true }).length))
+    .toBe(0)
+  await expect(stages.first()).toHaveCSS('transform', 'none')
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect
+    .poll(() => stages.first().evaluate((node) => node.getAnimations({ subtree: true }).length))
+    .toBeGreaterThan(0)
+  await page.emulateMedia({ media: 'print' })
+  await expect(stages.first()).toHaveCSS('transform', 'none')
+  await expect(stages.first().locator('.repetition-reflection')).toHaveCSS('opacity', '1')
+  await expect(stages.first().locator('.repetition-reflection .phrase-entry')).toHaveCSS(
+    'transform',
+    'none',
+  )
+  await page.emulateMedia({ media: null })
+  await stages.first().evaluate((node) => {
+    ;(window as any).repetitionAnimations = node
+      .getAnimations({ subtree: true })
+      .filter((animation) => !(animation instanceof CSSAnimation))
+  })
+  await page.getByRole('link', { name: 'Return to fixture' }).click()
+  await expect(page.locator('.temple-opening')).toHaveCount(0)
+  expect(
+    await page.evaluate(() =>
+      (window as any).repetitionAnimations.every(
+        (animation: Animation) => animation.playState === 'idle',
+      ),
+    ),
+  ).toBe(true)
+})
+
+test('Temple repetition retains its handoff without native scroll timelines', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.addInitScript(() => {
+    delete (window as any).ViewTimeline
+  })
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const outgoing = page.locator('.repetition-stage').first()
+  const contact = await page
+    .locator('.repetition-track')
+    .nth(1)
+    .evaluate((node) => {
+      const previous = node.previousElementSibling!.querySelector<HTMLElement>('.repetition-stage')!
+      return (
+        scrollY +
+        node.getBoundingClientRect().top -
+        (parseFloat(getComputedStyle(previous).top) + previous.offsetHeight + 8)
+      )
+    })
+  await page.evaluate((y) => scrollTo(0, y + 10), contact)
+  await page.evaluate(() => new Promise(requestAnimationFrame))
+  await page.evaluate(() => new Promise(requestAnimationFrame))
+  const before = (await outgoing.boundingBox())!.y
+  await page.evaluate(() => scrollBy(0, 30))
+  await expect.poll(async () => (await outgoing.boundingBox())!.y).toBeLessThan(before - 50)
+})
+
 for (const width of [390, 1440]) {
   test(`Temple repetition holds, reveals and yields at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
@@ -568,7 +1333,11 @@ for (const width of [390, 1440]) {
     await page.evaluate((y) => scrollTo(0, y), collision.scroll + 5)
     await expect.poll(async () => (await stage.boundingBox())!.y).toBeLessThan(beforeImpact.y - 9)
     expect((await stage.boundingBox())!.height).toBeCloseTo(beforeImpact.height, 0)
-    expect((await incomingStage.boundingBox())!.y).toBeCloseTo(incomingAtContact.y - 10, 0)
+    // Native scroll offsets can round to pixels in WebKit; the quadratic entry
+    // also already slows over these first five pixels of travel.
+    expect(
+      Math.abs((await incomingStage.boundingBox())!.y - (incomingAtContact.y - 10)),
+    ).toBeLessThan(1.5)
     await page.evaluate((y) => scrollTo(0, y), collision.scroll + collision.distance + 240)
     await expect(tracks.nth(1).locator('.repetition-reflection')).toHaveCSS('opacity', '1')
     const settled = await incomingStage.locator('.repetition-statement').boundingBox()
@@ -584,6 +1353,8 @@ for (const width of [390, 1440]) {
   test(`Temple repetition never overlaps during the full handoff at ${width}px`, async ({
     page,
   }) => {
+    // This forward/reverse replay waits for 324 actual browser frames.
+    test.slow()
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/temple-four-phrases')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
@@ -683,6 +1454,92 @@ test('Temple responsive chorus rows update across the breakpoint', async ({ page
   await expect(rows).toHaveCount(2)
   await page.setViewportSize({ width: 390, height: 900 })
   await expect(rows).toHaveCount(4)
+})
+
+test('Temple renders the authored action after the first pair with theme-aware fragments and native keyboard navigation', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
+  await page.goto('/temple-multiple')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const pairs = page.locator('.first-pair')
+  const stage = pairs.first().locator('.fragment-action-stage')
+  await expect(stage).toHaveAttribute('data-fragments-ready', '')
+  await expect(pairs.nth(1).locator('.fragment-action-stage')).toHaveCount(0)
+  const link = stage.getByRole('link', { name: 'Explore fixture' })
+  await expect(link).toHaveAttribute('href', '/fixture')
+  await expect(stage.locator('[data-piece]')).toHaveCount(11)
+  await stage.scrollIntoViewIfNeeded()
+  const shapes = () =>
+    stage.locator('path').evaluateAll((nodes) => nodes.map((n) => n.getAttribute('d')))
+  const paths = await shapes()
+  const artwork = page.locator('.temple-artwork')
+  const patternPaths = await artwork
+    .locator('.fragment-ground-piece > g > path')
+    .evaluateAll((nodes) => [...new Set(nodes.map((path) => path.getAttribute('d')))])
+  expect(patternPaths.length).toBeGreaterThan(0)
+  for (const path of patternPaths) expect(paths).toContain(path)
+  await expect(stage.locator('path').first()).toHaveAttribute('stroke-linejoin', 'round')
+  await expect(stage.locator('path').first()).toHaveAttribute('stroke-width', '1.8')
+  // Hidden subtrees need not recompute paint styles in WebKit. Exercise the
+  // background theme switch while it is actually rendered.
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect(page.locator('.fragment-ground-field')).toBeVisible()
+  const groundInk = page.locator('.fragment-ground-piece linearGradient stop').first()
+  const ground = await groundInk.evaluate((n) => getComputedStyle(n).stopColor)
+  const dark = await stage
+    .locator('linearGradient stop')
+    .first()
+    .evaluate((n) => getComputedStyle(n).stopColor)
+  await page.emulateMedia({ colorScheme: 'light' })
+  await expect
+    .poll(() =>
+      stage
+        .locator('linearGradient stop')
+        .first()
+        .evaluate((n) => getComputedStyle(n).stopColor),
+    )
+    .not.toBe(dark)
+  expect(await shapes()).toEqual(paths)
+  await expect.poll(() => groundInk.evaluate((n) => getComputedStyle(n).stopColor)).not.toBe(ground)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await stage.scrollIntoViewIfNeeded()
+  expect(await shapes()).toEqual(paths)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await link.focus()
+  await link.press('Enter')
+  await expect(page).toHaveURL(/\/fixture$/)
+  await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
+})
+
+test('Temple action scatters on click and zooms the same pieces back to full size', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/temple-of-sound')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const stage = page.locator('.fragment-action-stage')
+  await stage.scrollIntoViewIfNeeded()
+  await expect(stage).toHaveAttribute('data-fragments-ready', '')
+  const board = stage.locator('svg')
+  const scales = () =>
+    stage
+      .locator('[data-piece]')
+      .evaluateAll((nodes) =>
+        nodes.map((n) => Number(n.getAttribute('transform')!.match(/scale\(([^)]+)\)/)![1])),
+      )
+  const base = await scales()
+  const link = stage.getByRole('link', { name: 'Explore fixture' })
+  // Exercise the actual click effect while keeping this synthetic link on screen.
+  await link.evaluate((n) => n.addEventListener('click', (e) => e.preventDefault(), { once: true }))
+  await link.click()
+  await expect(board).toHaveAttribute('data-border-burst', '')
+  await expect.poll(async () => (await scales()).every((s) => s === 0)).toBe(true)
+  await expect.poll(async () => (await scales()).some((s, i) => s > 0 && s < base[i])).toBe(true)
+  await expect(board).not.toHaveAttribute('data-border-burst', '')
+  expect(await scales()).toEqual(base)
+  await page.getByRole('link', { name: 'Return to fixture' }).click()
+  await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
 })
 
 for (const width of [390, 1440]) {

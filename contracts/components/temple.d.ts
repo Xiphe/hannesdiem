@@ -1,5 +1,5 @@
 import type { Handle, RemixNode } from 'remix/component'
-import type { ImageSource } from './index.d.ts'
+import type { ImageSource, ButtonProps } from './index.d.ts'
 
 type Component<Props> = (handle: Handle<Props>) => () => RemixNode
 
@@ -16,6 +16,7 @@ export interface PoemLine {
   face?: 'copy' | 'cinzel' | 'germania' | 'spaced'
 }
 export interface PoemPair {
+  action?: Pick<ButtonProps, 'label' | 'href'> & { seed?: string }
   paragraphs: readonly (readonly PoemLine[])[]
   repetition?: readonly { statement: readonly PoemLine[]; reflection: PoemLine }[]
   refrain: readonly {
