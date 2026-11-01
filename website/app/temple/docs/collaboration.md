@@ -8,7 +8,7 @@ The artist approved committing and publishing the opener and first three verse/r
 
 Third pair: three angry statements hold at the same centred reading position. Smaller70%-width reflections reveal after arrival; compact50/50 handoffs push the earlier block upwards while the incoming block decelerates. No compression, and no overlap: resolve visible positions together with at least8px separation. Later reflection reveals fill the stationary reading intervals; the final reveal spans its sticky hold through native release. Preserve delayed entry on the first recurrence.
 
-The Bricolage third-pair refrain uses four explicit rows through900px: “i EXPLODE” / “AND COLLAPSE” / “15 TiMES” / “PER MiNUTE.” Legacy portrait word breaks do not override explicit rows. The final refrain’s visible ink determines the tighter gap to “and carry…”, reduced by another1.5rem. The closing paragraph highlights “the flowers” in Cinzel; surrounding copy remains Unbounded.
+The Bricolage third-pair refrain uses four explicit rows through900px: “i EXPLODE” / “AND COLLAPSE” / “15 TiMES” / “PER MiNUTE.” Legacy portrait word breaks do not override explicit rows. The final refrain’s visible ink determines the gap to “and carry…”. On2026-11-01 the artist approved adding1rem (16px at the default size) after “in my veins”, following local8px and16px previews. The closing paragraph highlights “the flowers” in Cinzel; surrounding copy remains Unbounded.
 
 Second pair: the full rose sentence uses one desktop Bézier and exactly two mobile rows. Selected mobile7-point curve is recorded in `curve.ts`; editors removed. “and earth.” stays on one mobile row. The three-line angry refrain and the supplied replacement coda keep their latest wording and punctuation.
 

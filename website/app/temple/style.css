@@ -637,7 +637,7 @@ html[data-layout='temple'] body {
 }
 
 .first-pair:has(> .repetition-stack) > .verse-coda {
-  margin-top: calc(-1 * var(--refrain-tail-gap, 0px) - 1.5rem);
+  margin-top: calc(-1 * var(--refrain-tail-gap, 0px) - 0.5rem);
 }
 @media print, (forced-colors: active) {
   .first-pair:has(> .repetition-stack) > .verse-coda {
