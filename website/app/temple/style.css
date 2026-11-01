@@ -401,6 +401,7 @@ html[data-layout='temple'] body {
   pointer-events: none;
 }
 .verse-copy > p[data-copy-cloud],
+.bridge-body-copy[data-copy-cloud],
 .temple-date[data-copy-cloud] {
   color: transparent;
 }
@@ -415,6 +416,7 @@ html[data-layout='temple'] body {
     display: none;
   }
   .verse-copy > p[data-copy-cloud],
+  .bridge-body-copy[data-copy-cloud],
   .temple-date[data-copy-cloud] {
     color: CanvasText;
   }
@@ -426,6 +428,7 @@ html[data-layout='temple'] body {
   }
   .verse-copy,
   .verse-copy > p[data-copy-cloud],
+  .bridge-body-copy[data-copy-cloud],
   .temple-date[data-copy-cloud] {
     color: #000;
   }
@@ -637,5 +640,193 @@ html[data-layout='temple'] body {
 @media print, (forced-colors: active) {
   .first-pair:has(> .repetition-stack) > .verse-coda {
     margin-top: 0;
+  }
+}
+
+.bridge-copy {
+  padding-bottom: max(120px, 20svh);
+}
+
+.bridge-copy .phrase-entry:has([data-lettering='spaced']) + .phrase-entry {
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.bridge-copy:has(+ .bridge-body) {
+  padding-bottom: clamp(48px, 8svh, 96px);
+}
+.bridge-body {
+  padding-bottom: max(120px, 20svh);
+}
+.bridge-body .bridge-body-copy {
+  font-family:
+    ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+  font-size: clamp(19px, 2.2vw, 27px);
+  font-weight: 400;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+.bridge-body-copy strong {
+  font-weight: 700;
+}
+.bridge-body-copy em {
+  font-style: italic;
+}
+.bridge-body > .bridge-body-copy + .bridge-body-copy {
+  margin-top: clamp(56px, 10svh, 100px);
+}
+/* Build while sticky, then let the completed text leave above the viewport
+   before the following surface begins its reveal. */
+.bridge-body[data-paged] {
+  padding-bottom: calc(100svh + var(--bridge-linger-runway, 0px));
+}
+.bridge-paragraph {
+  display: contents;
+}
+.bridge-page {
+  height: calc(100svh + var(--bridge-hold));
+  margin-bottom: calc(var(--bridge-exit, 100svh) - 100svh);
+}
+.bridge-page-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+}
+.bridge-body[data-paged] .bridge-body-copy {
+  width: 100%;
+  color: transparent;
+}
+.bridge-layout-probe {
+  position: absolute !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+@media print, (forced-colors: active) {
+  .bridge-body[data-paged] {
+    padding-bottom: 0;
+  }
+  .bridge-page {
+    height: auto;
+    margin: 0;
+  }
+  .bridge-page-stage {
+    height: auto;
+    position: static;
+    transform: none;
+    visibility: visible;
+    width: auto !important;
+    display: block;
+  }
+  .bridge-body[data-paged] .bridge-body-copy {
+    color: CanvasText;
+  }
+  .bridge-paragraph + .bridge-paragraph .bridge-page:first-child {
+    margin-top: 2rem;
+  }
+}
+
+.poem-pairs:has(.bridge-body[data-paged]) > .bridge-copy {
+  padding-bottom: 0;
+}
+
+.bridge-copy,
+.bridge-body {
+  --copy-color: light-dark(#1a2136, #c0cde2);
+  color: var(--copy-color);
+}
+@media print, (forced-colors: active) {
+  .bridge-copy,
+  .bridge-body {
+    --copy-color: CanvasText;
+    color: CanvasText;
+  }
+}
+
+/* Let the browser paint selected text once, above its native highlight. */
+.temple-artwork [data-copy-selected] {
+  color: var(--copy-color);
+}
+.temple-artwork [data-copy-selected] > .copy-cloud-canvas {
+  visibility: hidden;
+}
+/* Empty parts of adjacent sticky stages must not capture selection drags. */
+.bridge-page-stage {
+  pointer-events: none;
+}
+.bridge-page[data-active] .bridge-body-copy {
+  pointer-events: auto;
+}
+
+/* Native selection backgrounds stay available, but their foreground must not
+   expose glyphs which the reveal has not painted yet. */
+.temple-artwork .bridge-body-copy[data-copy-cloud]::selection,
+.temple-artwork .bridge-body-copy[data-copy-cloud] ::selection {
+  color: transparent;
+  background: light-dark(#b7bdd4, #39405d);
+}
+.poem-pairs {
+  position: relative;
+  z-index: 2;
+}
+.temple-bridge-ground {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.temple-bridge-ground::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: light-dark(#e7edf2, transparent);
+  opacity: var(--bridge-cooling, 0);
+}
+.bridge-body[data-paged] {
+  margin-top: -8svh;
+}
+@media print, (forced-colors: active) {
+  .temple-bridge-ground {
+    display: none;
+  }
+  .bridge-body[data-paged] {
+    margin-top: 0;
+  }
+}
+
+.bridge-cloud-canvas,
+.bridge-dust-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+[data-bridge-linger] {
+  white-space: nowrap;
+}
+.bridge-body .bridge-linger {
+  position: fixed;
+  width: max-content;
+  white-space: nowrap;
+  visibility: hidden;
+  pointer-events: none;
+  color: var(--copy-color);
+}
+.bridge-linger[data-active] {
+  visibility: visible;
+  pointer-events: auto;
+}
+.bridge-linger strong {
+  font-weight: 700;
+}
+.bridge-linger em {
+  font-style: italic;
+}
+@media print, (forced-colors: active) {
+  .bridge-linger {
+    display: none;
   }
 }

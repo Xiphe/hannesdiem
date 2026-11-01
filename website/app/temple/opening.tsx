@@ -1,7 +1,8 @@
+import { bridgeText } from './bridge-text.tsx'
 import { ref, type Handle } from 'remix/component'
 import { ArrowDownIcon } from '../heroicons.tsx'
 import { mountArtwork } from './artwork.ts'
-import { FirstPair } from './first-pair.tsx'
+import { FirstPair, Phrase } from './first-pair.tsx'
 import type { OpeningProps } from './types.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
@@ -40,7 +41,7 @@ export function Opening(handle: Handle<OpeningProps>) {
     }
   })
   return () => {
-    const { title, dates, image, pair, pairs } = handle.props
+    const { title, dates, image, pair, pairs, bridge, bridgeBody } = handle.props
     const format = (date: string) =>
       new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
         new Date(date + 'T12:00:00Z'),
@@ -97,6 +98,35 @@ export function Opening(handle: Handle<OpeningProps>) {
                 index={index}
               />
             ))}
+            {bridge && (
+              <section class="verse-copy bridge-copy">
+                {bridge.map((lines, index) => (
+                  <p>
+                    <Phrase
+                      lines={lines}
+                      firstStatic={index === 0}
+                    />
+                  </p>
+                ))}
+              </section>
+            )}
+            {bridgeBody && (
+              <section class="verse-copy bridge-body">
+                {bridgeBody.map((paragraph) => (
+                  <p
+                    class="bridge-body-copy"
+                    data-linger={typeof paragraph === 'string' ? undefined : paragraph.linger}
+                    data-wide-breaks={
+                      typeof paragraph === 'string'
+                        ? undefined
+                        : JSON.stringify(paragraph.wideBreaksAfter)
+                    }
+                  >
+                    {bridgeText(typeof paragraph === 'string' ? paragraph : paragraph.text)}
+                  </p>
+                ))}
+              </section>
+            )}
           </div>
         )}
       </div>

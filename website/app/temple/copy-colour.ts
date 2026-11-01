@@ -1,10 +1,13 @@
 // Cache native glyph masks on layout changes; paint colour directly, without
 // encoding images or changing DOM styles during animation. Text stays selectable.
 import { noise as cloudNoise } from './atmosphere.ts'
+import { createBridgeReveal } from './bridge-reveal.ts'
 import { defaults } from './defaults.ts'
 const warmInk = [142, 68, 28]
 const coolInk = [36, 89, 137]
 const darkRange = [50, -8, -65]
+const bridgeDark = { base: [192, 205, 226], purple: [211, 183, 224], blue: [156, 198, 238] }
+const bridgeLight = { base: [26, 33, 54], purple: [88, 44, 107], blue: [31, 79, 133] }
 export function colourCopy(
   root: HTMLElement,
   signal: AbortSignal,
@@ -12,13 +15,13 @@ export function colourCopy(
   date?: HTMLElement,
 ) {
   const paragraphs = [...root.querySelectorAll<HTMLElement>('.verse-copy > p')]
-  const lines = [...root.querySelectorAll<HTMLElement>('.phrase-entry')]
+  const lines = [...root.querySelectorAll<HTMLElement>('.phrase-entry, .bridge-body-copy')]
   const elements = date ? [...lines, date] : lines
   const dateBaseline = document.createElement('span')
   dateBaseline.className = 'block-baseline'
   dateBaseline.ariaHidden = 'true'
   date?.appendChild(dateBaseline)
-  const layers = elements.map((element) => {
+  const makeLayer = (element: HTMLElement) => {
     const canvas = document.createElement('canvas')
     canvas.className = 'copy-cloud-canvas'
     canvas.ariaHidden = 'true'
@@ -34,8 +37,22 @@ export function colourCopy(
       offset: 0,
       visible: false,
       revision: -1,
+      bridge: !!element.closest('.bridge-copy, .bridge-body'),
+      reveal: element.matches('.bridge-body-copy') ? createBridgeReveal(element) : undefined,
     }
-  })
+  }
+  const layers = elements.map(makeLayer)
+  const updateSelection = () => {
+    const selection = document.getSelection()
+    for (const layer of layers) {
+      if (layer.reveal) continue
+      layer.element.toggleAttribute(
+        'data-copy-selected',
+        !!selection && !selection.isCollapsed && selection.containsNode(layer.element, true),
+      )
+    }
+  }
+  document.addEventListener('selectionchange', updateSelection, { signal })
   let variance = defaults.copyVariance,
     speed = defaults.copySpeed,
     phase = 0,
@@ -49,12 +66,16 @@ export function colourCopy(
     cssHeight = 0
   const canvas = document.createElement('canvas')
   const ink = canvas.getContext('2d')
+  const bridgeCanvas = document.createElement('canvas')
+  const bridgeInk = bridgeCanvas.getContext('2d')!
   const supported = ink && layers.every((layer) => layer.ink && layer.maskInk)
   let frame: ImageData
+  let bridgeFrame: ImageData
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        const layer = layers.find((layer) => layer.element === entry.target)!
+        const layer = layers.find((layer) => layer.element === entry.target)
+        if (!layer) continue
         layer.visible = entry.isIntersecting
       }
       request()
@@ -67,10 +88,13 @@ export function colourCopy(
     () => {
       observer.disconnect()
       dateBaseline.remove()
-      for (const { element, canvas, mask } of layers) {
+      canvas.width = canvas.height = bridgeCanvas.width = bridgeCanvas.height = 0
+      for (const { element, canvas, mask, reveal } of layers) {
         element.removeAttribute('data-copy-cloud')
+        element.removeAttribute('data-copy-selected')
         element.closest('p')?.removeAttribute('data-copy-cloud')
         canvas.remove()
+        reveal?.dispose()
         canvas.width = canvas.height = mask.width = mask.height = 0
       }
     },
@@ -79,6 +103,22 @@ export function colourCopy(
 
   function resize() {
     if (!supported || signal.aborted) return
+    const bridge = [...root.querySelectorAll<HTMLElement>('.bridge-body-copy')]
+    for (let index = layers.length - 1; index >= 0; index--) {
+      const layer = layers[index]
+      if (!layer.reveal || bridge.includes(layer.element)) continue
+      observer.unobserve(layer.element)
+      layer.element.removeAttribute('data-copy-cloud')
+      layer.canvas.remove()
+      layer.reveal.dispose()
+      layer.canvas.width = layer.canvas.height = layer.mask.width = layer.mask.height = 0
+      layers.splice(index, 1)
+    }
+    for (const element of bridge)
+      if (!layers.some((layer) => layer.element === element)) {
+        layers.push(makeLayer(element))
+        observer.observe(element)
+      }
     const bounds = root.getBoundingClientRect()
     cssWidth = paragraphs[0].clientWidth
     cssHeight = root.scrollHeight
@@ -116,6 +156,7 @@ export function colourCopy(
           maskInk!.fillText(row.textContent!, position.left - rect.left, baseline - rect.top)
         }
       }
+      layer.reveal?.resize()
       layer.revision = -1
       if (!canvas.isConnected) element.appendChild(canvas)
     }
@@ -130,7 +171,11 @@ export function colourCopy(
       canvas.width = w
       canvas.height = h
       frame = ink!.createImageData(w, h)
+      bridgeCanvas.width = w
+      bridgeCanvas.height = h
+      bridgeFrame = bridgeInk.createImageData(w, h)
     }
+    const bridgePalette = lightInk ? bridgeLight : bridgeDark
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         const u = x / w,
@@ -145,6 +190,8 @@ export function colourCopy(
         // to zero. Mix towards bounded coloured inks on paper instead.
         const tint = temperature >= 0 ? warmInk : coolInk
         const amount = Math.min(1, Math.abs(temperature) * 2.4)
+        const bridgeTint = temperature >= 0 ? bridgePalette.purple : bridgePalette.blue
+        const bridgeBlend = amount * (lightInk ? 0.75 : 1)
         const at = (y * w + x) * 4
         for (let c = 0; c < 3; c++) {
           const original = Math.max(0, Math.min(255, base[c] + temperature * darkRange[c]))
@@ -157,14 +204,39 @@ export function colourCopy(
               ),
             ),
           )
+          bridgeFrame.data[at + c] = Math.round(
+            bridgePalette.base[c] + (bridgeTint[c] - bridgePalette.base[c]) * bridgeBlend,
+          )
         }
-        frame.data[at + 3] = 255
+        frame.data[at + 3] = bridgeFrame.data[at + 3] = 255
       }
     ink!.putImageData(frame, 0, 0)
+    bridgeInk.putImageData(bridgeFrame, 0, 0)
     revision++
   }
   return {
     resize,
+    bridgeBounds() {
+      let visible: { left: number; top: number; right: number; bottom: number } | null = null
+      for (const layer of layers) {
+        const bounds = layer.reveal?.bounds
+        if (!layer.visible || !layer.reveal?.active || !bounds) continue
+        const rect = layer.element.getBoundingClientRect()
+        const top = Math.max(0, rect.top + bounds.top)
+        const bottom = Math.min(innerHeight, rect.top + bounds.bottom)
+        if (bottom <= top) continue
+        const left = rect.left + bounds.left,
+          right = rect.left + bounds.right
+        if (!visible) visible = { left, right, top, bottom }
+        else {
+          visible.left = Math.min(visible.left, left)
+          visible.right = Math.max(visible.right, right)
+          visible.top = Math.min(visible.top, top)
+          visible.bottom = Math.max(visible.bottom, bottom)
+        }
+      }
+      return visible
+    },
     setBase(hex: string, useLightInk = lightInk) {
       base = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
       lightInk = useLightInk
@@ -189,20 +261,40 @@ export function colourCopy(
         last = now
       }
       for (const layer of layers) {
-        if (!layer.visible || layer.revision === revision) continue
+        if (!layer.visible) continue
+        const changed = layer.reveal?.paint(
+          layer.maskInk!,
+          layer.element.getBoundingClientRect().top,
+          layer.width,
+          layer.height,
+          reduced,
+        )
+        if (layer.reveal && !layer.reveal.active) {
+          if (changed) {
+            layer.ink!.clearRect(0, 0, layer.canvas.width, layer.canvas.height)
+            layer.revision = -1
+          }
+          continue
+        }
+        if (!changed && layer.revision === revision) continue
         const context = layer.ink!
         const ratio = layer.canvas.width / layer.width
         context.setTransform(ratio, 0, 0, layer.canvas.height / layer.height, 0, 0)
         context.globalCompositeOperation = 'copy'
         context.drawImage(layer.mask, 0, 0, layer.width, layer.height)
         context.globalCompositeOperation = 'source-in'
-        context.drawImage(
-          canvas,
-          layer.element === date ? (layer.width - cssWidth) / 2 : 0,
-          -layer.offset,
-          cssWidth,
-          cssHeight,
-        )
+        if (layer.reveal) {
+          context.fillStyle = lightInk ? '#1a2136' : '#c0cde2'
+          context.fillRect(0, 0, layer.width, layer.height)
+        } else {
+          context.drawImage(
+            layer.bridge ? bridgeCanvas : canvas,
+            layer.element === date ? (layer.width - cssWidth) / 2 : 0,
+            -layer.offset,
+            cssWidth,
+            cssHeight,
+          )
+        }
         context.globalCompositeOperation = 'source-over'
         layer.revision = revision
         if (!layer.element.hasAttribute('data-copy-cloud')) {

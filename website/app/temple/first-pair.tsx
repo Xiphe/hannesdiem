@@ -18,7 +18,7 @@ function TypeLine(handle: Handle<PoemLine>) {
   )
 }
 
-function Phrase(handle: Handle<{ lines: readonly PoemLine[]; firstStatic?: boolean }>) {
+export function Phrase(handle: Handle<{ lines: readonly PoemLine[]; firstStatic?: boolean }>) {
   return () => {
     const lines = handle.props.lines
     const groups = lines[0]?.face === 'spaced' ? [lines.slice(0, 1), lines.slice(1)] : [lines]

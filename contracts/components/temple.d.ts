@@ -36,6 +36,11 @@ export interface PoemOpeningProps {
   lightSource: { x: number; y: number }
   pair?: PoemPair
   pairs?: readonly PoemPair[]
+  bridge?: readonly (readonly PoemLine[])[]
+  /** Inline bridge copy supports **bold**, *italic*, and ***both***. */
+  bridgeBody?: readonly (
+    string | { text: string; wideBreaksAfter?: readonly string[]; linger?: string }
+  )[]
   children?: RemixNode
 }
 export interface PoemSectionProps {
