@@ -106,10 +106,8 @@ function fixtureContent(
 }
 export const templeContent = fixtureContent()
 export const multipleTempleContent = fixtureContent([firstPair, secondPair])
-export const actionlessTempleContent = fixtureContent([
-  { ...firstPair, action: undefined },
-  secondPair,
-])
+const { action: _action, ...actionlessPair } = firstPair
+export const actionlessTempleContent = fixtureContent([actionlessPair, secondPair])
 
 const thirdPair = {
   paragraphs: [
