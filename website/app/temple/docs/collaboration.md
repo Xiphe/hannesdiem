@@ -4,7 +4,7 @@ Research: 2026-10-22. Small collaborative steps accepted; opener prototype expli
 
 ## Current release scope — 2026-11-02
 
-The artist now requests deployment of the completed final verse, rise/drop and final chorus. Publish the complete authored poem through its final alive phrase, retaining the earlier accepted opener, verses and bridge plus main’s accepted fragment ground and mobile Safari fixes. The unfinished invitation action remains withdrawn. This approval supersedes the historical unpublished-final-verse notes below; preserve their decision trail.
+The artist now requests deployment of the completed final verse, rise/drop and final chorus. Publish the complete authored poem through its final alive phrase, retaining the earlier accepted opener, verses and bridge plus main’s accepted fragment ground and original Safari entry behavior. The unfinished invitation action remains withdrawn. This approval supersedes the historical unpublished-final-verse notes below; preserve their decision trail.
 
 The artist previously approved committing and publishing the opener and first three verse/refrain pairs: “ok, lass uns das so committen und live bringen bitte”. The authored wording, punctuation and font roles live in `content/pages/temple-of-sound/index.tsx`. Preserve main’s native sticky artwork scrolling and additional50px before the first verse.
 
@@ -397,3 +397,5 @@ Artist supplies the final verse and invokes making-art. The melodies / words / h
 **Tighter mobile angry-refrain exit,2026-11-01.** Artist requests less space after “Raging angry” on smaller screens, then accepts the preview and asks to deploy. At widths up to900px, compensate the stacked Unbounded ending’s empty ink tail before its coda. Preserve desktop spacing, other refrains and all wording. Local browser checks at390/640/900/1440px confirm the responsive scope.
 
 **Final verse publication approved.** Artist: “deploy”. Integrate the accepted ending with current main, preserving its independent native repetition, fragment ground, withdrawn action and iOS Safari fixes. Keep both sets of synthetic fixtures and their existing behavior. Publication fixtures omit absent children rather than representing them as undefined; the full handoff replay keeps its assertions with an explicit slow-test budget after a parallel-run timeout. Release through main’s ordered website-then-content workflow.
+
+**Preserve the concurrent Safari withdrawal.** Main advances to6911281 during final release checks: the artist explicitly withdraws all iOS chorus-clipping workarounds. Integrate that rollback before publishing the ending; keep the independent stable-viewport ending spacer fix.

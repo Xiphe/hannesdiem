@@ -1,6 +1,5 @@
 import { roughBand as sharedBand, drawDisturbance, type TypeFrame } from './typography.ts'
 import type { Escapes } from './escapes.ts'
-import { isIOSSafari } from './ios-safari.ts'
 import { createForest } from './forest.ts'
 import type { OpeningProps } from './types.ts'
 type Face = { id: string; family: string; weight: number }
@@ -55,7 +54,6 @@ export async function mountOpening(
     ready: () => void
   },
 ) {
-  const safariToolbar = isIOSSafari(navigator)
   const { beginPortals, cachePortal, addPortal, drawEscapes } = effects.escapes
   const clamp = (value: number) => Math.max(0, Math.min(1, value))
   const smooth = (value: number) => {
@@ -117,7 +115,6 @@ export async function mountOpening(
   const lastInputStart = performance.now()
   let width = 0,
     height = 0,
-    materialHeight = 0,
     ratio = 1,
     layers: Layer[] = [],
     raf = 0
@@ -290,15 +287,10 @@ export async function mountOpening(
     width = rect.width
     height = rect.height
     ratio = Math.min(devicePixelRatio, 1.5)
-    // The opener keeps its stable small-viewport geometry. Material and escaped
-    // light cover the large viewport without resizing during toolbar motion.
-    materialHeight = Math.max(height, parseFloat(getComputedStyle(foreground).height) || height)
-    for (const surface of [canvas, mask]) {
+    for (const surface of [canvas, mask, foreground]) {
       surface.width = Math.round(width * ratio)
       surface.height = Math.round(height * ratio)
     }
-    foreground.width = Math.round(width * ratio)
-    foreground.height = Math.round(materialHeight * ratio)
     for (const ink of [context, maskContext, foregroundInk])
       ink.setTransform(ratio, 0, 0, ratio, 0, 0)
     layers = faces.map(makeLayer)
@@ -460,21 +452,6 @@ export async function mountOpening(
     if (!raf && !document.hidden && visible && !suspended && !signal.aborted)
       raf = requestAnimationFrame(draw)
   }
-  function paintMaterial(ink: CanvasRenderingContext2D, bounds: DOMRect, paintHeight: number) {
-    ink.save()
-    ink.translate(-bounds.left, -bounds.top)
-    const top = Math.max(0, bounds.top),
-      left = Math.max(0, bounds.left)
-    const clip = new DOMRect(
-      left,
-      top,
-      Math.max(0, Math.min(width, bounds.right) - left),
-      Math.max(0, Math.min(paintHeight, bounds.bottom) - top),
-    )
-    paintForest(ink, width, paintHeight, elapsed, clip)
-    effects.paintMist(ink, width, paintHeight, elapsed)
-    ink.restore()
-  }
   function draw(now: number) {
     raf = 0
     const dt = Math.min(0.05, (now - lastNow) / 1000)
@@ -498,17 +475,21 @@ export async function mountOpening(
         )
       }
     const frame: TypeFrame = {
-      bounds: new DOMRect(0, 0, width, materialHeight),
+      bounds: new DOMRect(0, 0, width, height),
       paintMaterial(ink, bounds) {
-        if (!safariToolbar) {
-          paintMaterial(ink, bounds, materialHeight)
-          return
-        }
-        // Paint the complete native canvas, including the part Safari exposes
-        // behind its controls. Keep viewport alignment once it is fully inside.
-        const paintHeight = Math.max(materialHeight, bounds.height)
-        const top = Math.max(0, Math.min(paintHeight - bounds.height, bounds.top))
-        paintMaterial(ink, new DOMRect(bounds.left, top, bounds.width, bounds.height), paintHeight)
+        ink.save()
+        ink.translate(-bounds.left, -bounds.top)
+        const top = Math.max(0, bounds.top),
+          left = Math.max(0, bounds.left)
+        const clip = new DOMRect(
+          left,
+          top,
+          Math.max(0, Math.min(width, bounds.right) - left),
+          Math.max(0, Math.min(height, bounds.bottom) - top),
+        )
+        paintForest(ink, width, height, elapsed, clip)
+        effects.paintMist(ink, width, height, elapsed)
+        ink.restore()
       },
     }
     const typeActive = effects.drawType(now, frame)
@@ -530,13 +511,13 @@ export async function mountOpening(
 
     if (titleBounds.bottom > 0) {
       context.clearRect(0, 0, width, height)
-      paintMaterial(context, titleBounds, height)
+      frame.paintMaterial(context, titleBounds)
       context.globalCompositeOperation = 'destination-in'
       context.drawImage(mask, 0, 0, width, height)
       context.globalCompositeOperation = 'source-over'
     }
     effects.paintType?.(frame)
-    foregroundInk.clearRect(0, 0, width, materialHeight)
+    foregroundInk.clearRect(0, 0, width, height)
     drawEscapes(foregroundInk, elapsed, reduced.matches)
     if (!root.hasAttribute('data-ready')) {
       root.dataset.ready = 'true'

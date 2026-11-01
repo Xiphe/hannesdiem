@@ -215,9 +215,6 @@ html[data-layout='temple'] body {
   pointer-events: none;
   mix-blend-mode: screen;
 }
-.temple-artwork[data-safari-toolbar] .temple-escapes {
-  height: 100lvh;
-}
 .temple-artwork[data-state='ready'] .temple-escapes {
   display: block;
 }
@@ -353,12 +350,6 @@ html[data-layout='temple'] body {
   position: sticky;
   top: calc(50svh - var(--refrain-height, 50svh) / 2);
   height: var(--refrain-height, 50svh);
-}
-/* Only detected iOS Safari enters in document flow, avoiding its toolbar clip.
-   :where keeps print/forced-colour overrides at their existing specificity. */
-.refrain-composition[data-ready]:where([data-safari-toolbar]:not([data-sticky])) .refrain-stage {
-  position: relative;
-  top: 0;
 }
 .refrain-composition[data-ready] .refrain-phrase {
   position: absolute;
