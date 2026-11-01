@@ -1,4 +1,9 @@
-import { templeContent } from '../app/temple/tests/fixture.ts'
+import {
+  templeContent,
+  multipleTempleContent,
+  fourPhraseTempleContent,
+  actionlessTempleContent,
+} from '../app/temple/tests/fixture.ts'
 import assets from '../../.generated/assets.json' with { type: 'json' }
 import { CMX_DOCUMENT_SCHEMA, type CmxDocument } from '@cmx-tools/contracts'
 import type { PublishedDocuments, SiteMetadata } from '../../contracts/content.ts'
@@ -23,14 +28,8 @@ const page: CmxDocument = {
   content: { default: 'Synthetic page', title: 'Synthetic title' },
 }
 const site: SiteMetadata = {
-  version: 1,
-  routes: [
-    { path: '/fixture', document: 'fixture', title: 'Synthetic title', kind: 'page' },
-    { path: '/temple-of-sound', document: 'temple', title: 'Temple of Sound', kind: 'temple' },
-  ],
+  version: 2,
   media: { 'fixture-image': { src: assets.mark, width: 32, height: 32 } },
-  shareImages: {},
-  redirects: [{ path: '/', to: '/fixture', status: 307 }],
   navigation: {
     sections: [{ name: 'Fixture', items: [{ name: 'Fixture', href: '/fixture' }] }],
     legal: { name: 'Legal', items: [] },
@@ -39,11 +38,28 @@ const site: SiteMetadata = {
   },
 }
 export const documents: PublishedDocuments = {
-  '404': structuredClone(page),
+  _404: structuredClone(page),
   fixture: structuredClone(page),
-  temple: {
+  'temple-of-sound': {
     ...structuredClone(page),
-    content: templeContent,
+    content: { ...templeContent, metadata: { kind: 'temple' } },
+  },
+  'temple-multiple': {
+    ...structuredClone(page),
+    content: { ...multipleTempleContent, metadata: { kind: 'temple' } },
+  },
+  'temple-without-action': {
+    ...structuredClone(page),
+    content: { ...actionlessTempleContent, metadata: { kind: 'temple' } },
+  },
+  'temple-four-phrases': {
+    ...structuredClone(page),
+    content: { ...fourPhraseTempleContent, metadata: { kind: 'temple' } },
+  },
+  _redirects: {
+    ...structuredClone(page),
+    interface: { imports: {}, exports: { redirects: {} } },
+    content: { redirects: [{ path: '/', to: '/fixture', status: 307 }] },
   },
   _site: {
     ...structuredClone(page),

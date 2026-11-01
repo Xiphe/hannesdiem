@@ -7,8 +7,7 @@ if (process.env.WRANGLER_COMMAND === 'dev') {
   if (process.env.WEBSITE_TEST === 'true') {
     run('build:app')
   } else {
-    run('content:build', '--', '--reuse-media')
-    run('build:app', '--', '--local-media')
+    run('build')
   }
   console.log(`Local build ready in ${((performance.now() - started) / 1000).toFixed(1)}s`)
 }

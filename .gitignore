@@ -8,3 +8,4 @@ test-results/
 playwright-report/
 .env*
 .dev.vars*
+content/media/*.d.*.ts

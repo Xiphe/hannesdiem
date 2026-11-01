@@ -1,3 +1,5 @@
+import { roughBand as sharedBand, drawDisturbance, type TypeFrame } from './typography.ts'
+import type { Escapes } from './escapes.ts'
 import { createForest } from './forest.ts'
 import type { OpeningProps } from './types.ts'
 type Face = { id: string; family: string; weight: number }
@@ -35,7 +37,24 @@ type Disturbance = {
   strength?: number
 }
 
-export async function mountOpening(root: HTMLElement, props: OpeningProps, signal: AbortSignal) {
+export async function mountOpening(
+  root: HTMLElement,
+  props: OpeningProps,
+  signal: AbortSignal,
+  effects: {
+    escapes: Escapes
+    paintMist: (
+      context: CanvasRenderingContext2D,
+      width: number,
+      height: number,
+      seconds: number,
+    ) => void
+    drawType: (now: number, frame: TypeFrame) => boolean
+    paintType?: (frame: TypeFrame) => void
+    ready: () => void
+  },
+) {
+  const { beginPortals, cachePortal, addPortal, drawEscapes } = effects.escapes
   const clamp = (value: number) => Math.max(0, Math.min(1, value))
   const smooth = (value: number) => {
     const t = clamp(value)
@@ -82,20 +101,16 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     ...faces.map((face) => document.fonts.load(`${face.weight} 100px "${face.family}"`)),
   ])
   if (signal.aborted) return
-  const paintForest = createForest(image, props.lightSource)
+  const paintForest = createForest(image, props.lightSource, effects.escapes, signal)
   const context = canvas.getContext('2d')!
-  const mask = document.createElement('canvas'),
-    veil = document.createElement('canvas')
-  const maskContext = mask.getContext('2d')!,
-    veilContext = veil.getContext('2d')!
-  const edgeOverlay = document.createElement('canvas')
-  const edgeContext = edgeOverlay.getContext('2d')!
+  const foreground = root.parentElement!.querySelector<HTMLCanvasElement>('.temple-escapes')!
+  const foregroundInk = foreground.getContext('2d')!
+  const mask = document.createElement('canvas')
+  const maskContext = mask.getContext('2d')!
   const measure = document.createElement('canvas').getContext('2d')!
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const portrait = matchMedia('(orientation: portrait)')
   const appearance = matchMedia('(prefers-color-scheme: dark)')
-  let veilColor = getComputedStyle(root).backgroundColor
-  let appearanceChanged = false
   const words = props.title.toUpperCase().split(/\s+/)
   const lastInputStart = performance.now()
   let width = 0,
@@ -112,7 +127,6 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
   let lastInput = lastInputStart,
     lastScroll = -Infinity,
     nextIdle = lastInputStart + 1000 + variation(400) * 600,
-    nextDate = lastInputStart + 1400,
     idleSerial = 0
 
   // Optical corrections for this Bricolage wordmark, in 100-cap-height units.
@@ -273,14 +287,14 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     width = rect.width
     height = rect.height
     ratio = Math.min(devicePixelRatio, 1.5)
-    for (const surface of [canvas, mask, veil, edgeOverlay]) {
+    for (const surface of [canvas, mask, foreground]) {
       surface.width = Math.round(width * ratio)
       surface.height = Math.round(height * ratio)
     }
-    for (const ink of [context, maskContext, veilContext, edgeContext])
+    for (const ink of [context, maskContext, foregroundInk])
       ink.setTransform(ratio, 0, 0, ratio, 0, 0)
-    paintOverlay()
     layers = faces.map(makeLayer)
+    for (const layer of layers) for (const row of layer.rows) cachePortal(row.surface)
     disturbances.clear()
     requestDraw()
   }
@@ -304,11 +318,13 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
       }
       return result
     })
-    // Run the same sequence in 0.3 viewports of scroll, including the exit.
-    const y = clamp((progress - 1.05) / 0.95) * height
+    // Finish the face changes first, then exit at the following text’s document speed.
+    const y = Math.max(0, scroll - height * 0.1575)
     return {
       scroll,
-      y,
+      // The browser scrolls the sticky canvas. Glyph masks stay in local space.
+      y: 0,
+      exit: y,
       rows,
       rowFaces: rows.map((row) => (row.blend > 0.5 ? row.next : row.index)),
       reveal: smooth((y / height - 0.08) / 0.8),
@@ -336,17 +352,8 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     seed: number,
     offset = 0,
   ) {
-    ink.beginPath()
-    ink.moveTo(0, y + offset)
-    for (let x = 0; x <= width + 32; x += 32)
-      ink.lineTo(x, y + offset + (hash(seed + x * 0.01) - 0.5) * Math.min(9, h * 0.3))
-    ink.lineTo(width, y + h + offset)
-    for (let x = width; x >= -32; x -= 32)
-      ink.lineTo(x, y + h + offset + (hash(seed + x * 0.013 + 10) - 0.5) * Math.min(9, h * 0.3))
-    ink.closePath()
-    ink.clip()
+    sharedBand(ink, width, y, h, seed, offset)
   }
-
   function compose(s: ReturnType<typeof state>, now: number) {
     maskContext.clearRect(0, 0, width, height)
     for (let row = 0; row < 3; row++) {
@@ -392,7 +399,7 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
       !reduced.matches &&
       now - lastScroll < 145 &&
       s.scroll > 0 &&
-      s.y < height * 0.75 &&
+      s.exit < height * 0.75 &&
       variation(beat + 901) > 0.3
     if (fragment) {
       const count = variation(beat + 83) > 0.55 ? 2 : 1
@@ -430,63 +437,63 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     if (age >= duration) return false
     const letter = layers[event.layer].glyphs[event.glyph]
     const alt = layers[(event.layer + 1 + (event.glyph % 2)) % 4].glyphs[event.glyph]
-    const envelope = Math.min(1, age / 35) * (1 - age / duration)
-    const beat = Math.floor(age / (reduced.matches ? 110 : 46))
-    const rhythm = [1, 0.25, 0.8, 0.15, 0.65, 0.4][beat % 6]
-    const amount = envelope * rhythm * (event.idle ? event.strength! : 1)
-    const spread = (reduced.matches ? 2 : Math.min(17, letter.height * 0.11)) * amount
-    maskContext.save()
-    // Only the touched character's neighbourhood is disturbed, never the word's spacing.
-    maskContext.beginPath()
-    maskContext.rect(letter.x - 7, letter.y - s.y - 7, letter.width + 14, letter.height + 14)
-    maskContext.clip()
-    maskContext.globalCompositeOperation = 'destination-out'
-    maskContext.globalAlpha = amount * 0.95
-    maskContext.drawImage(
-      letter.tile,
-      letter.x - 4,
-      letter.y - s.y - 4,
-      letter.tile.width / ratio,
-      letter.tile.height / ratio,
+    drawDisturbance(
+      maskContext,
+      width,
+      ratio,
+      letter,
+      alt,
+      { ...event, age, duration, y: s.y },
+      reduced.matches,
     )
-    maskContext.globalCompositeOperation = 'source-over'
-    for (let band = 0; band < 5; band++) {
-      maskContext.save()
-      const y = letter.y - s.y + (letter.height * band) / 5
-      roughBand(maskContext, y, letter.height / 5 + 2, event.glyph * 7 + band + beat)
-      const source = (band + beat) % 3 === 0 ? alt : letter
-      const dx = (hash(band + event.serial + beat) > 0.5 ? 1 : -1) * spread
-      maskContext.globalAlpha = amount * 0.68
-      maskContext.drawImage(
-        source.tile,
-        letter.origin + source.offsetX + dx,
-        letter.baseline + source.offsetY - s.y + (band % 2 ? 1 : -1) * spread * 0.2,
-        source.tile.width / ratio,
-        source.tile.height / ratio,
-      )
-      maskContext.restore()
-    }
-    maskContext.restore()
     return true
   }
-
   function requestDraw() {
-    if (!raf && !document.hidden && visible && !signal.aborted) raf = requestAnimationFrame(draw)
+    if (!raf && !document.hidden && visible && !suspended && !signal.aborted)
+      raf = requestAnimationFrame(draw)
   }
   function draw(now: number) {
     raf = 0
-    if (appearanceChanged) {
-      veilColor = getComputedStyle(root).backgroundColor
-      appearanceChanged = false
-    }
     const dt = Math.min(0.05, (now - lastNow) / 1000)
     lastNow = now
     if (!reduced.matches) elapsed += dt
     const s = state()
-    date.style.setProperty('--scene-exit', `${-s.y}px`)
-    scrollHint.style.opacity = String(1 - smooth(s.scroll / Math.min(36, height * 0.04)))
-    compose(s, now)
-    if (!reduced.matches && now > nextIdle && now - lastInput > 800 && !s.y) {
+    const hintOpacity = String(1 - smooth(s.scroll / Math.min(36, height * 0.04)))
+    if (scrollHint.style.opacity !== hintOpacity) scrollHint.style.opacity = hintOpacity
+    const titleBounds = canvas.getBoundingClientRect()
+    if (titleBounds.bottom > 0) compose(s, now)
+    beginPortals()
+    for (const phase of s.rows)
+      if (titleBounds.bottom > 0 && (phase.blend <= 0.08 || phase.blend >= 0.92)) {
+        const row = layers[s.rowFaces[phase.row]].rows[phase.row]
+        addPortal(
+          row.surface,
+          row.x + titleBounds.left,
+          row.y + titleBounds.top,
+          row.width,
+          row.height,
+        )
+      }
+    const frame: TypeFrame = {
+      bounds: new DOMRect(0, 0, width, height),
+      paintMaterial(ink, bounds) {
+        ink.save()
+        ink.translate(-bounds.left, -bounds.top)
+        const top = Math.max(0, bounds.top),
+          left = Math.max(0, bounds.left)
+        const clip = new DOMRect(
+          left,
+          top,
+          Math.max(0, Math.min(width, bounds.right) - left),
+          Math.max(0, Math.min(height, bounds.bottom) - top),
+        )
+        paintForest(ink, width, height, elapsed, clip)
+        effects.paintMist(ink, width, height, elapsed)
+        ink.restore()
+      },
+    }
+    const typeActive = effects.drawType(now, frame)
+    if (!reduced.matches && now > nextIdle && now - lastInput > 800 && !s.exit) {
       const glyph = Math.floor(variation(idleSerial + 71) * layers[0].glyphs.length)
       const row = layers[0].glyphs[glyph].row
       disturbances.set(`idle-${idleSerial}`, {
@@ -501,46 +508,22 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
       nextIdle = now + 950 + variation(idleSerial) * 1350
     }
     for (const [key, event] of disturbances) if (!disturb(event, s, now)) disturbances.delete(key)
-    if (!reduced.matches && now > nextDate) {
-      date.animate([{ opacity: 0.12 }, { opacity: 1 }], { duration: 28 })
-      nextDate = now + 1800 + variation(Math.floor(now / 73)) * 1400
+
+    if (titleBounds.bottom > 0) {
+      context.clearRect(0, 0, width, height)
+      frame.paintMaterial(context, titleBounds)
+      context.globalCompositeOperation = 'destination-in'
+      context.drawImage(mask, 0, 0, width, height)
+      context.globalCompositeOperation = 'source-over'
     }
-    context.clearRect(0, 0, width, height)
-    paintForest(context, width, height, elapsed)
-    // One opaque veil with openings over the *combined* photograph + particles.
-    veilContext.clearRect(0, 0, width, height)
-    veilContext.globalCompositeOperation = 'source-over'
-    veilContext.globalAlpha = 1 - s.reveal
-    veilContext.fillStyle = veilColor
-    veilContext.fillRect(0, 0, width, height)
-    veilContext.globalAlpha = 1
-    veilContext.globalCompositeOperation = 'destination-out'
-    veilContext.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, width, height)
-    veilContext.globalCompositeOperation = 'source-over'
-    context.drawImage(veil, 0, 0, veil.width, veil.height, 0, 0, width, height)
-    // Edge colour is clipped to the live lettering, then disappears with its reveal.
-    if (overlayOpacity > 0 && s.reveal < 1) {
-      veilContext.clearRect(0, 0, width, height)
-      veilContext.drawImage(
-        edgeOverlay,
-        0,
-        0,
-        edgeOverlay.width,
-        edgeOverlay.height,
-        0,
-        0,
-        width,
-        height,
-      )
-      veilContext.globalCompositeOperation = 'destination-in'
-      veilContext.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, width, height)
-      veilContext.globalCompositeOperation = 'source-over'
-      context.globalAlpha = overlayOpacity * (1 - s.reveal)
-      context.drawImage(veil, 0, 0, veil.width, veil.height, 0, 0, width, height)
-      context.globalAlpha = 1
+    effects.paintType?.(frame)
+    foregroundInk.clearRect(0, 0, width, height)
+    drawEscapes(foregroundInk, elapsed, reduced.matches)
+    if (!root.hasAttribute('data-ready')) {
+      root.dataset.ready = 'true'
+      effects.ready()
     }
-    if (!root.hasAttribute('data-ready')) root.dataset.ready = 'true'
-    if (!reduced.matches || disturbances.size) requestDraw()
+    if (!reduced.matches || disturbances.size || typeActive) requestDraw()
   }
 
   function touchLetter(event: PointerEvent) {
@@ -602,7 +585,6 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
   appearance.addEventListener(
     'change',
     () => {
-      appearanceChanged = true
       requestDraw()
     },
     { signal },
@@ -612,7 +594,6 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
   reduced.addEventListener(
     'change',
     () => {
-      date.getAnimations().forEach((animation) => animation.cancel())
       requestDraw()
     },
     { signal },
@@ -631,24 +612,25 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
     { signal },
   )
 
-  // Artist-selected edge overlay.
-  const overlayOpacity = 0.11
-  const overlayColor = '#ff8800'
-  function paintOverlay() {
-    edgeContext.clearRect(0, 0, width, height)
-    const transparent = overlayColor + '00'
-    for (const gradient of [
-      edgeContext.createLinearGradient(0, 0, width, 0),
-      edgeContext.createLinearGradient(0, 0, 0, height),
-    ]) {
-      gradient.addColorStop(0, overlayColor)
-      gradient.addColorStop(0.42, transparent)
-      gradient.addColorStop(0.58, transparent)
-      gradient.addColorStop(1, overlayColor)
-      edgeContext.fillStyle = gradient
-      edgeContext.fillRect(0, 0, width, height)
-    }
-  }
+  let suspended = false
+  window.addEventListener(
+    'pagehide',
+    () => {
+      suspended = true
+      cancelAnimationFrame(raf)
+      raf = 0
+    },
+    { signal },
+  )
+  window.addEventListener(
+    'pageshow',
+    () => {
+      suspended = false
+      lastNow = performance.now()
+      requestDraw()
+    },
+    { signal },
+  )
   let visible = true
   const observer = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
@@ -660,7 +642,7 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
       raf = 0
     }
   })
-  observer.observe(root)
+  observer.observe(root.parentElement!)
   signal.addEventListener(
     'abort',
     () => {
@@ -668,9 +650,12 @@ export async function mountOpening(root: HTMLElement, props: OpeningProps, signa
       observer.disconnect()
       sizeObserver.disconnect()
       disturbances.clear()
-      date.getAnimations().forEach((animation) => animation.cancel())
+      layers = []
+      for (const surface of [canvas, mask, foreground]) surface.width = surface.height = 0
+      root.removeAttribute('data-ready')
     },
     { once: true },
   )
   resize()
+  return requestDraw
 }

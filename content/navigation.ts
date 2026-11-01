@@ -1,4 +1,4 @@
-import type { ContentRoute } from './types.ts'
+import type { SiteMetadata } from '../contracts/content.ts'
 
 export const socialLinks = [
   { title: 'Twitch', href: 'https://www.twitch.tv/hannes_diem', name: 'twitch' },
@@ -22,19 +22,9 @@ export const listenLinks = [
   { title: 'Tidal', href: 'https://tidal.com/browse/artist/3711015', name: 'tidal' },
   { title: 'SoundCloud', href: 'https://soundcloud.com/hannesdiem', name: 'soundcloud' },
 ]
-export function navigation(routeData: ContentRoute[]) {
-  const sections = [
-    {
-      name: 'Work',
-      items: routeData
-        .filter((route) => route.kind === 'release')
-        .sort((a, b) =>
-          ('releaseDate' in b ? (b.releaseDate ?? '') : '').localeCompare(
-            'releaseDate' in a ? (a.releaseDate ?? '') : '',
-          ),
-        )
-        .map((route) => ({ name: route.title, href: route.path })),
-    },
+export const navigation = {
+  sections: [
+    { name: 'Work', collection: 'release', items: [] },
     {
       name: 'One Week Album',
       items: [
@@ -43,17 +33,14 @@ export function navigation(routeData: ContentRoute[]) {
         { name: 'Løkken 2024 Recap', href: '/one-week-album/lokken-2024' },
       ],
     },
-  ]
-  return {
-    sections,
-    legal: {
-      name: 'Legal',
-      items: [
-        { name: 'Imprint', href: '/imprint' },
-        { name: 'Privacy', href: '/privacy' },
-      ],
-    },
-    social: socialLinks,
-    listen: listenLinks,
-  }
-}
+  ],
+  legal: {
+    name: 'Legal',
+    items: [
+      { name: 'Imprint', href: '/imprint' },
+      { name: 'Privacy', href: '/privacy' },
+    ],
+  },
+  social: socialLinks,
+  listen: listenLinks,
+} satisfies SiteMetadata['navigation']
