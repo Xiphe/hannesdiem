@@ -61,34 +61,10 @@ Include the exact release boundary, `sticky top + stage height - track height`, 
 
 Validation: app build, root TypeScript, formatting,47 Node checks,94 Chromium checks and14 targeted WebKit checks pass. The original complete Chromium replay reports zero downward reversals across245 frames.
 
-## Chorus entry after Safari toolbar collapse, 2026-11-01
+## Withdraw the iOS chorus clipping fixes, 2026-11-02
 
-Artist reports chorus lettering clipped as it enters the taller iOS viewport after the toolbar collapses. The native chorus canvas and glyph mask contain the full phrase, but the shared material and visibility checks stop at the opener’s100svh stage. Consequently, visible glyphs below that boundary have no material to reveal.
+The artist explicitly requests undoing the fix completely and prefers the original iOS cut-off. Restore the chorus runtime and tests to0342ff8, before all three clipping-related changes:9f80698 (large viewport),fb858fb (ordinary-flow entry and full-canvas painting), andfb5b0bc (iOS Safari detection). Remove the detector and its tests. Preserve the earlier native repetition animation, release-nudge correction and accepted spacing changes.
 
-Keep the accepted opener crop, sticky centre and scroll timing tied to the stable small viewport. Extend the chorus material and escaped-light canvas to100lvh, and use those shared bounds when deciding which chorus masks to draw and paint. This prepares the exposed strip without reallocating the material as browser controls move. See [WebKit’s viewport-unit definitions](https://webkit.org/blog/12445/new-webkit-features-in-safari-15-4/).
+The iOS entry clipping is accepted for this release; no toolbar workaround remains active. The discarded approaches and their evidence remain in those commits’ history.
 
-The synthetic browser regression separates a700px small viewport from an844px visible viewport and uses an opaque image to compare painted glyphs with their mask. It checks chorus entry wholly below the small edge and straddling it. The original renderer fails; the corrected renderer passes in Chromium and WebKit. This emulates the geometry in desktop WebKit; physical iOS toolbar behaviour remains a device review.
-
-Validation: build, both TypeScript checks, formatting and60 Node checks pass. All104 Chromium checks pass across the full and targeted runs; the desktop handoff sweep exceeded its30-second budget in the full run, then passed alone in34.2 seconds with a90-second limit. All13 targeted WebKit checks pass, including chorus rendering, multiple choruses, responsive rows and navigation cleanup.
-
-## Floating-toolbar clipping follow-up, 2026-11-02
-
-The artist reports that the viewport-height change did not resolve the issue. Their iPhone recording shows a straight horizontal cut above Safari’s collapsed address pill while the chorus scrolls into view; ordinary background content continues below it. The earlier desktop test checked only pixels inside a measured viewport and could not establish that the iOS defect was fixed. An [Apple Developer Forums report](https://developer.apple.com/forums/thread/800798) describes matching clipping of sticky/fixed content behind Safari26’s floating controls. This is a working diagnosis from the recording and report, not a reproduction of Safari’s browser UI in desktop WebKit.
-
-Enter each chorus in ordinary document flow. Arm its existing native sticky positioning once the full stage fits inside the stable small viewport, before the centred hold starts. Returning to the toolbar area restores ordinary flow. Switching modes before lock preserves the native geometry and lets the browser own the hold without scene frames. Keep the original hold length, release, font swaps and opener treatment.
-
-Prepare chorus masks one stage beyond the measured viewport and paint their complete canvas. Clamp material sampling to a full-height slice at viewport edges; when the canvas is wholly inside, its original viewport alignment is unchanged. This avoids a separate transparent strip in the lettering when Safari exposes content beyond the measured paint area. The original photograph raster size remains stable.
-
-The strengthened synthetic pixel check now compares the entire glyph mask, including off-viewport rows; it fails before the sampling correction. Geometry checks at390px and440px verify ordinary-flow entry and return, and a native centred hold with animation frames paused. They fail against the always-sticky renderer and pass with the workaround. These checks validate the mechanism, not the iOS browser chrome: the artist’s iPhone recheck remains the final pass/fail signal for the reported cut.
-
-Validation: app build, formatting, root and website TypeScript,60 Node checks, the complete106-test Chromium suite and15 targeted WebKit checks pass. The browser geometry checks cover entry, return and native lock at390px and the recording’s440px width. Physical iOS confirmation is still pending.
-
-## Scope the workaround to detected iOS Safari, 2026-11-02
-
-The artist asks to apply the toolbar fix only on detected iOS Safari. Gate ordinary-flow entry, overscan, complete-canvas material sampling and large-viewport escaped light on the same detector. Other browsers retain their original sticky entry, viewport culling and material crop.
-
-Identify iPhone/iPad/iPod Safari by its WebKit and Version/Safari tokens, excluding identifiable alternative iOS browsers and web views. iPadOS can present a desktop Mac user agent, so include `MacIntel` with more than one touch point; Mac Safari without touch remains on the original path. See [WebKit’s iPad desktop-user-agent announcement](https://webkit.org/blog/9674/new-webkit-features-in-safari-13/). This detection scopes a browser-UI workaround, not general touch support. Owned DOM markers are removed on teardown.
-
-Detection coverage includes iPhone/iPad Safari, desktop-mode iPad, Mac Safari, iOS Chrome/Firefox/Edge/Opera/DuckDuckGo/Google, iPad desktop-mode Chrome, web views and Android. Browser checks run the positive iPhone path and compare desktop Safari, desktop-mode iPad Safari and iOS Chrome. UA emulation verifies branching; it does not emulate Safari’s toolbar compositor.
-
-Validation: app build, formatting, both TypeScript checks,73 Node checks (including13 detection cases), all109 Chromium checks and18 targeted WebKit checks pass.
+Validation: restored application files and tests match0342ff8 exactly. App build, formatting, both TypeScript checks,60 Node checks and7 targeted WebKit checks pass. The production workflow runs the complete website suite before deployment.
