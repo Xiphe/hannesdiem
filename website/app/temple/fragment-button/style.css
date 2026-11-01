@@ -20,6 +20,7 @@
   min-height: 64px;
   padding: 0;
   border: 0;
+  border-radius: 4px;
   background: none;
   color: light-dark(#11120b, #d2d0c8);
   font:
@@ -42,4 +43,141 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+
+.temple-artwork {
+  position: relative;
+  isolation: isolate;
+}
+.fragment-ground {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.fragment-ground-hold {
+  position: sticky;
+  width: 100%;
+}
+.fragment-ground-ink,
+.temple-opening,
+.temple-stage {
+  isolation: isolate;
+}
+.fragment-ground-field {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+  z-index: -1;
+}
+/* Three groups drift at different rhythms; sticky layout owns scroll travel. */
+.fragment-ground-plane {
+  position: absolute;
+  inset: -64px -64px calc(-64px - var(--ground-parallax-pad, 0px));
+  --drift-x: 36px;
+  --drift-y: -26px;
+}
+.fragment-ground-plane[data-layer='1'] {
+  --drift-x: -30px;
+  --drift-y: 40px;
+}
+.fragment-ground-plane[data-layer='2'] {
+  --drift-x: 28px;
+  --drift-y: 32px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fragment-ground-plane {
+    animation: fragment-ground-drift 95s ease-in-out -23s infinite;
+  }
+  .fragment-ground-plane[data-layer='1'] {
+    animation-duration: 117s;
+    animation-delay: -28s;
+  }
+  .fragment-ground-plane[data-layer='2'] {
+    animation-duration: 103s;
+    animation-delay: -63s;
+  }
+}
+@keyframes fragment-ground-drift {
+  0%,
+  100% {
+    transform: translate(calc(-1 * var(--drift-x)), calc(-1 * var(--drift-y)));
+  }
+  50% {
+    transform: translate(var(--drift-x), var(--drift-y));
+  }
+}
+.fragment-ground-signal {
+  pointer-events: none;
+  animation: fragment-signal-life var(--signal-life) linear both;
+}
+.fragment-ground-signal path {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.fragment-ground-signal mask path {
+  fill: black;
+}
+.fragment-signal-trail {
+  stroke: light-dark(rgb(116 70 33 / 0.045), rgb(208 163 109 / 0.04));
+  stroke-width: 1.88;
+  stroke-dasharray: 1 1;
+  animation: fragment-signal-trail var(--signal-travel) linear both;
+}
+.fragment-signal-tip {
+  stroke: light-dark(rgb(116 70 33 / 0.09), rgb(208 163 109 / 0.12));
+  stroke-width: 1.96;
+  stroke-dasharray: 0.035 1;
+  animation: fragment-signal-tip var(--signal-travel) linear both;
+}
+@keyframes fragment-signal-life {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  5%,
+  55% {
+    opacity: 1;
+  }
+}
+@keyframes fragment-signal-trail {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fragment-signal-tip {
+  from {
+    stroke-dashoffset: 0.035;
+  }
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fragment-ground-signal {
+    display: none;
+  }
+}
+/* The moving pieces expose the page's opaque ground. No colour/opacity
+   reveal is layered above them, including during the opener handoff. */
+.temple-artwork:has(> .fragment-ground) :is(.temple-opening, .temple-stage) {
+  background-color: transparent;
+}
+@media print, (forced-colors: active) {
+  .fragment-ground,
+  .fragment-ground-field {
+    display: none;
+  }
+}
+
+.fragment-ground-piece {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  overflow: visible;
 }

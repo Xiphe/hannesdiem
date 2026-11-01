@@ -6,6 +6,7 @@ import { createAtmosphere } from './atmosphere.ts'
 import { createEscapes } from './escapes.ts'
 import { colourCopy } from './copy-colour.ts'
 import { blockType } from './block-type.ts'
+import { mountFragmentGround } from './fragment-button/ground.ts'
 export async function mountArtwork(
   host: HTMLElement,
   props: OpeningProps,
@@ -47,6 +48,7 @@ export async function mountArtwork(
       (i + 1) / (phrases.length - 1),
     ])
   })
+  mountFragmentGround(host, refrains, abort.signal)
   const fitBlocks = blockType(poem, abort.signal)
   const repetition = createRepetition(poem, abort.signal)
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')

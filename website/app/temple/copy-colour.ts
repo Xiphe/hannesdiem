@@ -2,9 +2,7 @@
 // encoding images or changing DOM styles during animation. Text stays selectable.
 import { noise as cloudNoise } from './atmosphere.ts'
 import { defaults } from './defaults.ts'
-const warmInk = [142, 68, 28]
-const coolInk = [36, 89, 137]
-const darkRange = [50, -8, -65]
+import { copyInkChannel } from './copy-palette.ts'
 export function colourCopy(
   root: HTMLElement,
   signal: AbortSignal,
@@ -143,21 +141,9 @@ export function colourCopy(
         const temperature = Math.max(-1, Math.min(1, (warm - cool) * 1.7 + detail * 0.2)) * variance
         // Near-black ink has no room for the old +/- shifts: channels clipped
         // to zero. Mix towards bounded coloured inks on paper instead.
-        const tint = temperature >= 0 ? warmInk : coolInk
-        const amount = Math.min(1, Math.abs(temperature) * 2.4)
         const at = (y * w + x) * 4
-        for (let c = 0; c < 3; c++) {
-          const original = Math.max(0, Math.min(255, base[c] + temperature * darkRange[c]))
-          frame.data[at + c] = Math.max(
-            0,
-            Math.min(
-              255,
-              Math.round(
-                lightInk ? (original + base[c] + (tint[c] - base[c]) * amount) / 2 : original,
-              ),
-            ),
-          )
-        }
+        for (let c = 0; c < 3; c++)
+          frame.data[at + c] = copyInkChannel(base[c], temperature, c, lightInk)
         frame.data[at + 3] = 255
       }
     ink!.putImageData(frame, 0, 0)

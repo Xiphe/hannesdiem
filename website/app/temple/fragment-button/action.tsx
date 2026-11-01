@@ -1,7 +1,11 @@
 import { ref, type Handle } from 'remix/component'
 import type { PoemPair } from '@hannesdiem/content-components'
 import { mountBorderMotion } from './border-motion.ts'
-import { assembleBorder, generateFragments, randomFrom, type Piece } from './fragment-generator.ts'
+import { copyInkColour } from '../copy-palette.ts'
+import { defaults } from '../defaults.ts'
+import { mountGroundSignal } from './ground-signal.ts'
+import { fragmentStroke, groundMaterial, provideGroundMaterial } from './material.ts'
+import { assembleBorder, generateFragments, type Piece } from './fragment-generator.ts'
 
 type Action = NonNullable<PoemPair['action']>
 
@@ -35,23 +39,65 @@ function mountFragmentAction(stage: HTMLElement, signal: AbortSignal) {
   const button = stage.querySelector<HTMLAnchorElement>('a')!
   const seed = stage.dataset.fragmentSeed ?? crypto.randomUUID()
   stage.dataset.fragmentSeed = seed
-  const source = generateFragments(seed, 8)
+  const source = generateFragments(seed, 11)
   let pieces = source
   const ns = 'http://www.w3.org/2000/svg'
+  const definitions = document.createElementNS(ns, 'defs')
+  board.appendChild(definitions)
+  const style = getComputedStyle(stage)
+  const themeBase = (theme: 'light' | 'dark') => {
+    const hex =
+      style.getPropertyValue(`--copy-ink-${theme}`).trim() ||
+      (theme === 'light' ? '#11120b' : defaults.copyColor)
+    return [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16))
+  }
+  const lightBase = themeBase('light')
+  const darkBase = themeBase('dark')
   const nodes = source.map((piece, i) => {
     const group = document.createElementNS(ns, 'g')
     group.dataset.piece = String(i)
-    const tint = randomFrom(`${i}/${piece.d}/tint`)
-    const hue = [36, 48, 75, 155, 190, 215, 25, 115][i % 8] + (tint() - 0.5) * 18
-    const saturation = 20 + tint() * 16
-    const lightness = 73 + tint() * 13
-    group.style.fill = `light-dark(hsl(${hue} ${saturation}% ${lightness - 42}%), hsl(${hue} ${saturation}% ${lightness}%))`
+    const temperature = ((i / (source.length - 1)) * 2 - 1) * defaults.copyVariance
+    const gradient = document.createElementNS(ns, 'linearGradient')
+    gradient.id = `fragment-tint-${crypto.randomUUID()}`
+    gradient.setAttribute('x1', i % 2 ? '100%' : '0%')
+    gradient.setAttribute('x2', i % 2 ? '0%' : '100%')
+    gradient.setAttribute('y2', '100%')
+    for (const [offset, shift] of [
+      [0, 3],
+      [1, -3],
+    ]) {
+      const stop = document.createElementNS(ns, 'stop')
+      stop.setAttribute('offset', String(offset))
+      const tint = Math.max(
+        -defaults.copyVariance,
+        Math.min(defaults.copyVariance, temperature + shift * 0.01),
+      )
+      stop.style.stopColor = `light-dark(${copyInkColour(lightBase, tint, true)}, ${copyInkColour(darkBase, tint, false)})`
+      gradient.appendChild(stop)
+    }
+    definitions.appendChild(gradient)
+    group.style.fill = `url(#${gradient.id})`
+    group.style.stroke = group.style.fill
     const path = document.createElementNS(ns, 'path')
     path.setAttribute('d', piece.d!)
+    path.setAttribute('stroke-width', String(fragmentStroke))
+    path.setAttribute('stroke-linejoin', 'round')
+    path.setAttribute('stroke-linecap', 'round')
     group.appendChild(path)
     board.appendChild(group)
     return group
   })
+  const artwork = stage.closest<HTMLElement>('.temple-artwork')
+  if (artwork && !groundMaterial(artwork)) {
+    provideGroundMaterial(artwork, { pieces: source, seed })
+    mountGroundSignal(
+      artwork,
+      source,
+      nodes.map((node) => node.querySelector('path')!),
+      seed,
+      signal,
+    )
+  }
   for (let i = 0; i < source.length; i++) {
     const ink = nodes[i].querySelector('path')!.getBBox()
     source[i] = { ...source[i], origin: [-(ink.x + ink.width / 2), -(ink.y + ink.height)] }
