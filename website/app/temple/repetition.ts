@@ -127,7 +127,7 @@ export function createRepetition(root: HTMLElement, signal: AbortSignal) {
           const delta = positions[i].top - positions[index].top
           for (const top of [
             other.lock,
-            other.height - positions[i].height,
+            other.lock + other.height - positions[i].height,
             items[i - 1] ? items[i - 1].lock + items[i - 1].height + 8 : other.lock,
           ]) {
             const travel = viewport + delta - top
