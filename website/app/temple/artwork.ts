@@ -220,9 +220,16 @@ export async function mountArtwork(
     for (const [chorusIndex, { refrain, refrainStage, ink }] of refrains.entries()) {
       const transitions = timings[chorusIndex]
       const section = refrain.getBoundingClientRect()
-      if (section.bottom < 0 || section.top > frame.bounds.height) continue
-      const hold = section.height - refrainStage.offsetHeight
-      const stickyTop = (stage.clientHeight - refrainStage.offsetHeight) / 2
+      const stageHeight = refrainStage.offsetHeight
+      const stickyTop = (stage.clientHeight - stageHeight) / 2
+      // Arm sticky before lock, once the whole stage clears the toolbar area.
+      // Both positioning modes have identical geometry until reaching lock.
+      const sticky = section.top <= Math.max(stickyTop, stage.clientHeight - stageHeight)
+      if (refrain.hasAttribute('data-sticky') !== sticky)
+        refrain.toggleAttribute('data-sticky', sticky)
+      // Prepare one stage ahead: Safari can reveal content behind its controls.
+      if (section.bottom < -stageHeight || section.top > frame.bounds.height + stageHeight) continue
+      const hold = section.height - stageHeight
       const position = Math.max(0, Math.min(1, (stickyTop - section.top) / hold))
       let index = 0,
         next = 0,
@@ -311,6 +318,7 @@ export async function mountArtwork(
           for (const { refrain, phrases } of refrains) {
             refrain.removeAttribute('data-ready')
             refrain.removeAttribute('data-active')
+            refrain.removeAttribute('data-sticky')
             refrain.style.removeProperty('--refrain-height')
             for (const phrase of phrases) phrase.removeAttribute('style')
           }

@@ -498,7 +498,11 @@ export async function mountOpening(
     const frame: TypeFrame = {
       bounds: new DOMRect(0, 0, width, materialHeight),
       paintMaterial(ink, bounds) {
-        paintMaterial(ink, bounds, materialHeight)
+        // Paint the complete native canvas, including the part Safari exposes
+        // behind its controls. Keep viewport alignment once it is fully inside.
+        const paintHeight = Math.max(materialHeight, bounds.height)
+        const top = Math.max(0, Math.min(paintHeight - bounds.height, bounds.top))
+        paintMaterial(ink, new DOMRect(bounds.left, top, bounds.width, bounds.height), paintHeight)
       },
     }
     const typeActive = effects.drawType(now, frame)

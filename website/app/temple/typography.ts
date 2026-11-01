@@ -321,7 +321,8 @@ export function createTypeSurface(
     scrolling = false,
   ) {
     const rect = canvas.getBoundingClientRect()
-    if (rect.bottom < 0 || rect.top > frame.bounds.height || rect.width === 0) return false
+    if (rect.bottom < -height || rect.top > frame.bounds.height + height || rect.width === 0)
+      return false
     const a = layers[index],
       b = layers[next]
     if (!a || !b) return false
@@ -427,7 +428,7 @@ export function createTypeSurface(
   }
   function paint(frame: TypeFrame) {
     const rect = canvas.getBoundingClientRect()
-    if (rect.bottom < 0 || rect.top > frame.bounds.height) return
+    if (rect.bottom < -height || rect.top > frame.bounds.height + height) return
     // The native sticky canvas owns motion. Only its material changes in RAF;
     // a late paint can no longer leave the phrase behind during fast scrolling.
     output.clearRect(0, 0, width, height)

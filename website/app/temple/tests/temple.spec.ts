@@ -22,7 +22,7 @@ test('Temple leaves room after the opening and scrolls its title independently o
     .toBeLessThan(-300)
 })
 
-test('Temple paints entering chorus ink below the small viewport after toolbar collapse', async ({
+test('Temple paints complete entering chorus ink across viewport and toolbar boundaries', async ({
   page,
 }) => {
   const smallHeight = 700
@@ -75,7 +75,7 @@ test('Temple paints entering chorus ink below the small viewport after toolbar c
         { height: smallHeight, straddling },
       )
       const coverage = () =>
-        canvas.evaluate((node, small) => {
+        canvas.evaluate((node) => {
           const canvas = node as HTMLCanvasElement
           const mask = (window as any).chorusMasks.get(canvas) as HTMLCanvasElement | undefined
           if (!mask) return { ink: 0, missing: 1 }
@@ -83,12 +83,11 @@ test('Temple paints entering chorus ink below the small viewport after toolbar c
           const output = canvas
             .getContext('2d')!
             .getImageData(0, 0, canvas.width, canvas.height).data
-          const rect = canvas.getBoundingClientRect()
           let ink = 0,
             missing = 0
+          // Safari can show page content behind its floating controls, beyond
+          // the measured viewport. The whole glyph mask must contain material.
           for (let y = 0; y < canvas.height; y++) {
-            const screenY = rect.top + (y * rect.height) / canvas.height
-            if (screenY <= small + 2 || screenY >= innerHeight - 8) continue
             for (let x = 0; x < canvas.width; x++) {
               const at = (y * canvas.width + x) * 4 + 3
               if (source[at] < 240) continue
@@ -97,12 +96,71 @@ test('Temple paints entering chorus ink below the small viewport after toolbar c
             }
           }
           return { ink, missing: ink ? missing / ink : 1 }
-        }, smallHeight)
+        })
       await expect.poll(async () => (await coverage()).ink).toBeGreaterThan(100)
       await expect.poll(async () => (await coverage()).missing).toBeLessThan(0.01)
     }
   }
 })
+
+for (const width of [390, 440]) {
+  test(`Temple enters in document flow and keeps its native chorus hold at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 956 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.addInitScript(() => {
+      const raf = window.requestAnimationFrame.bind(window)
+      window.requestAnimationFrame = (callback) =>
+        raf((time) => {
+          if (!(window as any).templeFramesPaused) callback(time)
+        })
+    })
+    await page.goto('/temple-of-sound')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const chorus = page.locator('.refrain-composition')
+    const stage = chorus.locator('.refrain-stage')
+    const enter = () =>
+      chorus.evaluate((node) =>
+        scrollTo(0, scrollY + node.getBoundingClientRect().top - (innerHeight - 60)),
+      )
+    const approach = () =>
+      chorus.evaluate((node) => {
+        const stage = node.querySelector<HTMLElement>('.refrain-stage')!
+        const lock =
+          (document.querySelector('.temple-stage')!.clientHeight - stage.offsetHeight) / 2
+        scrollTo(0, scrollY + node.getBoundingClientRect().top - (lock + 20))
+        return lock
+      })
+    // This verifies the workaround's geometry. Desktop WebKit has no Safari UI
+    // and cannot reproduce its clipping of sticky content behind the toolbar.
+    await enter()
+    await expect(stage).toHaveCSS('position', 'relative')
+    await approach()
+    await expect(stage).toHaveCSS('position', 'sticky')
+    // Returning to the toolbar area restores document flow without a jump.
+    await enter()
+    await expect(stage).toHaveCSS('position', 'relative')
+    await expect
+      .poll(async () => Math.abs((await stage.boundingBox())!.y - (956 - 60)))
+      .toBeLessThan(1.1)
+    const lock = await approach()
+    await expect(stage).toHaveCSS('position', 'sticky')
+    await expect
+      .poll(async () => Math.abs((await stage.boundingBox())!.y - (lock + 20)))
+      .toBeLessThan(1.1)
+    // Sticky is already armed before centre. Native scrolling must lock and
+    // hold it even when enhancement frames cannot run.
+    await page.evaluate(() => {
+      ;(window as any).templeFramesPaused = true
+      scrollBy(0, 40)
+    })
+    await expect.poll(async () => Math.abs((await stage.boundingBox())!.y - lock)).toBeLessThan(1.1)
+    const held = (await stage.boundingBox())!.y
+    await page.evaluate(() => scrollBy(0, 80))
+    await expect.poll(async () => (await stage.boundingBox())!.y).toBeCloseTo(held, 1)
+  })
+}
 
 test('Temple paints the chorus in its native scrolling canvas', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
