@@ -210,7 +210,7 @@ html[data-layout='temple'] body {
   position: fixed;
   inset: 0;
   width: 100%;
-  height: 100svh;
+  height: 100lvh;
   z-index: 3;
   pointer-events: none;
   mix-blend-mode: screen;

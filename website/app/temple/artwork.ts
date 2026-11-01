@@ -220,7 +220,7 @@ export async function mountArtwork(
     for (const [chorusIndex, { refrain, refrainStage, ink }] of refrains.entries()) {
       const transitions = timings[chorusIndex]
       const section = refrain.getBoundingClientRect()
-      if (section.bottom < 0 || section.top > stage.clientHeight) continue
+      if (section.bottom < 0 || section.top > frame.bounds.height) continue
       const hold = section.height - refrainStage.offsetHeight
       const stickyTop = (stage.clientHeight - refrainStage.offsetHeight) / 2
       const position = Math.max(0, Math.min(1, (stickyTop - section.top) / hold))
