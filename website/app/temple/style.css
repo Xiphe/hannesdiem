@@ -302,6 +302,12 @@ html[data-layout='temple'] body {
   margin-block: 1.4em;
   overflow-x: clip;
 }
+/* Font fitting reads native layout synchronously. The site's reduced-motion
+   transition duration must not defer those inherited font-size changes. */
+.refrain-composition,
+.refrain-composition * {
+  transition-property: none;
+}
 .refrain-stage {
   position: relative;
 }
@@ -335,7 +341,7 @@ html[data-layout='temple'] body {
   display: none;
 }
 .refrain-composition[data-ready] {
-  height: calc(var(--refrain-height, 50svh) + 52svh);
+  height: calc(var(--refrain-height, 50svh) + var(--refrain-runway, 52svh));
   margin-block: clamp(24px, 3vw, 40px);
 }
 .refrain-composition[data-ready] .refrain-stage {
@@ -672,6 +678,61 @@ html[data-layout='temple'] body {
 .bridge-body-copy em {
   font-style: italic;
 }
+
+.final-verse {
+  overflow-x: visible;
+  padding-bottom: max(120px, 20svh);
+}
+.final-verse > p {
+  overflow-x: clip;
+}
+/* The closing chorus now provides the exit space formerly reserved at the end
+   of the standalone final-verse study. */
+.final-verse[data-has-refrain] {
+  padding-bottom: 0;
+}
+.final-refrain {
+  --refrain-runway: 78svh;
+}
+.final-refrain:has(.refrain-composition[data-ready]) {
+  padding-bottom: var(--refrain-end-space, 0px);
+}
+.final-refrain .refrain-composition[data-ready] {
+  margin-bottom: 0;
+}
+@media print, (forced-colors: active) {
+  .final-refrain:has(.refrain-composition[data-ready]) {
+    padding-bottom: 0;
+  }
+}
+.final-verse-phrase {
+  width: 50%;
+  text-align: left;
+}
+.final-verse .final-verse-phrase:nth-of-type(3) {
+  margin-inline-start: 50%;
+}
+.final-verse .final-verse-phrase + .final-verse-phrase {
+  margin-top: calc(clamp(16px, 2.25vw, 32px) + 0.5rem);
+}
+.final-verse-phrase:nth-of-type(3) .block-line:first-child {
+  text-align: right;
+}
+.final-verse-phrase:nth-of-type(3) .block-line:first-child .block-row-ink {
+  left: auto;
+  right: 0;
+}
+@media (max-width: 640px) {
+  .final-verse-phrase {
+    width: calc(200% / 3);
+  }
+  .final-verse .final-verse-phrase:nth-of-type(3) {
+    margin-inline-start: calc(100% / 3);
+  }
+  .final-verse .final-verse-phrase + .final-verse-phrase {
+    margin-top: calc(clamp(32px, 6svh, 48px) + 1rem);
+  }
+}
 .bridge-body > .bridge-body-copy + .bridge-body-copy {
   margin-top: clamp(56px, 10svh, 100px);
 }
@@ -679,6 +740,179 @@ html[data-layout='temple'] body {
    before the following surface begins its reveal. */
 .bridge-body[data-paged] {
   padding-bottom: calc(100svh + var(--bridge-linger-runway, 0px));
+}
+.bridge-body[data-paged]:has(+ .final-pair) {
+  /* Keep 10% of the space below the lingering address before the next verse. */
+  padding-bottom: calc(
+    10svh + var(--bridge-address-clearance, 75svh) * 0.9 + var(--bridge-linger-runway, 0px)
+  );
+}
+
+.verse-finale {
+  position: relative;
+  margin-top: calc(clamp(32px, 4.5vw, 64px) + 1rem);
+}
+.rise-entry-marker {
+  position: absolute;
+  width: 1px;
+  visibility: hidden;
+  pointer-events: none;
+}
+.verse-finale-stage {
+  display: flow-root;
+}
+.final-verse .rise-call {
+  font-family: CinzelDecorative, serif;
+  font-weight: 700;
+  font-size: var(--rise-font-size, calc(clamp(24px, 3.5vw, 44px) * (1 + var(--rise-index) * 0.22)));
+  line-height: 1.05;
+  text-align: center;
+  text-wrap: balance;
+}
+.rise-call-ink {
+  display: inline-block;
+  line-height: 1;
+}
+.verse-rise > .rise-call + .rise-call {
+  margin-top: 1.5rem;
+}
+.temple-artwork:is([data-state='loading'], [data-state='ready']) .rise-call:last-child {
+  width: var(--rise-width, 100%);
+  margin-inline: calc((100% - var(--rise-width, 100%)) / 2);
+  white-space: nowrap;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .temple-artwork:is([data-state='loading'], [data-state='ready'])
+      .verse-rise
+      > .rise-call
+      + .rise-call {
+      margin-top: var(--rise-gap, 4svh);
+    }
+    .temple-artwork[data-state='ready'] .rise-call {
+      animation: verse-rise-entry linear both;
+      animation-timing-function: linear(0 0%, 0 var(--rise-delay, 55%), 1 100%);
+      animation-timeline: var(--rise-timeline, view());
+      animation-range: entry 0% cover 50%;
+    }
+  }
+}
+@keyframes verse-rise-entry {
+  0% {
+    transform: translateY(65svh);
+  }
+  100% {
+    transform: none;
+  }
+}
+@media print, (forced-colors: active) {
+  .temple-artwork:is([data-state='loading'], [data-state='ready'])
+    .verse-rise
+    > .rise-call
+    + .rise-call {
+    margin-top: 1.5rem;
+  }
+  .temple-artwork[data-state='ready'] .rise-call {
+    animation: none;
+  }
+}
+.verse-drop {
+  overflow-x: clip;
+  margin-top: clamp(24px, 4svh, 40px);
+}
+.verse-drop-stage {
+  display: grid;
+  place-items: center;
+  padding-block: 4svh 20svh;
+}
+.final-verse .verse-drop-copy {
+  width: 100%;
+  font-size: var(--drop-font-size, clamp(17px, 1.6vw, 23px));
+  line-height: 1.8;
+  text-align: center;
+  text-wrap: wrap;
+  perspective: 1000px;
+}
+.verse-drop-line {
+  display: block;
+}
+.temple-artwork[data-state='ready'] .verse-drop-line {
+  white-space: nowrap;
+}
+.verse-drop-word {
+  display: inline-block;
+}
+@supports (animation-timeline: view()) and (view-timeline-inset: 1px) and
+  (timeline-scope: --rise-call) {
+  @media (prefers-reduced-motion: no-preference) {
+    .temple-artwork[data-state='ready'] .final-verse:not([data-has-refrain]):has(.verse-drop) {
+      padding-bottom: 100svh;
+    }
+    .temple-artwork:is([data-state='loading'], [data-state='ready'])
+      .verse-finale:has(.verse-drop) {
+      height: calc(
+        var(--finale-height) + 70svh / var(--drop-speed, 0.7) * var(--drop-hold-fraction, 0.86)
+      );
+      view-timeline-name: --verse-drop;
+      view-timeline-axis: block;
+      /* Match the inset viewport to the whole stack, including any part above
+         the screen. Assembly continues briefly beyond the shared sticky hold. */
+      view-timeline-inset: var(--finale-top) var(--finale-inset-end);
+    }
+    .temple-artwork:is([data-state='loading'], [data-state='ready'])
+      .verse-finale:has(.verse-drop)
+      > .verse-finale-stage {
+      position: sticky;
+      top: var(--finale-top);
+    }
+    .temple-artwork:is([data-state='loading'], [data-state='ready']) .verse-drop {
+      margin-top: var(--drop-gap, 4svh);
+    }
+    .temple-artwork:is([data-state='loading'], [data-state='ready']) .verse-drop-stage {
+      padding: 0;
+    }
+    .temple-artwork[data-state='ready'] .verse-drop-word {
+      animation: verse-drop-arrival cubic-bezier(0.2, 0.35, 0.6, 0.85) both;
+      animation-timeline: --verse-drop;
+      animation-range: contain calc(var(--drop-start) / var(--drop-hold-fraction, 0.86)) contain
+        calc(var(--drop-end) / var(--drop-hold-fraction, 0.86));
+    }
+  }
+}
+@keyframes verse-drop-arrival {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--drop-x), var(--drop-y), var(--drop-z)) rotateX(var(--drop-angle));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media print, (forced-colors: active) {
+  .temple-artwork[data-state='ready'] .final-verse:not([data-has-refrain]):has(.verse-drop) {
+    padding-bottom: 2rem;
+  }
+  .temple-artwork:is([data-state='loading'], [data-state='ready']) .verse-finale:has(.verse-drop) {
+    height: auto;
+  }
+  .temple-artwork:is([data-state='loading'], [data-state='ready'])
+    .verse-finale:has(.verse-drop)
+    > .verse-finale-stage {
+    position: static;
+  }
+  .temple-artwork:is([data-state='loading'], [data-state='ready']) .verse-drop {
+    margin-top: 2rem;
+  }
+  .verse-drop-stage,
+  .temple-artwork:is([data-state='loading'], [data-state='ready']) .verse-drop-stage {
+    position: static;
+    height: auto;
+    padding-block: 2rem;
+  }
+  .temple-artwork[data-state='ready'] .verse-drop-word {
+    animation: none;
+  }
 }
 .bridge-paragraph {
   display: contents;
@@ -704,7 +938,8 @@ html[data-layout='temple'] body {
   pointer-events: none;
 }
 @media print, (forced-colors: active) {
-  .bridge-body[data-paged] {
+  .bridge-body[data-paged],
+  .bridge-body[data-paged]:has(+ .final-pair) {
     padding-bottom: 0;
   }
   .bridge-page {

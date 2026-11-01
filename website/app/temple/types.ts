@@ -1,4 +1,4 @@
-import type { PoemPair, PoemLine } from '@hannesdiem/content-components'
+import type { PoemPair, PoemLine, PoemOpeningProps } from '@hannesdiem/content-components'
 export interface OpeningProps {
   pair?: PoemPair
   pairs?: readonly PoemPair[]
@@ -6,6 +6,7 @@ export interface OpeningProps {
   bridgeBody?: readonly (
     string | { text: string; wideBreaksAfter?: readonly string[]; linger?: string }
   )[]
+  finalVerse?: PoemOpeningProps['finalVerse']
   title: string
   dates: { start: string; end: string }
   image: { src: string; width: number; height: number }

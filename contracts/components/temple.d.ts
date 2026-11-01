@@ -41,6 +41,13 @@ export interface PoemOpeningProps {
   bridgeBody?: readonly (
     string | { text: string; wideBreaksAfter?: readonly string[]; linger?: string }
   )[]
+  finalVerse?: {
+    intro: readonly PoemLine[]
+    phrases: readonly (readonly PoemLine[])[]
+    rise?: readonly string[]
+    drop?: string
+    refrain?: PoemPair['refrain']
+  }
   children?: RemixNode
 }
 export interface PoemSectionProps {

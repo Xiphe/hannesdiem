@@ -1,4 +1,6 @@
 import { createBridgeLinger } from './bridge-linger.ts'
+import { fitVerseRise } from './verse-rise.ts'
+import { fitVerseDrop } from './verse-drop.tsx'
 import { createBridgeCloud } from './bridge-cloud.ts'
 import { createBridgePages } from './bridge-pages.ts'
 import { createRepetition } from './repetition.ts'
@@ -52,6 +54,8 @@ export async function mountArtwork(
   })
   const fitBlocks = blockType(poem, abort.signal)
   const repetition = createRepetition(poem, abort.signal)
+  const fitRise = fitVerseRise(poem, abort.signal)
+  const fitDrop = fitVerseDrop(poem, abort.signal)
   const bridgePages = createBridgePages(poem, abort.signal)
   const bridgeLinger = createBridgeLinger(poem, abort.signal)
   const bridgeGround = document.createElement('div')
@@ -156,7 +160,14 @@ export async function mountArtwork(
         phrase.style.fontSize = `${size}px`
         for (let i = 0; i < 3; i++) {
           const content = phrase.querySelector<HTMLElement>('[data-ink]')!
-          const scale = Math.min(1, maxHeight / content.offsetHeight, width / content.scrollWidth)
+          const bounds = inkBounds(phrase)
+          // Inline spans report scrollWidth=0. Fit their native range and actual
+          // glyph ink so a long unbroken word cannot escape the canvas.
+          const scale = Math.min(
+            1,
+            maxHeight / Math.max(content.offsetHeight, bounds.height),
+            width / Math.max(content.getBoundingClientRect().width, bounds.width),
+          )
           if (scale >= 0.999) break
           phrase.style.fontSize = `${parseFloat(phrase.style.fontSize) * scale}px`
         }
@@ -164,6 +175,12 @@ export async function mountArtwork(
       const contentHeight =
         Math.max(...phrases.map((p) => Math.max(p.offsetHeight, inkBounds(p).height))) + 32
       refrain.style.setProperty('--refrain-height', `${contentHeight}px`)
+      if (refrain.parentElement!.classList.contains('final-refrain')) {
+        // Match the stable svh viewport used by the sticky position. Mobile
+        // innerHeight can temporarily expand while unfitted text overflows.
+        const tail = Math.max(0, (stage.clientHeight - contentHeight) / 2)
+        refrain.parentElement!.style.setProperty('--refrain-end-space', `${tail}px`)
+      }
       const lastInkHeight = inkBounds(phrases[phrases.length - 1]).height
       refrain.parentElement!.style.setProperty(
         '--refrain-tail-gap',
@@ -176,6 +193,8 @@ export async function mountArtwork(
     fitBlocks()
     fitRefrain()
     repetition.resize()
+    fitRise()
+    fitDrop()
     bridgePages.resize(reduced.matches)
     // WebKit settles native baseline probes after painting the newly fitted DOM.
     // Rebuilding masks immediately caches old baselines and clips later rows.
@@ -268,6 +287,8 @@ export async function mountArtwork(
       fitBlocks()
       fitRefrain()
       repetition.resize()
+      fitRise()
+      fitDrop()
       bridgePages.resize(reduced.matches)
       await settledLayout(abort.signal)
       if (abort.signal.aborted) return
@@ -307,6 +328,7 @@ export async function mountArtwork(
         () => {
           observer.disconnect()
           for (const { refrain, phrases } of refrains) {
+            refrain.parentElement!.style.removeProperty('--refrain-end-space')
             refrain.removeAttribute('data-ready')
             refrain.removeAttribute('data-active')
             refrain.style.removeProperty('--refrain-height')

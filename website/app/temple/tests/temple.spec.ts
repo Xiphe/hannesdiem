@@ -1335,3 +1335,296 @@ for (const width of [390, 1440])
     await expect(page.locator('.bridge-linger')).toHaveCount(0)
     await expect(page.locator('.bridge-page')).toHaveCount(0)
   })
+
+for (const [width, height] of [
+  [390, 844],
+  [1440, 900],
+  [844, 390],
+]) {
+  test(`Temple rise reaches centre before a shared assembly hold at ${width}x${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto('/temple-rise')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const rise = page.locator('.verse-rise')
+    const calls = rise.locator('.rise-call')
+    expect(
+      await calls.evaluateAll((nodes) =>
+        nodes.every((node) => getComputedStyle(node).position === 'relative'),
+      ),
+    ).toBe(true)
+    const fonts = await calls.evaluateAll((nodes) =>
+      nodes.map((n) => parseFloat(getComputedStyle(n).fontSize)),
+    )
+    for (let i = 1; i < fonts.length; i++) expect(fonts[i]).toBeGreaterThan(fonts[i - 1])
+    const ink = calls.locator('.rise-call-ink')
+    const widths = await ink.evaluateAll((nodes) =>
+      nodes.map((n) => n.getBoundingClientRect().width),
+    )
+    for (let i = 1; i < widths.length; i++) expect(widths[i]).toBeGreaterThan(widths[i - 1])
+    expect(
+      await ink.last().evaluate((node) => {
+        const range = document.createRange()
+        range.selectNodeContents(node)
+        return range.getClientRects().length
+      }),
+    ).toBe(1)
+    const column = await page.locator('.final-verse').boundingBox()
+    expect((await calls.last().boundingBox())!.width).toBeCloseTo(width - 32, 0)
+    expect((await calls.last().boundingBox())!.width).toBeGreaterThan(column!.width)
+    expect(widths.at(-1)!).toBeGreaterThan((width - 32) * 0.85)
+    expect(widths.at(-1)!).toBeLessThan((width - 32) * 0.92)
+    expect((await page.locator('.verse-drop-copy').boundingBox())!.width).toBeCloseTo(
+      column!.width,
+      0,
+    )
+    // Each delayed call stays below the screen until its own short approach,
+    // reaches the same centre, then immediately travels with native scrolling.
+    for (let index = 0; index < 4; index++) {
+      const call = calls.nth(index)
+      const arrival = await call.evaluate((node) => {
+        const rect = node.getBoundingClientRect()
+        const offset = new DOMMatrix(getComputedStyle(node).transform).m42
+        return scrollY + rect.top - offset + rect.height / 2 - innerHeight / 2
+      })
+      if (index > 0) {
+        await page.evaluate((y) => scrollTo(0, y), arrival - height * 0.1)
+        await expect.poll(async () => (await call.boundingBox())!.y).toBeGreaterThan(height)
+      }
+      // Scroll offsets are quantised to whole pixels in some engines.
+      await page.evaluate((y) => scrollTo(0, Math.ceil(y)), arrival)
+      await expect
+        .poll(() =>
+          call.evaluate((node) => {
+            const rect = node.getBoundingClientRect()
+            return Math.abs(rect.top + rect.height / 2 - innerHeight / 2)
+          }),
+        )
+        .toBeLessThan(1.1)
+      if (index === 3) {
+        // No word may begin assembling before the final call's arrival.
+        await page.evaluate((y) => scrollTo(0, Math.floor(y) - 1), arrival)
+        await expect
+          .poll(() =>
+            page
+              .locator('.verse-drop-word')
+              .evaluateAll((nodes) =>
+                Math.max(...nodes.map((node) => parseFloat(getComputedStyle(node).opacity))),
+              ),
+          )
+          .toBe(0)
+        await page.evaluate((y) => scrollTo(0, Math.ceil(y)), arrival)
+      }
+      // Backtracking for the gate check schedules another timeline update.
+      // Wait for its arrival before measuring subsequent native movement.
+      await expect
+        .poll(() =>
+          call.evaluate((node) => Math.abs(new DOMMatrix(getComputedStyle(node).transform).m42)),
+        )
+        .toBeLessThan(0.1)
+      const before = (await call.boundingBox())!.y
+      await page.evaluate(() => scrollBy(0, 50))
+      await expect.poll(async () => (await call.boundingBox())!.y - before).toBeCloseTo(-50, 0)
+    }
+    const drop = page.locator('.verse-drop-copy')
+    expect(
+      await page.locator('.verse-finale-stage').evaluate((node) => getComputedStyle(node).position),
+    ).toBe('sticky')
+    const pin = await page.locator('.verse-finale').evaluate((node) => {
+      const rect = node.getBoundingClientRect()
+      const stageHeight = node.querySelector('.verse-finale-stage')!.getBoundingClientRect().height
+      return {
+        start:
+          scrollY + rect.top - parseFloat(getComputedStyle(node).getPropertyValue('--finale-top')),
+        hold: rect.height - stageHeight,
+      }
+    })
+    const meanOpacity = () =>
+      page
+        .locator('.verse-drop-word')
+        .evaluateAll(
+          (nodes) =>
+            nodes.reduce((sum, node) => sum + parseFloat(getComputedStyle(node).opacity), 0) /
+            nodes.length,
+        )
+    await page.evaluate((y) => scrollTo(0, y), pin.start + pin.hold * 0.25)
+    await expect.poll(meanOpacity).toBeGreaterThan(0)
+    const partial = await meanOpacity()
+    const pinnedY = (await drop.boundingBox())!.y
+    const pinnedCalls = await calls.evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().top),
+    )
+    expect(
+      (await calls.last().boundingBox())!.y + (await calls.last().boundingBox())!.height,
+    ).toBeLessThanOrEqual(pinnedY + 1)
+    expect(pinnedY + (await drop.boundingBox())!.height / 2).toBeCloseTo(height * 0.5, 0)
+    await page.evaluate((y) => scrollTo(0, y), pin.start + pin.hold * 0.75)
+    await expect.poll(meanOpacity).toBeGreaterThan(partial)
+    expect((await drop.boundingBox())!.y).toBeCloseTo(pinnedY, 0)
+    const heldCalls = await calls.evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().top),
+    )
+    for (let index = 0; index < heldCalls.length; index++)
+      expect(heldCalls[index]).toBeCloseTo(pinnedCalls[index], 0)
+    await page.evaluate((y) => scrollTo(0, Math.ceil(y) + 1), pin.start + pin.hold)
+    await expect
+      .poll(() =>
+        page
+          .locator('.verse-drop-word')
+          .evaluateAll((nodes) =>
+            Math.min(...nodes.map((node) => parseFloat(getComputedStyle(node).opacity))),
+          ),
+      )
+      .toBeGreaterThan(0.8)
+    // The earlier exit must overlap visible depth motion, not merely an
+    // imperceptible easing tail whose progress is fractionally below one.
+    const remainingDepth = () =>
+      page
+        .locator('.verse-drop-word')
+        .evaluateAll((nodes) =>
+          Math.max(...nodes.map((node) => new DOMMatrix(getComputedStyle(node).transform).m43)),
+        )
+    await expect.poll(remainingDepth).toBeGreaterThan(20)
+    expect(await remainingDepth()).toBeLessThan(200)
+    const dropBefore = (await drop.boundingBox())!.y
+    const callsBefore = await calls.evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().top),
+    )
+    await page.evaluate(() => scrollBy(0, 50))
+    await expect.poll(async () => (await drop.boundingBox())!.y - dropBefore).toBeCloseTo(-50, 0)
+    const callsAfter = await calls.evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().top),
+    )
+    for (let index = 0; index < callsAfter.length; index++)
+      expect(callsAfter[index] - callsBefore[index]).toBeCloseTo(-50, 0)
+    await page.evaluate((y) => scrollTo(0, Math.ceil(y)), pin.start + pin.hold * 1.2)
+    await expect
+      .poll(() =>
+        page
+          .locator('.verse-drop-word')
+          .evaluateAll((nodes) =>
+            nodes.every(
+              (node) => node.getAnimations()[0].effect!.getComputedTiming().progress === 1,
+            ),
+          ),
+      )
+      .toBe(true)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect
+      .poll(() =>
+        calls.evaluateAll((nodes) =>
+          nodes.every((n) => getComputedStyle(n).animationName === 'none'),
+        ),
+      )
+      .toBe(true)
+  })
+}
+
+for (const reduced of [false, true])
+  for (const width of [390, 1440]) {
+    test(`Temple final refrain resolves four phrases after the drop at ${width}px (reduced: ${reduced})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 })
+      if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
+      await page.goto('/temple-rise')
+      await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+      const finalVerse = page.locator('.final-verse')
+      await expect(finalVerse).toHaveAttribute('data-has-refrain', '')
+      await expect(finalVerse).toHaveCSS('padding-bottom', '0px')
+      await expect(page.locator('.rise-controls, input[type=range]')).toHaveCount(0)
+      const chorus = page.locator('.final-refrain .refrain-composition')
+      await expect(chorus).toHaveAttribute('data-ready', 'true')
+      const phrases = chorus.locator('.refrain-phrase')
+      const runway = await chorus.evaluate(
+        (node) =>
+          node.getBoundingClientRect().height -
+          node.querySelector('.refrain-stage')!.getBoundingClientRect().height,
+      )
+      expect(runway).toBeCloseTo(900 * 0.78, 0)
+      expect(
+        await phrases.evaluateAll((nodes) =>
+          nodes.map((node) => (node as HTMLElement).dataset.face),
+        ),
+      ).toEqual(['cinzel', 'cinzel', 'unbounded', 'cinzel'])
+      const gap =
+        (await chorus.boundingBox())!.y -
+        ((await finalVerse.boundingBox())!.y + (await finalVerse.boundingBox())!.height)
+      expect(gap).toBeGreaterThanOrEqual(0)
+      expect(gap).toBeLessThanOrEqual(48)
+      for (let index = 0; index < 4; index++) {
+        await chorus.evaluate((node, progress) => {
+          const rect = node.getBoundingClientRect()
+          const stage = node.querySelector('.refrain-stage')!.getBoundingClientRect()
+          scrollTo(
+            0,
+            scrollY +
+              rect.top -
+              (innerHeight - stage.height) / 2 +
+              (rect.height - stage.height) * progress,
+          )
+        }, index / 3)
+        await expect(chorus).toHaveAttribute('data-active', String(index))
+      }
+      const long = phrases.nth(2).locator('[data-ink]')
+      expect((await long.boundingBox())!.height).toBeLessThanOrEqual(451)
+      expect(
+        await long.locator('[data-word]').evaluateAll((nodes) =>
+          nodes.every((node) => {
+            const rect = node.getBoundingClientRect()
+            return rect.left >= -1 && rect.right <= innerWidth + 1
+          }),
+        ),
+      ).toBe(true)
+      await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+      await expect(chorus).toHaveAttribute('data-active', '3')
+      await expect
+        .poll(() =>
+          chorus.locator('.refrain-stage').evaluate((node) => {
+            const rect = node.getBoundingClientRect()
+            return rect.top + rect.height / 2
+          }),
+        )
+        .toBeCloseTo(450, 0)
+      const atEnd = await chorus.locator('.refrain-stage').boundingBox()
+      await page.evaluate(() => scrollBy(0, 100))
+      expect((await chorus.locator('.refrain-stage').boundingBox())!.y).toBeCloseTo(atEnd!.y, 0)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+        false,
+      )
+    })
+  }
+
+for (const viewport of [
+  { width: 390, height: 664 },
+  { width: 375, height: 568 },
+]) {
+  test(`Temple mobile final phrase stays centred at page end at ${viewport.width}px`, async ({
+    browser,
+    baseURL,
+  }) => {
+    const context = await browser.newContext({ baseURL, viewport, isMobile: true, hasTouch: true })
+    const page = await context.newPage()
+    try {
+      await page.goto('/temple-rise')
+      await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+      const chorus = page.locator('.final-refrain .refrain-composition')
+      const stage = chorus.locator('.refrain-stage')
+      const ending = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
+      const center = () =>
+        stage.evaluate((node) => {
+          const rect = node.getBoundingClientRect()
+          return rect.top + rect.height / 2
+        })
+      for (const offset of [-20, 0]) {
+        await page.evaluate((y) => scrollTo(0, y), ending + offset)
+        await expect(chorus).toHaveAttribute('data-active', '3')
+        await expect.poll(center).toBeCloseTo(viewport.height / 2, 0)
+      }
+    } finally {
+      await context.close()
+    }
+  })
+}

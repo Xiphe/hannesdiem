@@ -1,6 +1,6 @@
 import { bridgeTextNodes } from './bridge-text-dom.ts'
 export const bridgeAnimatingGlyphs = 7
-export const bridgeScrollPerGlyph = 6
+export const bridgeScrollPerGlyph = 3
 
 export function bridgeGlyphScale(position: number, index: number) {
   return Math.max(0, Math.min(1, (position - index) / bridgeAnimatingGlyphs)) ** 3

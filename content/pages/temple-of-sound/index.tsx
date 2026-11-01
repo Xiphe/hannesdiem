@@ -180,6 +180,48 @@ And I also came to know that **I'm capable** of carrying and catering a wound fu
 and **staying with you**, my child.`,
           },
         ]}
+        finalVerse={{
+          intro: [
+            { text: "I'm devoting these two months to you, to the" },
+            { text: 'tension and resonance', face: 'cinzel' },
+            { text: 'between us and this elusive, precious reality out there.' },
+          ],
+          phrases: [
+            [
+              { text: 'May we find the' },
+              { text: 'melodies', face: 'cinzel' },
+              { text: 'that soothe and excite us,' },
+            ],
+            [
+              { text: 'write the' },
+              { text: 'words', face: 'cinzel' },
+              { text: 'that speak our pain and joy,' },
+            ],
+            [
+              { text: 'align the' },
+              { text: 'harmonies', face: 'cinzel' },
+              { text: 'that fail just slightly to hold' },
+              { text: 'our longing for connection,' },
+            ],
+          ],
+          rise: [
+            'whisper the glimmer,',
+            'hum the warmth,',
+            'stomp the pulse,',
+            'and scream out loud',
+          ],
+          drop: "what it means\nto be loved so deeply that it's\nfrightening to tell anyone.",
+          refrain: [
+            { text: 'I am playful', display: 'i Am PlAYfUL', face: 'cinzel' },
+            { text: 'I am inspired', display: 'I am INSpIRED', face: 'cinzel' },
+            {
+              text: 'I converge into diamonds and expand into void',
+              display: 'I CONVERGE INTO DIAMONDS AND EXPAND INTO VOID',
+              face: 'unbounded',
+            },
+            { text: 'I am alive', display: 'I aM aLIVe', face: 'cinzel' },
+          ],
+        }}
       />
     </PoemCanvas>
   )

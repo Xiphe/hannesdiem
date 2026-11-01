@@ -67,6 +67,7 @@ function fixtureContent(
   pairs?: readonly PoemPair[],
   bridge?: readonly (readonly PoemLine[])[],
   bridgeBody?: PoemOpeningProps['bridgeBody'],
+  finalVerse?: PoemOpeningProps['finalVerse'],
 ): CmxDocument['content'] {
   return {
     title: 'Temple of Sound',
@@ -88,16 +89,19 @@ function fixtureContent(
             ...(pairs ? { pairs } : { pair: firstPair }),
             ...(bridge ? { bridge } : {}),
             ...(bridgeBody ? { bridgeBody } : {}),
+            ...(finalVerse ? { finalVerse } : {}),
           },
-          children: [
-            { type: 'element', tag: 'p', children: ['Static verse fixture'] },
-            {
-              type: 'element',
-              tag: 'a',
-              props: { href: '/fixture' },
-              children: ['Return to fixture'],
-            },
-          ],
+          children: finalVerse?.refrain
+            ? undefined
+            : [
+                { type: 'element', tag: 'p', children: ['Static verse fixture'] },
+                {
+                  type: 'element',
+                  tag: 'a',
+                  props: { href: '/fixture' },
+                  children: ['Return to fixture'],
+                },
+              ],
         },
       ],
     },
@@ -105,6 +109,22 @@ function fixtureContent(
 }
 export const templeContent = fixtureContent()
 export const multipleTempleContent = fixtureContent([firstPair, secondPair])
+export const riseTempleContent = fixtureContent([firstPair], undefined, undefined, {
+  intro: [{ text: 'Synthetic final verse introduction.' }],
+  phrases: [[{ text: 'Synthetic lead-in.' }, { text: 'A highlight', face: 'cinzel' }]],
+  rise: ['Soft sample,', 'Another sample,', 'Third sample,', 'An ending synthetic call'],
+  drop: 'A small synthetic sentence\nfollows the accumulated calls\nand finishes on a third row.',
+  refrain: [
+    { text: 'A first closing phrase', display: 'A first closing phrase', face: 'cinzel' },
+    { text: 'A second closing phrase', display: 'A second closing phrase', face: 'cinzel' },
+    {
+      text: 'A synthetic WIDEMEASUREMENT phrase for a narrow screen',
+      display: 'A SYNTHETIC WIDEMEASUREMENT PHRASE FOR A NARROW SCREEN',
+      face: 'unbounded',
+    },
+    { text: 'The closing phrase', display: 'The closing phrase', face: 'cinzel' },
+  ],
+})
 
 const thirdPair = {
   paragraphs: [
