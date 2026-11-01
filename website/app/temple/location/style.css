@@ -136,6 +136,7 @@ html[data-layout='temple']:has(.facts-grid) body {
 }
 .tile-copy a {
   color: var(--fact-heading);
+  text-decoration-line: underline;
   text-underline-offset: 4px;
   text-decoration-thickness: 1px;
 }
