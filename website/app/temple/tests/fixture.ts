@@ -149,7 +149,7 @@ export const fourPhraseTempleContent = fixtureContent(
     ],
   ],
   [
-    'A synthetic paragraph contains **several bold words** and *some italic words* and enough native lines to examine a scroll-driven letter reveal. The document keeps its ordinary geometry while cached glyphs grow into their readable form.',
+    'Please read **several bold words** and *some italic words* in this synthetic paragraph, with enough native lines to examine a scroll-driven letter reveal. The document keeps its ordinary geometry while cached glyphs grow into their readable form.',
     {
       linger: 'presentation.',
       text:

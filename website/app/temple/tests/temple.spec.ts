@@ -1213,6 +1213,14 @@ test('Temple bridge canvas paints the native bold and italic fonts', async ({ pa
     ),
   )
   for (const tag of ['strong', 'em']) {
+    // This check compares one complete native run; pagination and wrapped
+    // emphasis are exercised separately. Keep its fixture unwrapped.
+    expect(
+      await first
+        .locator(tag)
+        .first()
+        .evaluate((node) => node.getClientRects().length),
+    ).toBe(1)
     await expect
       .poll(() =>
         first
