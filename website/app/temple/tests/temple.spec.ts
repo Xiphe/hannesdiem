@@ -341,6 +341,23 @@ test('Temple background drifts without animation frames and rests with reduced m
     .toBe(true)
 })
 
+test('Temple keeps the sculpture and traces without publishing an action', async ({ page }) => {
+  await page.clock.install()
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/temple-without-action')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
+  await expect(page.locator('.fragment-ground-piece').first()).toBeAttached()
+  await page.locator('.verse-copy').first().scrollIntoViewIfNeeded()
+  const signals = page.locator('.fragment-ground-signal')
+  for (let attempt = 0; attempt < 40 && (await signals.count()) === 0; attempt++)
+    await page.clock.runFor(300)
+  expect(await signals.count()).toBeGreaterThan(0)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(signals).toHaveCount(0)
+  await expect(page.locator('.fragment-ground-field')).toBeHidden()
+})
+
 test('Temple bounds concurrent edge traces and clears them for reduced motion and navigation', async ({
   page,
 }) => {

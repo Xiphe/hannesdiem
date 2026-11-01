@@ -1,5 +1,7 @@
 import { createGroundMotion } from './ground-motion.ts'
-import { groundMaterialEvent } from './material.ts'
+import { groundMaterial, groundMaterialEvent, provideGroundMaterial } from './material.ts'
+import { generateFragments } from './fragment-generator.ts'
+import { mountGroundSignal } from './ground-signal.ts'
 
 /** One page-length sculpture. Its negative spaces follow the actual choruses. */
 export function mountFragmentGround(
@@ -21,6 +23,24 @@ export function mountFragmentGround(
   }
   ground.appendChild(field)
   host.insertBefore(ground, host.firstChild)
+  // The sculpture remains available when the optional action is unpublished.
+  // When an action exists, it supplies its exact shapes and signal lifecycle.
+  if (!host.querySelector('.fragment-action-stage') && !groundMaterial(host)) {
+    const seed = crypto.randomUUID()
+    const pieces = generateFragments(seed, 11)
+    provideGroundMaterial(host, { pieces, seed })
+    const probe = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    probe.style.display = 'none'
+    const paths = pieces.map((piece) => {
+      const path = document.createElementNS(probe.namespaceURI, 'path') as SVGPathElement
+      path.setAttribute('d', piece.d!)
+      probe.appendChild(path)
+      return path
+    })
+    ground.appendChild(probe)
+    mountGroundSignal(host, pieces, paths, seed, signal)
+    probe.remove()
+  }
   const motion = createGroundMotion(host, field, refrains, signal)
   // Fitted text and arriving styles can settle after the initial asset-ready
   // frame. Observe real layout inputs; our absolute layers cannot resize them.

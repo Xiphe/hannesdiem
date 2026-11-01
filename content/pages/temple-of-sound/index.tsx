@@ -33,7 +33,6 @@ export const firstPair = {
     { text: 'I’m loved,', face: 'cinzel' },
     { text: 'and in awe of what you kindred souls have built onto this sphere.' },
   ],
-  action: { label: 'join me in person', href: 'mailto:sound@hannesdiem.de' },
 } satisfies PoemPair
 
 export const secondPair = {
