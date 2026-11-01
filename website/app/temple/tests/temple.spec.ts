@@ -889,6 +889,49 @@ test('mobile curved copy keeps two rows without editor controls', async ({ page 
   await expect(page.locator('input, .small-curve-controls')).toHaveCount(0)
 })
 
+for (const [width, height] of [
+  [390, 844],
+  [430, 932],
+  [844, 390],
+  [1440, 844],
+]) {
+  test(`Temple repetition never dips down before contact at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const rises = await page.evaluate(async () => {
+      const tracks = [...document.querySelectorAll<HTMLElement>('.repetition-track')]
+      const stages = tracks.map((track) => track.querySelector<HTMLElement>('.repetition-stage')!)
+      const rises = []
+      for (const [index, stage] of stages.slice(0, -1).entries()) {
+        const lock = parseFloat(getComputedStyle(stage).top)
+        const release =
+          scrollY +
+          tracks[index].getBoundingClientRect().bottom -
+          stage.getBoundingClientRect().height -
+          lock
+        let lowest = Infinity
+        let rise = 0
+        // Resolve every pixel around native release; a coarse handoff sweep can
+        // step over a short down/up nudge between four-pixel animation samples.
+        for (let y = Math.floor(release) - 8; y <= release + 12; y++) {
+          scrollTo(0, y)
+          await new Promise(requestAnimationFrame)
+          await new Promise(requestAnimationFrame)
+          const top = stage
+            .querySelector<HTMLElement>('.repetition-statement .phrase-entry')!
+            .getBoundingClientRect().top
+          lowest = Math.min(lowest, top)
+          rise = Math.max(rise, top - lowest)
+        }
+        rises.push(rise)
+      }
+      return rises
+    })
+    for (const rise of rises) expect(rise).toBeLessThanOrEqual(0.05)
+  })
+}
+
 for (const width of [390, 1440]) {
   test(`Temple repetition follows scrolling without scene frames at ${width}px`, async ({
     page,

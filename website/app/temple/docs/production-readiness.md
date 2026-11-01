@@ -52,3 +52,11 @@ Prepare the existing collision-resolved trajectories once per fit and play stage
 The390×900 synthetic Chromium sweep with `REPETITION=true` compares the same renderer with and without native timelines. Repetition layout reads fall from225 to0 across75 frames. Scene draw p95 falls from13.8ms to9.5ms; total-frame p95 is16.8ms in both runs, with4 versus0 intervals above25ms. These are software-browser samples, not a phone60fps guarantee. Both handoffs also move forward and backward with scene RAF callbacks paused in Chromium and WebKit. Physical iPhone review remains the final feel check. Preview: `sand tunnel 8798`, then `/temple-of-sound`.
 
 Validation: full build, root and website TypeScript, formatting and47 Node checks pass. The final full Chromium run passes90 checks; the10 targeted repetition, reflection and lifecycle checks also pass in WebKit. An earlier first-verse selection assertion failed once, then passed three isolated reruns and the clean full run.
+
+## Repetition release nudge, 2026-11-01
+
+Artist notices a small downward movement before the next block bumps in. A one-pixel scroll sweep reproduces up to0.8px of downward travel at native sticky release in the timeline renderer, while the frame-driven fallback stays steady. The release keyframe used `stage height - track height`, omitting the sticky top offset. Linear interpolation therefore crossed the actual release boundary and briefly overcompensated for native scrolling.
+
+Include the exact release boundary, `sticky top + stage height - track height`, in the native samples. Preserve the native timelines, trajectories, reflection timing and spacing. The regression measures the visible statement around both releases at390×844,430×932,844×390 and1440×844; downward movement must stay below0.05px. The new check fails before the correction and passes afterward in Chromium and WebKit.
+
+Validation: app build, root TypeScript, formatting,47 Node checks,94 Chromium checks and14 targeted WebKit checks pass. The original complete Chromium replay reports zero downward reversals across245 frames.
