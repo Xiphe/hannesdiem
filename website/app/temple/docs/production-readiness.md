@@ -60,3 +60,13 @@ Artist notices a small downward movement before the next block bumps in. A one-p
 Include the exact release boundary, `sticky top + stage height - track height`, in the native samples. Preserve the native timelines, trajectories, reflection timing and spacing. The regression measures the visible statement around both releases at390×844,430×932,844×390 and1440×844; downward movement must stay below0.05px. The new check fails before the correction and passes afterward in Chromium and WebKit.
 
 Validation: app build, root TypeScript, formatting,47 Node checks,94 Chromium checks and14 targeted WebKit checks pass. The original complete Chromium replay reports zero downward reversals across245 frames.
+
+## Chorus entry after Safari toolbar collapse, 2026-11-01
+
+Artist reports chorus lettering clipped as it enters the taller iOS viewport after the toolbar collapses. The native chorus canvas and glyph mask contain the full phrase, but the shared material and visibility checks stop at the opener’s100svh stage. Consequently, visible glyphs below that boundary have no material to reveal.
+
+Keep the accepted opener crop, sticky centre and scroll timing tied to the stable small viewport. Extend the chorus material and escaped-light canvas to100lvh, and use those shared bounds when deciding which chorus masks to draw and paint. This prepares the exposed strip without reallocating the material as browser controls move. See [WebKit’s viewport-unit definitions](https://webkit.org/blog/12445/new-webkit-features-in-safari-15-4/).
+
+The synthetic browser regression separates a700px small viewport from an844px visible viewport and uses an opaque image to compare painted glyphs with their mask. It checks chorus entry wholly below the small edge and straddling it. The original renderer fails; the corrected renderer passes in Chromium and WebKit. This emulates the geometry in desktop WebKit; physical iOS toolbar behaviour remains a device review.
+
+Validation: build, both TypeScript checks, formatting and60 Node checks pass. All104 Chromium checks pass across the full and targeted runs; the desktop handoff sweep exceeded its30-second budget in the full run, then passed alone in34.2 seconds with a90-second limit. All13 targeted WebKit checks pass, including chorus rendering, multiple choruses, responsive rows and navigation cleanup.

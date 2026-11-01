@@ -22,6 +22,88 @@ test('Temple leaves room after the opening and scrolls its title independently o
     .toBeLessThan(-300)
 })
 
+test('Temple paints entering chorus ink below the small viewport after toolbar collapse', async ({
+  page,
+}) => {
+  const smallHeight = 700
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  // Desktop WebKit has no retractable toolbar. Preserve the small viewport's
+  // CSS geometry while exposing a taller visible viewport, as Safari does.
+  await page.route('**/templeStyle-*.css', async (route) => {
+    const response = await route.fetch()
+    const css = (await response.text()).replace(
+      /([\d.]+)svh\b/g,
+      (_, value) => `${(Number(value) * smallHeight) / 100}px`,
+    )
+    await route.fulfill({ response, body: css })
+  })
+  // The ordinary fixture uses a transparent logo. An opaque synthetic material
+  // lets the glyph mask independently tell us which ink should be painted.
+  await page.route('**/mark-*.svg', (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640"><rect width="640" height="640" fill="#5874a8"/></svg>',
+    }),
+  )
+  await page.addInitScript(() => {
+    const masks = new Map<HTMLCanvasElement, HTMLCanvasElement>()
+    ;(window as any).chorusMasks = masks
+    const draw = CanvasRenderingContext2D.prototype.drawImage
+    CanvasRenderingContext2D.prototype.drawImage = function (...args: any[]) {
+      if (
+        this.canvas.matches('.refrain-canvas') &&
+        this.globalCompositeOperation === 'destination-in'
+      ) {
+        masks.set(this.canvas, args[0])
+      }
+      return (draw as any).apply(this, args)
+    }
+  })
+  await page.goto('/temple-of-sound')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await expect(page.locator('.temple-stage')).toHaveCSS('height', `${smallHeight}px`)
+  for (const canvas of await page.locator('.refrain-canvas').all()) {
+    // Cover both first entry entirely below svh and a phrase straddling its edge.
+    for (const straddling of [false, true]) {
+      await canvas.evaluate(
+        (node, { height, straddling }) => {
+          const rect = node.getBoundingClientRect()
+          const top = straddling ? height - rect.height / 2 : height + 8
+          scrollTo(0, scrollY + rect.top - top)
+        },
+        { height: smallHeight, straddling },
+      )
+      const coverage = () =>
+        canvas.evaluate((node, small) => {
+          const canvas = node as HTMLCanvasElement
+          const mask = (window as any).chorusMasks.get(canvas) as HTMLCanvasElement | undefined
+          if (!mask) return { ink: 0, missing: 1 }
+          const source = mask.getContext('2d')!.getImageData(0, 0, mask.width, mask.height).data
+          const output = canvas
+            .getContext('2d')!
+            .getImageData(0, 0, canvas.width, canvas.height).data
+          const rect = canvas.getBoundingClientRect()
+          let ink = 0,
+            missing = 0
+          for (let y = 0; y < canvas.height; y++) {
+            const screenY = rect.top + (y * rect.height) / canvas.height
+            if (screenY <= small + 2 || screenY >= innerHeight - 8) continue
+            for (let x = 0; x < canvas.width; x++) {
+              const at = (y * canvas.width + x) * 4 + 3
+              if (source[at] < 240) continue
+              ink++
+              if (output[at] < source[at] * 0.9) missing++
+            }
+          }
+          return { ink, missing: ink ? missing / ink : 1 }
+        }, smallHeight)
+      await expect.poll(async () => (await coverage()).ink).toBeGreaterThan(100)
+      await expect.poll(async () => (await coverage()).missing).toBeLessThan(0.01)
+    }
+  }
+})
+
 test('Temple paints the chorus in its native scrolling canvas', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
