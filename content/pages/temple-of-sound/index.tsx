@@ -142,6 +142,18 @@ export default function Content() {
         image={forest}
         lightSource={{ x: 53.24, y: 54.07 }}
         pairs={[firstPair, secondPair, thirdPair]}
+        bridge={[
+          [
+            {
+              text: 'I\u2003W I L L\u2003N O T\u2003B E N D\u2003F U R T H E R !',
+              face: 'spaced',
+              nowrap: true,
+            },
+            { text: 'I have trusted and accepted,' },
+            { text: 'waited patiently,', face: 'cinzel' },
+            { text: 'given space and opportunity to rest and resource.' },
+          ],
+        ]}
         bridgeBody={[
           {
             wideBreaksAfter: ['hide your shame,', 'painfully limited'],
@@ -167,18 +179,6 @@ And I also came to know that **I'm capable** of carrying and catering a wound fu
 **I am so willing** to practice and keep on practicing the art of showing up
 and **staying with you**, my child.`,
           },
-        ]}
-        bridge={[
-          [
-            {
-              text: 'I\u2003W I L L\u2003N O T\u2003B E N D\u2003F U R T H E R !',
-              face: 'spaced',
-              nowrap: true,
-            },
-            { text: 'I have trusted and accepted,' },
-            { text: 'waited patiently,', face: 'cinzel' },
-            { text: 'given space and opportunity to rest and resource.' },
-          ],
         ]}
       />
     </PoemCanvas>
