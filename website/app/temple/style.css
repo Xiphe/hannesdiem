@@ -630,7 +630,7 @@ html[data-layout='temple'] body {
     opacity: 1 !important;
   }
   .repetition-track[data-ready] .repetition-reflection .phrase-entry {
-    transform: none;
+    transform: none !important;
   }
 }
 

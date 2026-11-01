@@ -175,7 +175,7 @@ export async function mountArtwork(
   function resize() {
     fitBlocks()
     fitRefrain()
-    repetition.resize()
+    repetition.resize(reduced.matches)
     bridgePages.resize(reduced.matches)
     // WebKit settles native baseline probes after painting the newly fitted DOM.
     // Rebuilding masks immediately caches old baselines and clips later rows.
@@ -267,7 +267,7 @@ export async function mountArtwork(
       for (const { refrain } of refrains) refrain.dataset.ready = 'true'
       fitBlocks()
       fitRefrain()
-      repetition.resize()
+      repetition.resize(reduced.matches)
       bridgePages.resize(reduced.matches)
       await settledLayout(abort.signal)
       if (abort.signal.aborted) return
