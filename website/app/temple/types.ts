@@ -1,5 +1,11 @@
-import type { PoemPair, PoemLine } from '@hannesdiem/content-components'
+import type { PoemPair, PoemLine, PoemLocation } from '@hannesdiem/content-components'
+export type LocationProps = Omit<PoemLocation, 'image'> & {
+  id: string
+  image: { src: string; srcSet?: string; width: number; height: number }
+  mapAsset: string
+}
 export interface OpeningProps {
+  location?: LocationProps
   pair?: PoemPair
   pairs?: readonly PoemPair[]
   bridge?: readonly (readonly PoemLine[])[]

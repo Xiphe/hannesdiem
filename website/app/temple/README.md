@@ -1,10 +1,12 @@
 # Temple of Sound
 
-The opener and first three verse/refrain pairs render through the regular CMX document and Remix island at `/temple-of-sound`. Later poem sections remain in `content/pages/temple-of-sound/_draft.tsx` and are not published.
+The opener, location invitation, first three verse/refrain pairs and bridge render through the regular CMX document and Remix island at `/temple-of-sound`. Unpublished source material remains in `content/pages/temple-of-sound/_draft.tsx` and are not published.
 
 CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `tests/`; fonts/favicon: `assets/`.
 
 ## Content and rendering
+
+- `location/` renders the accepted location invitation immediately after the opener. Its copy and room photo live in the CMX content module; the shared Opening task owns its map enhancement. See [location implementation](location/README.md). The retired standalone study is archived at `b8e61ec`; no prototype server or duplicated artwork ships.
 
 - `repetition.ts` coordinates the third verse’s centred statements, delayed reflections and compact50/50 handoffs. Fit-time keyframes share the collision model and use native view timelines for movement, reflection opacity and entry, so delayed scene frames cannot leave the bumped block behind. Resolve positions together to maintain8px separation; no compression. Resize rebuilds the timelines; reduced motion and unavailable timelines retain the frame-driven sticky fallback. Navigation cancels all owned animations.
 - `content/pages/temple-of-sound/index.tsx` owns the typed verse/refrain pairs, including display casing and font roles. The unpublished draft reuses it. The browser never imports content modules or CMX runtime.

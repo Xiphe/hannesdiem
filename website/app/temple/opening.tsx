@@ -4,6 +4,8 @@ import { ArrowDownIcon } from '../heroicons.tsx'
 import { mountArtwork } from './artwork.ts'
 import { FirstPair, Phrase } from './first-pair.tsx'
 import type { OpeningProps } from './types.ts'
+import { Location } from './location/view.tsx'
+import { mountLocation } from './location/enhance.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
@@ -33,6 +35,7 @@ export function Opening(handle: Handle<OpeningProps>) {
       { once: true },
     )
     try {
+      if (handle.props.location) mountLocation(host, handle.props.location, controller.signal)
       await mountArtwork(host, handle.props, controller.signal, () => reveal('ready'))
     } catch (error) {
       controller.abort()
@@ -41,7 +44,7 @@ export function Opening(handle: Handle<OpeningProps>) {
     }
   })
   return () => {
-    const { title, dates, image, pair, pairs, bridge, bridgeBody } = handle.props
+    const { title, dates, image, pair, pairs, bridge, bridgeBody, location } = handle.props
     const format = (date: string) =>
       new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
         new Date(date + 'T12:00:00Z'),
@@ -90,9 +93,10 @@ export function Opening(handle: Handle<OpeningProps>) {
           aria-hidden="true"
         />
 
-        {(pairs?.length || pair) && (
+        {(pairs?.length || pair || location) && (
           <div class="poem-pairs">
-            {(pairs ?? [pair!]).map((pair, index) => (
+            {location && <Location {...location} />}
+            {(pairs ?? (pair ? [pair] : [])).map((pair, index) => (
               <FirstPair
                 pair={pair}
                 index={index}

@@ -21,7 +21,7 @@ export async function mountArtwork(
   const root = host.querySelector<HTMLElement>('.temple-opening')!
   const stage = root.querySelector<HTMLElement>('.temple-stage')!
   const poem = host.querySelector<HTMLElement>('.poem-pairs')!
-  if (!poem) {
+  if (!poem || !poem.querySelector('.verse-copy')) {
     const escapes = createEscapes(signal)
     await mountOpening(root, props, signal, {
       escapes,

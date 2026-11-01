@@ -35,6 +35,7 @@ export interface PoemOpeningProps {
   dates: { start: string; end: string }
   image: ImageSource
   lightSource: { x: number; y: number }
+  location?: PoemLocation
   pair?: PoemPair
   pairs?: readonly PoemPair[]
   bridge?: readonly (readonly PoemLine[])[]
@@ -43,6 +44,20 @@ export interface PoemOpeningProps {
     string | { text: string; wideBreaksAfter?: readonly string[]; linger?: string }
   )[]
   children?: RemixNode
+}
+export interface PoemLocation {
+  image: ImageSource
+  imageAlt: string
+  heading: string
+  venue: {
+    name: string
+    href: string
+    travel: string
+    latitude: number
+    longitude: number
+  }
+  invitation: string
+  action: { prompt: string; label: string; href: string }
 }
 export interface PoemSectionProps {
   id: string

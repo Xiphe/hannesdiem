@@ -87,6 +87,7 @@ const entries = Object.fromEntries(
 for (const [key, source] of [
   ['mark', 'website/app/assets/mark.svg'],
   ['templeMark', 'website/app/temple/assets/mark.svg'],
+  ['templeEurope', 'website/app/temple/location/europe.svg'],
 ] as const) {
   const mark = await readFile(source)
   entries[key] =

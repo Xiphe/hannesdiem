@@ -68,6 +68,7 @@ function fixtureContent(
   pairs?: readonly PoemPair[],
   bridge?: readonly (readonly PoemLine[])[],
   bridgeBody?: PoemOpeningProps['bridgeBody'],
+  location?: PoemOpeningProps['location'],
 ): CmxDocument['content'] {
   return {
     title: 'Temple of Sound',
@@ -89,6 +90,7 @@ function fixtureContent(
             ...(pairs ? { pairs } : { pair: firstPair }),
             ...(bridge ? { bridge } : {}),
             ...(bridgeBody ? { bridgeBody } : {}),
+            ...(location ? { location } : {}),
           },
           children: [
             { type: 'element', tag: 'p', children: ['Static verse fixture'] },
@@ -108,6 +110,29 @@ export const templeContent = fixtureContent()
 export const multipleTempleContent = fixtureContent([firstPair, secondPair])
 const { action: _action, ...actionlessPair } = firstPair
 export const actionlessTempleContent = fixtureContent([actionlessPair, secondPair])
+export const locationTempleContent = fixtureContent(
+  [actionlessPair, secondPair],
+  undefined,
+  undefined,
+  {
+    image: 'fixture-image',
+    imageAlt: 'Synthetic room image',
+    heading: 'A synthetic invitation with enough words to wrap naturally in the narrow layout.',
+    venue: {
+      name: 'Synthetic studio',
+      href: 'https://example.com/studio',
+      travel: 'Synthetic travel information',
+      latitude: 52.5,
+      longitude: 13.4,
+    },
+    invitation: 'A synthetic personal invitation for the location component fixture.',
+    action: {
+      prompt: 'Arrange a fixture visit',
+      label: 'Contact fixture',
+      href: 'mailto:fixture@example.com',
+    },
+  },
+)
 
 const thirdPair = {
   paragraphs: [
