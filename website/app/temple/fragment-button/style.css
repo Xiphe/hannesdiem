@@ -55,10 +55,6 @@
   z-index: -1;
   pointer-events: none;
 }
-.fragment-ground-hold {
-  position: sticky;
-  width: 100%;
-}
 .fragment-ground-ink,
 .temple-opening,
 .temple-stage {
@@ -71,7 +67,7 @@
   pointer-events: none;
   z-index: -1;
 }
-/* Three groups drift at different rhythms; sticky layout owns scroll travel. */
+/* The sculpture scrolls vertically at three depths, with gentle ambient drift. */
 .fragment-ground-plane {
   position: absolute;
   inset: -64px -64px calc(-64px - var(--ground-parallax-pad, 0px));
@@ -109,42 +105,55 @@
   }
 }
 .fragment-ground-signal {
+  --signal-direction: 1;
   pointer-events: none;
-  animation: fragment-signal-life var(--signal-life) linear both;
+  animation:
+    fragment-signal-appear 150ms linear both,
+    fragment-signal-fade 1.5s linear var(--signal-travel) forwards;
+}
+/* Reverse the growing trail as well as its moving tip. Reversing the trail's
+   animation clock would erase a completed border instead of drawing it. */
+.fragment-ground-signal[data-direction='reverse'] {
+  --signal-direction: -1;
+}
+.fragment-ground-signal[data-direction='reverse'] .fragment-signal-tip {
+  animation-direction: reverse;
 }
 .fragment-ground-signal path {
   fill: none;
   stroke-linejoin: round;
   stroke-linecap: round;
-}
-.fragment-ground-signal mask path {
-  fill: black;
+  stroke-width: var(--signal-stroke-width);
 }
 .fragment-signal-trail {
   stroke: light-dark(rgb(116 70 33 / 0.045), rgb(208 163 109 / 0.04));
-  stroke-width: 1.88;
   stroke-dasharray: 1 1;
   animation: fragment-signal-trail var(--signal-travel) linear both;
 }
 .fragment-signal-tip {
   stroke: light-dark(rgb(116 70 33 / 0.09), rgb(208 163 109 / 0.12));
-  stroke-width: 1.96;
   stroke-dasharray: 0.035 1;
   animation: fragment-signal-tip var(--signal-travel) linear both;
 }
-@keyframes fragment-signal-life {
-  0%,
-  100% {
+@keyframes fragment-signal-appear {
+  from {
     opacity: 0;
   }
-  5%,
-  55% {
+  to {
     opacity: 1;
+  }
+}
+@keyframes fragment-signal-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 @keyframes fragment-signal-trail {
   from {
-    stroke-dashoffset: 1;
+    stroke-dashoffset: var(--signal-direction);
   }
   to {
     stroke-dashoffset: 0;
@@ -163,8 +172,7 @@
     display: none;
   }
 }
-/* The moving pieces expose the page's opaque ground. No colour/opacity
-   reveal is layered above them, including during the opener handoff. */
+/* Spatial gaps keep the opener and choruses clear without a cover or fade. */
 .temple-artwork:has(> .fragment-ground) :is(.temple-opening, .temple-stage) {
   background-color: transparent;
 }

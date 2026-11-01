@@ -46,16 +46,18 @@ test('Temple paints the chorus in its native scrolling canvas', async ({ page })
 })
 
 for (const width of [390, 1440]) {
-  test(`Temple natively pauses the background through each refrain hold at ${width}px`, async ({
+  test(`Temple scrolls a spatial sculpture around dynamic chorus gaps at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
-    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'no-preference' })
     await page.goto('/temple-multiple')
-    const artwork = page.locator('.temple-artwork')
-    await expect(artwork).toHaveAttribute('data-state', 'ready')
-    // Let the initial ResizeObserver and its two mask-layout frames settle
-    // before deliberately stalling every enhancement frame.
+    const ground = page.locator('.fragment-ground')
+    const planes = ground.locator('.fragment-ground-plane')
+    const pieces = ground.locator('.fragment-ground-piece')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await expect(planes).toHaveCount(3)
+    await expect(pieces.first()).toBeAttached()
     await page.evaluate(
       () =>
         new Promise<void>((resolve) => {
@@ -67,257 +69,115 @@ for (const width of [390, 1440]) {
           requestAnimationFrame(settle)
         }),
     )
-    const refrains = page.locator('.refrain-composition')
-    expect(await refrains.count()).toBeGreaterThan(1)
-    const groundY = () =>
-      page.locator('.fragment-ground-ink').evaluate((node) => node.getBoundingClientRect().top)
-    await page.locator('.fragment-ground').evaluate((node) => {
-      // The browser must keep the ground still even if enhancement frames stall.
+    // Freeze only ambient float so scroll geometry can be compared precisely.
+    // Native scroll motion must keep working without enhancement frames.
+    await planes.evaluateAll((nodes) => {
+      for (const node of nodes)
+        for (const animation of node.getAnimations())
+          if (animation instanceof CSSAnimation) animation.pause()
       window.requestAnimationFrame = () => 0
+    })
+    const ranges = () =>
+      page.locator('.refrain-composition').evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const stage = node.querySelector<HTMLElement>('.refrain-stage')!
+          return {
+            start:
+              scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top),
+            hold: node.getBoundingClientRect().height - stage.offsetHeight,
+            top: parseFloat(getComputedStyle(stage).top),
+            bottom: parseFloat(getComputedStyle(stage).top) + stage.offsetHeight,
+          }
+        }),
+      )
+    const seek = async (y: number) => {
+      y = Math.round(y)
+      await page.evaluate((value) => scrollTo(0, value), y)
+      await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(y, 0)
+      // WebKit samples native timelines after scrollY has already updated.
+      await expect
+        .poll(() =>
+          planes
+            .first()
+            .evaluate((node) => parseFloat(getComputedStyle(node).translate.split(' ').at(-1)!)),
+        )
+        .toBeCloseTo(-y * 0.12, 0)
+    }
+    const clear = () =>
+      pieces.evaluateAll((nodes) =>
+        nodes.every((node) => {
+          const box = node.getBoundingClientRect()
+          return (
+            box.bottom <= 0 || box.top >= innerHeight || box.right <= 0 || box.left >= innerWidth
+          )
+        }),
+      )
+    const positions = () =>
+      pieces.evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const box = node.getBoundingClientRect()
+          return { x: box.x, y: box.y, layer: Number(node.parentElement!.dataset.layer) }
+        }),
+      )
+    await seek(0)
+    await expect.poll(clear).toBe(true)
+    const scenes = await ranges()
+    const verse = Math.round((900 * 0.3 + scenes[0].start) / 2)
+    await seek(verse)
+    await expect.poll(clear).toBe(false)
+    const before = await positions()
+    await ground.evaluate((node) => {
       ;(window as any).groundMutations = 0
       new MutationObserver((records) => {
         ;(window as any).groundMutations += records.length
       }).observe(node, { attributes: true, subtree: true })
     })
-    for (const refrain of await refrains.all()) {
-      const range = await refrain.evaluate((node) => {
-        const stage = node.querySelector<HTMLElement>('.refrain-stage')!
-        return {
-          start:
-            scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top),
-          hold: node.getBoundingClientRect().height - stage.offsetHeight,
-        }
-      })
-      const seek = async (y: number) => {
-        y = Math.round(y)
-        await page.evaluate((y) => scrollTo(0, y), y)
-        await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(y, 0)
-      }
-      await seek(range.start + range.hold * 0.2)
-      const expected = await artwork.evaluate((node) => {
-        const offset = [...node.querySelectorAll('.refrain-composition')].reduce((sum, section) => {
-          const stage = section.querySelector<HTMLElement>('.refrain-stage')!
-          const hold = section.getBoundingClientRect().height - stage.offsetHeight
-          return (
-            sum +
-            Math.max(
-              0,
-              Math.min(
-                hold,
-                parseFloat(getComputedStyle(stage).top) - section.getBoundingClientRect().top,
-              ),
+    await seek(verse + 100)
+    const after = await positions()
+    for (const [index, piece] of after.entries()) {
+      expect(piece.x).toBeCloseTo(before[index].x, 1)
+      expect(piece.y - before[index].y).toBeCloseTo(-100 * (1 + [0.12, 0.26, 0.42][piece.layer]), 0)
+    }
+    expect(
+      await pieces.evaluateAll((nodes) =>
+        nodes.every(
+          (node) => node.getAnimations().length === 0 && getComputedStyle(node).opacity === '1',
+        ),
+      ),
+    ).toBe(true)
+    const chorusClear = (scene: { top: number; bottom: number }) =>
+      pieces.evaluateAll(
+        (nodes, area) =>
+          nodes.every((node) => {
+            const box = node.getBoundingClientRect()
+            return (
+              box.bottom <= area.top ||
+              box.top >= area.bottom ||
+              box.right <= 0 ||
+              box.left >= innerWidth
             )
-          )
-        }, 0)
-        return node.getBoundingClientRect().top + offset
-      })
-      await expect.poll(groundY).toBeCloseTo(expected, 0)
-      for (const fraction of [0.8, 0.4]) {
-        await seek(range.start + range.hold * fraction)
-        await expect.poll(groundY).toBeCloseTo(expected, 0)
+          }),
+        scene,
+      )
+    // Only the chorus's actual reading area is reserved, leaving pieces behind
+    // neighbouring verse lines even when both scenes share the viewport.
+    // Only the central reading interval is clear; pieces can reach into
+    // chorus arrival/departure. Holes are spatial, without fades or exits.
+    for (const scene of scenes) {
+      for (const fraction of [0.35, 0.5, 0.65]) {
+        await seek(scene.start + scene.hold * fraction)
+        await expect.poll(() => chorusClear(scene)).toBe(true)
       }
-      await seek(range.start + range.hold + 40)
-      await expect.poll(groundY).toBeCloseTo(expected - 40, 0)
+    }
+    await seek(verse)
+    const reversed = await positions()
+    for (const [index, piece] of reversed.entries()) {
+      expect(piece.x).toBeCloseTo(before[index].x, 1)
+      expect(piece.y).toBeCloseTo(before[index].y, 0)
     }
     expect(await page.evaluate(() => (window as any).groundMutations)).toBe(0)
-  })
-}
-
-for (const width of [390, 1440]) {
-  test(`Temple clears chorus space with native scroll-linked depth at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 900 })
-    await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'no-preference' })
-    await page.goto('/temple-multiple')
-    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    const planes = page.locator('.fragment-ground-plane')
-    await expect(planes).toHaveCount(3)
-    // No texture is layered over the opener's black surround.
-    await expect(page.locator('.temple-opening .fragment-ground-field')).toHaveCount(0)
-    await expect(page.locator('.temple-stage')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
-    await page.evaluate(
-      () =>
-        new Promise<void>((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-        ),
-    )
-    const ranges = await page.locator('.refrain-composition').evaluateAll((nodes) =>
-      nodes.map((node) => {
-        const stage = node.querySelector<HTMLElement>('.refrain-stage')!
-        return {
-          start:
-            scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top),
-          hold: node.getBoundingClientRect().height - stage.offsetHeight,
-        }
-      }),
-    )
-    await page.evaluate(() => {
-      window.requestAnimationFrame = () => 0
-    })
-    let sourceDistance = await page.evaluate(
-      () => document.documentElement.scrollHeight - innerHeight,
-    )
-    const seek = async (y: number) => {
-      y = Math.round(y)
-      await page.evaluate((value) => scrollTo(0, value), y)
-      await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(y, 0)
-      // Wait for the native timeline sample, not merely updated scrollY.
-      // WebKit can commit these on a later compositor tick.
-      if (await page.evaluate(() => !matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-        await expect
-          .poll(() =>
-            planes
-              .first()
-              .evaluate((node) => parseFloat(getComputedStyle(node).translate.split(' ').at(-1)!)),
-          )
-          .toBeCloseTo((y - sourceDistance) * 0.12, 0)
-      }
-    }
-    const opacity = () =>
-      planes.evaluateAll((nodes) => nodes.map((node) => Number(getComputedStyle(node).opacity)))
-    const translation = () =>
-      planes.evaluateAll((nodes) =>
-        nodes.map((node) => getComputedStyle(node).translate.split(' ').map(parseFloat)),
-      )
-    const movingPieces = page.locator('.fragment-ground-piece')
-    await expect(movingPieces.first()).toBeAttached()
-    const cleared = () =>
-      movingPieces.evaluateAll((nodes) =>
-        nodes.every((node) => {
-          const rect = node.getBoundingClientRect()
-          return rect.right <= 0 || rect.left >= innerWidth
-        }),
-      )
-    // Opaque pieces move offscreen: the opener is clear without opacity or
-    // colour animation, even while JavaScript animation frames are stalled.
-    await seek(0)
-    await expect.poll(cleared).toBe(true)
-    expect(
-      await movingPieces.evaluateAll((nodes) =>
-        nodes.every((node) => {
-          const rect = node.getBoundingClientRect()
-          return (node as SVGSVGElement).dataset.exitSide === 'right'
-            ? rect.right <= 0
-            : rect.left >= innerWidth
-        }),
-      ),
-    ).toBe(true)
-    expect(
-      await movingPieces.evaluateAll((nodes) =>
-        [...new Set(nodes.map((node) => (node as SVGSVGElement).dataset.exitSide))].sort(),
-      ),
-    ).toEqual(['left', 'right'])
-    await expect.poll(opacity).toEqual([1, 1, 1])
-    expect(
-      await planes.evaluateAll((nodes) =>
-        nodes.every((node) =>
-          node
-            .getAnimations()
-            .every(
-              (animation) =>
-                !(animation.effect instanceof KeyframeEffect) ||
-                animation.effect
-                  .getKeyframes()
-                  .every((frame) => !('opacity' in frame) && !('backgroundColor' in frame)),
-            ),
-        ),
-      ),
-    ).toBe(true)
-    // Regression: sample every entire verse, including the old resting middle.
-    // Equal scroll distances must give equal displacement, with no plateau.
-    for (const [index, range] of ranges.entries()) {
-      const previous = ranges[index - 1]
-      const flowStart = previous ? previous.start + previous.hold : 900 * 0.3
-      const samples: { y: number; x: number[] }[] = []
-      for (const progress of [0.1, 0.3, 0.5, 0.7, 0.9]) {
-        const y = Math.round(flowStart + (range.start + range.hold * 0.4 - flowStart) * progress)
-        await seek(y)
-        samples.push({
-          y,
-          x: await movingPieces.evaluateAll((nodes) =>
-            nodes.map((node) => parseFloat(getComputedStyle(node).translate)),
-          ),
-        })
-      }
-      for (let sample = 2; sample < samples.length; sample++) {
-        for (let piece = 0; piece < samples[sample].x.length; piece++) {
-          const speed =
-            (samples[sample].x[piece] - samples[sample - 1].x[piece]) /
-            (samples[sample].y - samples[sample - 1].y)
-          const expected =
-            (samples[1].x[piece] - samples[0].x[piece]) / (samples[1].y - samples[0].y)
-          expect(Math.abs(expected)).toBeGreaterThan(0.01)
-          expect(speed).toBeCloseTo(expected, 2)
-        }
-      }
-    }
-    const before = ranges[0].start - 900 * 0.8
-    await seek(before)
-    await expect.poll(opacity).toEqual([1, 1, 1])
-    const depth = await translation()
-    // Layers must visibly lag the foreground, not merely share document speed.
-    await seek(before - 100)
-    const earlier = await translation()
-    for (const [i, amount] of [12, 26, 42].entries()) {
-      expect(depth[i][1] - earlier[i][1]).toBeCloseTo(amount, 0)
-    }
-    await seek(900 * 0.6)
-    for (const surface of [page.locator('.temple-opening'), page.locator('.temple-stage')]) {
-      await expect(surface).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
-    }
-    await expect.poll(cleared).toBe(false)
-    // Keep the pieces around while the first refrain is still approaching.
-    // The journey now continues into its measured native hold.
-    await seek(ranges[0].start - 900 * 0.5)
-    await expect.poll(opacity).toEqual([1, 1, 1])
-    const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
-    for (const [index, range] of ranges.entries()) {
-      const previous = ranges[index - 1]
-      const next = ranges[index + 1]
-      const approach =
-        range.start + range.hold * 0.4 - (previous ? previous.start + previous.hold : 900 * 0.3)
-      const departure = (next ? next.start : maxScroll) - range.start - range.hold
-      await seek(range.start + range.hold * 0.4 - approach / 2)
-      await expect.poll(opacity).toEqual([1, 1, 1])
-      await expect.poll(cleared).toBe(false)
-      // Motion continues into the chorus instead of clearing at its arrival.
-      await seek(range.start + range.hold * 0.05)
-      await expect.poll(cleared).toBe(false)
-      for (const fraction of [0.402, 0.5, 0.69, 0.71, 0.9]) {
-        await seek(range.start + range.hold * fraction)
-        await expect.poll(opacity).toEqual([1, 1, 1])
-        await expect.poll(cleared).toBe(true)
-        // Opposing currents leave on their near sides and enter opposite.
-        expect(
-          await movingPieces.evaluateAll(
-            (nodes, fraction) =>
-              nodes.every((node) => {
-                const svg = node as SVGSVGElement
-                const dx = parseFloat(getComputedStyle(svg).translate)
-                const outgoing = dx * (svg.dataset.exitSide === 'right' ? 1 : -1)
-                return fraction < 0.7 ? outgoing > 0 : outgoing < 0
-              }),
-            fraction,
-          ),
-        ).toBe(true)
-        expect(
-          await movingPieces.evaluateAll((nodes) =>
-            nodes.every((node) => getComputedStyle(node).opacity === '1'),
-          ),
-        ).toBe(true)
-      }
-      await seek(Math.min(maxScroll, range.start + range.hold + departure / 2))
-      await expect.poll(opacity).toEqual([1, 1, 1])
-      await expect.poll(cleared).toBe(false)
-    }
-    // Backtracking follows the same path, including returning to the verse.
-    await seek(before)
-    await expect.poll(opacity).toEqual([1, 1, 1])
-    await expect.poll(translation).toEqual(depth)
-    // Move the actual chorus by changing synthetic verse layout. Native
-    // journeys must remeasure the shifted scene without scroll-position writes.
-    const oldPiece = await movingPieces.first().elementHandle()
+    // Layout changes move the spaces with the actual content, not fixed lengths.
+    const oldPiece = await pieces.first().elementHandle()
     await page
       .locator('.verse-copy')
       .first()
@@ -325,27 +185,14 @@ for (const width of [390, 1440]) {
         ;(node as HTMLElement).style.paddingBottom = '300px'
       })
     await expect.poll(() => oldPiece!.evaluate((node) => node.isConnected)).toBe(false)
-    sourceDistance = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
-    const shifted = await page
-      .locator('.refrain-composition')
-      .first()
-      .evaluate((node) => {
-        const stage = node.querySelector<HTMLElement>('.refrain-stage')!
-        return {
-          start:
-            scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top),
-          hold: node.clientHeight - stage.offsetHeight,
-        }
-      })
-    expect(shifted.start).toBeGreaterThan(ranges[0].start + 290)
-    await seek(shifted.start + shifted.hold * 0.05)
-    await expect.poll(cleared).toBe(false)
-    await seek(shifted.start + shifted.hold * 0.45)
-    await expect.poll(cleared).toBe(true)
+    const shifted = await ranges()
+    expect(shifted[0].start).toBeGreaterThan(scenes[0].start + 290)
+    for (const scene of shifted) {
+      await seek(scene.start + scene.hold * 0.5)
+      await expect.poll(() => chorusClear(scene)).toBe(true)
+    }
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await seek(shifted.start + shifted.hold * 0.5)
     await expect(page.locator('.fragment-ground-field')).toBeHidden()
-    await expect.poll(opacity).toEqual([1, 1, 1])
     await expect
       .poll(() =>
         planes.evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).translate)),
@@ -408,7 +255,7 @@ test('Temple background drifts without animation frames and rests with reduced m
     .toBe(true)
 })
 
-test('Temple schedules one occasional edge signal and clears it for reduced motion and navigation', async ({
+test('Temple bounds concurrent edge traces and clears them for reduced motion and navigation', async ({
   page,
 }) => {
   await page.clock.install()
@@ -416,22 +263,48 @@ test('Temple schedules one occasional edge signal and clears it for reduced moti
   await page.goto('/temple-multiple')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   // The opener stays clear; signals belong to the patterned reading ground.
+  const signals = page.locator('.fragment-ground-signal')
+  const expectTrace = async () => {
+    // A skipped launch is valid. Advance the seeded scheduler instead of
+    // requiring multiple traces at an arbitrary instant.
+    for (let attempt = 0; attempt < 20 && (await signals.count()) === 0; attempt++)
+      await page.clock.runFor(300)
+    expect(await signals.count()).toBeGreaterThan(0)
+    expect(await signals.count()).toBeLessThanOrEqual(6)
+  }
+  await expect(signals).toHaveCount(0)
   await page
     .locator('.fragment-action-stage')
     .evaluate((node) => node.scrollIntoView({ block: 'center' }))
-  const signals = page.locator('.fragment-ground-signal')
-  await expect(signals).toHaveCount(0)
-  await page.clock.fastForward(1500)
-  await expect(signals).toHaveCount(1)
+  // The trace scheduler owns timers; foreground painting is irrelevant here.
+  await page.evaluate(() => {
+    window.requestAnimationFrame = () => 0
+  })
+  await page.clock.runFor(2000)
+  await expectTrace()
+  expect(
+    await signals.evaluateAll((nodes) => new Set(nodes.map((node) => node.parentElement)).size),
+  ).toBe(await signals.count())
   const shapes = await page
     .locator('.fragment-action-pieces [data-piece] path')
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('d')))
-  expect(shapes).toContain(await signals.locator('.fragment-signal-tip').getAttribute('d'))
-  await expect(signals).toHaveAttribute('aria-hidden', 'true')
-  await page.clock.fastForward(4000)
-  await expect(signals).toHaveCount(0)
-  await page.clock.fastForward(3500)
-  await expect(signals).toHaveCount(1)
+  for (const trace of await signals.all()) {
+    const original = await trace.evaluate((node) =>
+      node.parentElement!.querySelector(':scope > path')!.getAttribute('d'),
+    )
+    expect(shapes).toContain(original)
+    const tip = trace.locator('.fragment-signal-tip')
+    expect(await tip.getAttribute('d')).not.toBe(original)
+    const screenWidth = await tip.evaluate((node) => {
+      const matrix = (node as SVGPathElement).getScreenCTM()!
+      return parseFloat(getComputedStyle(node).strokeWidth) * Math.hypot(matrix.a, matrix.b)
+    })
+    expect(screenWidth).toBeCloseTo(3, 1)
+    await expect(tip).toHaveCSS('vector-effect', 'none')
+    await expect(trace).toHaveAttribute('aria-hidden', 'true')
+  }
+  await page.clock.runFor(4000)
+  await expectTrace()
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await expect(signals).toHaveCount(0)
   await page.clock.fastForward(60000)
@@ -445,8 +318,8 @@ test('Temple schedules one occasional edge signal and clears it for reduced moti
   })
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.evaluate(() => (window as any).motionResumed)
-  await page.clock.fastForward(1500)
-  await expect(signals).toHaveCount(1)
+  await page.clock.runFor(2000)
+  await expectTrace()
   await page.getByRole('link', { name: 'Return to fixture' }).click()
   await expect(page).toHaveURL(/\/fixture$/)
   await page.clock.fastForward(60000)

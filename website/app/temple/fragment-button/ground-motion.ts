@@ -1,8 +1,8 @@
-import { paintGroundPieces } from './ground-pieces.ts'
+import { paintGroundPieces, type GroundBand } from './ground-pieces.ts'
 
 type Refrain = { refrain: HTMLElement; refrainStage: HTMLElement }
 
-/** One uninterrupted native scroll journey between successive clear choruses. */
+/** Static sculpture coordinates, with native vertical scroll parallax only. */
 export function createGroundMotion(
   host: HTMLElement,
   field: HTMLElement,
@@ -25,68 +25,58 @@ export function createGroundMotion(
     clear()
     const height = host.querySelector<HTMLElement>('.temple-stage')!.clientHeight
     const distance = Math.max(1, document.documentElement.scrollHeight - innerHeight)
-    const depths = [0.12, 0.26, 0.42]
-    field.style.setProperty(
-      '--ground-parallax-pad',
-      `${Math.ceil(distance * Math.max(...depths))}px`,
-    )
-    field.hidden = reduced.matches
-    paintGroundPieces(host, planes)
-    if (reduced.matches) return
-    const opening = host.querySelector<HTMLElement>('.temple-opening')!
-    const begin = scrollY + opening.getBoundingClientRect().top + height * 0.3
-    const stops: { y: number; progress: number; easing?: string }[] = [
-      { y: 0, progress: -1 },
-      { y: begin, progress: -1 },
-    ]
-    for (const { refrain, refrainStage } of refrains) {
+    const origin = scrollY + host.getBoundingClientRect().top
+    const depths = [-0.12, -0.26, -0.42]
+    field.style.setProperty('--ground-parallax-pad', `${Math.ceil(distance * 0.42)}px`)
+    const holds = refrains.map(({ refrain, refrainStage }) => {
       const section = refrain.getBoundingClientRect()
       const top = parseFloat(getComputedStyle(refrainStage).top)
-      const hold = Math.max(0, section.height - refrainStage.offsetHeight)
-      if (!Number.isFinite(top) || hold === 0) continue
-      const start = scrollY + section.top - top
-      // The journey reaches into this chorus's measured sticky hold. Derive
-      // the endpoint from its real position/length, not a fixed verse duration.
-      const exitAt = start + hold * 0.4
-      const release = start + hold
-      // Only the remainder of the hold can pause/reset, entirely offscreen.
-      stops.push(
-        { y: exitAt, progress: 1, easing: 'steps(1, end)' },
-        { y: (exitAt + release) / 2, progress: -1 },
-        { y: release, progress: -1 },
-      )
-    }
-    if (stops.at(-1)!.y < distance) stops.push({ y: distance, progress: 1 })
+      return {
+        start: scrollY + section.top - top,
+        top,
+        height: refrainStage.offsetHeight,
+        length: Math.max(0, section.height - refrainStage.offsetHeight),
+      }
+    })
+    // Reserve the middle of each chorus hold, letting the sculpture reach
+    // into its arrival and departure. Reserve the chorus itself, not an entire
+    // empty viewport that would also strip pieces from neighbouring verse lines.
+    // Leave real empty space there, including room for the gentle ambient drift.
+    // No opacity, masks, sideways exits or scroll-time layout writes are needed.
+    const bands = depths.map((depth) => {
+      const available: GroundBand[] = []
+      const end = host.clientHeight - distance * depth
+      // Keep the initial viewport empty; forms emerge below it as the opener
+      // leaves. These planes travel slightly faster than the foreground, giving
+      // even the short first verse room for large forms and a clear chorus reading area.
+      // Match the largest float excursion, removing extra entry dead space.
+      let cursor = height + 40
+      for (const hold of holds) {
+        if (!Number.isFinite(hold.start) || hold.length === 0) continue
+        const start = Math.max(
+          0,
+          (1 - depth) * (hold.start + hold.length * 0.35) + hold.top - origin - 64,
+        )
+        if (start > cursor) available.push({ start: cursor, end: Math.min(end, start) })
+        cursor = Math.max(
+          cursor,
+          (1 - depth) * (hold.start + hold.length * 0.65) + hold.top + hold.height - origin + 64,
+        )
+      }
+      if (cursor < end) available.push({ start: cursor, end })
+      return available
+    })
+    field.hidden = reduced.matches
+    paintGroundPieces(host, planes, bands)
+    if (reduced.matches) return
     for (const [i, plane] of planes.entries()) {
       animations.push(
-        plane.animate([{ translate: `0px ${-distance * depths[i]}px` }, { translate: '0px 0px' }], {
+        plane.animate([{ translate: '0px 0px' }, { translate: `0px ${distance * depths[i]}px` }], {
           timeline: scroll,
           duration: 'auto',
           fill: 'both',
         }),
       )
-      for (const piece of plane.querySelectorAll<SVGSVGElement>('.fragment-ground-piece')) {
-        const centre = Number(piece.dataset.groundCentre)
-        const halfWidth = Number(piece.dataset.groundWidth) / 2
-        const left = -(centre + halfWidth + 64)
-        const right = innerWidth - centre + halfWidth + 64
-        const exitLeft = centre < innerWidth / 2
-        const entry = exitLeft ? right : left
-        const exit = exitLeft ? left : right
-        piece.dataset.exitSide = exit < 0 ? 'left' : 'right'
-        // Use the actual edge-clearance distances: overshooting the exit
-        // would make the shape disappear before the scene-linked endpoint.
-        animations.push(
-          piece.animate(
-            stops.map(({ y, progress, easing }) => ({
-              offset: Math.max(0, Math.min(1, y / distance)),
-              translate: `${progress < 0 ? entry : exit}px 0px`,
-              easing: easing ?? 'linear',
-            })),
-            { timeline: scroll, duration: 'auto', fill: 'both' },
-          ),
-        )
-      }
     }
   }
   reduced.addEventListener('change', resize, { signal })

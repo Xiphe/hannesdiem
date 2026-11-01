@@ -1,7 +1,14 @@
-import { fragmentStroke, groundMaterial, patternSize, placeGroundPieces } from './material.ts'
+import { fragmentStroke, groundMaterial } from './material.ts'
+import { randomFrom } from './fragment-generator.ts'
 
-/** Real, individually movable copies of the same six seeded texture placements. */
-export function paintGroundPieces(host: HTMLElement, planes: readonly HTMLElement[]) {
+export type GroundBand = { start: number; end: number }
+
+/** Seeded overlapping assemblies, placed around real gaps rather than tiled. */
+export function paintGroundPieces(
+  host: HTMLElement,
+  planes: readonly HTMLElement[],
+  bands: readonly (readonly GroundBand[])[],
+) {
   const material = groundMaterial(host)
   if (!material) return
   const ns = 'http://www.w3.org/2000/svg'
@@ -9,59 +16,49 @@ export function paintGroundPieces(host: HTMLElement, planes: readonly HTMLElemen
   probe.style.position = 'absolute'
   probe.style.visibility = 'hidden'
   const path = document.createElementNS(ns, 'path')
-  probe.appendChild(path)
+  const measurement = document.createElementNS(ns, 'g')
+  measurement.appendChild(path)
+  probe.appendChild(measurement)
   host.appendChild(probe)
-  const boxes = material.pieces.map((piece) => {
-    path.setAttribute('d', piece.d!)
-    const box = path.getBBox()
-    return { x: box.x - 2, y: box.y - 2, width: box.width + 4, height: box.height + 4 }
-  })
-  probe.remove()
   for (const plane of planes) plane.replaceChildren()
-  const height = planes[0].offsetHeight
-  for (const placement of placeGroundPieces(material.pieces, material.seed)) {
-    const { index, size, angle, tone, layer } = placement
-    const box = boxes[index]
-    const scale = size / 28
-    const radians = (angle * Math.PI) / 180
-    const corners = [
-      [box.x, box.y],
-      [box.x + box.width, box.y],
-      [box.x, box.y + box.height],
-      [box.x + box.width, box.y + box.height],
-    ].map(([x, y]) => ({
-      x: x * Math.cos(radians) - y * Math.sin(radians),
-      y: x * Math.sin(radians) + y * Math.cos(radians),
-    }))
-    const left = Math.min(...corners.map((p) => p.x))
-    const top = Math.min(...corners.map((p) => p.y))
-    const width = Math.max(...corners.map((p) => p.x)) - left
-    const h = Math.max(...corners.map((p) => p.y)) - top
-    // Include overlapping edge copies, but never cut a piece along a screen half.
-    for (
-      let column = Math.floor((-placement.x - (left + width) * scale) / patternSize.width);
-      column <= Math.ceil((host.clientWidth - placement.x - left * scale) / patternSize.width);
-      column++
-    ) {
-      const x = placement.x + column * patternSize.width
-      if (x + (left + width) * scale < -48 || x + left * scale > host.clientWidth + 48) continue
-      for (
-        let row = Math.floor((-placement.y - (top + h) * scale) / patternSize.height);
-        row <= Math.ceil((height - placement.y - top * scale) / patternSize.height);
-        row++
-      ) {
-        const y = placement.y + row * patternSize.height
-        if (y + (top + h) * scale < 0 || y + top * scale > height) continue
+  for (const [layer, spaces] of bands.entries()) {
+    for (const [band, space] of spaces.entries()) {
+      const available = space.end - space.start
+      if (available < 160) continue
+      // A fuller assembly, retaining the large scale and irregular overlaps.
+      const count = Math.max(2, Math.round((host.clientWidth * available * 3.2) / (1920 * 1600)))
+      for (let slot = 0; slot < count; slot++) {
+        const random = randomFrom(`${material.seed}/sculpture/${layer}/${band}/${slot}`)
+        const index = (band * 3 + layer + slot * 5) % material.pieces.length
+        const piece = material.pieces[index]
+        const angle = random() * 360
+        path.setAttribute('d', piece.d!)
+        path.setAttribute('transform', `rotate(${angle})`)
+        // Measure the rotated silhouette itself. Rotating its rectangular
+        // bounding box leaves empty triangular corners that widen the gap.
+        const bounds = measurement.getBBox()
+        const left = bounds.x - 2
+        const top = bounds.y - 2
+        const width = bounds.width + 4
+        const h = bounds.height + 4
+        // Uniformly fit the intact shape into its space; never cut an outline
+        // or compress it vertically to manufacture a hole for a chorus.
+        const scale = Math.min((piece.size * 24) / 28, available / h)
+        const tone = Math.round(7 + random() * 8)
+        const x = host.clientWidth * (0.1 + random() * 0.8) - (width * scale) / 2
+        const slack = available - h * scale
+        // Hold the assembly's ends against the intended gap. Random placement
+        // alone can leave another large empty interval beside the last verse.
+        const offset = slot === 0 ? 0 : slot === count - 1 ? slack : random() * slack
+        const y = space.start + offset
         const svg = document.createElementNS(ns, 'svg')
         svg.classList.add('fragment-ground-piece')
         svg.dataset.groundIndex = String(index)
-        svg.dataset.groundCentre = String(x + (left + width / 2) * scale)
-        svg.dataset.groundWidth = String(width * scale)
         svg.setAttribute('viewBox', `${left} ${top} ${width} ${h}`)
         svg.setAttribute('width', String(width * scale))
         svg.setAttribute('height', String(h * scale))
-        svg.style.left = `${64 + x + left * scale}px`
-        svg.style.top = `${64 + y + top * scale}px`
+        svg.style.left = `${64 + x}px`
+        svg.style.top = `${64 + y}px`
         const id = `ground-shade-${crypto.randomUUID()}`
         const colour = (shift: number) =>
           `light-dark(rgb(${247 - tone + shift} ${236 - tone + shift} ${223 - tone + shift}), rgb(${tone + shift} ${tone + 1 + shift} ${tone + shift}))`
@@ -70,4 +67,5 @@ export function paintGroundPieces(host: HTMLElement, planes: readonly HTMLElemen
       }
     }
   }
+  probe.remove()
 }
