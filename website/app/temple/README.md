@@ -6,7 +6,7 @@ CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `te
 
 ## Content and rendering
 
-- `repetition.ts` coordinates the third verse’s centred statements, delayed reflections and compact50/50 handoffs. Resolve positions together to maintain8px separation; no compression. Reduced motion uses native document flow.
+- `repetition.ts` coordinates the third verse’s centred statements, delayed reflections and compact50/50 handoffs. Fit-time keyframes share the collision model and use native view timelines for movement, reflection opacity and entry, so delayed scene frames cannot leave the bumped block behind. Resolve positions together to maintain8px separation; no compression. Resize rebuilds the timelines; reduced motion and unavailable timelines retain the frame-driven sticky fallback. Navigation cancels all owned animations.
 - `content/pages/temple-of-sound/index.tsx` owns the typed verse/refrain pairs, including display casing and font roles. The unpublished draft reuses it. The browser never imports content modules or CMX runtime.
 - `poem.tsx` resolves the immutable1920px media variant and passes serializable data to `Opening`. `first-pair.tsx` renders native paragraphs and selectable source text; no duplicated authored copy or workbench controls.
 - `opening.tsx` owns the Remix task and cancellation. `artwork.ts` coordinates fitted text, copy colour and each bounded refrain. `scene.ts` owns the shared RAF, title mask and pointer/idle disturbances. Native sticky canvases own the opener exit and chorus travel; a delayed animation frame cannot leave their geometry behind. The same viewport-aligned material paints directly into each visible canvas; escaped glimmers use one inert foreground layer.
@@ -20,7 +20,7 @@ CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `te
 
 ## Review and verification
 
-Run `npm run dev` (default8787), then `sand tunnel 8787`. The mobile scrolling follow-up uses8796: `sand tunnel 8796`;8790 remains available for the separate content work.
+Run `npm run dev` (default8787), then `sand tunnel 8787`. The repetition performance follow-up uses8798: `sand tunnel 8798`;8790 remains available for the separate content work.
 
 `npm run check:website` checks application behaviour against synthetic CMX input, independent of authored prose. Browser coverage includes startup, failure fallback, themes, selectable text, responsive fitting, navigation/disposal and the no-JavaScript document.
 
@@ -33,3 +33,5 @@ The removed workbench is recoverable at `7eeabb0:website/app/temple/text.prototy
 For diagnostics, start the synthetic Worker separately: `WEBSITE_TEST=true npx wrangler dev website/tests/worker.ts --config website/wrangler.jsonc --port 8791`. The diagnostic defaults target that fixture server, keeping automated assertions independent of authored content and media. Use the actual content route only for visual review.
 
 The first pair now supports an optional typed `action`; the selected [fragment button](fragment-button/README.md) renders in its final pause. Its native contact link and decorative SVG share the existing Opening island, with per-instance seeds and lifetime/visibility guards.
+
+For the third-pair diagnostic, use `REPETITION=true TEMPLE_URL=http://localhost:8791/temple-four-phrases WIDTH=390 HEIGHT=900 node website/app/temple/debug/scroll.mjs`. It sweeps the complete repetition and counts its per-frame layout reads. Add `NATIVE_TIMELINES=false` to compare the frame-driven fallback, or `ENGINE=webkit` for WebKit. Frame budgets remain software-browser measurements.

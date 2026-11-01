@@ -890,6 +890,152 @@ test('mobile curved copy keeps two rows without editor controls', async ({ page 
 })
 
 for (const width of [390, 1440]) {
+  test(`Temple repetition follows scrolling without scene frames at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.addInitScript(() => {
+      const raf = window.requestAnimationFrame.bind(window)
+      window.requestAnimationFrame = (callback) =>
+        raf((time) => {
+          if (!(window as any).templeFramesPaused) callback(time)
+        })
+    })
+    await page.goto('/temple-four-phrases')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    for (const index of [1, 2]) {
+      const outgoing = page.locator('.repetition-stage').nth(index - 1)
+      const incoming = page.locator('.repetition-stage').nth(index)
+      const contact = await page
+        .locator('.repetition-track')
+        .nth(index)
+        .evaluate((node) => {
+          const previous =
+            node.previousElementSibling!.querySelector<HTMLElement>('.repetition-stage')!
+          const lock = parseFloat(getComputedStyle(previous).top)
+          return {
+            scroll: scrollY + node.getBoundingClientRect().top - (lock + previous.offsetHeight + 8),
+            lock,
+          }
+        })
+      await page.evaluate((y) => scrollTo(0, y + 10), contact.scroll)
+      const expected = contact.lock - 2 * ((await page.evaluate(() => scrollY)) - contact.scroll)
+      await expect.poll(async () => (await outgoing.boundingBox())!.y).toBeCloseTo(expected, 0)
+      const before = (await outgoing.boundingBox())!.y
+      await page.evaluate(() => {
+        ;(window as any).templeFramesPaused = true
+        scrollBy(0, 30)
+      })
+      await expect.poll(async () => (await outgoing.boundingBox())!.y).toBeLessThan(before - 50)
+      const upper = (await outgoing.boundingBox())!
+      const lower = (await incoming.boundingBox())!
+      expect(lower.y - upper.y - upper.height).toBeGreaterThanOrEqual(7)
+      await page.evaluate(() => scrollBy(0, -30))
+      await expect.poll(async () => (await outgoing.boundingBox())!.y).toBeCloseTo(before, 0)
+    }
+  })
+}
+
+test('Temple repetition rebuilds for resize and motion changes, then disposes its animations', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const stages = page.locator('.repetition-stage')
+  await stages.first().evaluate((node) => {
+    ;(window as any).repetitionAnimations = node
+      .getAnimations({ subtree: true })
+      .filter((animation) => !(animation instanceof CSSAnimation))
+  })
+  await page.setViewportSize({ width: 844, height: 390 })
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (window as any).repetitionAnimations.every(
+          (animation: Animation) => animation.playState === 'idle',
+        ),
+      ),
+    )
+    .toBe(true)
+  await page
+    .locator('.repetition-track')
+    .first()
+    .evaluate((node) => {
+      const stage = node.firstElementChild as HTMLElement
+      scrollTo(
+        0,
+        scrollY + node.getBoundingClientRect().top - parseFloat(getComputedStyle(stage).top) + 100,
+      )
+    })
+  const statement = stages.first().locator('.repetition-statement')
+  await expect
+    .poll(async () => {
+      const box = (await statement.boundingBox())!
+      return box.y + box.height / 2
+    })
+    .toBeCloseTo(195, 0)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect
+    .poll(() => stages.first().evaluate((node) => node.getAnimations({ subtree: true }).length))
+    .toBe(0)
+  await expect(stages.first()).toHaveCSS('transform', 'none')
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect
+    .poll(() => stages.first().evaluate((node) => node.getAnimations({ subtree: true }).length))
+    .toBeGreaterThan(0)
+  await page.emulateMedia({ media: 'print' })
+  await expect(stages.first()).toHaveCSS('transform', 'none')
+  await expect(stages.first().locator('.repetition-reflection')).toHaveCSS('opacity', '1')
+  await expect(stages.first().locator('.repetition-reflection .phrase-entry')).toHaveCSS(
+    'transform',
+    'none',
+  )
+  await page.emulateMedia({ media: null })
+  await stages.first().evaluate((node) => {
+    ;(window as any).repetitionAnimations = node
+      .getAnimations({ subtree: true })
+      .filter((animation) => !(animation instanceof CSSAnimation))
+  })
+  await page.getByRole('link', { name: 'Return to fixture' }).click()
+  await expect(page.locator('.temple-opening')).toHaveCount(0)
+  expect(
+    await page.evaluate(() =>
+      (window as any).repetitionAnimations.every(
+        (animation: Animation) => animation.playState === 'idle',
+      ),
+    ),
+  ).toBe(true)
+})
+
+test('Temple repetition retains its handoff without native scroll timelines', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.addInitScript(() => {
+    delete (window as any).ViewTimeline
+  })
+  await page.goto('/temple-four-phrases')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const outgoing = page.locator('.repetition-stage').first()
+  const contact = await page
+    .locator('.repetition-track')
+    .nth(1)
+    .evaluate((node) => {
+      const previous = node.previousElementSibling!.querySelector<HTMLElement>('.repetition-stage')!
+      return (
+        scrollY +
+        node.getBoundingClientRect().top -
+        (parseFloat(getComputedStyle(previous).top) + previous.offsetHeight + 8)
+      )
+    })
+  await page.evaluate((y) => scrollTo(0, y + 10), contact)
+  await page.evaluate(() => new Promise(requestAnimationFrame))
+  await page.evaluate(() => new Promise(requestAnimationFrame))
+  const before = (await outgoing.boundingBox())!.y
+  await page.evaluate(() => scrollBy(0, 30))
+  await expect.poll(async () => (await outgoing.boundingBox())!.y).toBeLessThan(before - 50)
+})
+
+for (const width of [390, 1440]) {
   test(`Temple repetition holds, reveals and yields at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/temple-four-phrases')
@@ -942,7 +1088,11 @@ for (const width of [390, 1440]) {
     await page.evaluate((y) => scrollTo(0, y), collision.scroll + 5)
     await expect.poll(async () => (await stage.boundingBox())!.y).toBeLessThan(beforeImpact.y - 9)
     expect((await stage.boundingBox())!.height).toBeCloseTo(beforeImpact.height, 0)
-    expect((await incomingStage.boundingBox())!.y).toBeCloseTo(incomingAtContact.y - 10, 0)
+    // Native scroll offsets can round to pixels in WebKit; the quadratic entry
+    // also already slows over these first five pixels of travel.
+    expect(
+      Math.abs((await incomingStage.boundingBox())!.y - (incomingAtContact.y - 10)),
+    ).toBeLessThan(1.5)
     await page.evaluate((y) => scrollTo(0, y), collision.scroll + collision.distance + 240)
     await expect(tracks.nth(1).locator('.repetition-reflection')).toHaveCSS('opacity', '1')
     const settled = await incomingStage.locator('.repetition-statement').boundingBox()

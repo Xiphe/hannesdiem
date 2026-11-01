@@ -20,7 +20,14 @@ try {
     const session = await page.context().newCDPSession(page)
     await session.send('Emulation.setCPUThrottlingRate', { rate: cpu })
   }
-  await page.addInitScript(() => {
+  await page.addInitScript((fallback) => {
+    if (fallback) delete window.ViewTimeline
+    window.__repetitionReads = 0
+    const rect = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = function () {
+      if (this.matches('.repetition-track')) window.__repetitionReads++
+      return rect.call(this)
+    }
     let seed = 14519
     Math.random = () => {
       seed = (Math.imul(seed, 1664525) + 1013904223) | 0
@@ -42,12 +49,20 @@ try {
         // Follow real scene paints, including minified production callbacks.
         if (draws > before) window.__drawTimes.push(performance.now() - start)
       })
-  })
+  }, process.env.NATIVE_TIMELINES === 'false')
   await page.goto(process.env.TEMPLE_URL ?? 'http://localhost:8791/temple-of-sound')
   await page.waitForSelector('.temple-opening[data-ready]')
   await page.waitForTimeout(300)
-  const result = await page.evaluate(async () => {
+  const result = await page.evaluate(async (repetition) => {
+    const tracks = [...document.querySelectorAll('.repetition-track')]
+    if (repetition && !tracks.length) throw new Error('The fixture needs repetition tracks')
+    const start = repetition ? scrollY + tracks[0].getBoundingClientRect().top - innerHeight / 2 : 0
+    const end = repetition ? scrollY + tracks.at(-1).getBoundingClientRect().bottom : 2960
+    scrollTo(0, start)
+    await new Promise(requestAnimationFrame)
+    await new Promise(requestAnimationFrame)
     window.__drawTimes = []
+    window.__repetitionReads = 0
     const gaps = []
     let previous,
       frame = 0
@@ -55,7 +70,7 @@ try {
       requestAnimationFrame(function drive(now) {
         if (previous !== undefined) gaps.push(now - previous)
         previous = now
-        scrollTo(0, frame * 40)
+        scrollTo(0, start + ((end - start) * frame) / 74)
         if (++frame < 75) requestAnimationFrame(drive)
         else resolve()
       }),
@@ -71,8 +86,9 @@ try {
       frameP95: percentile(gaps, 0.95),
       framesOver25ms: gaps.filter((gap) => gap > 25).length,
       frames: gaps.length,
+      ...(repetition ? { repetitionLayoutReads: window.__repetitionReads } : {}),
     }
-  })
+  }, process.env.REPETITION === 'true')
   // Isolate app main-thread work. Headless software raster/compositing also costs
   // time: frame intervals are reported separately, never called a 60fps guarantee.
   const appPass = result.drawP95 <= 16.7
