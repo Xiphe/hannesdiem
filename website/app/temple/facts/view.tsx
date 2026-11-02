@@ -2,13 +2,7 @@ import { ref, type Handle } from 'remix/component'
 import type { FactProps } from '../types.ts'
 import { fragmentStroke } from '../fragment-button/material.ts'
 import { mountReadingMaterial } from './enhance.ts'
-
-const contours = {
-  watch:
-    'M135 70C80 44 38 64 36 124C18 370 40 626 18 858Q12 925 80 935C350 958 580 972 854 986Q922 994 930 926C950 686 966 418 984 166Q991 95 920 108C648 162 400 164 135 70Z',
-  create:
-    'M110 90C54 82 28 110 40 166L164 906Q176 966 238 950L920 790Q978 776 956 716C882 496 950 306 970 166Q980 98 912 114C620 180 402 58 110 90Z',
-}
+import { readingContours } from './material.ts'
 
 /** Native CMX content; the fitted silhouette is optional enhancement. */
 export function Fact(handle: Handle<FactProps>) {
@@ -57,7 +51,7 @@ export function Fact(handle: Handle<FactProps>) {
             </defs>
             <g transform="rotate(8)">
               <path
-                d={contours[layout]}
+                d={readingContours[layout]}
                 fill={`url(#${materialId})`}
                 stroke={`url(#${materialId})`}
                 stroke-width={fragmentStroke}

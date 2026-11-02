@@ -511,3 +511,10 @@ copy on desktop and stacked on mobile, and a title permalink at
 `#mic-tech-check`. Keep the surrounding accepted compositions and prose. This is
 the requested page integration for local review; no production deployment has
 been requested in this step.
+
+**Recording reading order — 2026-11-03.** Artist asks for the title above the
+video and the description below it. Use one centred column at every viewport,
+with rounded video corners and the description held by the existing Watch
+contour. Preserve heading and description type roles, native rich text and
+`#mic-tech-check` permalink. Keep Cloudflare's current player while presenting
+its customization options; no new player styling was specified. Local review.

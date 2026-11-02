@@ -11,15 +11,12 @@
 }
 .temple-video-layout {
   display: grid;
-  gap: clamp(28px, 5vw, 80px);
-  max-width: 1080px;
+  gap: 24px;
+  max-width: max(360px, calc(74svh * var(--video-aspect)));
   margin-inline: auto;
 }
-.temple-video-copy {
-  align-self: center;
-}
 .temple-video h2 {
-  margin: 0 0 24px;
+  margin: 0;
   font:
     700 clamp(28px, 3vw, 42px)/1.2 CinzelDecorative,
     serif;
@@ -38,12 +35,32 @@
   outline-offset: 6px;
 }
 .temple-video-description {
+  position: relative;
+  padding: 24px 28px 36px;
   max-width: 45ch;
   color: light-dark(#5d5046, #bdb2a5);
   font:
     400 clamp(17px, 1.3vw, 20px)/1.65 ui-sans-serif,
     system-ui,
     sans-serif;
+}
+.temple-video-description-piece {
+  position: relative;
+  margin-block: 32px 48px;
+}
+.temple-video-material {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.temple-video-description > :first-child {
+  margin-top: 0;
+}
+.temple-video-description > :last-child {
+  margin-bottom: 0;
 }
 .temple-video-description > * + * {
   margin-top: 1em;
@@ -57,8 +74,9 @@
   list-style: revert;
 }
 .temple-video-player {
-  width: min(100%, calc(74svh * var(--video-aspect)));
-  justify-self: center;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
 }
 .temple-video + .first-pair {
   margin-top: 0;
@@ -72,17 +90,4 @@
 }
 .temple-video + .first-pair .block-row + .block-row {
   margin-top: clamp(8px, 1.2vw, 12px);
-}
-@media (min-width: 761px) {
-  .temple-video-layout {
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  }
-  .temple-video-copy {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .temple-video-player {
-    grid-column: 1;
-    grid-row: 1;
-  }
 }
