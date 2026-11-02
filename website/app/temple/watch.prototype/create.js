@@ -23,9 +23,19 @@ export function createSection() {
         <p class="create-beyond-sound"></p>
       </div>
     </div>
-    <div class="watch-action"><a href="mailto:sound@hannesdiem.de">let's talk</a></div>
-    <div class="create-tooltip" id="create-steal-note" role="tooltip" popover="auto"><em></em></div>
+    <div class="watch-action"><p></p><a href="mailto:sound@hannesdiem.de"></a></div>
+    <div class="create-tooltip" id="create-steal-note" role="tooltip" popover="auto">
+      <svg class="create-tooltip-piece" viewBox="0 0 400 180" preserveAspectRatio="none" aria-hidden="true">
+        <defs><linearGradient id="create-tooltip-material" x1="0" y1="0" x2="1" y2="1">
+          <stop class="create-tooltip-top"/><stop class="create-tooltip-bottom" offset="1"/>
+        </linearGradient></defs>
+        <path fill="url(#create-tooltip-material)" d="M25 17C105 5 197 24 365 7Q390 5 387 29L397 141Q400 160 377 162C260 155 154 179 26 170Q7 169 10 149L3 40Q0 21 25 17Z"/>
+      </svg>
+      <em></em>
+    </div>
   `
+  section.querySelector('.watch-action p').textContent = copy.actionContext
+  section.querySelector('.watch-action a').textContent = copy.actionLabel
   section.querySelector('#create-heading').textContent = copy.headline
   section.querySelector('[data-fragment="0"]').textContent = copy.invitation
   const trigger = document.createElement('button')

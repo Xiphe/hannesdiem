@@ -71,3 +71,8 @@ portrait, leaving the face and hands visible. The artist then removed the separa
 Create label and requested staggered lower image edges. The mixer extends24–64px
 below the portrait, with clearance before the reading column on mobile and before
 the contact action on desktop. Watch's contour remains independent.
+
+The tooltip uses a softly rounded, irregular SVG piece with a theme-aware neutral
+gradient instead of a bordered panel. Its native popover still supports hover,
+keyboard focus, tap, Escape and outside dismissal, with viewport-aware placement.
+The artist's CTA now reads “what should we write together?” above “lets talk”.

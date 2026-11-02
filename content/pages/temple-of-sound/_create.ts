@@ -10,4 +10,6 @@ export const createCopy = {
     note: 'Using "steal" here because it gives a certain kind of permission, not because I see you as thiefs',
   },
   beyondSound: 'Those creating and vibing on medium other then sound are super welcome as well.',
+  actionContext: 'what should we write together?',
+  actionLabel: 'lets talk',
 } as const
