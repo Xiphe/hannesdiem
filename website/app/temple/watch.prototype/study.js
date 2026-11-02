@@ -6,7 +6,6 @@ import { mountReadingMaterial } from './reading-material.js'
 const section = document.createElement('section')
 section.className = 'watch-study'
 section.id = 'watch'
-section.dataset.variant = 'A'
 section.setAttribute('aria-label', 'Watch')
 section.innerHTML = `
   <div class="watch-pictures">

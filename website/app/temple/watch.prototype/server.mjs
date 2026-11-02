@@ -1,4 +1,4 @@
-// THROWAWAY: develop Alongside inside the accepted page, ?variant=A.
+// THROWAWAY: develop Watch and Create inside the accepted page.
 // Proxy the running CMX page; none of this enters the website's build or publication.
 import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
@@ -66,8 +66,10 @@ createServer(async (request, response) => {
     }
   } catch (error) {
     console.error(error)
-    response.writeHead(502).end('Start the regular Temple preview on port 8791 first.')
+    response
+      .writeHead(502)
+      .end(`Start the regular Temple preview at ${new URL(upstream).origin} first.`)
   }
 }).listen(port, '0.0.0.0', () => {
-  console.log(`Watch studies: http://localhost:${port}/temple-of-sound?variant=A#watch`)
+  console.log(`Watch/Create preview: http://localhost:${port}/temple-of-sound#watch`)
 })

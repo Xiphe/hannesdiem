@@ -8,7 +8,6 @@ export function createSection() {
   const section = document.createElement('section')
   section.className = 'watch-study create-study'
   section.id = 'create'
-  section.dataset.variant = 'A'
   section.setAttribute('aria-labelledby', 'create-heading')
   section.innerHTML = `
     <div class="watch-pictures">

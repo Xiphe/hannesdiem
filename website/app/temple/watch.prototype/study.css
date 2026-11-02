@@ -38,7 +38,7 @@
   position: relative;
   z-index: 2;
 }
-.watch-copy-tile > :not(.watch-material) {
+.watch-copy-tile > * {
   position: relative;
   z-index: 2;
 }
@@ -103,9 +103,6 @@
   font-weight: 600;
   color: var(--watch-ink);
 }
-.watch-fragments [hidden] {
-  display: none;
-}
 .watch-action :is(button, a) {
   border: 0;
   border-radius: 8px;
@@ -130,8 +127,8 @@
   outline: 2px solid currentColor;
   outline-offset: 4px;
 }
-/* A: an asymmetrical photographic spread, reading column beside both images. */
-.watch-study[data-variant='A'] {
+/* Selected Alongside composition: photographs beside the reading column. */
+.watch-study {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   grid-template-rows: auto auto;
@@ -139,11 +136,11 @@
   row-gap: 24px;
   align-items: start;
 }
-[data-variant='A'] .watch-copy-tile {
+.watch-study .watch-copy-tile {
   grid-column: 2;
   grid-row: 1;
 }
-[data-variant='A'] .watch-pictures {
+.watch-study .watch-pictures {
   grid-column: 1;
   grid-row: 1;
   display: grid;
@@ -154,28 +151,28 @@
   margin-top: calc(-1 * clamp(100px, 18svh, 180px));
   margin-bottom: 36px;
 }
-[data-variant='A'] .watch-daylight {
+.watch-study .watch-daylight {
   grid-column: 1 / 10;
   grid-row: 1;
   min-height: 0;
 }
-[data-variant='A'] .watch-daylight img {
+.watch-study .watch-daylight img {
   object-position: 56% 50%;
 }
-[data-variant='A'] .watch-fire {
+.watch-study .watch-fire {
   position: relative;
   grid-column: 3 / -1;
   grid-row: 2;
   margin-top: -10%;
   min-height: 0;
 }
-[data-variant='A'] .watch-fragments {
+.watch-study .watch-fragments {
   max-width: 50ch;
 }
-[data-variant='A'] .watch-fragments p:not([hidden]) ~ p:not([hidden]) {
+.watch-study .watch-fragments p + p {
   margin-top: 1.35em;
 }
-[data-variant='A'] .watch-action {
+.watch-study .watch-action {
   grid-column: 1 / -1;
   grid-row: 2;
   align-self: start;
@@ -190,14 +187,14 @@
 .create-study .watch-heading {
   text-wrap: balance;
 }
-.create-study[data-variant='A'] .watch-daylight {
+.create-study .watch-daylight {
   grid-column: 1 / 8;
   grid-row: 1 / 3;
 }
-.create-study[data-variant='A'] .watch-daylight img {
+.create-study .watch-daylight img {
   object-position: 50% 60%;
 }
-.create-study[data-variant='A'] .watch-fire {
+.create-study .watch-fire {
   grid-column: 5 / -1;
   grid-row: 2;
   margin-top: 0;
@@ -208,38 +205,38 @@
     padding-top: 0;
     scroll-margin-top: 144px;
   }
-  .watch-study[data-variant='A'] {
+  .watch-study {
     display: flex;
     flex-direction: column;
     gap: 32px;
   }
-  [data-variant='A'] .watch-pictures {
+  .watch-study .watch-pictures {
     padding-top: 0;
     contain: none;
     grid-template-rows: auto auto;
     margin-top: -14svh;
     margin-bottom: 0;
   }
-  [data-variant='A'] .watch-daylight {
+  .watch-study .watch-daylight {
     aspect-ratio: 1.25;
   }
-  [data-variant='A'] .watch-fire {
+  .watch-study .watch-fire {
     margin-top: -15%;
     aspect-ratio: 1.6;
   }
-  [data-variant='A'] .watch-action {
+  .watch-study .watch-action {
     align-self: center;
   }
-  .create-study[data-variant='A'] .watch-pictures {
+  .create-study .watch-pictures {
     grid-template-rows: minmax(0, 1fr) auto;
     height: 114vw;
     max-height: 600px;
     margin-bottom: var(--mixer-drop);
   }
-  .create-study[data-variant='A'] .watch-daylight {
+  .create-study .watch-daylight {
     aspect-ratio: auto;
   }
-  .create-study[data-variant='A'] .watch-fire {
+  .create-study .watch-fire {
     aspect-ratio: 1.5;
   }
 }
