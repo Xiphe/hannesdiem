@@ -32,7 +32,10 @@ export function createApp(content: ContentLoader) {
       return new Response('Not found', { status: 404, headers: privateHeaders })
     if (request.headers.get('X-Remix-Target') !== 'overlay') return redirect(path, 307)
     return render(
-      <SiteContent site={page.site}>
+      <SiteContent
+        site={page.site}
+        routes={page.routes}
+      >
         <div
           mix={css({
             display: 'flex',
@@ -102,10 +105,10 @@ export function createApp(content: ContentLoader) {
     )
   })
   router.get(routes.sitemap, async ({ request }) => {
-    const { site } = await content(request)
+    const { routes } = await content(request)
     return new Response(
       '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
-        site.routes
+        routes
           .filter((route) => !route.noindex && route.path !== '/about')
           .map(
             (route) =>
@@ -123,27 +126,6 @@ export function createApp(content: ContentLoader) {
       },
     )
   })
-  router.get(routes.legacyShareImage, async ({ request, params }) => {
-    const { site } = await content(request)
-    const kind =
-      params.collection === 'hdm-pages'
-        ? 'page'
-        : params.collection === 'hdm-songs'
-          ? 'song'
-          : undefined
-    const page =
-      kind &&
-      site.routes.find(
-        (route) => route.kind === kind && route.sourceId === params.file.replace(/\.png$/, ''),
-      )
-    const image = page && site.shareImages[page.path]
-    return image
-      ? redirect(image.src, {
-          status: 307,
-          headers: { 'Cache-Tag': contentCacheTag, 'Cache-Control': 'no-cache' },
-        })
-      : new Response('Not found', { status: 404, headers: privateHeaders })
-  })
   router.get(
     routes.robots,
     () =>
@@ -160,7 +142,7 @@ export function createApp(content: ContentLoader) {
   router.get(routes.content, async ({ request, render }) => {
     const path = new URL(request.url).pathname
     const page = await content(request)
-    const destination = page.site.redirects.find((redirect) => redirect.path === path)
+    const destination = page.redirects.find((redirect) => redirect.path === path)
     if (destination)
       return redirect(
         destination.to + (destination.preserveSearch ? new URL(request.url).search : ''),
@@ -176,7 +158,10 @@ export function createApp(content: ContentLoader) {
     if (path.endsWith('/') && path !== '/')
       return redirect(path.slice(0, -1) + new URL(request.url).search, 308)
     return render(
-      <SiteContent site={page.site}>
+      <SiteContent
+        site={page.site}
+        routes={page.routes}
+      >
         <Page
           {...renderContent(page.document)}
           route={page.route}

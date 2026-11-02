@@ -27,7 +27,22 @@ export function PoemSection(handle: Handle<PoemSectionProps>) {
 export function PoemOpening(handle: Handle<PoemOpeningProps>) {
   const site = handle.context.get(SiteContent)
   return () => {
-    const { id, title, dates, image, lightSource, children } = handle.props
+    const {
+      id,
+      title,
+      dates,
+      image,
+      lightSource,
+      pair,
+      pairs,
+      bridge,
+      bridgeBody,
+      location,
+      facts,
+      navigation,
+      finalVerse,
+      children,
+    } = handle.props
     const item = getMedia(site.media, image)
     // The accepted study used this responsive variant, not the largest original.
     const source =
@@ -38,10 +53,32 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
     return (
       <>
         <Opening
+          id={id}
+          mark={assets.templeMark}
+          navigation={navigation}
           title={title}
           dates={dates}
           image={{ src: source, width: item.width, height: item.height }}
           lightSource={lightSource}
+          pair={pair}
+          pairs={pairs}
+          bridge={bridge}
+          bridgeBody={bridgeBody}
+          facts={facts?.map((fact) => ({
+            ...fact,
+            images: [getMedia(site.media, fact.images[0]), getMedia(site.media, fact.images[1])],
+          }))}
+          location={
+            location
+              ? {
+                  ...location,
+                  id: `temple-location-${id}`,
+                  image: getMedia(site.media, location.image),
+                  mapAsset: assets.templeEurope,
+                }
+              : undefined
+          }
+          finalVerse={finalVerse}
         />
         {children != null && (
           <PoemSection

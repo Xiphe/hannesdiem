@@ -1,4 +1,29 @@
+import type { PageMetadata } from '../../types.ts'
+import fire from '../../media/fire.jpg'
+
+import selfie from '../../media/selfie.jpg'
+import hannesRec1 from '../../media/hannes_rec_1.jpg'
+import cooking from '../../media/cooking.jpg'
+import piano from '../../media/piano.jpg'
+import yoga1 from '../../media/yoga1.jpg'
+import moreGuitar from '../../media/more_guitar.jpg'
+import food2 from '../../media/food_2.jpg'
+import painting from '../../media/painting.jpg'
+import food1 from '../../media/food_1.jpg'
+import yoga2 from '../../media/yoga2.jpg'
+import hygge from '../../media/hygge.jpg'
 import { Button, Hero, ImageBand, Page, TextBlock } from '@hannesdiem/content-components'
+
+export const metadata = {
+  description:
+    'A creative retreat in Denmark, a house meant for ten, and two artists diving deep into music, food, and creativity. One Week Album is just getting started.',
+  image: fire,
+  theme: 'beach',
+  ogImageTitle: 'Løkken 2024',
+  ogSubtitle: 'Just the two of us',
+  ogTextColor: 'dark',
+  shareImage: true,
+} satisfies PageMetadata
 
 export const title = 'Løkken 2024 Recap'
 
@@ -7,9 +32,9 @@ export default function Content() {
     <>
       <Page firstIsHero={true}>
         <Hero
-          title={'Løkken 2024 Recap'}
+          title={title}
           subtitle={'One Week Album - Just the two of us.'}
-          image={'fire.jpg'}
+          image={fire}
           first={true}
           pullUp={false}
           textColor={'dark'}
@@ -35,8 +60,8 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'selfie.jpg', includeStacked: true },
-            { image: 'hannes_rec_1.jpg', includeStacked: false },
+            { image: selfie, includeStacked: true },
+            { image: hannesRec1, includeStacked: false },
           ]}
         />
         <a
@@ -99,9 +124,9 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'cooking.jpg', includeStacked: true },
-            { image: 'piano.jpg', includeStacked: true },
-            { image: 'yoga1.jpg', includeStacked: false },
+            { image: cooking, includeStacked: true },
+            { image: piano, includeStacked: true },
+            { image: yoga1, includeStacked: false },
           ]}
         />
         <TextBlock
@@ -149,9 +174,9 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'more_guitar.jpg', includeStacked: false },
-            { image: 'food_2.jpg', includeStacked: false },
-            { image: 'painting.jpg', includeStacked: true },
+            { image: moreGuitar, includeStacked: false },
+            { image: food2, includeStacked: false },
+            { image: painting, includeStacked: true },
           ]}
         />
         <TextBlock
@@ -190,9 +215,9 @@ export default function Content() {
           pullUp={false}
           breakPoint={'sm'}
           images={[
-            { image: 'food_1.jpg', includeStacked: false },
-            { image: 'yoga2.jpg', includeStacked: true },
-            { image: 'hygge.jpg', includeStacked: false },
+            { image: food1, includeStacked: false },
+            { image: yoga2, includeStacked: true },
+            { image: hygge, includeStacked: false },
           ]}
         />
       </Page>

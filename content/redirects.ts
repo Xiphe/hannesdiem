@@ -1,4 +1,4 @@
-export const redirects = new Map<string, { to: string; status: 307 | 308 }>([
+const aliases = new Map<string, { to: string; status: 307 | 308 }>([
   ['/', { to: '/linktree', status: 307 }],
   ['/owa', { to: '/one-week-album', status: 308 }],
   ['/one-week-album-retreat', { to: '/one-week-album', status: 308 }],
@@ -24,3 +24,9 @@ export const redirects = new Map<string, { to: string; status: 307 | 308 }>([
     },
   ],
 ])
+
+export const redirects = [...aliases].map(([path, destination]) => ({
+  path,
+  ...destination,
+  ...(path === '/' ? { preserveSearch: true } : {}),
+}))

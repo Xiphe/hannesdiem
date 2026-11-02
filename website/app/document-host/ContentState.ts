@@ -10,10 +10,9 @@ import { cmx } from '@cmx-tools/remix'
 import { environment } from '../../../.cmx/environment.ts'
 import { contentPage } from './source.ts'
 import {
-  siteEntry,
-  readSite,
   validatePublication,
   type PublishedDocuments,
+  type PublicationIndex,
 } from '../../../contracts/content.ts'
 import { verifyPublicationRequest } from './authentication.ts'
 import { manifestConditionHeader } from '../../../contracts/publication.ts'
@@ -23,9 +22,9 @@ const emptyState = {
   manifest: {} as Record<string, string>,
 }
 const privateHeaders = { 'Cache-Control': 'no-store' }
-class InvalidCollection extends Error {}
 
 export class ContentState extends DurableObject<Env> {
+  private index?: { contentHash: string; publication: PublicationIndex }
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
     this.ctx.storage.sql.exec(`
@@ -52,32 +51,6 @@ export class ContentState extends DurableObject<Env> {
   private commit(publication: CmxDocumentStoreCommit): boolean {
     return this.ctx.storage.transactionSync(() => {
       if (this.state().contentHash !== publication.baseContentHash) return false
-      const documents: PublishedDocuments = Object.fromEntries(
-        this.ctx.storage.sql
-          .exec<{ entry: string; document: string }>('SELECT entry, document FROM documents')
-          .toArray()
-          .map((row) => [row.entry, JSON.parse(row.document)]),
-      )
-      for (const key of publication.remove) delete documents[key]
-      for (const [key, document] of Object.entries(publication.upsert)) {
-        Object.defineProperty(documents, key, {
-          value: document,
-          enumerable: true,
-          configurable: true,
-        })
-      }
-      try {
-        validatePublication(documents)
-        for (const document of Object.values(documents)) {
-          const verification = verifyCmxDocumentEnvironment(document, environment)
-          if (!verification.valid)
-            throw new Error('Content requires a different component contract.')
-          // Resolve named component imports as well as verifying dependency versions.
-          cmx(document, environment)
-        }
-      } catch (error) {
-        throw new InvalidCollection(error instanceof Error ? error.message : 'Invalid publication')
-      }
       for (const key of publication.remove)
         this.ctx.storage.sql.exec('DELETE FROM documents WHERE entry = ?', key)
       for (const [key, document] of Object.entries(publication.upsert)) {
@@ -135,8 +108,16 @@ export class ContentState extends DurableObject<Env> {
   readPage(path: string) {
     const state = this.state()
     if (!Object.keys(state.manifest).length) return null
-    const site = readSite(this.document(siteEntry))
-    return contentPage(path, site, (key) => this.document(key), state.contentHash)
+    if (this.index?.contentHash !== state.contentHash) {
+      const documents: PublishedDocuments = Object.fromEntries(
+        this.ctx.storage.sql
+          .exec<{ entry: string; document: string }>('SELECT entry, document FROM documents')
+          .toArray()
+          .map((row) => [row.entry, JSON.parse(row.document)]),
+      )
+      this.index = { contentHash: state.contentHash, publication: validatePublication(documents) }
+    }
+    return contentPage(path, this.index.publication, (key) => this.document(key), state.contentHash)
   }
 
   pendingPurge(): string | null {
@@ -176,23 +157,45 @@ export class ContentState extends DurableObject<Env> {
       })
       if (!consumed)
         throw new PublicationRequestError('Publication signature has already been used.', 401)
-      let invalidCollection: InvalidCollection | undefined
       const store: CmxDocumentStore = {
         getState: async () => this.state(),
         getDocument: async (key) => this.document(key),
-        commit: async (publication) => {
-          try {
-            return this.commit(publication)
-          } catch (error) {
-            if (!(error instanceof InvalidCollection)) throw error
-            invalidCollection = error
-            return false
-          }
-        },
+        commit: async (publication) => this.commit(publication),
       }
+      const currentEntries = Object.keys(this.state().manifest)
       const host = createCmxDocumentHost({
         store,
-        verifyIncomingDocument: (document) => verifyCmxDocumentEnvironment(document, environment),
+        async verifyPublicationUpdate(update, loadDocument) {
+          try {
+            for (const document of Object.values(update.upsert)) {
+              const verification = verifyCmxDocumentEnvironment(document, environment)
+              if (!verification.valid) return verification
+              // Resolve named component imports as well as dependency versions.
+              cmx(document, environment)
+            }
+            const entries = new Set([...currentEntries, ...Object.keys(update.upsert)])
+            for (const key of update.remove) entries.delete(key)
+            const documents: PublishedDocuments = {}
+            for (const key of entries) {
+              const document = await loadDocument(key)
+              if (document)
+                Object.defineProperty(documents, key, { value: document, enumerable: true })
+            }
+            validatePublication(documents)
+            return { valid: true }
+          } catch (error) {
+            return {
+              valid: false,
+              diagnostics: [
+                {
+                  severity: 'error',
+                  code: 'app/invalid-publication',
+                  message: error instanceof Error ? error.message : 'Invalid publication',
+                },
+              ],
+            }
+          }
+        },
       })
       const publicationHeaders = new Headers(request.headers)
       if (request.method === 'GET') {
@@ -205,11 +208,6 @@ export class ContentState extends DurableObject<Env> {
           body: request.method === 'GET' ? undefined : body,
         }),
       )
-      if (invalidCollection)
-        return Response.json(
-          { message: invalidCollection.message },
-          { status: 422, headers: privateHeaders },
-        )
       const headers = new Headers(response.headers)
       headers.set('Cache-Control', 'no-store')
       return new Response(response.body, { status: response.status, headers })

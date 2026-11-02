@@ -4,7 +4,7 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? 8787)
 
 export default defineConfig({
   testDir: '.',
-  testMatch: ['**/tests/website.spec.ts', '**/temple/tests/temple.spec.ts'],
+  testMatch: ['**/tests/*.spec.ts', '**/temple/tests/*.spec.ts'],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

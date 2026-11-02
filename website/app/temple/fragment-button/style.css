@@ -1,0 +1,191 @@
+.verse-coda[data-has-action] {
+  padding-bottom: 0;
+}
+.fragment-action-stage {
+  position: relative;
+  width: 100%;
+  height: max(180px, 25svh);
+  overflow: hidden;
+  isolation: isolate;
+}
+.fragment-action {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: max-content;
+  max-width: calc(100% - 64px);
+  min-height: 64px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: light-dark(#11120b, #d2d0c8);
+  font:
+    800 20px/1.15 Bricolage,
+    sans-serif;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+.fragment-action:focus-visible,
+.fragment-action-stage:not([data-fragments-ready]) .fragment-action {
+  outline: 1px solid currentColor;
+  outline-offset: 6px;
+}
+.fragment-action-pieces {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.temple-artwork {
+  position: relative;
+  isolation: isolate;
+}
+.fragment-ground {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.fragment-ground-ink,
+.temple-opening,
+.temple-stage {
+  isolation: isolate;
+}
+.fragment-ground-field {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+  z-index: -1;
+}
+/* The sculpture scrolls vertically at three depths, with gentle ambient drift. */
+.fragment-ground-plane {
+  position: absolute;
+  inset: -64px -64px calc(-64px - var(--ground-parallax-pad, 0px));
+  --drift-x: 36px;
+  --drift-y: -26px;
+}
+.fragment-ground-plane[data-layer='1'] {
+  --drift-x: -30px;
+  --drift-y: 40px;
+}
+.fragment-ground-plane[data-layer='2'] {
+  --drift-x: 28px;
+  --drift-y: 32px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fragment-ground-plane {
+    animation: fragment-ground-drift 95s ease-in-out -23s infinite;
+  }
+  .fragment-ground-plane[data-layer='1'] {
+    animation-duration: 117s;
+    animation-delay: -28s;
+  }
+  .fragment-ground-plane[data-layer='2'] {
+    animation-duration: 103s;
+    animation-delay: -63s;
+  }
+}
+@keyframes fragment-ground-drift {
+  0%,
+  100% {
+    transform: translate(calc(-1 * var(--drift-x)), calc(-1 * var(--drift-y)));
+  }
+  50% {
+    transform: translate(var(--drift-x), var(--drift-y));
+  }
+}
+.fragment-ground-signal {
+  --signal-direction: 1;
+  pointer-events: none;
+  animation:
+    fragment-signal-appear 150ms linear both,
+    fragment-signal-fade 1.5s linear var(--signal-travel) forwards;
+}
+/* Reverse the growing trail as well as its moving tip. Reversing the trail's
+   animation clock would erase a completed border instead of drawing it. */
+.fragment-ground-signal[data-direction='reverse'] {
+  --signal-direction: -1;
+}
+.fragment-ground-signal[data-direction='reverse'] .fragment-signal-tip {
+  animation-direction: reverse;
+}
+.fragment-ground-signal path {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-width: var(--signal-stroke-width);
+}
+.fragment-signal-trail {
+  stroke: light-dark(rgb(116 70 33 / 0.045), rgb(208 163 109 / 0.04));
+  stroke-dasharray: 1 1;
+  animation: fragment-signal-trail var(--signal-travel) linear both;
+}
+.fragment-signal-tip {
+  stroke: light-dark(rgb(116 70 33 / 0.09), rgb(208 163 109 / 0.12));
+  stroke-dasharray: 0.035 1;
+  animation: fragment-signal-tip var(--signal-travel) linear both;
+}
+@keyframes fragment-signal-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fragment-signal-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes fragment-signal-trail {
+  from {
+    stroke-dashoffset: var(--signal-direction);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fragment-signal-tip {
+  from {
+    stroke-dashoffset: 0.035;
+  }
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fragment-ground-signal {
+    display: none;
+  }
+}
+/* Spatial gaps keep the opener and choruses clear without a cover or fade. */
+.temple-artwork:has(> .fragment-ground) :is(.temple-opening, .temple-stage) {
+  background-color: transparent;
+}
+@media print, (forced-colors: active) {
+  .fragment-ground,
+  .fragment-ground-field {
+    display: none;
+  }
+}
+
+.fragment-ground-piece {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  overflow: visible;
+}

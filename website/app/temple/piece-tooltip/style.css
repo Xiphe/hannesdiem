@@ -1,0 +1,51 @@
+.piece-tooltip-trigger {
+  display: inline;
+  padding: 0.15em 0.05em;
+  margin: -0.15em 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+  cursor: help;
+}
+.piece-tooltip-trigger:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.piece-tooltip {
+  box-sizing: border-box;
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: max-content;
+  max-width: min(24rem, calc(100vw - 24px));
+  padding: 30px 32px;
+  border: 0;
+  background: transparent;
+  color: light-dark(#302920, #e8ddd0);
+  font:
+    400 16px/1.5 ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+.piece-tooltip-piece {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.piece-tooltip[data-placement='top'] .piece-tooltip-piece {
+  transform: scaleY(-1);
+}
+.piece-tooltip-top {
+  stop-color: light-dark(#e6ddd0, #34322d);
+}
+.piece-tooltip-bottom {
+  stop-color: light-dark(#d6cbbd, #25241f);
+}
+.piece-tooltip em {
+  position: relative;
+}

@@ -1,0 +1,260 @@
+.fact-story {
+  --fact-story-ink: light-dark(#2c2721, #e1d9ce);
+  --fact-story-copy: light-dark(#5d5046, #bdb2a5);
+  position: relative;
+  z-index: 3;
+  color: var(--fact-story-ink);
+  margin: clamp(80px, 14svh, 160px) 0 30svh;
+  padding: 7svh clamp(24px, 5vw, 100px) 8svh;
+  scroll-margin-top: 90px;
+}
+.fact-copy-tile {
+  position: relative;
+  z-index: 1;
+  padding: 24px 28px 36px;
+}
+.fact-heading {
+  margin: 0 0 24px;
+  font:
+    700 clamp(38px, 4vw, 64px)/1.1 CinzelDecorative,
+    serif;
+}
+.fact-story[data-fact-layout='watch'] .fact-heading {
+  margin: 0 0 28px;
+  font:
+    700 clamp(24px, 2.25vw, 36px)/1.25 CinzelDecorative,
+    serif;
+  text-wrap: pretty;
+}
+.fact-material-boundary {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+.fact-pictures {
+  position: relative;
+  z-index: 2;
+}
+.fact-copy-tile > * {
+  position: relative;
+  z-index: 2;
+}
+.fact-material {
+  fill: none;
+}
+.fact-action {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding-top: 12px;
+}
+.fact-action p {
+  margin: 0;
+  color: var(--fact-story-copy);
+  font:
+    400 clamp(15px, 1.2vw, 18px)/1.6 ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+/* Preserve the second verse's existing spacing across the inserted fact. */
+.fact-story + .first-pair {
+  margin-top: 0;
+  padding-top: 0;
+}
+.fact-story + .first-pair .verse-copy {
+  --ink-gap: clamp(12px, 1.8vw, 18px);
+}
+.fact-story + .first-pair .verse-copy p + p {
+  margin-top: clamp(40px, 5vw, 64px);
+}
+.fact-story + .first-pair .block-row + .block-row {
+  margin-top: clamp(8px, 1.2vw, 12px);
+}
+.fact-pictures figure {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 5px;
+}
+.fact-pictures img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fact-fragments {
+  color: var(--fact-story-copy);
+  font:
+    400 clamp(17px, 1.3vw, 20px)/1.65 ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+.fact-fragments p {
+  margin: 0;
+  text-wrap: pretty;
+}
+.fact-fragments p[data-fragment='0'] {
+  font-weight: 600;
+  color: var(--fact-story-ink);
+}
+.fact-action :is(button, a) {
+  border: 0;
+  border-radius: 8px;
+  padding: 14px 26px;
+  background: light-dark(#d3cfc9, #282624);
+  color: var(--fact-story-ink);
+  font:
+    600 18px/1.4 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  opacity: 1;
+  cursor: default;
+  text-decoration: none;
+}
+.fact-action a {
+  cursor: pointer;
+}
+.fact-action a:hover {
+  background: light-dark(#c9c3bb, #35312d);
+}
+.fact-action a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+/* Selected Alongside composition: photographs beside the reading column. */
+.fact-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: clamp(40px, 7vw, 112px);
+  row-gap: 24px;
+  align-items: start;
+}
+.fact-story .fact-copy-tile {
+  grid-column: 2;
+  grid-row: 1;
+}
+.fact-story .fact-pictures {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: minmax(0, 1.8fr) minmax(0, 1fr);
+  contain: size;
+  align-self: stretch;
+  margin-top: calc(-1 * clamp(100px, 18svh, 180px));
+  margin-bottom: 36px;
+}
+.fact-story .fact-primary-photo {
+  grid-column: 1 / 10;
+  grid-row: 1;
+  min-height: 0;
+}
+.fact-story .fact-primary-photo img {
+  object-position: 56% 50%;
+}
+.fact-story .fact-secondary-photo {
+  position: relative;
+  grid-column: 3 / -1;
+  grid-row: 2;
+  margin-top: -10%;
+  min-height: 0;
+}
+.fact-story .fact-fragments {
+  max-width: 50ch;
+}
+.fact-story .fact-fragments p + p {
+  margin-top: 1.35em;
+}
+.fact-story .fact-action {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  align-self: start;
+}
+/* Keep the portrait's gesture visible; the mixing image overlaps its lower side. */
+.fact-story[data-fact-layout='create'] {
+  --mixer-drop: clamp(24px, 4vw, 64px);
+}
+.fact-story[data-fact-layout='create'] .fact-action {
+  padding-top: calc(12px + var(--mixer-drop));
+}
+.fact-story[data-fact-layout='create'] .fact-heading {
+  text-wrap: balance;
+}
+.fact-story[data-fact-layout='create'] .fact-primary-photo {
+  grid-column: 1 / 8;
+  grid-row: 1 / 3;
+}
+.fact-story[data-fact-layout='create'] .fact-primary-photo img {
+  object-position: 50% 60%;
+}
+.fact-story[data-fact-layout='create'] .fact-secondary-photo {
+  grid-column: 5 / -1;
+  grid-row: 2;
+  margin-top: 0;
+  transform: translateY(var(--mixer-drop));
+}
+@media (max-width: 760px) {
+  .fact-story {
+    padding-top: 0;
+    scroll-margin-top: 144px;
+  }
+  .fact-story {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .fact-story .fact-pictures {
+    padding-top: 0;
+    contain: none;
+    grid-template-rows: auto auto;
+    margin-top: -14svh;
+    margin-bottom: 0;
+  }
+  .fact-story .fact-primary-photo {
+    aspect-ratio: 1.25;
+  }
+  .fact-story .fact-secondary-photo {
+    margin-top: -15%;
+    aspect-ratio: 1.6;
+  }
+  .fact-story .fact-action {
+    align-self: center;
+  }
+  .fact-story[data-fact-layout='create'] .fact-pictures {
+    grid-template-rows: minmax(0, 1fr) auto;
+    height: 114vw;
+    max-height: 600px;
+    margin-bottom: var(--mixer-drop);
+  }
+  .fact-story[data-fact-layout='create'] .fact-primary-photo {
+    aspect-ratio: auto;
+  }
+  .fact-story[data-fact-layout='create'] .fact-secondary-photo {
+    aspect-ratio: 1.5;
+  }
+}
+@media (max-width: 640px) {
+  .fact-story + .first-pair [data-shape='sweep'] .block-row + .block-row {
+    margin-top: 0;
+  }
+}
+
+.fact-story:not([data-material-ready]) .fact-copy-tile {
+  background: light-dark(#e1d6c9, #141514);
+}
+.fact-story:not([data-material-ready]) .fact-material {
+  visibility: hidden;
+}
+
+.fact-material-start {
+  stop-color: light-dark(rgb(227 216 203), rgb(21 22 21));
+}
+.fact-material-end {
+  stop-color: light-dark(rgb(223 212 199), rgb(17 18 17));
+}
