@@ -1,5 +1,152 @@
 import { expect, test } from '@playwright/test'
 
+for (const fallback of [false, true]) {
+  test(`section progress aligns with facts and verses after insertion and resizing${fallback ? ' with fallback' : ''}`, async ({
+    page,
+  }) => {
+    if (fallback) {
+      await page.addInitScript(() => {
+        Object.defineProperty(window, 'ScrollTimeline', { value: undefined })
+      })
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/temple-navigation')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await page.evaluate(() => {
+      const visit = document.querySelector('.facts-grid')!
+      visit
+        .querySelectorAll('[data-nav-visual]')
+        .forEach((node) => node.removeAttribute('data-nav-visual'))
+      const visitVisual = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      visitVisual.id = 'synthetic-visit-visual'
+      visitVisual.dataset.navVisual = ''
+      visitVisual.style.cssText =
+        'position:absolute;top:-140px;left:-100px;width:200px;height:200px'
+      visitVisual.setAttribute('viewBox', '0 0 200 200')
+      // The highest corner is offscreen; the first visible paint is 50px lower.
+      visitVisual.innerHTML = '<path d="M0 0L200 100V140H0Z" fill="gray"/>'
+      visit.appendChild(visitVisual)
+      const fact = document.createElement('section')
+      fact.id = 'synthetic-later-fact'
+      fact.style.height = '700px'
+      fact.style.position = 'relative'
+      const raised = document.createElement('div')
+      raised.id = 'synthetic-watch-visual'
+      raised.dataset.navVisual = ''
+      raised.style.cssText =
+        'position:absolute;top:-160px;left:30px;width:120px;height:100px;background:gray'
+      fact.appendChild(raised)
+      const body = document.createElement('div')
+      body.dataset.navVisual = ''
+      body.style.height = '100%'
+      fact.appendChild(body)
+      const first = document.querySelector('.first-pair')!
+      first.parentNode!.insertBefore(fact, first.nextSibling)
+      const link = document.querySelectorAll<HTMLAnchorElement>(
+        '.temple-nav-items > a:not(.temple-nav-separator-link)',
+      )[1]
+      link.href = '#synthetic-later-fact'
+      link.removeAttribute('aria-disabled')
+      // Keep every section's arrival point reachable without bottom clamping.
+      const extra = document.createElement('div')
+      extra.style.height = '3000px'
+      document.body.appendChild(extra)
+    })
+    const tip = () =>
+      page
+        .locator('.temple-nav-progress span')
+        .evaluate((node) => node.getBoundingClientRect().right)
+    const stopX = (index: number) =>
+      page
+        .locator('[data-nav-stop]')
+        .nth(index)
+        .evaluate((node) => {
+          const rect = node.getBoundingClientRect()
+          if (node.classList.contains('temple-nav-separator-link')) {
+            return node.previousElementSibling!.getBoundingClientRect().right
+          }
+          return rect.left
+        })
+    for (const index of [0, 1, 2, 3, 1]) {
+      await page
+        .locator('[data-nav-stop]')
+        .nth(index)
+        .evaluate((node) => {
+          const target = document.querySelector(node.getAttribute('href')!)!
+          const cue =
+            target.id === 'facts'
+              ? document.getElementById('synthetic-visit-visual')!
+              : target.id === 'synthetic-later-fact'
+                ? document.getElementById('synthetic-watch-visual')!
+                : target.querySelector('[data-nav-visual]')!
+          const rect = cue.getBoundingClientRect()
+          scrollTo(0, scrollY + rect.top + (target.id === 'facts' ? 50 : 0) - innerHeight)
+        })
+      await expect.poll(async () => Math.abs((await tip()) - (await stopX(index)))).toBeLessThan(1)
+    }
+    const visitMidpoint = await page.evaluate(() => {
+      const word = document.querySelector('[data-nav-stop]')!.getBoundingClientRect()
+      const a = document.getElementById('synthetic-visit-visual')!.getBoundingClientRect()
+      const b = document
+        .getElementById('verse-fixture-pair-1')!
+        .querySelector('[data-nav-visual]')!
+        .getBoundingClientRect()
+      scrollTo(0, scrollY + (a.top + 50 + b.top) / 2 - innerHeight)
+      return (word.left + word.right) / 2
+    })
+    await expect.poll(tip).toBeCloseTo(visitMidpoint, 0)
+    for (const height of [700, 1700]) {
+      const expected = await page
+        .locator('[data-nav-stop]')
+        .nth(2)
+        .evaluate((node) => {
+          const rect = node.getBoundingClientRect()
+          return (rect.left + rect.right) / 2
+        })
+      await page.evaluate(async (height) => {
+        const fact = document.getElementById('synthetic-later-fact')!
+        fact.style.height = `${height}px`
+        // Let resize observers and native scroll anchoring settle before seeking
+        // the new midpoint; otherwise WebKit can adjust the requested scroll.
+        for (let frame = 0; frame < 2; frame++) {
+          await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+        }
+        const next = document
+          .getElementById('verse-fixture-pair-2')!
+          .querySelector('[data-nav-visual]')!
+        const cue = document.getElementById('synthetic-watch-visual')!
+        const a = cue.getBoundingClientRect(),
+          b = next.getBoundingClientRect()
+        scrollTo(0, scrollY + (a.top + b.top) / 2 - innerHeight)
+      }, height)
+      await expect.poll(tip).toBeCloseTo(expected, 0)
+    }
+    for (const fraction of [0.25, 0.75]) {
+      const expected = await page.evaluate((fraction) => {
+        const words = document.querySelectorAll(
+          '.temple-nav-items > a:not(.temple-nav-separator-link)',
+        )
+        const left = words[0].getBoundingClientRect().right
+        const right = words[1].getBoundingClientRect().left
+        const a = document
+          .getElementById('verse-fixture-pair-1')!
+          .querySelector('[data-nav-visual]')!
+          .getBoundingClientRect()
+        const b = document.getElementById('synthetic-watch-visual')!.getBoundingClientRect()
+        scrollTo(0, scrollY + a.top + (b.top - a.top) * fraction - innerHeight)
+        return left + (right - left) * fraction
+      }, fraction)
+      await expect.poll(tip).toBeCloseTo(expected, 0)
+    }
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+    await expect.poll(async () => Math.abs((await tip()) - (await stopX(4)))).toBeLessThan(1)
+    await page.getByRole('link', { name: 'First fixture verse' }).click()
+    await expect(page.locator('#verse-fixture-pair-1')).toBeFocused()
+    await page.evaluate(() => scrollTo(0, 0))
+    await expect.poll(async () => Math.abs((await tip()) - (await stopX(0)))).toBeLessThan(1)
+  })
+}
+
 for (const width of [390, 1440]) {
   test(`local navigation becomes fixed as the opener exits without covering its target at ${width}px`, async ({
     page,
@@ -28,7 +175,9 @@ for (const width of [390, 1440]) {
         (await page.locator('.temple-opening').boundingBox())!.height,
     ).toBeGreaterThan(0)
     expect(await header.evaluate((node) => getComputedStyle(node).position)).toBe('fixed')
-    await expect(header.locator('.temple-nav-items a')).toHaveText([
+    await expect(
+      header.locator('.temple-nav-items > a:not(.temple-nav-separator-link)'),
+    ).toHaveText([
       'First target',
       'Second target',
       'Third target',
@@ -301,9 +450,11 @@ test('reduced motion reaches the section synchronously', async ({ page }) => {
   await page.evaluate(() => scrollTo(0, 240))
   await expect(page.locator('.temple-top-navigation')).toBeVisible()
   expect(
-    await page.locator('.temple-nav-items a[href]').evaluate((node) => {
-      ;(node as HTMLAnchorElement).click()
-      return document.activeElement === document.querySelector('.facts-grid')
-    }),
+    await page
+      .locator('.temple-nav-items > a[href]:not(.temple-nav-separator-link)')
+      .evaluate((node) => {
+        ;(node as HTMLAnchorElement).click()
+        return document.activeElement === document.querySelector('.facts-grid')
+      }),
   ).toBe(true)
 })

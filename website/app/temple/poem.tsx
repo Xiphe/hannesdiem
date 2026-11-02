@@ -39,6 +39,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
       bridgeBody,
       location,
       navigation,
+      finalVerse,
       children,
     } = handle.props
     const item = getMedia(site.media, image)
@@ -72,6 +73,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
                 }
               : undefined
           }
+          finalVerse={finalVerse}
         />
         {children != null && (
           <PoemSection

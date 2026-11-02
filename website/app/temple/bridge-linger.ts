@@ -13,9 +13,17 @@ export function createBridgeLinger(root: HTMLElement, signal: AbortSignal) {
   let hold = 0,
     viewport = 0,
     opacity = -1
-  signal.addEventListener('abort', () => ghost.remove(), { once: true })
+  signal.addEventListener(
+    'abort',
+    () => {
+      ghost.remove()
+      body?.style.removeProperty('--bridge-address-clearance')
+    },
+    { once: true },
+  )
   return {
     resize(reduced: boolean) {
+      body?.style.removeProperty('--bridge-address-clearance')
       ghost.removeAttribute('data-active')
       opacity = -1
       page = null
@@ -43,6 +51,12 @@ export function createBridgeLinger(root: HTMLElement, signal: AbortSignal) {
       const own = bridgeTextRange(ghost)(0, ghost.textContent!.length).getBoundingClientRect()
       ghost.style.left = `${target.left - own.left}px`
       ghost.style.top = `${target.top - stageTop - own.top}px`
+      // Let the next verse enter before the fade ends, but never cross the
+      // stationary address. Its baseline varies with native page wrapping.
+      body.style.setProperty(
+        '--bridge-address-clearance',
+        `${ghost.getBoundingClientRect().bottom}px`,
+      )
     },
     draw(reduced: boolean) {
       if (!page || reduced) {

@@ -36,7 +36,12 @@ export interface PoemOpeningProps {
   image: ImageSource
   lightSource: { x: number; y: number }
   location?: PoemLocation
-  navigation?: readonly { label: string; href?: string }[]
+  navigation?: readonly {
+    label: string
+    href?: string
+    /** The poem section represented by the piece immediately before this item. */
+    verseBefore?: { label: string; href: string }
+  }[]
   pair?: PoemPair
   pairs?: readonly PoemPair[]
   bridge?: readonly (readonly PoemLine[])[]
@@ -44,6 +49,13 @@ export interface PoemOpeningProps {
   bridgeBody?: readonly (
     string | { text: string; wideBreaksAfter?: readonly string[]; linger?: string }
   )[]
+  finalVerse?: {
+    intro: readonly PoemLine[]
+    phrases: readonly (readonly PoemLine[])[]
+    rise?: readonly string[]
+    drop?: string
+    refrain?: PoemPair['refrain']
+  }
   children?: RemixNode
 }
 export interface PoemLocation {

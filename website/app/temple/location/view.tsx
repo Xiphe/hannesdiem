@@ -19,6 +19,7 @@ export function Location(handle: Handle<LocationProps>) {
             <div class="fact-solid map-solid">
               <svg
                 class="tile-material"
+                data-nav-visual
                 aria-hidden="true"
               />
               <article class="tile-face map-face">
@@ -54,6 +55,7 @@ export function Location(handle: Handle<LocationProps>) {
                   <use
                     href={`#${id}-shape`}
                     class="map-water"
+                    data-nav-visual
                     fill={`url(#${id}-water)`}
                   />
                   <g clipPath={`url(#${id}-clip)`}>
@@ -101,7 +103,10 @@ export function Location(handle: Handle<LocationProps>) {
         </div>
         <div class="fact-slot text-slot">
           <div class="fact-flight">
-            <figure class="editorial-photo tile-face">
+            <figure
+              class="editorial-photo tile-face"
+              data-nav-visual
+            >
               <img
                 src={image.src}
                 srcSet={image.srcSet}
@@ -115,6 +120,7 @@ export function Location(handle: Handle<LocationProps>) {
             <div class="fact-solid text-solid">
               <svg
                 class="tile-material"
+                data-nav-visual
                 aria-hidden="true"
                 viewBox="-16 -16 32 32"
               >
@@ -125,7 +131,12 @@ export function Location(handle: Handle<LocationProps>) {
                   class="tile-copy"
                   id="location-copy"
                 >
-                  <h2 class="location-heading">{heading}</h2>
+                  <h2
+                    class="location-heading"
+                    data-nav-visual
+                  >
+                    {heading}
+                  </h2>
                   <p>
                     <a
                       href={venue.href}
@@ -142,7 +153,10 @@ export function Location(handle: Handle<LocationProps>) {
             </div>
           </div>
         </div>
-        <div class="location-action">
+        <div
+          class="location-action"
+          data-nav-visual
+        >
           <p class="location-prompt">{action.prompt}</p>
           <a
             class="location-button"

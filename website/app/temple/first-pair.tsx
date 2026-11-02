@@ -50,11 +50,12 @@ export function Phrase(handle: Handle<{ lines: readonly PoemLine[]; firstStatic?
   }
 }
 
-export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
+export function FirstPair(handle: Handle<{ id: string; pair: PoemPair; index: number }>) {
   return () => {
     const { pair } = handle.props
     return (
       <article
+        id={handle.props.id}
         class="first-pair"
         aria-label={
           handle.props.index === 0
@@ -64,7 +65,7 @@ export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
       >
         <div class="verse-copy">
           {pair.paragraphs.map((lines, index) => (
-            <p>
+            <p data-nav-visual>
               <Phrase
                 lines={lines}
                 firstStatic={index === 0}
@@ -94,54 +95,13 @@ export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
             ))}
           </div>
         )}
-        <section
-          class="refrain-composition"
-          aria-label="Refrain"
-        >
-          <div class="refrain-stage">
-            {pair.refrain.map(({ text, display, face, lines, smallLines }, index) => (
-              <p
-                class="refrain-phrase"
-                data-face={face}
-                data-phrase={index}
-                data-small-refrain-lines={smallLines?.join('\n')}
-                data-wide-refrain-lines={smallLines ? (lines ?? [display]).join('\n') : undefined}
-              >
-                <span class="semantic-text">{text}</span>
-                <span
-                  data-ink
-                  aria-hidden="true"
-                >
-                  {(lines
-                    ? lines.map((line) => line.split(' '))
-                    : face === 'bricolage'
-                      ? [display.split(' ').slice(0, 2), display.split(' ').slice(2)]
-                      : [display.split(' ')]
-                  ).map((words) => (
-                    <span data-line={lines || face === 'bricolage' ? '' : undefined}>
-                      {words.map((word, i) => (
-                        <>
-                          {i > 0 ? ' ' : ''}
-                          <span data-word>{word}</span>
-                        </>
-                      ))}
-                    </span>
-                  ))}
-                </span>
-              </p>
-            ))}
-            <canvas
-              class="refrain-canvas"
-              aria-hidden="true"
-            />
-          </div>
-        </section>
+        <Refrain phrases={pair.refrain} />
         <div
           class="verse-copy verse-coda"
           data-has-action={pair.action ? '' : undefined}
         >
           {[pair.coda, ...(pair.continuation ?? [])].map((lines, index) => (
-            <p>
+            <p data-nav-visual>
               <Phrase
                 lines={lines}
                 firstStatic={index === 0}
@@ -153,4 +113,51 @@ export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
       </article>
     )
   }
+}
+
+export function Refrain(handle: Handle<{ phrases: PoemPair['refrain'] }>) {
+  return () => (
+    <section
+      class="refrain-composition"
+      aria-label="Refrain"
+    >
+      <div class="refrain-stage">
+        {handle.props.phrases.map(({ text, display, face, lines, smallLines }, index) => (
+          <p
+            class="refrain-phrase"
+            data-face={face}
+            data-phrase={index}
+            data-small-refrain-lines={smallLines?.join('\n')}
+            data-wide-refrain-lines={smallLines ? (lines ?? [display]).join('\n') : undefined}
+          >
+            <span class="semantic-text">{text}</span>
+            <span
+              data-ink
+              aria-hidden="true"
+            >
+              {(lines
+                ? lines.map((line) => line.split(' '))
+                : face === 'bricolage'
+                  ? [display.split(' ').slice(0, 2), display.split(' ').slice(2)]
+                  : [display.split(' ')]
+              ).map((words) => (
+                <span data-line={lines || face === 'bricolage' ? '' : undefined}>
+                  {words.map((word, i) => (
+                    <>
+                      {i > 0 ? ' ' : ''}
+                      <span data-word>{word}</span>
+                    </>
+                  ))}
+                </span>
+              ))}
+            </span>
+          </p>
+        ))}
+        <canvas
+          class="refrain-canvas"
+          aria-hidden="true"
+        />
+      </div>
+    </section>
+  )
 }

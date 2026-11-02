@@ -5,6 +5,7 @@ export function blockType(root: HTMLElement, signal: AbortSignal) {
   const lines = [...root.querySelectorAll<HTMLElement>('[data-type-line]')].map((element) => ({
     element,
     text: element.textContent!.trim(),
+    leading: element.closest('.final-verse-phrase')?.querySelector('[data-type-line]') === element,
   }))
   signal.addEventListener(
     'abort',
@@ -20,10 +21,11 @@ export function blockType(root: HTMLElement, signal: AbortSignal) {
   return () => {
     const copySizes = new Map<Element, number>()
     const ordered = [
-      ...lines.filter(({ element }) => element.dataset.lettering === 'copy'),
+      ...lines.filter(({ element, leading }) => element.dataset.lettering === 'copy' && !leading),
+      ...lines.filter(({ element, leading }) => element.dataset.lettering === 'copy' && leading),
       ...lines.filter(({ element }) => element.dataset.lettering !== 'copy'),
     ]
-    for (const { element, text } of ordered) {
+    for (const { element, text, leading } of ordered) {
       const style = getComputedStyle(element)
       const tracking = element.dataset.lettering === 'spaced' ? 0.28 : 0
       const width = element.clientWidth
@@ -89,6 +91,9 @@ export function blockType(root: HTMLElement, signal: AbortSignal) {
         ink.className = 'block-row-ink'
         ink.textContent = words.join(' ')
         let size = (width * 100) / extent(ink.textContent)
+        // The final verse's short lead-ins share the closing copy's scale,
+        // rather than stretching to fill the measure like its Cinzel word.
+        if (leading) size = Math.min(size, copySizes.get(paragraph) ?? size)
         if (element.dataset.lettering === 'spaced')
           size = Math.min(size, Math.max(16, width * 0.05))
         row.style.fontSize = `${size}px`
