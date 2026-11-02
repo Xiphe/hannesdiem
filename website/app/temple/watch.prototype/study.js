@@ -82,16 +82,54 @@ const mount = () => {
   materialBoundary.setAttribute('aria-hidden', 'true')
   materialBoundary.append(material)
   section.prepend(materialBoundary)
+  // Find the largest clear rectangle in the actual concave silhouette once.
+  // Map that interior onto the padded text, so every line has ground behind it.
+  const view = material.viewBox.baseVal
+  const group = material.querySelector('g')
+  const shape = new Path2D()
+  shape.addPath(
+    new Path2D(material.querySelector('path').getAttribute('d')),
+    DOMMatrix.fromMatrix(group.transform.baseVal.consolidate().matrix),
+  )
+  const probe = document.createElement('canvas').getContext('2d')
+  const cells = 64
+  const cellWidth = view.width / cells
+  const cellHeight = view.height / cells
+  const heights = Array(cells).fill(0)
+  let clear = { x: 0, y: 0, width: 0, height: 0 }
+  for (let y = 0; y < cells; y++) {
+    for (let x = 0; x < cells; x++) {
+      const inside = [
+        [x, y],
+        [x + 1, y],
+        [x, y + 1],
+        [x + 1, y + 1],
+      ].every(([cx, cy]) =>
+        probe.isPointInPath(shape, view.x + cx * cellWidth, view.y + cy * cellHeight),
+      )
+      heights[x] = inside ? heights[x] + 1 : 0
+      let height = heights[x]
+      for (let left = x; left >= 0 && height; left--) {
+        height = Math.min(height, heights[left])
+        const width = x - left + 1
+        if (width * height > clear.width * clear.height) {
+          clear = { x: left, y: y + 1 - height, width, height }
+        }
+      }
+    }
+  }
   const mapFlight = visit.querySelector('.map-slot .fact-flight')
   const visitHeading = document.createElement('h2')
   visitHeading.className = 'watch-visit-heading'
   visitHeading.textContent = 'Visit'
   mapFlight.append(visitHeading)
   const layout = () => {
-    material.style.width = `${copyTile.offsetWidth + 100}px`
-    material.style.height = `${copyTile.offsetHeight + 96}px`
-    material.style.left = `${copyTile.offsetLeft - 50}px`
-    material.style.top = `${copyTile.offsetTop - 48}px`
+    const scaleX = copyTile.offsetWidth / (clear.width * cellWidth)
+    const scaleY = copyTile.offsetHeight / (clear.height * cellHeight)
+    material.style.width = `${view.width * scaleX}px`
+    material.style.height = `${view.height * scaleY}px`
+    material.style.left = `${copyTile.offsetLeft - clear.x * cellWidth * scaleX}px`
+    material.style.top = `${copyTile.offsetTop - clear.y * cellHeight * scaleY}px`
     const mapBounds = visit.querySelector('.map-water').getBoundingClientRect()
     const flightBounds = mapFlight.getBoundingClientRect()
     visitHeading.style.top = `${mapBounds.top - flightBounds.top - visitHeading.offsetHeight - 28}px`

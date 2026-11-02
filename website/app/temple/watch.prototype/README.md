@@ -34,3 +34,8 @@ layer; it cannot paint over either neighbouring verse. Desktop images stretch
 upward from the text's bottom baseline without determining the row height. The
 centred action sits closer beneath both columns. On desktop, Visit's heading ends
 at the map's right contour, alongside the room image; mobile keeps it left-aligned.
+
+After the artist found the bounded piece too small, fit its largest clear interior
+rectangle around the padded text rather than fitting its outer bounds. All text
+stays inside the concave contour; the background-only clip still protects the
+verses. Add80–160px of responsive top margin to separate Watch from the poem.
