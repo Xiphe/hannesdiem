@@ -11,20 +11,36 @@
 }
 .temple-video-layout {
   display: grid;
-  gap: 24px;
+  gap: 8px;
   max-width: max(360px, calc(74svh * var(--video-aspect)));
   margin-inline: auto;
 }
 .temple-video h2 {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
   margin: 0;
+  padding: 28px 20px 80px;
+  color: #e1d9ce;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 75%), rgb(0 0 0 / 35%) 60%, transparent);
   font:
-    700 clamp(28px, 3vw, 42px)/1.2 CinzelDecorative,
+    700 clamp(24px, 2.5vw, 36px)/1.2 CinzelDecorative,
     serif;
+  text-align: center;
   text-wrap: balance;
+  pointer-events: none;
+  transition:
+    opacity 160ms,
+    visibility 160ms;
+}
+.temple-video-player[data-playing] h2:not(:focus-within) {
+  opacity: 0;
+  visibility: hidden;
 }
 .temple-video h2 a {
   color: inherit;
   text-decoration: none;
+  pointer-events: auto;
 }
 .temple-video h2 a:hover {
   text-decoration: underline;
@@ -36,7 +52,7 @@
 }
 .temple-video-description {
   position: relative;
-  padding: 24px 28px 36px;
+  padding: 20px 28px 28px;
   max-width: 45ch;
   color: light-dark(#5d5046, #bdb2a5);
   font:
@@ -46,7 +62,7 @@
 }
 .temple-video-description-piece {
   position: relative;
-  margin-block: 32px 48px;
+  margin-block: 0 48px;
 }
 .temple-video-material {
   position: absolute;
@@ -74,9 +90,16 @@
   list-style: revert;
 }
 .temple-video-player {
+  position: relative;
+  z-index: 1;
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .temple-video h2 {
+    transition: none;
+  }
 }
 .temple-video + .first-pair {
   margin-top: 0;

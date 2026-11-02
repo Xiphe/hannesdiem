@@ -518,3 +518,12 @@ with rounded video corners and the description held by the existing Watch
 contour. Preserve heading and description type roles, native rich text and
 `#mic-tech-check` permalink. Keep Cloudflare's current player while presenting
 its customization options; no new player styling was specified. Local review.
+
+**Recording title screen — 2026-11-03.** Artist clarifies that “over” means above
+the video in the z-axis, like a title screen, and asks for the description closer
+to the video. Overlay the title on the poster with space for the existing play
+button; hide it during playback and show it on pause/end. Tuck the description's
+Watch piece underneath the rounded video. Cloudflare's official player API
+provides playback events, so retain the current player and its controls. Keep the
+permalink and exact supplied wording. This supersedes the separate-heading
+interpretation above; local review only.

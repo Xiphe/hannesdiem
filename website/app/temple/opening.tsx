@@ -12,12 +12,14 @@ import { TopNavigation } from './top-navigation.tsx'
 import { mountNavigationPosition } from './top-navigation-position.ts'
 import { mountNavigationScroll } from './top-navigation-scroll.ts'
 import { mountNavigationProgress } from './top-navigation-progress.ts'
+import { mountRecordingTitles } from './video-title.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
   handle.queueTask(async (signal) => {
     if (!root || signal.aborted) return
     const host = root
+    mountRecordingTitles(host, signal)
     mountNavigationPosition(host, signal)
     mountNavigationProgress(host, signal)
     mountNavigationScroll(host, signal)

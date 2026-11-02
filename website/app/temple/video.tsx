@@ -16,11 +16,11 @@ export function TempleVideo(handle: Handle<TempleVideoProps>) {
         style={{ '--video-aspect': aspectRatio }}
       >
         <div class="temple-video-layout">
-          <h2 id={`${id}-title`}>
-            <a href={`#${encodeURIComponent(id)}`}>{title}</a>
-          </h2>
           <div class="temple-video-player">
             <StreamVideo {...handle.props} />
+            <h2 id={`${id}-title`}>
+              <a href={`#${encodeURIComponent(id)}`}>{title}</a>
+            </h2>
           </div>
           <div class="temple-video-description-piece">
             <svg

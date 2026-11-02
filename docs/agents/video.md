@@ -38,7 +38,15 @@ Publishing a video is a separate content decision from uploading it.
 rich-text description around the same player. Place it in a fact's `after` slot
 to render it immediately after that fact and before the next verse. The slot is
 resolved by CMX and passed as serializable JSX through the existing Opening
-island; the player itself needs no additional island or SDK.
+island. The title is an overlay on the poster, with the description's reading
+piece tucked underneath the rounded player.
+
+`video-title.ts` uses Cloudflare's official player SDK to hide the overlay during
+playback and restore it on pause/end. It loads only when a recording is present,
+keeps the iframe's playback controls and releases listeners when Opening is
+disposed. If the SDK is unavailable, the title remains visible without blocking
+the central play button or controls. There is no custom video player or extra
+island.
 
 The artist requested the first recording after Watch, titled `Mic/Tech-Check`,
 with their supplied description unchanged. Its direct link is
