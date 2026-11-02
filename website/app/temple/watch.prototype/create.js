@@ -49,6 +49,7 @@ export function createSection() {
     .append(copy.musicians.before, trigger, copy.musicians.after)
   section.querySelector('.create-beyond-sound').textContent = copy.beyondSound
   const tooltip = section.querySelector('.create-tooltip')
+  const tooltipOutline = tooltip.querySelector('path')
   tooltip.querySelector('em').textContent = copy.musicians.note
   let pinned = false
   let hovering = false
@@ -62,12 +63,18 @@ export function createSection() {
   const position = () => {
     const anchor = trigger.getBoundingClientRect()
     const box = tooltip.getBoundingClientRect()
-    tooltip.style.left = `${Math.max(12, Math.min(innerWidth - box.width - 12, anchor.left))}px`
-    tooltip.style.top = `${
-      anchor.bottom + box.height <= innerHeight - 12
-        ? anchor.bottom
-        : Math.max(12, anchor.top - box.height)
-    }px`
+    const center = anchor.left + anchor.width / 2
+    const left = Math.max(12, Math.min(innerWidth - box.width - 12, center - box.width / 2))
+    const below = anchor.bottom + box.height <= innerHeight - 12
+    const arrow = Math.max(28, Math.min(372, ((center - left) / box.width) * 400))
+    tooltip.dataset.placement = below ? 'bottom' : 'top'
+    tooltip.style.left = `${left}px`
+    tooltip.style.top = `${below ? anchor.bottom : Math.max(12, anchor.top - box.height)}px`
+    // Integrate the pointer into the fragment so it shares the same material.
+    tooltipOutline.setAttribute(
+      'd',
+      `M25 17Q${arrow / 2} 9 ${arrow - 12} 14L${arrow} 0L${arrow + 12} 14Q${(arrow + 400) / 2} 19 365 7Q390 5 387 29L397 141Q400 160 377 162C260 155 154 179 26 170Q7 169 10 149L3 40Q0 21 25 17Z`,
+    )
   }
   const open = () => {
     clearTimeout(closing)

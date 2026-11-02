@@ -168,6 +168,9 @@
   height: 100%;
   pointer-events: none;
 }
+.create-tooltip[data-placement='top'] .create-tooltip-piece {
+  transform: scaleY(-1);
+}
 .create-tooltip-top {
   stop-color: light-dark(#e6ddd0, #34322d);
 }

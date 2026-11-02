@@ -77,4 +77,6 @@ the contact action on desktop. Watch's contour remains independent.
 The tooltip uses a softly rounded, irregular SVG piece with a theme-aware neutral
 gradient instead of a bordered panel. Its native popover still supports hover,
 keyboard focus, tap, Escape and outside dismissal, with viewport-aware placement.
+It prefers bottom-centre placement with an integrated pointer aimed at “steal*”.
+Clamp to the viewport on narrow screens and flip above when needed.
 The artist's CTA now reads “what should we write together?” above “lets talk”.
