@@ -34,11 +34,14 @@ export function fitVerseRise(root: HTMLElement, signal: AbortSignal) {
   return () => {
     if (!rise || !calls.length || signal.aborted) return
     // Break the final call out of the reading column without stretching glyphs.
-    const fullWidth = document.documentElement.clientWidth - 32
+    const portrait = matchMedia('(max-width: 640px) and (orientation: portrait)').matches
+    const viewportWidth = document.documentElement.clientWidth
+    const fullWidth = portrait ? viewportWidth * 1.01 : viewportWidth - 32
     rise.style.setProperty('--rise-width', `${fullWidth}px`)
     // Keep the small end legible on phones while still widening each row.
     const narrow = rise.clientWidth < 600
-    const tip = narrow ? 0.58 : 0.38
+    const tip = portrait ? 0.78 : narrow ? 0.58 : 0.38
+    const step = portrait ? 0.98 : narrow ? 0.9 : 0.82
     let nextSize = Infinity,
       nextWidth = Infinity
     for (let index = calls.length - 1; index >= 0; index--) {
@@ -52,9 +55,13 @@ export function fitVerseRise(root: HTMLElement, signal: AbortSignal) {
         metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight,
       )
       const fraction = calls.length === 1 ? 1 : tip + ((1 - tip) * index) / (calls.length - 1)
-      const available = index === calls.length - 1 ? fullWidth * 0.9 : call.clientWidth
-      const width = Math.min((available - 2) * fraction, nextWidth * (narrow ? 0.9 : 0.82))
-      const size = Math.min((width * 100) / extent, nextSize * (narrow ? 0.9 : 0.85))
+      const available =
+        index === calls.length - 1 ? (portrait ? fullWidth + 2 : fullWidth * 0.9) : call.clientWidth
+      const width = Math.min((available - 2) * fraction, nextWidth * step)
+      const size = Math.min(
+        (width * 100) / extent,
+        nextSize * (portrait ? step : narrow ? 0.9 : 0.85),
+      )
       call.style.setProperty('--rise-font-size', `${size}px`)
       nextSize = size
       nextWidth = (size * extent) / 100

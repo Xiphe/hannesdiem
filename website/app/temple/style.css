@@ -687,6 +687,11 @@ html[data-layout='temple'] body {
   font-style: italic;
 }
 
+.final-pair {
+  /* The oversized scream is cropped at the viewport without sideways scrolling.
+     Unlike hidden, clip does not introduce a scroll container for sticky stages. */
+  overflow-x: clip;
+}
 .final-verse {
   overflow-x: visible;
   padding-bottom: max(120px, 20svh);
@@ -759,6 +764,8 @@ html[data-layout='temple'] body {
 .verse-finale {
   position: relative;
   margin-top: calc(clamp(32px, 4.5vw, 64px) + 1rem);
+  /* Match the extra horizontal travel with more scroll distance, not speed. */
+  --drop-spread: 1.6;
 }
 .rise-entry-marker {
   position: absolute;
@@ -789,6 +796,14 @@ html[data-layout='temple'] body {
   margin-inline: calc((100% - var(--rise-width, 100%)) / 2);
   white-space: nowrap;
 }
+@media (max-width: 640px) and (orientation: portrait) {
+  .temple-artwork:is([data-state='loading'], [data-state='ready']) .verse-rise > .rise-call {
+    width: var(--rise-width, 101vw);
+    margin-inline: calc((100% - var(--rise-width, 101vw)) / 2);
+    white-space: nowrap;
+    --rise-entry-duration: 1.75;
+  }
+}
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .temple-artwork:is([data-state='loading'], [data-state='ready'])
@@ -799,7 +814,11 @@ html[data-layout='temple'] body {
     }
     .temple-artwork[data-state='ready'] .rise-call {
       animation: verse-rise-entry linear both;
-      animation-timing-function: linear(0 0%, 0 var(--rise-delay, 55%), 1 100%);
+      animation-timing-function: linear(
+        0 0%,
+        0 calc(100% - (100% - var(--rise-delay, 55%)) * var(--rise-entry-duration, 1)),
+        1 100%
+      );
       animation-timeline: var(--rise-timeline, view());
       animation-range: entry 0% cover 50%;
     }
@@ -825,7 +844,6 @@ html[data-layout='temple'] body {
   }
 }
 .verse-drop {
-  overflow-x: clip;
   margin-top: clamp(24px, 4svh, 40px);
 }
 .verse-drop-stage {
@@ -859,7 +877,8 @@ html[data-layout='temple'] body {
     .temple-artwork:is([data-state='loading'], [data-state='ready'])
       .verse-finale:has(.verse-drop) {
       height: calc(
-        var(--finale-height) + 70svh / var(--drop-speed, 0.7) * var(--drop-hold-fraction, 0.86)
+        var(--finale-height) + 70svh * var(--drop-spread) / var(--drop-speed, 0.7) *
+          var(--drop-hold-fraction, 0.86)
       );
       view-timeline-name: --verse-drop;
       view-timeline-axis: block;
@@ -890,7 +909,8 @@ html[data-layout='temple'] body {
 @keyframes verse-drop-arrival {
   from {
     opacity: 0;
-    transform: translate3d(var(--drop-x), var(--drop-y), var(--drop-z)) rotateX(var(--drop-angle));
+    transform: translate3d(calc(var(--drop-x) * var(--drop-spread)), var(--drop-y), var(--drop-z))
+      rotateX(var(--drop-angle));
   }
   to {
     opacity: 1;

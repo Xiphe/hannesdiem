@@ -2036,10 +2036,29 @@ for (const [width, height] of [
       }),
     ).toBe(1)
     const column = await page.locator('.final-verse').boundingBox()
-    expect((await calls.last().boundingBox())!.width).toBeCloseTo(width - 32, 0)
+    const portrait = width <= 640 && height > width
+    expect((await calls.last().boundingBox())!.width).toBeCloseTo(
+      portrait ? width * 1.01 : width - 32,
+      0,
+    )
     expect((await calls.last().boundingBox())!.width).toBeGreaterThan(column!.width)
-    expect(widths.at(-1)!).toBeGreaterThan((width - 32) * 0.85)
-    expect(widths.at(-1)!).toBeLessThan((width - 32) * 0.92)
+    if (portrait) {
+      const extent = await ink.last().evaluate((node) => {
+        const style = getComputedStyle(node)
+        const measure = document.createElement('canvas').getContext('2d')!
+        measure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+        const metrics = measure.measureText(node.textContent!)
+        return Math.max(
+          metrics.width,
+          metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight,
+        )
+      })
+      expect(extent).toBeGreaterThan(width)
+      expect(extent).toBeLessThan(width * 1.015)
+    } else {
+      expect(widths.at(-1)!).toBeGreaterThan((width - 32) * 0.85)
+      expect(widths.at(-1)!).toBeLessThan((width - 32) * 0.92)
+    }
     expect((await page.locator('.verse-drop-copy').boundingBox())!.width).toBeCloseTo(
       column!.width,
       0,

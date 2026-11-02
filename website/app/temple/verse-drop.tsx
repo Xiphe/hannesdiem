@@ -26,7 +26,7 @@ export function VerseDrop(handle: Handle<{ text: string }>) {
                         class="verse-drop-word"
                         style={{
                           '--drop-x': `${fraction(1) * 200 - 100}%`,
-                          '--drop-y': `${fraction(2) * 20 - 10}%`,
+                          '--drop-y': `${fraction(2) * 80 - 40}%`,
                           '--drop-z': `${500 + fraction(3) * 450}px`,
                           '--drop-angle': `${fraction(4) * 180 - 90}deg`,
                           '--drop-start': `${start}%`,
