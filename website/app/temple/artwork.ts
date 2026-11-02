@@ -65,7 +65,6 @@ export async function mountArtwork(
   bridgeGround.ariaHidden = 'true'
   const bridgeBody = poem.querySelector<HTMLElement>('.bridge-body')
   if (bridgeBody) host.appendChild(bridgeGround)
-  let bridgeCooling = -1
   const bridgeCloud = createBridgeCloud(bridgeBody, bridgeGround, abort.signal)
   abort.signal.addEventListener('abort', () => bridgeGround.remove(), { once: true })
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
@@ -214,17 +213,6 @@ export async function mountArtwork(
         copyColour.resize()
         bridgeLinger.resize(reduced.matches)
       } else request()
-    }
-    if (bridgeBody) {
-      const progress = Math.max(
-        0,
-        Math.min(1, 1 - bridgeBody.getBoundingClientRect().top / innerHeight),
-      )
-      const cooling = progress * progress * (3 - 2 * progress)
-      if (cooling !== bridgeCooling) {
-        bridgeGround.style.setProperty('--bridge-cooling', String(cooling))
-        bridgeCooling = cooling
-      }
     }
     const scrolling = now - lastScroll < 140
     copyColour.draw(now, reduced.matches)

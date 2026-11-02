@@ -1548,18 +1548,11 @@ for (const colorScheme of ['dark', 'light'] as const) {
       return colors.size
     })
     expect(cloudColors).toBeGreaterThan(5)
-    const coolingGround = await page
+    const groundOverlay = await page
       .locator('.temple-bridge-ground')
-      .evaluate((node) => getComputedStyle(node, '::before').backgroundColor)
-    expect(coolingGround).toBe(colorScheme === 'light' ? 'rgb(231, 237, 242)' : 'rgba(0, 0, 0, 0)')
+      .evaluate((node) => getComputedStyle(node, '::before').content)
+    expect(groundOverlay).toBe('none')
     if (colorScheme === 'light') {
-      await expect
-        .poll(() =>
-          page
-            .locator('.temple-bridge-ground')
-            .evaluate((node) => getComputedStyle(node, '::before').opacity),
-        )
-        .toBe('1')
       const darkEnough = await page.locator('.bridge-cloud-canvas').evaluate((node) => {
         const c = node as HTMLCanvasElement
         const pixels = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data

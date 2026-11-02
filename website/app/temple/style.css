@@ -1020,13 +1020,6 @@ html[data-layout='temple'] body {
   pointer-events: none;
   overflow: hidden;
 }
-.temple-bridge-ground::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: light-dark(#e7edf2, transparent);
-  opacity: var(--bridge-cooling, 0);
-}
 .bridge-body[data-paged] {
   margin-top: -8svh;
 }
