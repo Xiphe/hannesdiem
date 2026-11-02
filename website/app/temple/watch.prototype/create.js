@@ -14,9 +14,9 @@ export function createSection() {
     <div class="watch-pictures">
       <figure class="watch-daylight"><img src="/__watch/tos.jpg" alt="" width="1066" height="1600" loading="lazy"></figure>
       <figure class="watch-fire"><img src="/__watch/mixing-scene-one-week-retreat-1803-2fadbcefea805a0a.webp" alt="" width="1803" height="1200" loading="lazy"></figure>
+      <div class="create-section-label">Create</div>
     </div>
     <div class="watch-copy-tile">
-      <div class="create-section-label">Create</div>
       <h2 class="watch-heading" id="create-heading"></h2>
       <div class="watch-fragments">
         <p data-fragment="0"></p>

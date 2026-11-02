@@ -65,7 +65,9 @@ in `reading-material.js`, with independent gradient IDs, so
 adding the new fact preserves Watch's contour and placement.
 
 Artist refinement: Create has a distinct rounded contour with a right-side inward
-bend and sloping lower edge. “Collaborate on music” is the supplied main heading;
-Create sits above it as a small label outside normal flow. The mixer image moves
-higher on desktop. Mobile retains the original collage, with the separate label
-clear of the photographs. Watch's contour remains independent.
+bend and sloping lower edge. “Collaborate on music” is the supplied main heading.
+Following the artist's screenshot correction, the mixer overlaps only the lower
+portrait, leaving the face and hands visible. Create uses Visit's exact typography
+in the collage's L-shaped space, independently of the reading column. On mobile
+the label sits below the photographs with its own clearance. Watch's contour
+remains independent.
