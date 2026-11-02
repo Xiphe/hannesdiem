@@ -532,3 +532,7 @@ interpretation above; local review only.
 even closer and smaller. Remove the grid gap, reduce its top padding to 8px,
 and use 15–16px copy with 1.55 line height. Match the video corners to the
 content images’ 5px radius. Keep the existing piece and wording.
+
+**Full-width recording description — 2026-11-03.** Artist asks for the description
+to use the full media width. Remove its side padding and character-width cap so
+its text aligns with the video edges, retaining the smaller type and close gap.

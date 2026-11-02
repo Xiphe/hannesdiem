@@ -52,8 +52,7 @@
 }
 .temple-video-description {
   position: relative;
-  padding: 8px 28px 20px;
-  max-width: 45ch;
+  padding: 8px 0 20px;
   color: light-dark(#5d5046, #bdb2a5);
   font:
     400 clamp(15px, 1.1vw, 16px)/1.55 ui-sans-serif,
