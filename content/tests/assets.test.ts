@@ -99,3 +99,20 @@ test('WebP and AVIF inputs also return extracted palettes', async (t) => {
     assert.ok(image.palette.some((swatch) => swatch.name === 'Vibrant'))
   }
 })
+
+test('full-resolution JPEGs keep native dimensions and extract a usable palette', async (t) => {
+  const { load, directory } = await fixture(t)
+  const bytes = await sharp({
+    create: { width: 7000, height: 4700, channels: 3, background: '#0044ff' },
+  })
+    .jpeg({ chromaSubsampling: '4:4:4' })
+    .toBuffer()
+  const image = await load(bytes)
+  assert.equal(image.width, 7000)
+  assert.equal(image.height, 4700)
+  const vibrant = image.palette.find((swatch) => swatch.name === 'Vibrant')!
+  assert.ok(vibrant.hsl[0] > 0.55 && vibrant.hsl[0] < 0.75)
+  assert.ok(vibrant.hsl[1] > 0.8)
+  const largest = await sharp(join(directory, 'images', basename(image.src))).metadata()
+  assert.equal(largest.width, 2560)
+})

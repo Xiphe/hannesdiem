@@ -30,7 +30,7 @@ export function mediaBase(value: string): string {
 }
 
 export const imageLoader = {
-  version: `4:vibrant-${vibrantPackage.version}:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
+  version: `5:bounded-palette:vibrant-${vibrantPackage.version}:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
   extensions: ['.jpg', '.jpeg', '.png', '.webp', '.avif'],
   async load({ bytes, relativePath, options }) {
     const filename = basename(relativePath)
@@ -40,10 +40,18 @@ export const imageLoader = {
     const width = rotated ? metadata.height! : metadata.width!
     const height = rotated ? metadata.width! : metadata.height!
     if (!width || !height) throw new Error(`Missing image dimensions: ${relativePath}`)
-    // The legacy extractor decodes JPEG/PNG; Sharp supplies PNG for other formats.
-    const paletteInput = ['jpeg', 'png'].includes(metadata.format ?? '')
-      ? input
-      : await sharp(input).png().toBuffer()
+    // Jimp decodes the whole JPEG before Vibrant samples it. Large 4:4:4
+    // originals exceed its 512MB decoder limit; bound only the palette input.
+    // Keep legacy palettes for smaller images and all rendition bytes unchanged.
+    const large = metadata.width! * metadata.height! > 16_777_216
+    const paletteInput = large
+      ? await sharp(input)
+          .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
+          .png()
+          .toBuffer()
+      : ['jpeg', 'png'].includes(metadata.format ?? '')
+        ? input
+        : await sharp(input).png().toBuffer()
     const swatches = await Vibrant.from(paletteInput).getPalette()
     const { data } = await sharp(input)
       .resize(1, 1, { fit: 'cover' })
