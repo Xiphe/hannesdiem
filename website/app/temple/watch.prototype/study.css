@@ -27,16 +27,6 @@
     serif;
   text-wrap: pretty;
 }
-#watch .watch-section-label {
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: calc(-1 * clamp(72px, 9vw, 176px));
-  margin: 0;
-  color: var(--watch-ink);
-  font:
-    700 clamp(38px, 4vw, 64px)/1.1 CinzelDecorative,
-    serif;
-}
 .watch-material-boundary {
   position: absolute;
   inset: 0;
@@ -73,7 +63,6 @@
     system-ui,
     sans-serif;
 }
-.watch-visit-heading,
 .create-section-label {
   position: absolute;
   z-index: 3;
@@ -258,13 +247,6 @@
   margin-top: 0;
 }
 @media (max-width: 760px) {
-  #watch .watch-section-label {
-    left: auto;
-    right: 0;
-  }
-  #watch .watch-copy-tile {
-    margin-top: 24px;
-  }
   .create-study .create-section-label {
     position: absolute;
     grid-column: auto;
