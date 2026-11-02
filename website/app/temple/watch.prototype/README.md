@@ -57,11 +57,9 @@ fact. Source copy, including the tooltip note, lives verbatim in unpublished
 
 Working choices for review: place Create after the second verse/refrain pair,
 reuse the current text material and typography, and overlap the mixing image on
-the portrait while retaining its gesture. The earlier “let's talk” action opens
-the supplied sound@hannesdiem.de address. No new prose or publication approval.
+the portrait while retaining its gesture. The contact action opens the supplied
+sound@hannesdiem.de address. No new prose or publication approval.
 
-“steal*” opens the supplied italic note on hover, keyboard focus or tap; Escape,
-blur and outside taps dismiss it. The native popover escapes the material clip.
 The Create navigation item reaches the section. The material fitting is shared
 in `reading-material.js`, with independent gradient IDs, so
 adding the new fact preserves Watch's contour and placement.
@@ -74,9 +72,8 @@ Create label and requested staggered lower image edges. The mixer extends24–64
 below the portrait, with clearance before the reading column on mobile and before
 the contact action on desktop. Watch's contour remains independent.
 
-The tooltip uses a softly rounded, irregular SVG piece with a theme-aware neutral
-gradient instead of a bordered panel. Its native popover still supports hover,
-keyboard focus, tap, Escape and outside dismissal, with viewport-aware placement.
-It prefers bottom-centre placement with an integrated pointer aimed at “steal*”.
-Clamp to the viewport on narrow screens and flip above when needed.
+The tooltip is saved separately as `../piece-tooltip/view.tsx`, with its own
+styles, lifecycle and synthetic browser check. It is no longer used in Create:
+the artist replaced “steal*” and its note with plain
+“sample, interpret, cover or remix”.
 The artist's CTA now reads “what should we write together?” above “lets talk”.
