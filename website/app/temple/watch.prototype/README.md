@@ -8,8 +8,8 @@ arrive higher and the centred CTA follows both columns. Visit receives a heading
 above its map. Preserve the second verse's original typography across the inserted
 section and leave more space before it.
 
-All three supplied fragments remain verbatim. The review bar toggles their
-presence without committing to a text selection; H hides the bar. The notification
+All three supplied fragments remain verbatim and visible. The artist requested
+removal of the review bar, fragment toggles and keyboard shortcut. The notification
 button is a visual placeholder; it does not enrol anyone in the general newsletter.
 The artist supplied its context: “I'll drop new content here regularly”.
 

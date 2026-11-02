@@ -366,3 +366,5 @@ Artist proposes number10 from Codrops Set2 for the longer passage. Counting Set2
 **Connect photos and Watch material on desktop,2026-11-02.** Artist asks to close the gap between the photographs and the text tile on larger screens. Extend the fitted interior leftward24px beneath the upper photograph, connecting both images to the same soft material without moving the reading column. Keep the existing mobile arrangement and background clip.
 
 **Uncut upper contour,2026-11-02.** Artist points out an overly calculated horizontal edge. It is the section clip slicing the curve. Let the background use Watch's own preceding margin while keeping its painted position unchanged; the clip begins at the preceding verse's end. The upper curve stays intact, with no overlap onto verse content or change to text/image placement.
+
+**Review controls retired,2026-11-02.** Artist asks to clean up the controls. Remove the floating review bar, fragment toggles, jump buttons, keyboard shortcut and their unused styles/listeners. Keep all three supplied fragments visible and preserve the current artwork and ordinary page navigation. This does not approve publication.

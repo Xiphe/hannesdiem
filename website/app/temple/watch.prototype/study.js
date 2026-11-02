@@ -4,6 +4,7 @@ import { fragments, actionContext } from './material.js'
 const section = document.createElement('section')
 section.className = 'watch-study'
 section.id = 'watch'
+section.dataset.variant = 'A'
 section.setAttribute('aria-label', 'Watch')
 section.innerHTML = `
   <div class="watch-pictures">
@@ -24,38 +25,6 @@ for (const [index, fragment] of fragments.entries()) {
   section.querySelector('.watch-fragments').append(paragraph)
 }
 
-const controls = document.createElement('aside')
-controls.className = 'watch-review'
-controls.setAttribute('aria-label', 'Watch prototype controls')
-controls.innerHTML = `
-  <output>Alongside</output>
-  <fieldset><legend>Fragments</legend>${fragments.map((_, i) => `<label><input type="checkbox" data-toggle="${i}" checked>${i + 1}</label>`).join('')}</fieldset>
-  <button class="watch-review-jump">Watch ↓</button>
-  <small>Layout study · images are placeholders · signup not connected</small>
-`
-const selection = new Set([0, 1, 2])
-const update = () => {
-  section.dataset.variant = 'A'
-  for (const paragraph of section.querySelectorAll('[data-fragment]')) {
-    paragraph.hidden = !selection.has(Number(paragraph.dataset.fragment))
-  }
-  section.querySelector('.watch-fragments').dataset.count = String(selection.size)
-  console.info('Watch study', { variant: 'A', visibleFragments: [...selection].map((i) => i + 1) })
-}
-controls.addEventListener('click', (event) => {
-  if (event.target.closest('.watch-review-jump')) section.scrollIntoView({ block: 'start' })
-})
-controls.addEventListener('change', (event) => {
-  const input = event.target.closest('[data-toggle]')
-  if (!input) return
-  if (input.checked) selection.add(Number(input.dataset.toggle))
-  else selection.delete(Number(input.dataset.toggle))
-  update()
-})
-document.addEventListener('keydown', (event) => {
-  if (event.target.closest('input, textarea, select, [contenteditable]')) return
-  if (event.key.toLowerCase() === 'h') controls.hidden = !controls.hidden
-})
 // Let the real Remix island connect before inserting a temporary, unowned study.
 const mount = () => {
   const host = document.querySelector('.temple-artwork')
@@ -163,8 +132,6 @@ const mount = () => {
   )
   nav?.setAttribute('href', '#watch')
   nav?.removeAttribute('aria-disabled')
-  document.body.append(controls)
-  update()
   if (location.hash === '#watch') section.scrollIntoView({ block: 'start' })
 }
 mount()
