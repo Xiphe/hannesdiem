@@ -190,6 +190,17 @@ test('signed publications persist, update the complete site and reject replay or
         import: 'Image',
         props: { image: 'publication.webp' },
       },
+      {
+        type: 'component',
+        from: '@hannesdiem/content-components',
+        import: 'StreamVideo',
+        props: {
+          customerCode: 'fixture',
+          videoId: '0123456789abcdef0123456789abcdef',
+          title: 'Published video',
+          aspectRatio: 9 / 16,
+        },
+      },
     ],
   }
   // Use a page that declares the component dependency, as real CMX compilation does.
@@ -231,6 +242,15 @@ test('signed publications persist, update the complete site and reject replay or
       assert.equal(hash, contentHash)
       assert.match(html, /First publication/)
       assert.match(html, /src="https:\/\/media.example.com\/immutable-image.webp"/)
+      assert.match(
+        html,
+        /src="https:\/\/customer-fixture.cloudflarestream.com\/0123456789abcdef0123456789abcdef\/iframe\?preload=none"/,
+      )
+      assert.match(html, /<iframe[^>]*title="Published video"/)
+      assert.match(
+        html.match(/style="([^"]*aspect-ratio[^"]*)"/)?.[1] ?? '',
+        /^aspect-ratio:\s*0\.5625;?$/,
+      )
       assert.match(html, /content="https:\/\/media.example.com\/immutable-card.jpg"/)
       assert.match(html, /href="\/test-publication"/)
       const sitemap = await get('/sitemap.xml')

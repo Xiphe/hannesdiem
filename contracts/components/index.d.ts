@@ -9,6 +9,12 @@ export interface ImageProps {
   priority?: boolean
   title?: string
 }
+export interface StreamVideoProps {
+  customerCode: string
+  videoId: string
+  title: string
+  aspectRatio?: number
+}
 export interface PageProps {
   firstIsHero?: boolean
   children?: RemixNode
@@ -113,6 +119,7 @@ export interface LinkTreeProps {
   children?: RemixNode
 }
 export declare const Image: Component<ImageProps>
+export declare const StreamVideo: Component<StreamVideoProps>
 export declare const Page: Component<PageProps>
 export declare const Hero: Component<HeroProps>
 export declare const TextBlock: Component<TextBlockProps>
