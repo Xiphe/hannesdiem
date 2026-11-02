@@ -18,9 +18,11 @@ Run the normal preview on8791, then `npm run prototype:temple-watch`. Open
 `http://localhost:8793/temple-of-sound?variant=A#watch` (`sand tunnel 8793`).
 The Node proxy injects only this local experiment; no prototype code is included
 by the normal website build. The upstream remains the accepted CMX page.
-Original placeholder images live in `content/media/tos2.jpg` and `tos4.jpg`;
-source copy lives in `content/pages/temple-of-sound/_watch.ts`. No crop or watermark
-is written back to either image.
+The clean, full-resolution originals replace the watermarked placeholders:
+`A7403062-1.jpg` → `content/media/tos4.jpg`, `A7404065-1.jpg` →
+`content/media/tos2.jpg`, and `A7403058-1.jpg` → `content/media/tos.jpg`.
+The existing filenames preserve the Watch/Create references and layouts.
+Source copy lives in `content/pages/temple-of-sound/_watch.ts`.
 
 Images are placeholders for future content, not symbols to interpret. Alongside
 and placement after the first pair are artist choices; fragment inclusion and
