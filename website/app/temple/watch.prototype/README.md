@@ -8,7 +8,8 @@ arrive higher and the centred CTA follows both columns. Visit receives a heading
 above its map. Preserve the second verse's original typography across the inserted
 section and leave more space before it.
 
-All three supplied fragments remain verbatim and visible. The artist requested
+The artist's two revised paragraphs remain verbatim and visible, with their
+restored introduction beneath “Watch”. The artist requested
 removal of the review bar, fragment toggles and keyboard shortcut. The notification
 button is a visual placeholder; it does not enrol anyone in the general newsletter.
 The artist supplied its context: “I'll drop new content here regularly”.

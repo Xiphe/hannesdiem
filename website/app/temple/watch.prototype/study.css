@@ -20,6 +20,14 @@
     700 clamp(38px, 4vw, 64px)/1.1 CinzelDecorative,
     serif;
 }
+.watch-introduction {
+  margin: 0 0 28px;
+  font:
+    500 clamp(20px, 1.9vw, 28px)/1.4 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  text-wrap: pretty;
+}
 .watch-material-boundary {
   position: absolute;
   inset: 0;

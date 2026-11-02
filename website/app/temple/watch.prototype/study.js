@@ -1,5 +1,5 @@
 // THROWAWAY: layout and copy selection only. No signup mutation or new artwork clock.
-import { fragments, actionContext } from './material.js'
+import { fragments, actionContext, introduction } from './material.js'
 import { createSection } from './create.js'
 import { mountReadingMaterial } from './reading-material.js'
 
@@ -15,11 +15,13 @@ section.innerHTML = `
   </div>
   <div class="watch-copy-tile">
     <h2 class="watch-heading">Watch</h2>
+    <h3 class="watch-introduction"></h3>
     <div class="watch-fragments"></div>
   </div>
   <div class="watch-action"><p></p><button type="button" disabled>get notified</button></div>
 `
 section.querySelector('.watch-action p').textContent = actionContext
+section.querySelector('.watch-introduction').textContent = introduction
 for (const [index, fragment] of fragments.entries()) {
   const paragraph = document.createElement('p')
   paragraph.dataset.fragment = String(index)

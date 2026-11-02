@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 import {
   watchFragments,
   watchActionContext,
+  watchIntroduction,
 } from '../../../../content/pages/temple-of-sound/_watch.ts'
 import { createCopy } from '../../../../content/pages/temple-of-sound/_create.ts'
 
@@ -22,7 +23,7 @@ createServer(async (request, response) => {
       if (name === 'material.js') {
         response.setHeader('Content-Type', 'text/javascript')
         response.end(
-          `export const fragments = ${JSON.stringify(watchFragments)}; export const actionContext = ${JSON.stringify(watchActionContext)}; export const createCopy = ${JSON.stringify(createCopy)};`,
+          `export const fragments = ${JSON.stringify(watchFragments)}; export const actionContext = ${JSON.stringify(watchActionContext)}; export const introduction = ${JSON.stringify(watchIntroduction)}; export const createCopy = ${JSON.stringify(createCopy)};`,
         )
       } else if (['study.js', 'study.css', 'create.js', 'reading-material.js'].includes(name)) {
         response.setHeader('Content-Type', name.endsWith('.js') ? 'text/javascript' : 'text/css')
