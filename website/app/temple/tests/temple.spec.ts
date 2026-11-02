@@ -2300,3 +2300,66 @@ for (const viewport of [
     }
   })
 }
+
+for (const width of [390, 1440]) {
+  test(`Temple sculpture resumes after the bridge at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-bridge-finale')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await page.addStyleTag({ content: '.fragment-ground-plane { animation: none !important; }' })
+    const pieces = page.locator('.fragment-ground-piece')
+    const visiblePieces = () =>
+      pieces.evaluateAll(
+        (nodes) =>
+          nodes.filter((node) => {
+            const rect = node.getBoundingClientRect()
+            return (
+              rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth
+            )
+          }).length,
+      )
+    const phrase = page.locator('.final-verse-phrase').first()
+    await phrase.evaluate((node) =>
+      scrollTo(0, scrollY + node.getBoundingClientRect().top - innerHeight * 0.35),
+    )
+    await expect.poll(visiblePieces).toBeGreaterThan(0)
+    const bridge = page.locator('.bridge-page').first()
+    await bridge.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top + 100))
+    await expect.poll(visiblePieces).toBe(0)
+    // Native parallax must reveal the same arrangement on forward seeking.
+    await phrase.evaluate((node) =>
+      scrollTo(0, scrollY + node.getBoundingClientRect().top - innerHeight * 0.35),
+    )
+    await expect.poll(visiblePieces).toBeGreaterThan(0)
+    const chorus = page.locator('.final-refrain .refrain-composition')
+    await chorus.evaluate((node) => {
+      const stage = node.querySelector<HTMLElement>('.refrain-stage')!
+      const hold = node.getBoundingClientRect().height - stage.offsetHeight
+      scrollTo(
+        0,
+        scrollY +
+          node.getBoundingClientRect().top -
+          parseFloat(getComputedStyle(stage).top) +
+          hold / 2,
+      )
+    })
+    await expect
+      .poll(() =>
+        pieces.evaluateAll((nodes) => {
+          const stage = document
+            .querySelector('.final-refrain .refrain-stage')!
+            .getBoundingClientRect()
+          return nodes.every((node) => {
+            const box = node.getBoundingClientRect()
+            return (
+              box.bottom <= stage.top ||
+              box.top >= stage.bottom ||
+              box.right <= 0 ||
+              box.left >= innerWidth
+            )
+          })
+        }),
+      )
+      .toBe(true)
+  })
+}

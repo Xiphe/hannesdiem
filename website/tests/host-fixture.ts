@@ -3,6 +3,7 @@ import {
   multipleTempleContent,
   fourPhraseTempleContent,
   riseTempleContent,
+  bridgeFinaleTempleContent,
   actionlessTempleContent,
 } from '../app/temple/tests/fixture.ts'
 import assets from '../../.generated/assets.json' with { type: 'json' }
@@ -56,6 +57,10 @@ export const documents: PublishedDocuments = {
   'temple-four-phrases': {
     ...structuredClone(page),
     content: { ...fourPhraseTempleContent, metadata: { kind: 'temple' } },
+  },
+  'temple-bridge-finale': {
+    ...structuredClone(page),
+    content: { ...bridgeFinaleTempleContent, metadata: { kind: 'temple' } },
   },
   'temple-rise': {
     ...structuredClone(page),

@@ -112,7 +112,7 @@ function fixtureContent(
 }
 export const templeContent = fixtureContent()
 export const multipleTempleContent = fixtureContent([firstPair, secondPair])
-export const riseTempleContent = fixtureContent([firstPair], undefined, undefined, {
+const finalVerse = {
   intro: [{ text: 'Synthetic final verse introduction.' }],
   phrases: [[{ text: 'Synthetic lead-in.' }, { text: 'A highlight', face: 'cinzel' }]],
   rise: ['Soft sample,', 'Another sample,', 'Third sample,', 'An ending synthetic call'],
@@ -127,7 +127,14 @@ export const riseTempleContent = fixtureContent([firstPair], undefined, undefine
     },
     { text: 'The closing phrase', display: 'The closing phrase', face: 'cinzel' },
   ],
-})
+} satisfies NonNullable<PoemOpeningProps['finalVerse']>
+export const riseTempleContent = fixtureContent([firstPair], undefined, undefined, finalVerse)
+export const bridgeFinaleTempleContent = fixtureContent(
+  [firstPair],
+  [[{ text: 'A synthetic bridge introduction.' }]],
+  ['A synthetic reading paragraph stays clear of the sculpture. '.repeat(12).trim()],
+  finalVerse,
+)
 const { action: _action, ...actionlessPair } = firstPair
 export const actionlessTempleContent = fixtureContent([actionlessPair, secondPair])
 
