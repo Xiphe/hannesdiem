@@ -252,6 +252,19 @@ test('header slides down from above and keeps its dates beneath the wordmark', a
     (await header.locator('.temple-nav-title').boundingBox())!.y +
       (await header.locator('.temple-nav-title').boundingBox())!.height,
   )
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    await expect
+      .poll(() =>
+        date.evaluate((node) => {
+          const text = document.createRange()
+          text.selectNodeContents(node)
+          const title = node.parentElement!.querySelector('.temple-nav-title')!
+          return Math.abs(text.getBoundingClientRect().width - title.getBoundingClientRect().width)
+        }),
+      )
+      .toBeLessThan(1)
+  }
 })
 
 test('section links move slowly, allow interruption and retain native hash history', async ({
