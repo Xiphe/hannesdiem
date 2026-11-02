@@ -174,7 +174,7 @@ export function Page(
           />
           <link
             rel="icon"
-            href={assets.mark}
+            href={temple ? assets.templeMark : assets.mark}
             type="image/svg+xml"
           />
           <link

@@ -52,7 +52,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
       <>
         <Opening
           id={id}
-          mark={assets.mark}
+          mark={assets.templeMark}
           navigation={navigation}
           title={title}
           dates={dates}

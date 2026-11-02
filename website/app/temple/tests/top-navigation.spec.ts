@@ -196,9 +196,9 @@ test('navigation shares the material renderer, freezes with reduced motion and d
   ).toBe(true)
 })
 
-test('Temple uses the normal coloured brand mark as its favicon', async ({ page }) => {
-  await page.goto('/temple-of-sound')
-  const mark = await page.locator('[data-navigation-panel] img').first().getAttribute('src')
+test('Temple header logo and favicon share the Temple palette', async ({ page }) => {
+  await page.goto('/temple-navigation')
+  const mark = await page.locator('.temple-nav-logo img').getAttribute('src')
   await expect(page.locator('link[rel=icon]')).toHaveAttribute('href', mark!)
 })
 
@@ -211,4 +211,44 @@ test('fixed navigation remains available when artwork enhancement fails', async 
   await expect(header).toBeVisible()
   await header.getByRole('button', { name: 'Open menu' }).click()
   await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toBeVisible()
+})
+
+test('header slides down from above and keeps its dates beneath the wordmark', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/temple-navigation')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const header = page.locator('.temple-top-navigation')
+  const motion = await header.evaluate(async (node) => {
+    const stage = document.querySelector<HTMLElement>('.temple-stage')!
+    const track = document.querySelector('.temple-title-track')!
+    scrollTo(0, scrollY + track.getBoundingClientRect().bottom - stage.offsetHeight + 10)
+    for (let i = 0; i < 20; i++) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+      const animation = node
+        .getAnimations()
+        .find(
+          (animation) =>
+            animation instanceof CSSTransition && animation.transitionProperty === 'transform',
+        )
+      if (!animation) continue
+      animation.pause()
+      animation.currentTime = Number(animation.effect!.getTiming().duration) / 2
+      const rect = node.getBoundingClientRect()
+      const result = { y: rect.top, height: rect.height }
+      animation.finish()
+      return result
+    }
+    return null
+  })
+  expect(motion).not.toBeNull()
+  expect(motion!.y).toBeGreaterThan(-motion!.height)
+  expect(motion!.y).toBeLessThan(-0.5)
+  await expect.poll(async () => (await header.boundingBox())!.y).toBeCloseTo(0, 0)
+  const date = header.locator('.temple-nav-date')
+  await expect(date.locator('time').first()).toHaveAttribute('datetime', '2030-01-01')
+  await expect(date.locator('time').last()).toHaveAttribute('datetime', '2030-02-02')
+  expect((await date.boundingBox())!.y).toBeGreaterThanOrEqual(
+    (await header.locator('.temple-nav-title').boundingBox())!.y +
+      (await header.locator('.temple-nav-title').boundingBox())!.height,
+  )
 })
