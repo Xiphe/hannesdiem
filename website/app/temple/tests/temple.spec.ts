@@ -2302,7 +2302,14 @@ for (const viewport of [
           const rect = node.getBoundingClientRect()
           return rect.top + rect.height / 2
         })
-      for (const offset of [-20, 0]) {
+      await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+      await expect(chorus).toHaveAttribute('data-active', '3')
+      // Position belongs to native sticky layout even when enhancement frames
+      // stall. Exercise approach, page end and reverse scroll without a repaint.
+      await page.evaluate(() => {
+        window.requestAnimationFrame = () => 0
+      })
+      for (const offset of [-40, -5, 0, -10, 0]) {
         await page.evaluate((y) => scrollTo(0, y), ending + offset)
         await expect(chorus).toHaveAttribute('data-active', '3')
         await expect.poll(center).toBeCloseTo(viewport.height / 2, 0)

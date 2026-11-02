@@ -712,6 +712,9 @@ html[data-layout='temple'] body {
 }
 .final-refrain .refrain-composition[data-ready] {
   margin-bottom: 0;
+  /* This fitted chorus stays inside the viewport already. Keep its native
+     sticky stage outside the scattered verse's clipping layers on Safari. */
+  overflow-x: visible;
 }
 @media print, (forced-colors: active) {
   .final-refrain:has(.refrain-composition[data-ready]) {

@@ -129,49 +129,51 @@ export function Opening(handle: Handle<OpeningProps>) {
               </section>
             )}
             {finalVerse && (
-              <div class="final-pair">
-                <section
-                  class="verse-copy final-verse"
-                  data-has-refrain={finalVerse.refrain ? '' : undefined}
-                >
-                  <p class="final-verse-intro">
-                    <Phrase
-                      lines={finalVerse.intro}
-                      firstStatic
-                    />
-                  </p>
-                  {finalVerse.phrases.map((lines) => (
-                    <p class="final-verse-phrase">
-                      <Phrase lines={lines} />
+              <>
+                <div class="final-pair">
+                  <section
+                    class="verse-copy final-verse"
+                    data-has-refrain={finalVerse.refrain ? '' : undefined}
+                  >
+                    <p class="final-verse-intro">
+                      <Phrase
+                        lines={finalVerse.intro}
+                        firstStatic
+                      />
                     </p>
-                  ))}
-                  <div class="verse-finale">
-                    <div class="verse-finale-stage">
-                      {finalVerse.rise && (
-                        <div class="final-verse-rise verse-rise">
-                          {finalVerse.rise.map((line, index) => (
-                            <p
-                              class="rise-call"
-                              style={{
-                                '--rise-index': index,
-                                '--rise-delay': `${100 * (1 - 0.128 / (0.65 * 1.6 ** index))}%`,
-                              }}
-                            >
-                              <span class="rise-call-ink">{line}</span>
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                      {finalVerse.drop && <VerseDrop text={finalVerse.drop} />}
+                    {finalVerse.phrases.map((lines) => (
+                      <p class="final-verse-phrase">
+                        <Phrase lines={lines} />
+                      </p>
+                    ))}
+                    <div class="verse-finale">
+                      <div class="verse-finale-stage">
+                        {finalVerse.rise && (
+                          <div class="final-verse-rise verse-rise">
+                            {finalVerse.rise.map((line, index) => (
+                              <p
+                                class="rise-call"
+                                style={{
+                                  '--rise-index': index,
+                                  '--rise-delay': `${100 * (1 - 0.128 / (0.65 * 1.6 ** index))}%`,
+                                }}
+                              >
+                                <span class="rise-call-ink">{line}</span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        {finalVerse.drop && <VerseDrop text={finalVerse.drop} />}
+                      </div>
                     </div>
-                  </div>
-                </section>
+                  </section>
+                </div>
                 {finalVerse.refrain && (
                   <div class="final-refrain">
                     <Refrain phrases={finalVerse.refrain} />
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         )}
