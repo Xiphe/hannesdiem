@@ -39,3 +39,8 @@ After the artist found the bounded piece too small, fit its largest clear interi
 rectangle around the padded text rather than fitting its outer bounds. All text
 stays inside the concave contour; the background-only clip still protects the
 verses. Add80–160px of responsive top margin to separate Watch from the poem.
+
+The artist then requested a less geometric form with rounder corners. The current
+trial uses gently bowed sides and a shallow inward upper curve, with rounded
+geometry instead of relying on the inherited outline stroke. The existing
+interior fitting and background boundary still apply; Visit's shape is unchanged.
