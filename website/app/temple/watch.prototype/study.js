@@ -14,8 +14,8 @@ section.innerHTML = `
     <figure class="watch-fire"><img src="/__watch/tos2.jpg" alt="" width="1920" height="1280" loading="lazy"></figure>
   </div>
   <div class="watch-copy-tile">
-    <h2 class="watch-heading">Watch</h2>
-    <h3 class="watch-introduction"></h3>
+    <div class="watch-section-label">Watch</div>
+    <h2 class="watch-introduction" id="watch-heading"></h2>
     <div class="watch-fragments"></div>
   </div>
   <div class="watch-action"><p></p><button type="button" disabled>get notified</button></div>

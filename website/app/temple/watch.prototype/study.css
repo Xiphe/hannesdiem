@@ -23,10 +23,19 @@
 .watch-introduction {
   margin: 0 0 28px;
   font:
-    500 clamp(20px, 1.9vw, 28px)/1.4 ui-sans-serif,
-    system-ui,
-    sans-serif;
+    700 clamp(24px, 2.25vw, 36px)/1.25 CinzelDecorative,
+    serif;
   text-wrap: pretty;
+}
+#watch .watch-section-label {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 28px;
+  margin: 0;
+  color: var(--watch-ink);
+  font:
+    700 clamp(38px, 4vw, 64px)/1.1 CinzelDecorative,
+    serif;
 }
 .watch-material-boundary {
   position: absolute;
@@ -250,6 +259,9 @@
   transform: translateY(calc(-1 * clamp(64px, 9svh, 104px)));
 }
 @media (max-width: 760px) {
+  #watch .watch-copy-tile {
+    margin-top: 24px;
+  }
   .create-study .watch-copy-tile > .create-section-label {
     top: -16px;
   }
