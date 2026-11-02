@@ -174,7 +174,7 @@ export function Page(
           />
           <link
             rel="icon"
-            href={path === '/temple-of-sound' ? assets.templeMark : assets.mark}
+            href={assets.mark}
             type="image/svg+xml"
           />
           <link

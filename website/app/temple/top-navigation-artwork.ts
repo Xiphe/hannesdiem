@@ -10,11 +10,10 @@ export function createNavigationArtwork(
 ) {
   const title = host.querySelector<HTMLElement>('.temple-nav-title')
   if (!title) return
+  const header = title.closest('header')!
+  const visible = () =>
+    !header.hasAttribute('data-nav-mounted') || header.hasAttribute('data-nav-visible')
   const canvas = title.querySelector('canvas')!
-  const appearance = matchMedia('(prefers-color-scheme: dark)')
-  const style = getComputedStyle(host)
-  const lightInk = style.getPropertyValue('--copy-ink-light').trim()
-  const darkInk = style.getPropertyValue('--copy-ink-dark').trim()
   const ink = createTypeSurface(
     canvas,
     [title.querySelector<HTMLElement>('.temple-nav-title-ink')!],
@@ -28,20 +27,23 @@ export function createNavigationArtwork(
     request()
   })
   observer.observe(title)
+  const visibility = new MutationObserver(request)
+  visibility.observe(header, { attributes: true, attributeFilter: ['data-nav-visible'] })
   signal.addEventListener(
     'abort',
     () => {
       observer.disconnect()
+      visibility.disconnect()
       title.removeAttribute('data-ink-ready')
     },
     { once: true },
   )
   return {
     resize: () => ink.resize(),
-    draw: (now: number, frame: TypeFrame) => ink.draw(frame, now),
+    draw: (now: number, frame: TypeFrame) => visible() && ink.draw(frame, now),
     paint(frame: TypeFrame) {
       const rect = canvas.getBoundingClientRect()
-      if (rect.top >= innerHeight || rect.bottom <= 0) return
+      if (!visible() || rect.top >= innerHeight || rect.bottom <= 0) return
       ink.paint({
         ...frame,
         paintMaterial(context, bounds) {
@@ -59,13 +61,6 @@ export function createNavigationArtwork(
               bounds.height / scale,
             ),
           )
-          context.restore()
-          // Keep the photographic detail readable in a small navigation label.
-          context.save()
-          context.globalCompositeOperation = appearance.matches ? 'screen' : 'multiply'
-          context.globalAlpha = 0.65
-          context.fillStyle = appearance.matches ? darkInk : lightInk
-          context.fillRect(0, 0, bounds.width, bounds.height)
           context.restore()
         },
       })

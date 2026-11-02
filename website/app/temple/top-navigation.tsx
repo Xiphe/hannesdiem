@@ -20,7 +20,12 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
             href={href}
             aria-disabled={!href || undefined}
           >
-            {label}
+            <span
+              class="temple-nav-item-ink"
+              data-copy-inline
+            >
+              {label}
+            </span>
           </a>
         ))}
       </nav>

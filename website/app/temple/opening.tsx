@@ -7,12 +7,14 @@ import type { OpeningProps } from './types.ts'
 import { Location } from './location/view.tsx'
 import { mountLocation } from './location/enhance.ts'
 import { TopNavigation } from './top-navigation.tsx'
+import { mountNavigationPosition } from './top-navigation-position.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
   handle.queueTask(async (signal) => {
     if (!root || signal.aborted) return
     const host = root
+    mountNavigationPosition(host, signal)
     const controller = new AbortController()
     signal.addEventListener('abort', () => controller.abort(), { once: true })
     host.dataset.state = 'loading'

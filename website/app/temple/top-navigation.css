@@ -7,9 +7,17 @@
   align-items: center;
   gap: 24px;
   min-height: 72px;
-  padding: calc(10px + env(safe-area-inset-top, 0px)) clamp(20px, 3vw, 48px) 10px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 10px 10px;
   background: light-dark(#f7ecdf, #030503);
   color: light-dark(#28231d, #d2d0c8);
+}
+.temple-top-navigation[data-nav-mounted] {
+  position: fixed;
+  inset-inline: 0;
+  visibility: hidden;
+}
+.temple-top-navigation[data-nav-visible] {
+  visibility: visible;
 }
 .temple-nav-title {
   position: relative;
@@ -27,10 +35,10 @@
   width: calc(100% + 14px);
   height: calc(100% + 10px);
   pointer-events: none;
-  visibility: hidden;
+  opacity: 0;
 }
 .temple-nav-title[data-ink-ready] canvas {
-  visibility: visible;
+  opacity: 1;
 }
 .temple-nav-title[data-ink-ready] .temple-nav-title-ink {
   color: transparent;
@@ -40,10 +48,16 @@
   align-items: center;
   gap: clamp(16px, 2vw, 32px);
   font:
-    500 15px/1.4 ui-sans-serif,
-    system-ui,
+    350 14px/1.4 UnboundedCopy,
     sans-serif;
   white-space: nowrap;
+}
+.temple-nav-item-ink {
+  position: relative;
+  display: inline-block;
+}
+.temple-nav-item-ink[data-copy-cloud] {
+  color: transparent;
 }
 .temple-nav-items a {
   display: inline-flex;
@@ -57,6 +71,7 @@
 }
 .temple-nav-items a[aria-disabled] {
   color: light-dark(#756d63, #8c8981);
+  opacity: 0.7;
 }
 .temple-nav-logo {
   justify-self: end;
@@ -83,7 +98,7 @@
   .temple-top-navigation {
     grid-template-columns: minmax(0, 1fr) 44px;
     gap: 0 16px;
-    padding-inline: 20px;
+    padding-inline: 10px;
   }
   .temple-nav-title {
     font-size: 23px;
@@ -108,6 +123,9 @@
 }
 @media print, (forced-colors: active) {
   .temple-nav-title[data-ink-ready] .temple-nav-title-ink {
+    color: CanvasText;
+  }
+  .temple-nav-item-ink[data-copy-cloud] {
     color: CanvasText;
   }
   .temple-nav-title canvas {

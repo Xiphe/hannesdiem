@@ -26,11 +26,31 @@ export async function mountArtwork(
     const escapes = createEscapes(signal)
     let requestScene = () => {}
     const navigation = createNavigationArtwork(host, signal, () => requestScene(), escapes)
+    const copy = colourCopy(host, signal, () => requestScene())
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+    const appearance = matchMedia('(prefers-color-scheme: dark)')
+    const sync = () => {
+      copy.setBase(
+        getComputedStyle(host)
+          .getPropertyValue(appearance.matches ? '--copy-ink-dark' : '--copy-ink-light')
+          .trim(),
+        !appearance.matches,
+      )
+      requestScene()
+    }
+    appearance.addEventListener('change', sync, { signal })
+    sync()
+    await document.fonts.load('350 28px UnboundedCopy')
+    if (signal.aborted) return
+    copy.resize()
     requestScene =
       (await mountOpening(root, props, signal, {
         escapes,
         paintMist: createAtmosphere(signal),
-        drawType: (now, frame) => navigation?.draw(now, frame) ?? false,
+        drawType: (now, frame) => {
+          copy.draw(now, reduced.matches)
+          return navigation?.draw(now, frame) ?? false
+        },
         paintType: (frame) => navigation?.paint(frame),
         ready: () => {
           navigation?.resize()
@@ -80,7 +100,7 @@ export async function mountArtwork(
   let requestScene = () => {}
   const navigation = createNavigationArtwork(host, abort.signal, request, escapes)
   const copyColour = colourCopy(
-    poem,
+    host,
     abort.signal,
     request,
     root.querySelector<HTMLElement>('.temple-date')!,

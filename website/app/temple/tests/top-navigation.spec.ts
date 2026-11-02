@@ -1,14 +1,33 @@
 import { expect, test } from '@playwright/test'
 
 for (const width of [390, 1440]) {
-  test(`local navigation follows the opener and sticks without covering its target at ${width}px`, async ({
+  test(`local navigation becomes fixed as the opener exits without covering its target at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/temple-navigation')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
     const header = page.locator('.temple-top-navigation')
-    expect((await header.boundingBox())!.y).toBeGreaterThanOrEqual(900)
+    await expect(header).not.toBeVisible()
+    await expect(header.locator('.temple-nav-title canvas')).not.toBeVisible()
+    const exit = await page
+      .locator('.temple-title-track')
+      .evaluate(
+        (node) =>
+          scrollY +
+          node.getBoundingClientRect().bottom -
+          node.querySelector<HTMLElement>('.temple-stage')!.offsetHeight,
+      )
+    await page.evaluate((y) => scrollTo(0, y), exit - 2)
+    await expect(header).not.toBeVisible()
+    await expect(header.locator('.temple-nav-title canvas')).not.toBeVisible()
+    await page.evaluate((y) => scrollTo(0, y), exit + 8)
+    await expect(header).toBeVisible()
+    expect(
+      (await page.locator('.temple-opening').boundingBox())!.y +
+        (await page.locator('.temple-opening').boundingBox())!.height,
+    ).toBeGreaterThan(0)
+    expect(await header.evaluate((node) => getComputedStyle(node).position)).toBe('fixed')
     await expect(header.locator('.temple-nav-items a')).toHaveText([
       'First target',
       'Second target',
@@ -42,6 +61,8 @@ for (const width of [390, 1440]) {
     }
     await header.getByRole('link', { name: 'Temple of Sound' }).click()
     await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
+    await expect(header).not.toBeVisible()
+    await expect(header.locator('.temple-nav-title canvas')).not.toBeVisible()
   })
 }
 
@@ -114,7 +135,12 @@ test('navigation shares the material renderer, freezes with reduced motion and d
       }
     })
   await expect.poll(async () => (await pixels()).alpha).toBeGreaterThan(1000)
-  const readable = await title.locator('canvas').evaluate((node) => {
+  const item = page.locator('.temple-nav-item-ink').first()
+  await expect(item).toHaveAttribute('data-copy-cloud', '')
+  expect(await item.evaluate((node) => getComputedStyle(node).fontFamily)).toContain(
+    'UnboundedCopy',
+  )
+  const readable = await item.locator('canvas').evaluate((node) => {
     const canvas = node as HTMLCanvasElement
     const data = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
     const luminance = (rgb: number[]) =>
@@ -168,4 +194,21 @@ test('navigation shares the material renderer, freezes with reduced motion and d
       )
     }),
   ).toBe(true)
+})
+
+test('Temple uses the normal coloured brand mark as its favicon', async ({ page }) => {
+  await page.goto('/temple-of-sound')
+  const mark = await page.locator('[data-navigation-panel] img').first().getAttribute('src')
+  await expect(page.locator('link[rel=icon]')).toHaveAttribute('href', mark!)
+})
+
+test('fixed navigation remains available when artwork enhancement fails', async ({ page }) => {
+  await page.route('**/*.ttf', (route) => route.abort())
+  await page.goto('/temple-navigation')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'fallback')
+  await page.evaluate(() => scrollTo(0, 40))
+  const header = page.locator('.temple-top-navigation')
+  await expect(header).toBeVisible()
+  await header.getByRole('button', { name: 'Open menu' }).click()
+  await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toBeVisible()
 })
