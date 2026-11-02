@@ -115,9 +115,10 @@ export function FirstPair(handle: Handle<{ id: string; pair: PoemPair; index: nu
   }
 }
 
-export function Refrain(handle: Handle<{ phrases: PoemPair['refrain'] }>) {
+export function Refrain(handle: Handle<{ id?: string; phrases: PoemPair['refrain'] }>) {
   return () => (
     <section
+      id={handle.props.id}
       class="refrain-composition"
       aria-label="Refrain"
     >

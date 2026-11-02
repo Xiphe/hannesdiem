@@ -150,6 +150,20 @@ export const bridgeFinaleTempleContent = fixtureContent(
   undefined,
   finalVerse,
 )
+export const chorusNavigationTempleContent = fixtureContent(
+  [firstPair],
+  undefined,
+  undefined,
+  undefined,
+  [
+    { label: 'Fixture start', href: '#verse-fixture-pair-1' },
+    {
+      label: 'Fixture pending',
+      verseBefore: { label: 'Fixture final chorus', href: '#verse-fixture-final-chorus' },
+    },
+  ],
+  finalVerse,
+)
 const { action: _action, ...actionlessPair } = firstPair
 export const actionlessTempleContent = fixtureContent([actionlessPair, secondPair])
 const fixtureLocation = {

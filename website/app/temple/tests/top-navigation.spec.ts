@@ -1,5 +1,23 @@
 import { expect, test } from '@playwright/test'
 
+for (const width of [390, 1440, 2172]) {
+  test(`final chorus link arrives on its first phrase at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/temple-chorus-navigation')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await page
+      .locator('.temple-opening')
+      .evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().bottom + 30))
+    await page.getByRole('link', { name: 'Fixture final chorus' }).click()
+    await expect(page.locator('#verse-fixture-final-chorus')).toBeFocused()
+    await expect(page.locator('.final-refrain .refrain-composition')).toHaveAttribute(
+      'data-active',
+      '0',
+    )
+  })
+}
+
 for (const fallback of [false, true]) {
   test(`section progress aligns with facts and verses after insertion and resizing${fallback ? ' with fallback' : ''}`, async ({
     page,

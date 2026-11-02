@@ -536,3 +536,33 @@ content images’ 5px radius. Keep the existing piece and wording.
 **Full-width recording description — 2026-11-03.** Artist asks for the description
 to use the full media width. Remove its side padding and character-width cap so
 its text aligns with the video edges, retaining the smaller type and close gap.
+
+**Quiet unfinished navigation; connect the remaining verses — 2026-11-03.**
+Artist asks to disable hover on Inspire, Be Held and Wish and confirms linking
+the pieces after Create, Share and Inspire to the third verse, bridge and final
+verse respectively. The piece before Wish stays decorative. Limit warm text
+hover/focus feedback to labels with destinations; use existing `verseBefore`
+metadata and native section IDs for the links. Preserve enlarged piece feedback,
+reading progress and authored wording. Local review; no publication requested.
+
+**Final chorus as sixth navigation section — 2026-11-03.** Artist selects the
+last chorus as the sixth section. Connect the piece before Wish to its own
+`${opening.id}-final-chorus` anchor through existing `verseBefore` metadata,
+with the same header clearance as other poem destinations. Preserve the native
+sticky chorus, timing, layout and inactive text labels. This supersedes leaving
+the final piece decorative. Local review only.
+
+**Final chorus link starts on its first phrase — 2026-11-03.** Artist reports
+landing on “I am inspired” on larger screens. Synthetic phone/desktop navigation
+reproduces landing on the second phrase: header alignment seeks past the start
+of the centered sticky hold. Put the anchor on the chorus composition itself and
+use its fitted height in native `scroll-margin-top` to arrive at the hold's start,
+retaining header clearance. Keep chorus timing and native sticky positioning.
+Synthetic link checks cover 390, 1440 and 2172px widths. Local review only.
+
+**Navigation publication approved — 2026-11-03.** Artist requests bringing this
+chat's navigation work to `origin/main`. Publish inactive-label hover removal,
+all six poem-piece destinations and first-phrase final-chorus arrival. Transfer
+only this navigation changeset from the recording worktree onto current main;
+the separate recording work is not part of this changeset. Preserve its
+independent release when main advances during validation.

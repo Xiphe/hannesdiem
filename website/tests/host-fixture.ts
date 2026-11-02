@@ -4,6 +4,7 @@ import {
   fourPhraseTempleContent,
   riseTempleContent,
   bridgeFinaleTempleContent,
+  chorusNavigationTempleContent,
   actionlessTempleContent,
   locationTempleContent,
   navigationTempleContent,
@@ -81,6 +82,10 @@ export const documents: PublishedDocuments = {
   'temple-bridge-finale': {
     ...structuredClone(page),
     content: { ...bridgeFinaleTempleContent, metadata: { kind: 'temple' } },
+  },
+  'temple-chorus-navigation': {
+    ...structuredClone(page),
+    content: { ...chorusNavigationTempleContent, metadata: { kind: 'temple' } },
   },
   'temple-rise': {
     ...structuredClone(page),

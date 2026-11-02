@@ -137,7 +137,10 @@ export function Opening(handle: Handle<OpeningProps>) {
               </>
             ))}
             {bridge && (
-              <section class="verse-copy bridge-copy">
+              <section
+                id={`${handle.props.id}-bridge`}
+                class="verse-copy bridge-copy"
+              >
                 {bridge.map((lines, index) => (
                   <p>
                     <Phrase
@@ -169,6 +172,7 @@ export function Opening(handle: Handle<OpeningProps>) {
               <>
                 <div class="final-pair">
                   <section
+                    id={`${handle.props.id}-final-verse`}
                     class="verse-copy final-verse"
                     data-has-refrain={finalVerse.refrain ? '' : undefined}
                   >
@@ -207,7 +211,10 @@ export function Opening(handle: Handle<OpeningProps>) {
                 </div>
                 {finalVerse.refrain && (
                   <div class="final-refrain">
-                    <Refrain phrases={finalVerse.refrain} />
+                    <Refrain
+                      id={`${handle.props.id}-final-chorus`}
+                      phrases={finalVerse.refrain}
+                    />
                   </div>
                 )}
               </>

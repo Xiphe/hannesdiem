@@ -43,7 +43,11 @@ The optional `PoemOpening.navigation` renders the page navigation. Enhancement f
 
 Navigation separators reuse seeded fragment contours as small SVGs. A navigation
 item's optional `verseBefore: { label, href }` makes its preceding piece a native
-link to that poem section. Pair IDs are `${opening.id}-pair-${index + 1}`.
+link to that poem section. Pair IDs are `${opening.id}-pair-${index + 1}`;
+the bridge, final verse and final chorus use `${opening.id}-bridge`,
+`${opening.id}-final-verse` and `${opening.id}-final-chorus`.
+The final chorus anchor sits on its composition; native scroll spacing uses its
+fitted height to arrive on the first phrase at the start of the centered hold.
 Facts retain their own `href`; add it when the actual section exists.
 
 The 2px progress line starts at the first fact label. `top-navigation-progress.ts`
@@ -67,7 +71,8 @@ raised scene entries, horizontally clipped SVG paint, complete verse gaps,
 clickable verse pieces, forward/reverse travel, late insertion and changed
 section height in both paths.
 
-Text-link hover and keyboard focus use the progress palette. Separator slots
+Text links with destinations use the progress palette on hover and keyboard focus;
+unbuilt labels retain their subdued appearance. Separator slots
 cover the complete word-to-word gap; hovering a slot enlarges only its piece,
 preserving spacing. The travelling highlight was rejected at `e99226f`; the bar
 shows reading progress alone; the extra hover effect is parked.

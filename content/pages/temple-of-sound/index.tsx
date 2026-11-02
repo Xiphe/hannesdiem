@@ -162,10 +162,22 @@ export default function Content() {
             href: '#create',
             verseBefore: { label: 'Second verse and refrain', href: '#verse-1-pair-2' },
           },
-          { label: 'Share' },
-          { label: 'Inspire' },
-          { label: 'Be Held' },
-          { label: 'Wish' },
+          {
+            label: 'Share',
+            verseBefore: { label: 'Third verse and refrain', href: '#verse-1-pair-3' },
+          },
+          {
+            label: 'Inspire',
+            verseBefore: { label: 'Bridge', href: '#verse-1-bridge' },
+          },
+          {
+            label: 'Be Held',
+            verseBefore: { label: 'Final verse', href: '#verse-1-final-verse' },
+          },
+          {
+            label: 'Wish',
+            verseBefore: { label: 'Final chorus', href: '#verse-1-final-chorus' },
+          },
         ]}
         location={{
           image: room,

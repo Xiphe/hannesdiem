@@ -155,14 +155,14 @@
   color: light-dark(#756d63, #8c8981);
   opacity: 0.7;
 }
-.temple-nav-items > a:not(.temple-nav-separator-link):is(:hover, :focus-visible) {
+.temple-nav-items > a[href]:not(.temple-nav-separator-link):is(:hover, :focus-visible) {
   text-decoration: none;
   opacity: 1;
 }
-.temple-nav-items > a:is(:hover, :focus-visible) .temple-nav-item-ink {
+.temple-nav-items > a[href]:is(:hover, :focus-visible) .temple-nav-item-ink {
   color: var(--nav-warm-end);
 }
-.temple-nav-items > a:is(:hover, :focus-visible) .temple-nav-item-ink canvas {
+.temple-nav-items > a[href]:is(:hover, :focus-visible) .temple-nav-item-ink canvas {
   opacity: 0;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -188,8 +188,26 @@
   outline: 2px solid currentColor;
   outline-offset: 4px;
 }
-.temple-artwork:has(.temple-top-navigation) :is(.facts-grid, .temple-video) {
-  scroll-margin-top: 88px;
+.temple-artwork:has(.temple-top-navigation) {
+  --temple-nav-clearance: 88px;
+}
+.temple-artwork:has(.temple-top-navigation)
+  :is(
+    .facts-grid,
+    .temple-video,
+    .first-pair,
+    .bridge-copy,
+    .final-verse,
+    .final-refrain .refrain-composition
+  ) {
+  scroll-margin-top: var(--temple-nav-clearance);
+}
+.temple-artwork:has(.temple-top-navigation) .final-refrain .refrain-composition[data-ready] {
+  /* Land at the centered hold's start, before the first phrase advances. */
+  scroll-margin-top: max(
+    var(--temple-nav-clearance),
+    calc(50svh - var(--refrain-height, 50svh) / 2)
+  );
 }
 @media (max-width: 1050px) {
   .temple-top-navigation {
@@ -215,8 +233,8 @@
     padding-inline: 4px;
     margin-inline: -4px;
   }
-  .temple-artwork:has(.temple-top-navigation) :is(.facts-grid, .temple-video) {
-    scroll-margin-top: 128px;
+  .temple-artwork:has(.temple-top-navigation) {
+    --temple-nav-clearance: 128px;
   }
 }
 @media print, (forced-colors: active) {
