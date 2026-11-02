@@ -1,0 +1,278 @@
+/* THROWAWAY. Compare composition, not a selected Watch design. */
+.watch-study {
+  --watch-ink: light-dark(#2c2721, #e1d9ce);
+  --watch-copy: light-dark(#5d5046, #bdb2a5);
+  position: relative;
+  z-index: 3;
+  color: var(--watch-ink);
+  margin: -6svh 0 14svh;
+  padding: 7svh clamp(24px, 5vw, 100px) 8svh;
+  scroll-margin-top: 90px;
+}
+.watch-heading h2 {
+  font:
+    700 clamp(38px, 4vw, 64px)/1.1 CinzelDecorative,
+    serif;
+  margin: 0 0 24px;
+}
+.watch-heading > p {
+  margin: 0;
+  max-width: 36ch;
+  font:
+    450 clamp(20px, 1.9vw, 28px)/1.4 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  text-wrap: pretty;
+}
+.watch-pictures figure {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 5px;
+}
+.watch-pictures img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.watch-fragments {
+  color: var(--watch-copy);
+  font:
+    400 clamp(17px, 1.3vw, 20px)/1.65 ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+.watch-fragments p {
+  margin: 0;
+  text-wrap: pretty;
+}
+.watch-fragments [hidden] {
+  display: none;
+}
+.watch-action button {
+  border: 0;
+  border-radius: 8px;
+  padding: 14px 26px;
+  background: light-dark(#d3cfc9, #282624);
+  color: var(--watch-ink);
+  font:
+    600 18px/1.4 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  opacity: 1;
+  cursor: default;
+}
+/* A: an asymmetrical photographic spread, reading column beside both images. */
+.watch-study[data-variant='A'] {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  column-gap: clamp(40px, 7vw, 112px);
+  row-gap: 36px;
+  align-items: start;
+}
+[data-variant='A'] .watch-heading {
+  grid-column: 2;
+  grid-row: 1;
+}
+[data-variant='A'] .watch-pictures {
+  grid-column: 1;
+  grid-row: 1 / 4;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  padding-top: 8svh;
+}
+[data-variant='A'] .watch-daylight {
+  grid-column: 1 / 10;
+  grid-row: 1;
+  aspect-ratio: 1.07;
+}
+[data-variant='A'] .watch-daylight img {
+  object-position: 56% 50%;
+}
+[data-variant='A'] .watch-fire {
+  position: relative;
+  grid-column: 3 / -1;
+  grid-row: 2;
+  margin-top: -10%;
+  aspect-ratio: 1.6;
+}
+[data-variant='A'] .watch-fragments {
+  grid-column: 2;
+  grid-row: 2;
+  max-width: 50ch;
+}
+[data-variant='A'] .watch-fragments p:not([hidden]) ~ p:not([hidden]) {
+  margin-top: 1.35em;
+}
+[data-variant='A'] .watch-action {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: start;
+}
+/* B: the media holds a wide stage, then all fragments read beneath it. */
+.watch-study[data-variant='B'] {
+  display: flex;
+  flex-direction: column;
+}
+[data-variant='B'] .watch-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 40px;
+  margin-bottom: 36px;
+}
+[data-variant='B'] .watch-heading h2 {
+  margin: 0;
+}
+[data-variant='B'] .watch-heading > p {
+  max-width: 40ch;
+  font-size: clamp(19px, 1.5vw, 23px);
+}
+[data-variant='B'] .watch-pictures {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  height: clamp(300px, 42vw, 560px);
+  gap: 12px;
+  order: 1;
+}
+[data-variant='B'] .watch-fire {
+  grid-column: 1;
+  grid-row: 1;
+}
+[data-variant='B'] .watch-daylight {
+  grid-column: 2;
+  grid-row: 1;
+}
+[data-variant='B'] .watch-daylight img {
+  object-position: 56% 50%;
+}
+[data-variant='B'] .watch-fragments {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(30px, 5vw, 80px);
+  margin-top: 40px;
+  order: 2;
+}
+[data-variant='B'] .watch-fragments[data-count='2'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 90ch;
+}
+[data-variant='B'] .watch-fragments[data-count='1'] {
+  grid-template-columns: 1fr;
+  max-width: 55ch;
+}
+[data-variant='B'] .watch-action {
+  order: 3;
+  align-self: center;
+  margin-top: 44px;
+}
+.watch-review {
+  position: fixed;
+  z-index: 1000;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 18px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 10px 14px;
+  border: 1px solid #8a8881;
+  border-radius: 12px;
+  background: #f2f0e9;
+  color: #242522;
+  box-shadow: 0 4px 24px #0004;
+  font:
+    500 13px/1.4 system-ui,
+    sans-serif;
+}
+.watch-review[hidden] {
+  display: none;
+}
+.watch-review button {
+  border: 0;
+  background: #deddd5;
+  color: #242522;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font: inherit;
+}
+.watch-review-variants {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.watch-review output {
+  min-width: 112px;
+  text-align: center;
+}
+.watch-review fieldset {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.watch-review legend {
+  float: left;
+  margin-right: 8px;
+}
+.watch-review label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.watch-review input {
+  accent-color: #484332;
+}
+.watch-review small {
+  flex-basis: 100%;
+  font-size: 10px;
+  text-align: center;
+  color: #6b685f;
+}
+@media (max-width: 760px) {
+  .watch-study {
+    margin-top: -8svh;
+    padding-top: 0;
+    scroll-margin-top: 144px;
+  }
+  .watch-study[data-variant='A'] {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  [data-variant='A'] .watch-pictures {
+    padding-top: 0;
+  }
+  [data-variant='A'] .watch-daylight {
+    aspect-ratio: 1.25;
+  }
+  [data-variant='A'] .watch-fire {
+    margin-top: -15%;
+  }
+  [data-variant='A'] .watch-action {
+    align-self: center;
+  }
+  [data-variant='B'] .watch-heading {
+    display: block;
+    margin-bottom: 28px;
+  }
+  [data-variant='B'] .watch-heading h2 {
+    margin-bottom: 20px;
+  }
+  [data-variant='B'] .watch-pictures {
+    height: 44svh;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+  [data-variant='B'] .watch-fragments {
+    grid-template-columns: 1fr !important;
+    gap: 24px;
+    margin-top: 28px;
+  }
+}
