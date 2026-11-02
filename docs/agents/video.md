@@ -34,14 +34,35 @@ Publishing a video is a separate content decision from uploading it.
 
 ## Validate the first recording
 
-The Final Cut export preset is being configured by the artist's local agent.
-1080p is sufficient and sound takes priority. Preserve the finished mix without
-added mastering. Compare Stream playback against the actual export, especially
-the sound; unchanged audio passthrough has not been established.
+The artist's local agent saved the Final Cut destination `Cloudflare Stream
+1080p`. 1080p is sufficient and sound takes priority. Preserve the finished mix
+without added mastering. Compare Stream playback against the actual export,
+especially the sound; unchanged audio passthrough has not been established.
 
-Stream subscription setup and the first real upload have not been verified by
-this repository change. Player placement in Temple of Sound remains an artwork
-decision; consult `website/app/temple/docs/collaboration.md` before changing it.
+### First uploaded video: 2026-11-02
+
+The artist uploaded `tech-check.mp4`. Its public Stream player is:
+
+https://customer-ku6r49ei7df9hym2.cloudflarestream.com/54f94a6c1df7a504f462ecc8e2564f6d/iframe
+
+Use customer code `ku6r49ei7df9hym2`, video ID
+`54f94a6c1df7a504f462ecc8e2564f6d`, and `aspectRatio={9 / 16}` for this technical
+sample. It is 13:56.4 long; it is not the earlier proposed 60-second test.
+
+The public DASH manifest reports five video qualities, from 240 × 426 through
+1080 × 1920, all at 30 fps. Audio is stereo AAC-LC at 48 kHz, with declared
+bandwidth of 130,696 bits/second. These properties do not establish unchanged
+audio or perceptual quality against the local export.
+
+A browser check of the actual `StreamVideo` component confirmed paused, unmuted
+initial state; playback and seeking without media errors; and 9:16 sizing without
+horizontal overflow at desktop and 390px viewport widths. Before playback, the
+observed requests included initialization metadata and a manifest, but no media
+segments. The matched-volume listening comparison against the local export is
+still pending.
+
+Player placement in Temple of Sound remains an artwork decision; consult
+`website/app/temple/docs/collaboration.md` before changing it.
 
 References:
 

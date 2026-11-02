@@ -17,7 +17,7 @@ export function StreamVideo(handle: Handle<StreamVideoProps>) {
           title={title}
           src={`https://customer-${customerCode}.cloudflarestream.com/${encodeURIComponent(videoId)}/iframe?preload=none`}
           loading="lazy"
-          allow="encrypted-media; picture-in-picture; fullscreen"
+          allow="encrypted-media; picture-in-picture"
           allowFullScreen
           mix={css({ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 })}
         />
