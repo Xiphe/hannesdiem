@@ -136,10 +136,14 @@ const mount = () => {
     const reach = innerWidth > 760 ? Math.max(0, copyTile.offsetLeft - photoRight + 24) : 0
     const scaleX = (copyTile.offsetWidth + reach) / (clear.width * cellWidth)
     const scaleY = copyTile.offsetHeight / (clear.height * cellHeight)
+    // Let the contour use Watch's own preceding gap instead of slicing it at
+    // the section edge. The clip still ends before the neighbouring verse.
+    const headroom = parseFloat(getComputedStyle(section).marginTop)
+    materialBoundary.style.top = `${-headroom}px`
     material.style.width = `${view.width * scaleX}px`
     material.style.height = `${view.height * scaleY}px`
     material.style.left = `${copyTile.offsetLeft - reach - clear.x * cellWidth * scaleX}px`
-    material.style.top = `${copyTile.offsetTop - clear.y * cellHeight * scaleY}px`
+    material.style.top = `${copyTile.offsetTop + headroom - clear.y * cellHeight * scaleY}px`
     const mapBounds = visit.querySelector('.map-water').getBoundingClientRect()
     const flightBounds = mapFlight.getBoundingClientRect()
     visitHeading.style.top = `${mapBounds.top - flightBounds.top - visitHeading.offsetHeight - 28}px`
