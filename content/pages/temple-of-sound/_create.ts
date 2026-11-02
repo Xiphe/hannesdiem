@@ -1,5 +1,6 @@
 // Artist-supplied working material. Not included in the published page.
 export const createCopy = {
+  headline: 'Collaborate on music',
   invitation:
     'I long for your inspiring support and co-creation, for your stories, sharings, feelings and all the vibrations you carry and want to see rippling.',
   musicians: {

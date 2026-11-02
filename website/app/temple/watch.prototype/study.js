@@ -1,6 +1,6 @@
 // THROWAWAY: layout and copy selection only. No signup mutation or new artwork clock.
 import { fragments, actionContext, introduction } from './material.js'
-import { createSection } from './create.js'
+import { createSection, createContour } from './create.js'
 import { mountReadingMaterial } from './reading-material.js'
 
 const section = document.createElement('section')
@@ -42,7 +42,7 @@ const mount = () => {
   mountReadingMaterial(section, sourceMaterial)
   const create = createSection()
   host.querySelectorAll('.first-pair')[1].after(create)
-  mountReadingMaterial(create, sourceMaterial)
+  mountReadingMaterial(create, sourceMaterial, createContour)
   const mapFlight = visit.querySelector('.map-slot .fact-flight')
   const visitHeading = document.createElement('h2')
   visitHeading.className = 'watch-visit-heading'

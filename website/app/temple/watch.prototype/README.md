@@ -63,3 +63,9 @@ blur and outside taps dismiss it. The native popover escapes the material clip.
 The Create navigation item reaches the section. The material fitting is shared
 in `reading-material.js`, with independent gradient IDs, so
 adding the new fact preserves Watch's contour and placement.
+
+Artist refinement: Create has a distinct rounded contour with a right-side inward
+bend and sloping lower edge. “Collaborate on music” is the supplied main heading;
+Create sits above it as a small label outside normal flow. The mixer image moves
+higher on desktop. Mobile retains the original collage, with the separate label
+clear of the photographs. Watch's contour remains independent.

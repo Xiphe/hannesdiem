@@ -1,5 +1,5 @@
 // THROWAWAY: share the current fitted material between fact studies.
-export function mountReadingMaterial(section, sourceMaterial) {
+export function mountReadingMaterial(section, sourceMaterial, contour) {
   // Keep Visit's colours, but give this reading surface a broader, softer
   // fragment contour. Round the geometry itself, not just the outline stroke.
   const copyTile = section.querySelector('.watch-copy-tile')
@@ -11,7 +11,8 @@ export function mountReadingMaterial(section, sourceMaterial) {
     .querySelector('path')
     .setAttribute(
       'd',
-      'M135 70C80 44 38 64 36 124C18 370 40 626 18 858Q12 925 80 935C350 958 580 972 854 986Q922 994 930 926C950 686 966 418 984 166Q991 95 920 108C648 162 400 164 135 70Z',
+      contour ??
+        'M135 70C80 44 38 64 36 124C18 370 40 626 18 858Q12 925 80 935C350 958 580 972 854 986Q922 994 930 926C950 686 966 418 984 166Q991 95 920 108C648 162 400 164 135 70Z',
     )
   const gradient = material.querySelector('linearGradient')
   const oldId = gradient.id
