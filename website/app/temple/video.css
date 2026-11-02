@@ -11,7 +11,7 @@
 }
 .temple-video-layout {
   display: grid;
-  gap: 8px;
+  gap: 0;
   max-width: max(360px, calc(74svh * var(--video-aspect)));
   margin-inline: auto;
 }
@@ -52,11 +52,11 @@
 }
 .temple-video-description {
   position: relative;
-  padding: 20px 28px 28px;
+  padding: 8px 28px 20px;
   max-width: 45ch;
   color: light-dark(#5d5046, #bdb2a5);
   font:
-    400 clamp(17px, 1.3vw, 20px)/1.65 ui-sans-serif,
+    400 clamp(15px, 1.1vw, 16px)/1.55 ui-sans-serif,
     system-ui,
     sans-serif;
 }
@@ -93,7 +93,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  border-radius: 12px;
+  border-radius: 5px;
   overflow: hidden;
 }
 @media (prefers-reduced-motion: reduce) {

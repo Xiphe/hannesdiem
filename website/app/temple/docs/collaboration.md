@@ -527,3 +527,8 @@ Watch piece underneath the rounded video. Cloudflare's official player API
 provides playback events, so retain the current player and its controls. Keep the
 permalink and exact supplied wording. This supersedes the separate-heading
 interpretation above; local review only.
+
+**Compact recording description — 2026-11-03.** Artist asks for the description
+even closer and smaller. Remove the grid gap, reduce its top padding to 8px,
+and use 15–16px copy with 1.55 line height. Match the video corners to the
+content images’ 5px radius. Keep the existing piece and wording.
