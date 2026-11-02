@@ -47,6 +47,7 @@ export function createGroundMotion(
         top,
         height: refrainStage.offsetHeight,
         length: Math.max(0, section.height - refrainStage.offsetHeight),
+        final: refrain.parentElement!.classList.contains('final-refrain'),
       }
     })
     // Reserve the middle of each chorus hold, letting the sculpture reach
@@ -70,10 +71,18 @@ export function createGroundMotion(
         )
         if (Math.min(end, start) > cursor)
           available.push({ start: cursor, end: Math.min(end, start) })
-        cursor = Math.max(
-          cursor,
-          (1 - depth) * (hold.start + hold.length * 0.65) + hold.top + hold.height - origin + 64,
-        )
+        // The ending stays held. Its empty ground continues to the document
+        // end rather than resuming underneath the final phrase.
+        cursor = hold.final
+          ? Infinity
+          : Math.max(
+              cursor,
+              (1 - depth) * (hold.start + hold.length * 0.65) +
+                hold.top +
+                hold.height -
+                origin +
+                64,
+            )
       }
       if (cursor < end) available.push({ start: cursor, end })
       if (bridgeStart === undefined) return available

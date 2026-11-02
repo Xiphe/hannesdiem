@@ -2373,5 +2373,10 @@ for (const width of [390, 1440]) {
         }),
       )
       .toBe(true)
+    // The closing chorus has no departure: its ground must stay empty all the
+    // way to the document end, including below the centred final phrase.
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+    await expect(chorus).toHaveAttribute('data-active', '3')
+    await expect.poll(visiblePieces).toBe(0)
   })
 }
