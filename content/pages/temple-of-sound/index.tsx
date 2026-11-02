@@ -47,7 +47,7 @@ export const firstPair = {
 export const secondPair = {
   paragraphs: [
     [
-      { text: "Yet I'm in deep hurt and grief over" },
+      { text: "Oh I'm in deep hurt and grief over" },
       { text: 'mankind and earth.', face: 'cinzel', smallLines: ['mankind', 'and earth.'] },
     ],
     [
