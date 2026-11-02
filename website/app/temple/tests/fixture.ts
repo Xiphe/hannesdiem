@@ -70,6 +70,7 @@ function fixtureContent(
   bridgeBody?: PoemOpeningProps['bridgeBody'],
   location?: PoemOpeningProps['location'],
   navigation?: PoemOpeningProps['navigation'],
+  finalVerse?: PoemOpeningProps['finalVerse'],
 ): CmxDocument['content'] {
   return {
     title: 'Temple of Sound',
@@ -93,16 +94,21 @@ function fixtureContent(
             ...(bridgeBody ? { bridgeBody } : {}),
             ...(location ? { location } : {}),
             ...(navigation ? { navigation } : {}),
+            ...(finalVerse ? { finalVerse } : {}),
           },
-          children: [
-            { type: 'element', tag: 'p', children: ['Static verse fixture'] },
-            {
-              type: 'element',
-              tag: 'a',
-              props: { href: '/fixture' },
-              children: ['Return to fixture'],
-            },
-          ],
+          ...(finalVerse?.refrain
+            ? {}
+            : {
+                children: [
+                  { type: 'element', tag: 'p', children: ['Static verse fixture'] },
+                  {
+                    type: 'element',
+                    tag: 'a',
+                    props: { href: '/fixture' },
+                    children: ['Return to fixture'],
+                  },
+                ],
+              }),
         },
       ],
     },
@@ -110,6 +116,38 @@ function fixtureContent(
 }
 export const templeContent = fixtureContent()
 export const multipleTempleContent = fixtureContent([firstPair, secondPair])
+const finalVerse = {
+  intro: [{ text: 'Synthetic final verse introduction.' }],
+  phrases: [[{ text: 'Synthetic lead-in.' }, { text: 'A highlight', face: 'cinzel' }]],
+  rise: ['Soft sample,', 'Another sample,', 'Third sample,', 'An ending synthetic call'],
+  drop: 'A small synthetic sentence\nfollows the accumulated calls\nand finishes on a third row.',
+  refrain: [
+    { text: 'A first closing phrase', display: 'A first closing phrase', face: 'cinzel' },
+    { text: 'A second closing phrase', display: 'A second closing phrase', face: 'cinzel' },
+    {
+      text: 'A synthetic WIDEMEASUREMENT phrase for a narrow screen',
+      display: 'A SYNTHETIC WIDEMEASUREMENT PHRASE FOR A NARROW SCREEN',
+      face: 'unbounded',
+    },
+    { text: 'The closing phrase', display: 'The closing phrase', face: 'cinzel' },
+  ],
+} satisfies NonNullable<PoemOpeningProps['finalVerse']>
+export const riseTempleContent = fixtureContent(
+  [firstPair],
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  finalVerse,
+)
+export const bridgeFinaleTempleContent = fixtureContent(
+  [firstPair],
+  [[{ text: 'A synthetic bridge introduction.' }]],
+  ['A synthetic reading paragraph stays clear of the sculpture. '.repeat(12).trim()],
+  undefined,
+  undefined,
+  finalVerse,
+)
 const { action: _action, ...actionlessPair } = firstPair
 export const actionlessTempleContent = fixtureContent([actionlessPair, secondPair])
 const fixtureLocation = {
@@ -143,8 +181,14 @@ export const navigationTempleContent = fixtureContent(
   fixtureLocation,
   [
     { label: 'First target', href: '#facts' },
-    { label: 'Second target' },
-    { label: 'Third target' },
+    {
+      label: 'Second target',
+      verseBefore: { label: 'First fixture verse', href: '#verse-fixture-pair-1' },
+    },
+    {
+      label: 'Third target',
+      verseBefore: { label: 'Second fixture verse', href: '#verse-fixture-pair-2' },
+    },
     { label: 'Fourth target' },
     { label: 'Fifth target' },
     { label: 'Sixth target' },

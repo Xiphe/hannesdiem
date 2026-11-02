@@ -47,7 +47,8 @@ export function mountFragmentGround(
   host.addEventListener(groundMaterialEvent, motion.resize, { signal })
   const observer = new ResizeObserver(motion.resize)
   observer.observe(host)
-  for (const bridge of host.querySelectorAll('.bridge-copy, .bridge-body')) observer.observe(bridge)
+  for (const section of host.querySelectorAll('.bridge-copy, .bridge-body, .final-verse'))
+    observer.observe(section)
   for (const { refrain, refrainStage } of refrains) {
     observer.observe(refrain)
     observer.observe(refrainStage)

@@ -1,4 +1,9 @@
-import type { PoemPair, PoemLine, PoemLocation } from '@hannesdiem/content-components'
+import type {
+  PoemPair,
+  PoemLine,
+  PoemLocation,
+  PoemOpeningProps,
+} from '@hannesdiem/content-components'
 export type LocationProps = Omit<PoemLocation, 'image'> & {
   id: string
   image: { src: string; srcSet?: string; width: number; height: number }
@@ -7,7 +12,7 @@ export type LocationProps = Omit<PoemLocation, 'image'> & {
 export interface OpeningProps {
   id: string
   mark: string
-  navigation?: readonly { label: string; href?: string }[]
+  navigation?: PoemOpeningProps['navigation']
   location?: LocationProps
   pair?: PoemPair
   pairs?: readonly PoemPair[]
@@ -15,6 +20,7 @@ export interface OpeningProps {
   bridgeBody?: readonly (
     string | { text: string; wideBreaksAfter?: readonly string[]; linger?: string }
   )[]
+  finalVerse?: PoemOpeningProps['finalVerse']
   title: string
   dates: { start: string; end: string }
   image: { src: string; width: number; height: number }

@@ -1,6 +1,6 @@
 # Temple of Sound
 
-The opener, location invitation, first three verse/refrain pairs and bridge render through the regular CMX document and Remix island at `/temple-of-sound`. Unpublished source material remains in `content/pages/temple-of-sound/_draft.tsx` and are not published.
+The opener, location invitation, first three verse/refrain pairs, bridge and final verse/chorus render through the regular CMX document and Remix island at `/temple-of-sound`. Authored wording and selected display casing live in `content/pages/temple-of-sound/index.tsx`.
 
 CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `tests/`; fonts/favicon: `assets/`.
 
@@ -8,6 +8,7 @@ CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `te
 
 - `location/` renders the accepted location invitation immediately after the opener. Its copy and room photo live in the CMX content module; the shared Opening task owns its map enhancement. See [location implementation](location/README.md). The retired standalone study is archived at `b8e61ec`; no prototype server or duplicated artwork ships.
 
+- `verse-rise.ts` fits the final verse’s widening Cinzel calls and their native entry timelines. `verse-drop.tsx` assembles the small three-line drop in a shared sticky stage before native release. The final chorus reuses `Refrain`, has a longer scroll runway and ends with its last phrase held at the page boundary. No tuning controls ship.
 - `repetition.ts` coordinates the third verse’s centred statements, delayed reflections and compact50/50 handoffs. Fit-time keyframes share the collision model and use native view timelines for movement, reflection opacity and entry, so delayed scene frames cannot leave the bumped block behind. Resolve positions together to maintain8px separation; no compression. Resize rebuilds the timelines; reduced motion and unavailable timelines retain the frame-driven sticky fallback. Navigation cancels all owned animations.
 - `content/pages/temple-of-sound/index.tsx` owns the typed verse/refrain pairs, including display casing and font roles. The unpublished draft reuses it. The browser never imports content modules or CMX runtime.
 - `poem.tsx` resolves the immutable1920px media variant and passes serializable data to `Opening`. `first-pair.tsx` renders native paragraphs and selectable source text; no duplicated authored copy or workbench controls.
@@ -39,3 +40,34 @@ The first pair now supports an optional typed `action`; the selected [fragment b
 For the third-pair diagnostic, use `REPETITION=true TEMPLE_URL=http://localhost:8791/temple-four-phrases WIDTH=390 HEIGHT=900 node website/app/temple/debug/scroll.mjs`. It sweeps the complete repetition and counts its per-frame layout reads. Add `NATIVE_TIMELINES=false` to compare the frame-driven fallback, or `ENGINE=webkit` for WebKit. Frame budgets remain software-browser measurements.
 
 The optional `PoemOpening.navigation` renders the page navigation. Enhancement fixes it to the top as soon as the native sticky opener begins moving upwards; reverse scroll hides it again. Without JavaScript it remains a native sticky header after the opener. The artist supplies its ordered labels and available destinations in CMX content. Unbuilt facts have no link destination yet. The labels share the verse font and colour-cloud field through `copy-colour.ts`. The left wordmark uses `top-navigation-artwork.ts`, sharing `createTypeSurface` and the existing scene clock/material; it does not mount another forest simulation. Native text remains the accessible source and failure/print fallback. Narrow screens keep the complete item row horizontally scrollable. The normal logo invokes the existing navigation dialog through Chrome, including lazy newsletter state, keyboard dismissal and focus restoration. No duplicate main menu is created.
+
+Navigation separators reuse seeded fragment contours as small SVGs. A navigation
+item's optional `verseBefore: { label, href }` makes its preceding piece a native
+link to that poem section. Pair IDs are `${opening.id}-pair-${index + 1}`.
+Facts retain their own `href`; add it when the actual section exists.
+
+The 2px progress line starts at the first fact label. `top-navigation-progress.ts`
+starts each scene when its first foreground paint reaches the viewport bottom,
+including raised photographs and irregular tile material. `data-nav-visual`
+marks those elements; `data-nav-clip` bounds clipped material. SVG contours are
+measured inside the viewport's horizontal edges, so an offscreen corner does not
+announce the scene early. Measurements include the initial hidden loading phase.
+Facts fill their word's width; verses fill the entire gap between neighbouring
+words, with their piece midway along that span. Each interval interpolates over
+its actual scroll length until the next scene starts. The final implemented section advances to the next
+pending fact and stops there, leaving future facts unmapped. Production connects Visit and the first pair, stopping at the pending Watch label.
+Further facts and verse markers can be connected through their content metadata;
+late section insertion and link updates are detected automatically.
+
+Native `ScrollTimeline` keyframes carry these measured offsets where supported;
+otherwise a passive, RAF-coalesced fallback interpolates cached geometry.
+Observers rebuild only on relevant layout/target changes, not on every scroll.
+Everything disconnects on abort, with no idle clock. Synthetic checks exercise
+raised scene entries, horizontally clipped SVG paint, complete verse gaps,
+clickable verse pieces, forward/reverse travel, late insertion and changed
+section height in both paths.
+
+Text-link hover and keyboard focus use the progress palette. Separator slots
+cover the complete word-to-word gap; hovering a slot enlarges only its piece,
+preserving spacing. The travelling highlight was rejected at `e99226f`; the bar
+shows reading progress alone; the extra hover effect is parked.

@@ -321,7 +321,7 @@ export function createTypeSurface(
     scrolling = false,
   ) {
     const rect = canvas.getBoundingClientRect()
-    if (rect.bottom < 0 || rect.top > frame.bounds.height || rect.width === 0) return false
+    if (rect.bottom < 0 || rect.top > innerHeight || rect.width === 0) return false
     const a = layers[index],
       b = layers[next]
     if (!a || !b) return false

@@ -2,13 +2,15 @@ import { bridgeText } from './bridge-text.tsx'
 import { ref, type Handle } from 'remix/component'
 import { ArrowDownIcon } from '../heroicons.tsx'
 import { mountArtwork } from './artwork.ts'
-import { FirstPair, Phrase } from './first-pair.tsx'
+import { FirstPair, Phrase, Refrain } from './first-pair.tsx'
+import { VerseDrop } from './verse-drop.tsx'
 import type { OpeningProps } from './types.ts'
 import { Location } from './location/view.tsx'
 import { mountLocation } from './location/enhance.ts'
 import { TopNavigation } from './top-navigation.tsx'
 import { mountNavigationPosition } from './top-navigation-position.ts'
 import { mountNavigationScroll } from './top-navigation-scroll.ts'
+import { mountNavigationProgress } from './top-navigation-progress.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
@@ -16,6 +18,7 @@ export function Opening(handle: Handle<OpeningProps>) {
     if (!root || signal.aborted) return
     const host = root
     mountNavigationPosition(host, signal)
+    mountNavigationProgress(host, signal)
     mountNavigationScroll(host, signal)
     const controller = new AbortController()
     signal.addEventListener('abort', () => controller.abort(), { once: true })
@@ -49,7 +52,8 @@ export function Opening(handle: Handle<OpeningProps>) {
     }
   })
   return () => {
-    const { title, dates, image, pair, pairs, bridge, bridgeBody, location } = handle.props
+    const { title, dates, image, pair, pairs, bridge, bridgeBody, location, finalVerse } =
+      handle.props
     const format = (date: string) =>
       new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
         new Date(date + 'T12:00:00Z'),
@@ -105,6 +109,7 @@ export function Opening(handle: Handle<OpeningProps>) {
             {location && <Location {...location} />}
             {(pairs ?? (pair ? [pair] : [])).map((pair, index) => (
               <FirstPair
+                id={`${handle.props.id}-pair-${index + 1}`}
                 pair={pair}
                 index={index}
               />
@@ -137,6 +142,53 @@ export function Opening(handle: Handle<OpeningProps>) {
                   </p>
                 ))}
               </section>
+            )}
+            {finalVerse && (
+              <>
+                <div class="final-pair">
+                  <section
+                    class="verse-copy final-verse"
+                    data-has-refrain={finalVerse.refrain ? '' : undefined}
+                  >
+                    <p class="final-verse-intro">
+                      <Phrase
+                        lines={finalVerse.intro}
+                        firstStatic
+                      />
+                    </p>
+                    {finalVerse.phrases.map((lines) => (
+                      <p class="final-verse-phrase">
+                        <Phrase lines={lines} />
+                      </p>
+                    ))}
+                    <div class="verse-finale">
+                      <div class="verse-finale-stage">
+                        {finalVerse.rise && (
+                          <div class="final-verse-rise verse-rise">
+                            {finalVerse.rise.map((line, index) => (
+                              <p
+                                class="rise-call"
+                                style={{
+                                  '--rise-index': index,
+                                  '--rise-delay': `${100 * (1 - 0.128 / (0.65 * 1.6 ** index))}%`,
+                                }}
+                              >
+                                <span class="rise-call-ink">{line}</span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        {finalVerse.drop && <VerseDrop text={finalVerse.drop} />}
+                      </div>
+                    </div>
+                  </section>
+                </div>
+                {finalVerse.refrain && (
+                  <div class="final-refrain">
+                    <Refrain phrases={finalVerse.refrain} />
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

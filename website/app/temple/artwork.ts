@@ -1,4 +1,6 @@
 import { createBridgeLinger } from './bridge-linger.ts'
+import { fitVerseRise } from './verse-rise.ts'
+import { fitVerseDrop } from './verse-drop.tsx'
 import { createBridgeCloud } from './bridge-cloud.ts'
 import { createBridgePages } from './bridge-pages.ts'
 import { createRepetition } from './repetition.ts'
@@ -63,6 +65,7 @@ export async function mountArtwork(
   const refrains = [...host.querySelectorAll<HTMLElement>('.refrain-composition')].map(
     (refrain) => ({
       refrain,
+      final: refrain.parentElement!.classList.contains('final-refrain'),
       refrainStage: refrain.querySelector<HTMLElement>('.refrain-stage')!,
       phrases: [...refrain.querySelectorAll<HTMLElement>('.refrain-phrase')],
       ink: undefined as ReturnType<typeof createTypeSurface> | undefined,
@@ -83,6 +86,8 @@ export async function mountArtwork(
   mountFragmentGround(host, refrains, abort.signal)
   const fitBlocks = blockType(poem, abort.signal)
   const repetition = createRepetition(poem, abort.signal)
+  const fitRise = fitVerseRise(poem, abort.signal)
+  const fitDrop = fitVerseDrop(poem, abort.signal)
   const bridgePages = createBridgePages(poem, abort.signal)
   const bridgeLinger = createBridgeLinger(poem, abort.signal)
   const bridgeGround = document.createElement('div')
@@ -90,7 +95,6 @@ export async function mountArtwork(
   bridgeGround.ariaHidden = 'true'
   const bridgeBody = poem.querySelector<HTMLElement>('.bridge-body')
   if (bridgeBody) host.appendChild(bridgeGround)
-  let bridgeCooling = -1
   const bridgeCloud = createBridgeCloud(bridgeBody, bridgeGround, abort.signal)
   abort.signal.addEventListener('abort', () => bridgeGround.remove(), { once: true })
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
@@ -138,7 +142,7 @@ export async function mountArtwork(
     return { left, right, top, bottom, width: right - left, height: bottom - top }
   }
   function fitRefrain() {
-    for (const { refrain, refrainStage, phrases } of refrains) {
+    for (const { refrain, refrainStage, phrases, final } of refrains) {
       const width = refrainStage.clientWidth * 0.9
       const maxHeight = innerHeight * 0.5
       for (const phrase of phrases) {
@@ -188,7 +192,14 @@ export async function mountArtwork(
         phrase.style.fontSize = `${size}px`
         for (let i = 0; i < 3; i++) {
           const content = phrase.querySelector<HTMLElement>('[data-ink]')!
-          const scale = Math.min(1, maxHeight / content.offsetHeight, width / content.scrollWidth)
+          const bounds = inkBounds(phrase)
+          // Inline spans report scrollWidth=0. Fit their native range and actual
+          // glyph ink so a long unbroken word cannot escape the canvas.
+          const scale = Math.min(
+            1,
+            maxHeight / Math.max(content.offsetHeight, bounds.height),
+            width / Math.max(content.getBoundingClientRect().width, bounds.width),
+          )
           if (scale >= 0.999) break
           phrase.style.fontSize = `${parseFloat(phrase.style.fontSize) * scale}px`
         }
@@ -196,6 +207,12 @@ export async function mountArtwork(
       const contentHeight =
         Math.max(...phrases.map((p) => Math.max(p.offsetHeight, inkBounds(p).height))) + 32
       refrain.style.setProperty('--refrain-height', `${contentHeight}px`)
+      if (final) {
+        // Match the stable svh viewport. Leave one CSS pixel before sticky
+        // release: integer scrollHeight can round past its fractional boundary.
+        const tail = Math.max(0, (stage.clientHeight - contentHeight) / 2 - 1)
+        refrain.parentElement!.style.setProperty('--refrain-end-space', `${tail}px`)
+      }
       const lastInkHeight = inkBounds(phrases[phrases.length - 1]).height
       refrain.parentElement!.style.setProperty(
         '--refrain-tail-gap',
@@ -208,6 +225,8 @@ export async function mountArtwork(
     fitBlocks()
     fitRefrain()
     repetition.resize(reduced.matches)
+    fitRise()
+    fitDrop()
     bridgePages.resize(reduced.matches)
     // WebKit settles native baseline probes after painting the newly fitted DOM.
     // Rebuilding masks immediately caches old baselines and clips later rows.
@@ -227,17 +246,6 @@ export async function mountArtwork(
         navigation?.resize()
       } else request()
     }
-    if (bridgeBody) {
-      const progress = Math.max(
-        0,
-        Math.min(1, 1 - bridgeBody.getBoundingClientRect().top / innerHeight),
-      )
-      const cooling = progress * progress * (3 - 2 * progress)
-      if (cooling !== bridgeCooling) {
-        bridgeGround.style.setProperty('--bridge-cooling', String(cooling))
-        bridgeCooling = cooling
-      }
-    }
     const scrolling = now - lastScroll < 140
     copyColour.draw(now, reduced.matches)
     repetition.draw(reduced.matches)
@@ -249,11 +257,13 @@ export async function mountArtwork(
       !appearance.matches,
     )
     activeFrame = navigation?.draw(now, frame) || activeFrame
-    for (const [chorusIndex, { refrain, refrainStage, ink }] of refrains.entries()) {
+    for (const [chorusIndex, { refrain, refrainStage, ink, final }] of refrains.entries()) {
       const transitions = timings[chorusIndex]
       const section = refrain.getBoundingClientRect()
-      if (section.bottom < 0 || section.top > frame.bounds.height) continue
-      const hold = section.height - refrainStage.offsetHeight
+      if (section.bottom < 0 || section.top > stage.clientHeight) continue
+      // Resolve the closing phrase before the guarded endpoint, including a
+      // further pixel for document-height rounding. Native sticky owns position.
+      const hold = section.height - refrainStage.offsetHeight - (final ? 2 : 0)
       const stickyTop = (stage.clientHeight - refrainStage.offsetHeight) / 2
       const position = Math.max(0, Math.min(1, (stickyTop - section.top) / hold))
       let index = 0,
@@ -302,6 +312,8 @@ export async function mountArtwork(
       fitBlocks()
       fitRefrain()
       repetition.resize(reduced.matches)
+      fitRise()
+      fitDrop()
       bridgePages.resize(reduced.matches)
       await settledLayout(abort.signal)
       if (abort.signal.aborted) return
@@ -342,6 +354,7 @@ export async function mountArtwork(
         () => {
           observer.disconnect()
           for (const { refrain, phrases } of refrains) {
+            refrain.parentElement!.style.removeProperty('--refrain-end-space')
             refrain.removeAttribute('data-ready')
             refrain.removeAttribute('data-active')
             refrain.style.removeProperty('--refrain-height')

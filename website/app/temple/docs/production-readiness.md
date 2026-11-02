@@ -61,12 +61,16 @@ Include the exact release boundary, `sticky top + stage height - track height`, 
 
 Validation: app build, root TypeScript, formatting,47 Node checks,94 Chromium checks and14 targeted WebKit checks pass. The original complete Chromium replay reports zero downward reversals across245 frames.
 
-## Chorus entry after Safari toolbar collapse, 2026-11-01
+## Withdraw the iOS chorus clipping fixes, 2026-11-02
 
-Artist reports chorus lettering clipped as it enters the taller iOS viewport after the toolbar collapses. The native chorus canvas and glyph mask contain the full phrase, but the shared material and visibility checks stop at the opener’s100svh stage. Consequently, visible glyphs below that boundary have no material to reveal.
+The artist explicitly requests undoing the fix completely and prefers the original iOS cut-off. Restore the chorus runtime and tests to0342ff8, before all three clipping-related changes:9f80698 (large viewport),fb858fb (ordinary-flow entry and full-canvas painting), andfb5b0bc (iOS Safari detection). Remove the detector and its tests. Preserve the earlier native repetition animation, release-nudge correction and accepted spacing changes.
 
-Keep the accepted opener crop, sticky centre and scroll timing tied to the stable small viewport. Extend the chorus material and escaped-light canvas to100lvh, and use those shared bounds when deciding which chorus masks to draw and paint. This prepares the exposed strip without reallocating the material as browser controls move. See [WebKit’s viewport-unit definitions](https://webkit.org/blog/12445/new-webkit-features-in-safari-15-4/).
+The iOS entry clipping is accepted for this release; no toolbar workaround remains active. The discarded approaches and their evidence remain in those commits’ history.
 
-The synthetic browser regression separates a700px small viewport from an844px visible viewport and uses an opaque image to compare painted glyphs with their mask. It checks chorus entry wholly below the small edge and straddling it. The original renderer fails; the corrected renderer passes in Chromium and WebKit. This emulates the geometry in desktop WebKit; physical iOS toolbar behaviour remains a device review.
+Validation: restored application files and tests match0342ff8 exactly. App build, formatting, both TypeScript checks,60 Node checks and7 targeted WebKit checks pass. The production workflow runs the complete website suite before deployment.
 
-Validation: build, both TypeScript checks, formatting and60 Node checks pass. All104 Chromium checks pass across the full and targeted runs; the desktop handoff sweep exceeded its30-second budget in the full run, then passed alone in34.2 seconds with a90-second limit. All13 targeted WebKit checks pass, including chorus rendering, multiple choruses, responsive rows and navigation cleanup.
+## Final verse release, 2026-11-02
+
+The artist requests deployment of the final verse, accelerating Cinzel rise, three-line drop and closing chorus. Publish the selected CMX wording and display casing; remove all tuning controls. Preserve main’s accepted fragment ground, withdrawn invitation action, native repetition movement and deliberately restored original Safari entry behavior during integration. Final chorus has78svh runway and ends at its centred last phrase. Its spacer uses the stable artwork viewport because mobile innerHeight can expand transiently during initial overflowing font fit.
+
+Combined validation:60 website Node checks,13 content tooling checks, all118 Chromium cases (the long forward/reverse handoff replay passes alone after timing out under parallel load), and9 targeted WebKit rise/ending checks. Mark that324-frame replay slow without weakening its geometry assertions. Full build, website/content/root TypeScript, formatting and published CMS compatibility checks pass. Omit absent fixture children instead of emitting undefined so signed-publication checks remain strict JSON. Physical Safari browser chrome remains outside headless emulation coverage.
