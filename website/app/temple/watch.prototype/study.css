@@ -1,28 +1,70 @@
-/* THROWAWAY. Compare composition, not a selected Watch design. */
+/* THROWAWAY. Develop the artist-selected Alongside composition. */
 .watch-study {
   --watch-ink: light-dark(#2c2721, #e1d9ce);
   --watch-copy: light-dark(#5d5046, #bdb2a5);
   position: relative;
   z-index: 3;
   color: var(--watch-ink);
-  margin: -6svh 0 14svh;
+  margin: -6svh 0 30svh;
   padding: 7svh clamp(24px, 5vw, 100px) 8svh;
   scroll-margin-top: 90px;
 }
-.watch-heading h2 {
+.watch-copy-tile {
+  position: relative;
+  z-index: 0;
+  padding: 24px 28px 36px;
+}
+.watch-pictures {
+  position: relative;
+  z-index: 2;
+}
+.watch-copy-tile > :not(.watch-material) {
+  position: relative;
+  z-index: 2;
+}
+.watch-material {
+  fill: none;
+}
+.watch-action {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding-top: clamp(24px, 4svh, 48px);
+}
+.watch-action p {
+  margin: 0;
+  color: var(--watch-copy);
+  font:
+    400 clamp(15px, 1.2vw, 18px)/1.6 ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+.watch-visit-heading {
+  position: absolute;
+  z-index: 3;
+  margin: 0;
+  color: var(--watch-ink, light-dark(#2c2721, #e1d9ce));
   font:
     700 clamp(38px, 4vw, 64px)/1.1 CinzelDecorative,
     serif;
-  margin: 0 0 24px;
 }
-.watch-heading > p {
-  margin: 0;
-  max-width: 36ch;
-  font:
-    450 clamp(20px, 1.9vw, 28px)/1.4 ui-sans-serif,
-    system-ui,
-    sans-serif;
-  text-wrap: pretty;
+/* Preserve the second verse's existing spacing across the inserted fact. */
+.watch-study + .first-pair {
+  margin-top: 0;
+  padding-top: 0;
+}
+.watch-study + .first-pair .verse-copy {
+  --ink-gap: clamp(12px, 1.8vw, 18px);
+}
+.watch-study + .first-pair .verse-copy p + p {
+  margin-top: clamp(40px, 5vw, 64px);
+}
+.watch-study + .first-pair .block-row + .block-row {
+  margin-top: clamp(8px, 1.2vw, 12px);
 }
 .watch-pictures figure {
   margin: 0;
@@ -46,6 +88,10 @@
   margin: 0;
   text-wrap: pretty;
 }
+.watch-fragments p[data-fragment='0'] {
+  font-weight: 600;
+  color: var(--watch-ink);
+}
 .watch-fragments [hidden] {
   display: none;
 }
@@ -66,21 +112,21 @@
 .watch-study[data-variant='A'] {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
   column-gap: clamp(40px, 7vw, 112px);
   row-gap: 36px;
   align-items: start;
 }
-[data-variant='A'] .watch-heading {
+[data-variant='A'] .watch-copy-tile {
   grid-column: 2;
   grid-row: 1;
 }
 [data-variant='A'] .watch-pictures {
   grid-column: 1;
-  grid-row: 1 / 4;
+  grid-row: 1;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  padding-top: 8svh;
+  margin-top: -5svh;
 }
 [data-variant='A'] .watch-daylight {
   grid-column: 1 / 10;
@@ -98,74 +144,15 @@
   aspect-ratio: 1.6;
 }
 [data-variant='A'] .watch-fragments {
-  grid-column: 2;
-  grid-row: 2;
   max-width: 50ch;
 }
 [data-variant='A'] .watch-fragments p:not([hidden]) ~ p:not([hidden]) {
   margin-top: 1.35em;
 }
 [data-variant='A'] .watch-action {
-  grid-column: 2;
-  grid-row: 3;
+  grid-column: 1 / -1;
+  grid-row: 2;
   align-self: start;
-}
-/* B: the media holds a wide stage, then all fragments read beneath it. */
-.watch-study[data-variant='B'] {
-  display: flex;
-  flex-direction: column;
-}
-[data-variant='B'] .watch-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 40px;
-  margin-bottom: 36px;
-}
-[data-variant='B'] .watch-heading h2 {
-  margin: 0;
-}
-[data-variant='B'] .watch-heading > p {
-  max-width: 40ch;
-  font-size: clamp(19px, 1.5vw, 23px);
-}
-[data-variant='B'] .watch-pictures {
-  display: grid;
-  grid-template-columns: 1.8fr 1fr;
-  height: clamp(300px, 42vw, 560px);
-  gap: 12px;
-  order: 1;
-}
-[data-variant='B'] .watch-fire {
-  grid-column: 1;
-  grid-row: 1;
-}
-[data-variant='B'] .watch-daylight {
-  grid-column: 2;
-  grid-row: 1;
-}
-[data-variant='B'] .watch-daylight img {
-  object-position: 56% 50%;
-}
-[data-variant='B'] .watch-fragments {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(30px, 5vw, 80px);
-  margin-top: 40px;
-  order: 2;
-}
-[data-variant='B'] .watch-fragments[data-count='2'] {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-width: 90ch;
-}
-[data-variant='B'] .watch-fragments[data-count='1'] {
-  grid-template-columns: 1fr;
-  max-width: 55ch;
-}
-[data-variant='B'] .watch-action {
-  order: 3;
-  align-self: center;
-  margin-top: 44px;
 }
 .watch-review {
   position: fixed;
@@ -200,11 +187,6 @@
   padding: 5px 10px;
   border-radius: 4px;
   font: inherit;
-}
-.watch-review-variants {
-  display: flex;
-  gap: 10px;
-  align-items: center;
 }
 .watch-review output {
   min-width: 112px;
@@ -258,21 +240,9 @@
   [data-variant='A'] .watch-action {
     align-self: center;
   }
-  [data-variant='B'] .watch-heading {
-    display: block;
-    margin-bottom: 28px;
-  }
-  [data-variant='B'] .watch-heading h2 {
-    margin-bottom: 20px;
-  }
-  [data-variant='B'] .watch-pictures {
-    height: 44svh;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
-  [data-variant='B'] .watch-fragments {
-    grid-template-columns: 1fr !important;
-    gap: 24px;
-    margin-top: 28px;
+}
+@media (max-width: 640px) {
+  .watch-study + .first-pair [data-shape='sweep'] .block-row + .block-row {
+    margin-top: 0;
   }
 }

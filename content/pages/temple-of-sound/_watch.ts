@@ -1,6 +1,5 @@
 // Artist-supplied working material. Not included in the published page.
-export const watchIntroduction =
-  'Thoughts, Songs, Improvisation and Meditation here on this website.'
+export const watchActionContext = "I'll drop new content here regularly"
 
 export const watchFragments = [
   'I invite a turning point in the way I relate to the parts of me that so long have been fractured and disconnected though living in the same human body.',

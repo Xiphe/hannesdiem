@@ -1,10 +1,10 @@
-// THROWAWAY: compare Watch compositions inside the accepted page, ?variant=A|B.
+// THROWAWAY: develop Alongside inside the accepted page, ?variant=A.
 // Proxy the running CMX page; none of this enters the website's build or publication.
 import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import {
   watchFragments,
-  watchIntroduction,
+  watchActionContext,
 } from '../../../../content/pages/temple-of-sound/_watch.ts'
 
 const upstream = process.env.TEMPLE_PREVIEW ?? 'http://127.0.0.1:8791'
@@ -21,7 +21,7 @@ createServer(async (request, response) => {
       if (name === 'material.js') {
         response.setHeader('Content-Type', 'text/javascript')
         response.end(
-          `export const fragments = ${JSON.stringify(watchFragments)}; export const introduction = ${JSON.stringify(watchIntroduction)};`,
+          `export const fragments = ${JSON.stringify(watchFragments)}; export const actionContext = ${JSON.stringify(watchActionContext)};`,
         )
       } else if (name === 'study.js' || name === 'study.css') {
         response.setHeader('Content-Type', name.endsWith('.js') ? 'text/javascript' : 'text/css')

@@ -1,15 +1,17 @@
 # Watch composition study — throwaway
 
-Question: how should placeholder media and the artist's personal invitation
-share a section? Two compositions in the real `/temple-of-sound` page:
+The artist selected Alongside: a photographic spread beside a continuous reading
+column. The original two-way comparison is recoverable at `7212ac6` on this branch.
+Develop this composition in the real `/temple-of-sound` page, after the complete
+first verse/refrain pair. A cloned Visit material sits behind the text; images
+arrive higher and the centred CTA follows both columns. Visit receives a heading
+above its map. Preserve the second verse's original typography across the inserted
+section and leave more space before it.
 
-- `?variant=A#watch`: a photographic spread beside a continuous reading column.
-- `?variant=B#watch`: a wide media stage, then parallel text fragments beneath it.
-
-Both retain the three supplied fragments verbatim. The review bar toggles their
-presence without committing to a text selection. Left/right keys switch studies;
-H hides the bar. The notification button is a visual placeholder; it does not
-enrol anyone in the existing general newsletter.
+All three supplied fragments remain verbatim. The review bar toggles their
+presence without committing to a text selection; H hides the bar. The notification
+button is a visual placeholder; it does not enrol anyone in the general newsletter.
+The artist supplied its context: “I'll drop new content here regularly”.
 
 Run the normal preview on8791, then `npm run prototype:temple-watch`. Open
 `http://localhost:8793/temple-of-sound?variant=A#watch` (`sand tunnel 8793`).
@@ -19,7 +21,10 @@ Original placeholder images live in `content/media/tos2.jpg` and `tos4.jpg`;
 source copy lives in `content/pages/temple-of-sound/_watch.ts`. No crop or watermark
 is written back to either image.
 
-Phase: Expansion. Images are placeholders for future content, not symbols to
-interpret. Layout, fragment selection, placement and signup remain unselected.
-Watch is temporarily placed after Visit to compare the facts together. Neither
-this placement nor these studies approve changing the poem or publishing Watch.
+Images are placeholders for future content, not symbols to interpret. Alongside
+and placement after the first pair are artist choices; fragment inclusion and
+signup remain open. For the headline, follow the artist's invitation to try none
+and give the first paragraph slightly more weight. They describe intimate access
+to an existing creative process, laid-back and humble, without overselling it.
+Assistant-written headline candidates were rejected; use the making-art skill
+to moderate their own wording. No publication approval.
