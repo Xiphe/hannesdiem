@@ -129,12 +129,16 @@ const mount = () => {
   visitHeading.className = 'watch-visit-heading'
   visitHeading.textContent = 'Visit'
   mapFlight.append(visitHeading)
+  const photograph = section.querySelector('.watch-daylight')
   const layout = () => {
-    const scaleX = copyTile.offsetWidth / (clear.width * cellWidth)
+    const photoRight =
+      photograph.getBoundingClientRect().right - section.getBoundingClientRect().left
+    const reach = innerWidth > 760 ? Math.max(0, copyTile.offsetLeft - photoRight + 24) : 0
+    const scaleX = (copyTile.offsetWidth + reach) / (clear.width * cellWidth)
     const scaleY = copyTile.offsetHeight / (clear.height * cellHeight)
     material.style.width = `${view.width * scaleX}px`
     material.style.height = `${view.height * scaleY}px`
-    material.style.left = `${copyTile.offsetLeft - clear.x * cellWidth * scaleX}px`
+    material.style.left = `${copyTile.offsetLeft - reach - clear.x * cellWidth * scaleX}px`
     material.style.top = `${copyTile.offsetTop - clear.y * cellHeight * scaleY}px`
     const mapBounds = visit.querySelector('.map-water').getBoundingClientRect()
     const flightBounds = mapFlight.getBoundingClientRect()
@@ -146,7 +150,7 @@ const mount = () => {
     }px`
   }
   const materialObserver = new ResizeObserver(layout)
-  for (const node of [copyTile, visitHeading, visit.querySelector('.location-map')]) {
+  for (const node of [copyTile, photograph, visitHeading, visit.querySelector('.location-map')]) {
     materialObserver.observe(node)
   }
   layout()
