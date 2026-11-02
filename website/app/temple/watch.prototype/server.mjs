@@ -6,6 +6,7 @@ import {
   watchFragments,
   watchActionContext,
 } from '../../../../content/pages/temple-of-sound/_watch.ts'
+import { createCopy } from '../../../../content/pages/temple-of-sound/_create.ts'
 
 const upstream = process.env.TEMPLE_PREVIEW ?? 'http://127.0.0.1:8791'
 const port = Number(process.env.WATCH_PORT ?? 8793)
@@ -21,13 +22,20 @@ createServer(async (request, response) => {
       if (name === 'material.js') {
         response.setHeader('Content-Type', 'text/javascript')
         response.end(
-          `export const fragments = ${JSON.stringify(watchFragments)}; export const actionContext = ${JSON.stringify(watchActionContext)};`,
+          `export const fragments = ${JSON.stringify(watchFragments)}; export const actionContext = ${JSON.stringify(watchActionContext)}; export const createCopy = ${JSON.stringify(createCopy)};`,
         )
-      } else if (name === 'study.js' || name === 'study.css') {
+      } else if (['study.js', 'study.css', 'create.js', 'reading-material.js'].includes(name)) {
         response.setHeader('Content-Type', name.endsWith('.js') ? 'text/javascript' : 'text/css')
         response.end(await readFile(new URL(name, local)))
-      } else if (name === 'tos2.jpg' || name === 'tos4.jpg') {
-        response.setHeader('Content-Type', 'image/jpeg')
+      } else if (
+        [
+          'tos2.jpg',
+          'tos4.jpg',
+          'tos.jpg',
+          'mixing-scene-one-week-retreat-1803-2fadbcefea805a0a.webp',
+        ].includes(name)
+      ) {
+        response.setHeader('Content-Type', name.endsWith('.webp') ? 'image/webp' : 'image/jpeg')
         response.end(await readFile(new URL(`content/media/${name}`, root)))
       } else {
         response.writeHead(404).end()

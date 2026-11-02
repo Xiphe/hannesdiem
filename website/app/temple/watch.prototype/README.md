@@ -1,4 +1,4 @@
-# Watch composition study — throwaway
+# Watch and Create studies — throwaway
 
 The artist selected Alongside: a photographic spread beside a continuous reading
 column. The original two-way comparison is recoverable at `7212ac6` on this branch.
@@ -44,3 +44,21 @@ The artist then requested a less geometric form with rounder corners. The curren
 trial uses gently bowed sides and a shallow inward upper curve, with rounded
 geometry instead of relying on the inherited outline stroke. The existing
 interior fitting and background boundary still apply; Visit's shape is unchanged.
+
+## Create — initial material in context
+
+`http://localhost:8793/temple-of-sound?variant=A#create` shows the artist's third
+fact. Source copy, including the tooltip note, lives verbatim in unpublished
+`content/pages/temple-of-sound/_create.ts`. The requested `tos.jpg` and exact
+`mixing-scene-one-week-retreat-1803-2fadbcefea805a0a.webp` are in `content/media/`.
+
+Working choices for review: place Create after the second verse/refrain pair,
+reuse the current text material and typography, and overlap the mixing image on
+the portrait while retaining its gesture. The earlier “let's talk” action opens
+the supplied sound@hannesdiem.de address. No new prose or publication approval.
+
+“steal*” opens the supplied italic note on hover, keyboard focus or tap; Escape,
+blur and outside taps dismiss it. The native popover escapes the material clip.
+The Create navigation item reaches the section. The material fitting is shared
+in `reading-material.js`, with independent gradient IDs, so
+adding the new fact preserves Watch's contour and placement.
