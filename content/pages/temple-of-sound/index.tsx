@@ -211,7 +211,7 @@ and **staying with you**, my child.`,
             'stomp the pulse,',
             'and scream out loud',
           ],
-          drop: "what it means\nto be loved so deeply that it's\nfrightening to tell anyone.",
+          drop: "what it means\nto be loved so fully that it's\nfrightening to tell anyone.",
           refrain: [
             { text: 'I am playful', display: 'i Am PlAYfUL', face: 'cinzel' },
             { text: 'I am inspired', display: 'I am INSpIRED', face: 'cinzel' },
