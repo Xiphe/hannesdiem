@@ -10,8 +10,9 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
         <a
           class="temple-nav-title"
           href={`#temple-top-${handle.props.id}`}
+          aria-label={handle.props.title}
         >
-          <span class="temple-nav-title-ink">{handle.props.title}</span>
+          <span class="temple-nav-title-ink">{handle.props.title.toUpperCase()}</span>
           <canvas aria-hidden="true" />
         </a>
         <div class="temple-nav-date">

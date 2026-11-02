@@ -44,6 +44,7 @@ for (const width of [390, 1440]) {
     await expect.poll(async () => (await header.boundingBox())!.y).toBeCloseTo(0, 0)
     await header.getByRole('link', { name: 'First target' }).click()
     await expect(page).toHaveURL(/#facts$/)
+    await expect(page.locator('.facts-grid')).toBeFocused()
     const box = (await header.boundingBox())!
     expect((await page.locator('.facts-grid').boundingBox())!.y).toBeGreaterThanOrEqual(
       box.height - 1,
@@ -251,4 +252,45 @@ test('header slides down from above and keeps its dates beneath the wordmark', a
     (await header.locator('.temple-nav-title').boundingBox())!.y +
       (await header.locator('.temple-nav-title').boundingBox())!.height,
   )
+})
+
+test('section links move slowly, allow interruption and retain native hash history', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/temple-navigation')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await page.evaluate(() => scrollTo(0, 240))
+  const link = page.locator('.temple-nav-items').getByRole('link', { name: 'First target' })
+  const before = await page.evaluate(() => scrollY)
+  await link.click()
+  await expect(page).toHaveURL(/#facts$/)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(before + 2)
+  await expect(page.locator('.facts-grid')).not.toBeFocused()
+  await page.mouse.wheel(0, 20)
+  await page.waitForTimeout(300)
+  const stopped = await page.evaluate(() => scrollY)
+  await page.waitForTimeout(1300)
+  expect(Math.abs((await page.evaluate(() => scrollY)) - stopped)).toBeLessThanOrEqual(1)
+  await expect(page.locator('.facts-grid')).not.toBeFocused()
+  const started = await page.evaluate(() => performance.now())
+  await link.click()
+  await expect(page.locator('.facts-grid')).toBeFocused()
+  expect((await page.evaluate(() => performance.now())) - started).toBeGreaterThanOrEqual(1000)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/temple-navigation$/)
+})
+
+test('reduced motion reaches the section synchronously', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/temple-navigation')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await page.evaluate(() => scrollTo(0, 240))
+  await expect(page.locator('.temple-top-navigation')).toBeVisible()
+  expect(
+    await page.locator('.temple-nav-items a[href]').evaluate((node) => {
+      ;(node as HTMLAnchorElement).click()
+      return document.activeElement === document.querySelector('.facts-grid')
+    }),
+  ).toBe(true)
 })

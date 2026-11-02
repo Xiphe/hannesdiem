@@ -8,6 +8,7 @@ import { Location } from './location/view.tsx'
 import { mountLocation } from './location/enhance.ts'
 import { TopNavigation } from './top-navigation.tsx'
 import { mountNavigationPosition } from './top-navigation-position.ts'
+import { mountNavigationScroll } from './top-navigation-scroll.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
@@ -15,6 +16,7 @@ export function Opening(handle: Handle<OpeningProps>) {
     if (!root || signal.aborted) return
     const host = root
     mountNavigationPosition(host, signal)
+    mountNavigationScroll(host, signal)
     const controller = new AbortController()
     signal.addEventListener('abort', () => controller.abort(), { once: true })
     host.dataset.state = 'loading'
