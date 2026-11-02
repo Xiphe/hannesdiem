@@ -63,15 +63,6 @@
     system-ui,
     sans-serif;
 }
-.create-section-label {
-  position: absolute;
-  z-index: 3;
-  margin: 0;
-  color: var(--watch-ink, light-dark(#2c2721, #e1d9ce));
-  font:
-    700 clamp(38px, 4vw, 64px)/1.1 CinzelDecorative,
-    serif;
-}
 /* Preserve the second verse's existing spacing across the inserted fact. */
 .watch-study + .first-pair {
   margin-top: 0;
@@ -223,13 +214,11 @@
   align-self: start;
 }
 /* Keep the portrait's gesture visible; the mixing image overlaps its lower side. */
-.create-study .create-section-label {
-  position: relative;
-  grid-column: 8 / -1;
-  grid-row: 1;
-  align-self: end;
-  justify-self: start;
-  margin: 0 0 20px 16px;
+.create-study {
+  --mixer-drop: clamp(24px, 4vw, 64px);
+}
+.create-study .watch-action {
+  padding-top: calc(12px + var(--mixer-drop));
 }
 .create-study .watch-heading {
   text-wrap: balance;
@@ -245,16 +234,9 @@
   grid-column: 5 / -1;
   grid-row: 2;
   margin-top: 0;
+  transform: translateY(var(--mixer-drop));
 }
 @media (max-width: 760px) {
-  .create-study .create-section-label {
-    position: absolute;
-    grid-column: auto;
-    grid-row: auto;
-    top: calc(100% + 16px);
-    left: 0;
-    margin: 0;
-  }
   .watch-study {
     padding-top: 0;
     scroll-margin-top: 144px;
@@ -285,14 +267,13 @@
     grid-template-rows: minmax(0, 1fr) auto;
     height: 114vw;
     max-height: 600px;
-    margin-bottom: 64px;
+    margin-bottom: var(--mixer-drop);
   }
   .create-study[data-variant='A'] .watch-daylight {
     aspect-ratio: auto;
   }
   .create-study[data-variant='A'] .watch-fire {
     aspect-ratio: 1.5;
-    transform: none;
   }
 }
 @media (max-width: 640px) {
