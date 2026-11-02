@@ -1,4 +1,4 @@
-import type { CmxDocument } from '@cmx-tools/contracts'
+import type { CmxComponentNode, CmxDocument } from '@cmx-tools/contracts'
 import type { PoemPair, PoemLine, PoemOpeningProps } from '@hannesdiem/content-components'
 
 const firstPair = {
@@ -305,3 +305,51 @@ export const factsTempleContent = fixtureContent(
     },
   ],
 )
+
+export const videoTempleContent = structuredClone(factsTempleContent)
+const videoOpening = (videoTempleContent.default as CmxComponentNode)
+  .children![0] as CmxComponentNode
+videoOpening.slots = [['facts', 0, 'after']]
+const videoFacts = videoOpening.props!.facts as Record<string, unknown>[]
+videoFacts[0].after = {
+  type: 'component',
+  from: '@hannesdiem/content-components',
+  import: 'TempleVideo',
+  props: {
+    id: 'fixture-recording',
+    title: 'Synthetic recording',
+    customerCode: 'fixture',
+    videoId: '0123456789abcdef0123456789abcdef',
+    aspectRatio: 9 / 16,
+  },
+  children: [
+    {
+      type: 'element',
+      tag: 'p',
+      children: [
+        'An ',
+        { type: 'element', tag: 'strong', children: ['independent'] },
+        ' recording with a ',
+        { type: 'element', tag: 'em', children: ['formatted'] },
+        ' description.',
+      ],
+    },
+    {
+      type: 'element',
+      tag: 'p',
+      children: [
+        {
+          type: 'element',
+          tag: 'a',
+          props: { href: 'https://example.org/recording' },
+          children: ['Fixture reference'],
+        },
+      ],
+    },
+    {
+      type: 'element',
+      tag: 'ul',
+      children: [{ type: 'element', tag: 'li', children: ['First fixture detail'] }],
+    },
+  ],
+}

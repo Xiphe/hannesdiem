@@ -286,7 +286,7 @@ test('signed publications persist, update the complete site and reject replay or
       assert.match(html, /<iframe[^>]*title="Published video"/)
       assert.match(
         html.match(/style="([^"]*aspect-ratio[^"]*)"/)?.[1] ?? '',
-        /^aspect-ratio:\s*0\.5625;?$/,
+        /(?:^|;)\s*aspect-ratio:\s*0\.5625(?:;|$)/,
       )
       assert.match(html, /content="https:\/\/media.example.com\/immutable-card.jpg"/)
       assert.match(html, /href="\/test-publication"/)

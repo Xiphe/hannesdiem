@@ -9,6 +9,7 @@ import tos4 from '../../media/tos4.jpg'
 import mixing from '../../media/mixing-scene-one-week-retreat-1803-2fadbcefea805a0a.webp'
 import { watchActionContext, watchIntroduction, watchFragments } from './_watch.ts'
 import { createCopy } from './_create.ts'
+import { techCheck } from './_recordings.tsx'
 
 export const metadata = { kind: 'temple', image: forest } satisfies PageMetadata
 
@@ -194,6 +195,7 @@ export default function Content() {
             heading: watchIntroduction,
             paragraphs: watchFragments,
             action: { prompt: watchActionContext, label: 'get notified' },
+            after: techCheck,
           },
           {
             id: 'create',

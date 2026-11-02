@@ -500,3 +500,14 @@ main's current poem and navigation. Retire the development proxy; its checkpoint
 remains recoverable in Git. The dedicated Temple newsletter audience is still
 unimplemented, so “get notified” stays disabled rather than enrolling visitors
 in the general list.
+
+**Present the first recording after Watch — 2026-11-02.** Artist requests the
+uploaded Stream video immediately after Watch, deep-linkable, titled
+“Mic/Tech-Check”, with the exact description “Welcome to the space, you're a bit
+early. Make yourself comfortable I'm just figuring out some things”. Author the
+description as native CMX rich text and place the recording through Watch's
+`after` slot. Use the existing Watch colour/type roles, portrait playback beside
+copy on desktop and stacked on mobile, and a title permalink at
+`#mic-tech-check`. Keep the surrounding accepted compositions and prose. This is
+the requested page integration for local review; no production deployment has
+been requested in this step.

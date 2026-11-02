@@ -32,6 +32,27 @@ video preload. The iframe loads lazily; Stream still fetches initialization
 metadata. No additional player SDK, video backend, or R2 source copy is needed.
 Publishing a video is a separate content decision from uploading it.
 
+## Present a recording in Temple of Sound
+
+`TempleVideo` adds a stable `id`, a linked title, and native CMX children for a
+rich-text description around the same player. Place it in a fact's `after` slot
+to render it immediately after that fact and before the next verse. The slot is
+resolved by CMX and passed as serializable JSX through the existing Opening
+island; the player itself needs no additional island or SDK.
+
+The artist requested the first recording after Watch, titled `Mic/Tech-Check`,
+with their supplied description unchanged. Its direct link is
+`/temple-of-sound#mic-tech-check`; authored content lives in
+`content/pages/temple-of-sound/_recordings.tsx`. The title itself links to that
+anchor. Rich-text descriptions use ordinary paragraphs, emphasis, links and lists
+rather than a new Markdown parser or HTML string.
+
+The preceding poem changes height while fonts and artwork are fitted. On initial
+recording deep links, restore the native anchor arrival after readiness/fallback
+so the title stays below the navigation. Synthetic checks cover initial load,
+reload, native links, portrait sizing and rich-text hydration on phone/desktop,
+plus rendering without site JavaScript.
+
 ## Validate the first recording
 
 The artist's local agent saved the Final Cut destination `Cloudflare Stream
@@ -61,8 +82,7 @@ observed requests included initialization metadata and a manifest, but no media
 segments. The matched-volume listening comparison against the local export is
 still pending.
 
-Player placement in Temple of Sound remains an artwork decision; consult
-`website/app/temple/docs/collaboration.md` before changing it.
+Further artwork changes follow `website/app/temple/docs/collaboration.md`.
 
 References:
 

@@ -29,6 +29,15 @@ export function Opening(handle: Handle<OpeningProps>) {
       host.dataset.state = state
       document.documentElement.removeAttribute('data-temple-loading')
       clearTimeout(timeout)
+      // The poem's font fitting changes the layout after the native hash jump.
+      // Restore a recording's arrival once that preceding layout has settled.
+      try {
+        const target = document.getElementById(decodeURIComponent(location.hash.slice(1)))
+        if (target?.matches('.temple-video') && host.contains(target))
+          target.scrollIntoView({ block: 'start', behavior: 'instant' })
+      } catch {
+        // Malformed fragments must not prevent the artwork from becoming ready.
+      }
     }
     const timeout = setTimeout(() => {
       controller.abort()
@@ -118,7 +127,10 @@ export function Opening(handle: Handle<OpeningProps>) {
                 {facts
                   ?.filter((fact) => fact.afterPair === index + 1)
                   .map((fact) => (
-                    <Fact {...fact} />
+                    <>
+                      <Fact {...fact} />
+                      {fact.after}
+                    </>
                   ))}
               </>
             ))}

@@ -188,7 +188,7 @@
   outline: 2px solid currentColor;
   outline-offset: 4px;
 }
-.temple-artwork:has(.temple-top-navigation) .facts-grid {
+.temple-artwork:has(.temple-top-navigation) :is(.facts-grid, .temple-video) {
   scroll-margin-top: 88px;
 }
 @media (max-width: 1050px) {
@@ -215,7 +215,7 @@
     padding-inline: 4px;
     margin-inline: -4px;
   }
-  .temple-artwork:has(.temple-top-navigation) .facts-grid {
+  .temple-artwork:has(.temple-top-navigation) :is(.facts-grid, .temple-video) {
     scroll-margin-top: 128px;
   }
 }

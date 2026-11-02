@@ -1,6 +1,7 @@
 @import './fragment-button/style.css';
 @import './location/style.css';
 @import './facts/style.css';
+@import './video.css';
 @import './top-navigation.css';
 
 html[data-layout='temple'] {

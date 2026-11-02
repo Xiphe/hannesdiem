@@ -1,4 +1,4 @@
-import { css, type Handle } from 'remix/component'
+import type { Handle } from 'remix/component'
 import type { StreamVideoProps } from '@hannesdiem/content-components'
 
 export function StreamVideo(handle: Handle<StreamVideoProps>) {
@@ -9,17 +9,14 @@ export function StreamVideo(handle: Handle<StreamVideoProps>) {
       throw new Error('Stream video aspect ratio must be positive')
 
     return (
-      <div
-        mix={css({ position: 'relative' })}
-        style={{ aspectRatio }}
-      >
+      <div style={{ position: 'relative', aspectRatio }}>
         <iframe
           title={title}
           src={`https://customer-${customerCode}.cloudflarestream.com/${encodeURIComponent(videoId)}/iframe?preload=none`}
           loading="lazy"
           allow="encrypted-media; picture-in-picture"
           allowFullScreen
-          mix={css({ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 })}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
         />
       </div>
     )

@@ -1,5 +1,5 @@
 import type { Handle, RemixNode } from 'remix/component'
-import type { ImageSource, ButtonProps } from './index.d.ts'
+import type { ImageSource, ButtonProps, StreamVideoProps } from './index.d.ts'
 
 type Component<Props> = (handle: Handle<Props>) => () => RemixNode
 
@@ -69,6 +69,13 @@ export interface PoemFact {
   paragraphs: readonly string[]
   /** An omitted href keeps an unfinished action disabled. */
   action: { prompt: string; label: string; href?: string }
+  /** Native CMX content immediately following this fact. */
+  after?: RemixNode
+}
+export interface TempleVideoProps extends StreamVideoProps {
+  id: string
+  /** Rich-text description, authored as ordinary CMX children. */
+  children?: RemixNode
 }
 export interface PoemLocation {
   image: ImageSource
@@ -92,3 +99,4 @@ export interface PoemSectionProps {
 export declare const PoemCanvas: Component<PoemCanvasProps>
 export declare const PoemOpening: Component<PoemOpeningProps>
 export declare const PoemSection: Component<PoemSectionProps>
+export declare const TempleVideo: Component<TempleVideoProps>
