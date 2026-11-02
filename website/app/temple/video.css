@@ -42,10 +42,6 @@
   text-decoration: none;
   pointer-events: auto;
 }
-.temple-video h2 a:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
 .temple-video a:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 6px;
