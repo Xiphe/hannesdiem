@@ -39,7 +39,7 @@ export const firstPair = {
 export const secondPair = {
   paragraphs: [
     [
-      { text: "Yet I'm in deep hurt and grief with" },
+      { text: "Yet I'm in deep hurt and grief over" },
       { text: 'mankind and earth.', face: 'cinzel', smallLines: ['mankind', 'and earth.'] },
     ],
     [
@@ -71,7 +71,7 @@ export const secondPair = {
     },
   ],
   coda: [
-    { text: 'with those who mistreat willingly' },
+    { text: 'with those who mistreat willfully' },
     { text: 'and with myself for taking part.' },
   ],
 } satisfies PoemPair
@@ -79,8 +79,8 @@ export const secondPair = {
 export const thirdPair = {
   paragraphs: [
     [
-      { text: 'I will not accept that my' },
-      { text: 'love gets dimmed.', face: 'cinzel' },
+      { text: 'I will not let my' },
+      { text: 'love be dimmed.', face: 'cinzel' },
       { text: 'I have not grown this tall to get extinguished.' },
     ],
   ],
@@ -118,17 +118,17 @@ export const thirdPair = {
       smallLines: ['i EXPLODE', 'AND COLLAPSE', '15 TiMES', 'PER MiNUTE.'],
     },
     {
-      text: 'I pump 6 liters of glorified pain in my veins,',
-      display: 'I PUMP 6 LITERS OF GLORIFIED PAIN IN MY VEINS,',
+      text: 'I carry 6 liters of glorified pain in my veins,',
+      display: 'I CARRY 6 LITERS OF GLORIFIED PAIN IN MY VEINS,',
       face: 'germania',
     },
   ],
-  coda: [{ text: 'and carry a love so deep I can not fathom.' }],
+  coda: [{ text: 'and a love too deep to fathom.' }],
   continuation: [
     [
-      { text: 'And I will not accept this hatred machinery to eat up' },
+      { text: 'And I will not accept this hatred machinery eating up' },
       { text: 'the flowers', face: 'cinzel' },
-      { text: 'that I so long to see out there on the fields of life.' },
+      { text: 'that I so long to see out there in the fields of life.' },
     ],
   ],
 } satisfies PoemPair
@@ -157,10 +157,10 @@ export default function Content() {
         ]}
         bridgeBody={[
           {
-            wideBreaksAfter: ['hide your shame,', 'painfully limited'],
+            wideBreaksAfter: ['bury your shame,', 'painfully limited'],
             text: `But I see you **numbing**, **disconnecting** and **fleeing**.
 I see you **frightened** and **scared**, my child.
-I see you hold your tears, cage your anger, hide your shame, swallow your disgust and betray your pride.
+I see you dam your tears, cage your anger, bury your shame, choke your disgust and bend your pride.
 
 I see us **trapped** and **helpless**.
 Painfully limited by routine and a **lack of belonging**.`,
@@ -170,12 +170,12 @@ I want you to know that I'm here and that you are **not alone anymore**.
 I want you to understand that I can **stay with you** no matter what.
 
 Oh yes, I know...
-it's not easy, and **trust is hard to gift** when it has been taken so often.
-That's ok. There is nothing to do for you, I understand it's **my responsibility** to show you.`,
+it's not easy, and **trust is hard to gift** when it has been broken so often.
+That's ok. There's nothing you need to do. I understand it's **my responsibility** to show you.`,
           {
             linger: 'my child.',
-            text: `I painfully know that I will screw this up.
-And I also came to know that **I'm capable** of carrying and catering a wound further and further until it becomes something **wider** then a moment and **deeper** then a scene.
+            text: `I'm painfully aware that I will screw this up.
+And I've also come to know that **I'm capable** of carrying and tending a wound further and further until it becomes something **wider** than a moment and **deeper** than a scene.
 
 **I am so willing** to practice and keep on practicing the art of showing up
 and **staying with you**, my child.`,
