@@ -64,9 +64,9 @@ export function createSection() {
     const box = tooltip.getBoundingClientRect()
     tooltip.style.left = `${Math.max(12, Math.min(innerWidth - box.width - 12, anchor.left))}px`
     tooltip.style.top = `${
-      anchor.bottom + 4 + box.height <= innerHeight - 12
-        ? anchor.bottom + 4
-        : Math.max(12, anchor.top - box.height - 4)
+      anchor.bottom + box.height <= innerHeight - 12
+        ? anchor.bottom
+        : Math.max(12, anchor.top - box.height)
     }px`
   }
   const open = () => {
