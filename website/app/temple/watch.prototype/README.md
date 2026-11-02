@@ -23,8 +23,14 @@ is written back to either image.
 
 Images are placeholders for future content, not symbols to interpret. Alongside
 and placement after the first pair are artist choices; fragment inclusion and
-signup remain open. For the headline, follow the artist's invitation to try none
-and give the first paragraph slightly more weight. They describe intimate access
-to an existing creative process, laid-back and humble, without overselling it.
+signup remain open. The artist restored “Watch” after a headline-free trial;
+the first paragraph retains its slightly heavier weight. They describe intimate
+access to an existing creative process, laid-back and humble, without overselling it.
 Assistant-written headline candidates were rejected; use the making-art skill
 to moderate their own wording. No publication approval.
+
+The Watch material now fits the reading column inside a clipped background-only
+layer; it cannot paint over either neighbouring verse. Desktop images stretch
+upward from the text's bottom baseline without determining the row height. The
+centred action sits closer beneath both columns. On desktop, Visit's heading ends
+at the map's right contour, alongside the room image; mobile keeps it left-aligned.

@@ -11,6 +11,7 @@ section.innerHTML = `
     <figure class="watch-fire"><img src="/__watch/tos2.jpg" alt="" width="1920" height="1280" loading="lazy"></figure>
   </div>
   <div class="watch-copy-tile">
+    <h2 class="watch-heading">Watch</h2>
     <div class="watch-fragments"></div>
   </div>
   <div class="watch-action"><p></p><button type="button" disabled>get notified</button></div>
@@ -64,39 +65,44 @@ const mount = () => {
     return
   }
   host.querySelector('.first-pair').after(section)
-  // Reuse Visit's exact material and its fitted clear reading area. Uniformly
-  // scale that material around the new text, without inventing a new silhouette.
+  // Keep Visit's contour/colours, bounded around this reading column rather
+  // than inheriting its very wide fitted canvas. Clip only the background so
+  // the higher photos can still extend outside the section's top edge.
   const copyTile = section.querySelector('.watch-copy-tile')
-  const sourceFace = visit.querySelector('.text-face')
   const sourceMaterial = visit.querySelector('.text-solid .tile-material')
   const material = sourceMaterial.cloneNode(true)
   material.classList.add('watch-material')
+  material.setAttribute('preserveAspectRatio', 'none')
   const gradient = material.querySelector('linearGradient')
   const oldId = gradient.id
   gradient.id = 'watch-text-material'
   material.innerHTML = material.innerHTML.replaceAll(`url(#${oldId})`, 'url(#watch-text-material)')
-  copyTile.prepend(material)
+  const materialBoundary = document.createElement('div')
+  materialBoundary.className = 'watch-material-boundary'
+  materialBoundary.setAttribute('aria-hidden', 'true')
+  materialBoundary.append(material)
+  section.prepend(materialBoundary)
   const mapFlight = visit.querySelector('.map-slot .fact-flight')
   const visitHeading = document.createElement('h2')
   visitHeading.className = 'watch-visit-heading'
   visitHeading.textContent = 'Visit'
   mapFlight.append(visitHeading)
   const layout = () => {
-    const width = copyTile.clientWidth
-    const height = copyTile.clientHeight
-    const scale = Math.max(width / sourceFace.clientWidth, height / sourceFace.clientHeight)
-    for (const property of ['width', 'height']) {
-      material.style[property] = `${parseFloat(sourceMaterial.style[property]) * scale}px`
-    }
-    material.style.left = `${width / 2 + (parseFloat(sourceMaterial.style.left) - sourceFace.clientWidth / 2) * scale}px`
-    material.style.top = `${height / 2 + (parseFloat(sourceMaterial.style.top) - sourceFace.clientHeight / 2) * scale}px`
+    material.style.width = `${copyTile.offsetWidth + 100}px`
+    material.style.height = `${copyTile.offsetHeight + 96}px`
+    material.style.left = `${copyTile.offsetLeft - 50}px`
+    material.style.top = `${copyTile.offsetTop - 48}px`
     const mapBounds = visit.querySelector('.map-water').getBoundingClientRect()
     const flightBounds = mapFlight.getBoundingClientRect()
     visitHeading.style.top = `${mapBounds.top - flightBounds.top - visitHeading.offsetHeight - 28}px`
-    visitHeading.style.left = `${Math.max(24, innerWidth * 0.05) - flightBounds.left}px`
+    visitHeading.style.left = `${
+      innerWidth > 760
+        ? mapBounds.right - flightBounds.left - visitHeading.offsetWidth
+        : Math.max(24, innerWidth * 0.05) - flightBounds.left
+    }px`
   }
   const materialObserver = new ResizeObserver(layout)
-  for (const node of [copyTile, sourceFace, sourceMaterial, visit.querySelector('.location-map')]) {
+  for (const node of [copyTile, visitHeading, visit.querySelector('.location-map')]) {
     materialObserver.observe(node)
   }
   layout()
