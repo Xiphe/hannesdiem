@@ -36,6 +36,7 @@ export async function mountArtwork(
   const refrains = [...host.querySelectorAll<HTMLElement>('.refrain-composition')].map(
     (refrain) => ({
       refrain,
+      final: refrain.parentElement!.classList.contains('final-refrain'),
       refrainStage: refrain.querySelector<HTMLElement>('.refrain-stage')!,
       phrases: [...refrain.querySelectorAll<HTMLElement>('.refrain-phrase')],
       ink: undefined as ReturnType<typeof createTypeSurface> | undefined,
@@ -111,7 +112,7 @@ export async function mountArtwork(
     return { left, right, top, bottom, width: right - left, height: bottom - top }
   }
   function fitRefrain() {
-    for (const { refrain, refrainStage, phrases } of refrains) {
+    for (const { refrain, refrainStage, phrases, final } of refrains) {
       const width = refrainStage.clientWidth * 0.9
       const maxHeight = innerHeight * 0.5
       for (const phrase of phrases) {
@@ -176,10 +177,10 @@ export async function mountArtwork(
       const contentHeight =
         Math.max(...phrases.map((p) => Math.max(p.offsetHeight, inkBounds(p).height))) + 32
       refrain.style.setProperty('--refrain-height', `${contentHeight}px`)
-      if (refrain.parentElement!.classList.contains('final-refrain')) {
-        // Match the stable svh viewport used by the sticky position. Mobile
-        // innerHeight can temporarily expand while unfitted text overflows.
-        const tail = Math.max(0, (stage.clientHeight - contentHeight) / 2)
+      if (final) {
+        // Match the stable svh viewport. Leave one CSS pixel before sticky
+        // release: integer scrollHeight can round past its fractional boundary.
+        const tail = Math.max(0, (stage.clientHeight - contentHeight) / 2 - 1)
         refrain.parentElement!.style.setProperty('--refrain-end-space', `${tail}px`)
       }
       const lastInkHeight = inkBounds(phrases[phrases.length - 1]).height
@@ -224,11 +225,13 @@ export async function mountArtwork(
       copyColour.bridgeBounds(),
       !appearance.matches,
     )
-    for (const [chorusIndex, { refrain, refrainStage, ink }] of refrains.entries()) {
+    for (const [chorusIndex, { refrain, refrainStage, ink, final }] of refrains.entries()) {
       const transitions = timings[chorusIndex]
       const section = refrain.getBoundingClientRect()
       if (section.bottom < 0 || section.top > stage.clientHeight) continue
-      const hold = section.height - refrainStage.offsetHeight
+      // Resolve the closing phrase before the guarded endpoint, including a
+      // further pixel for document-height rounding. Native sticky owns position.
+      const hold = section.height - refrainStage.offsetHeight - (final ? 2 : 0)
       const stickyTop = (stage.clientHeight - refrainStage.offsetHeight) / 2
       const position = Math.max(0, Math.min(1, (stickyTop - section.top) / hold))
       let index = 0,

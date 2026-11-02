@@ -2282,10 +2282,11 @@ for (const reduced of [false, true])
   }
 
 for (const viewport of [
+  { width: 390, height: 844 },
   { width: 390, height: 664 },
   { width: 375, height: 568 },
 ]) {
-  test(`Temple mobile final phrase stays centred at page end at ${viewport.width}px`, async ({
+  test(`Temple mobile final phrase stays centred at page end at ${viewport.width}x${viewport.height}`, async ({
     browser,
     baseURL,
   }) => {
@@ -2313,6 +2314,22 @@ for (const viewport of [
         await page.evaluate((y) => scrollTo(0, y), ending + offset)
         await expect(chorus).toHaveAttribute('data-active', '3')
         await expect.poll(center).toBeCloseTo(viewport.height / 2, 0)
+      }
+      // Real preceding type/rise layout has fractional CSS-pixel extents.
+      // Vary that geometry: integer scrollHeight must not carry the final
+      // sticky stage past its release boundary, even for part of a pixel.
+      for (const fraction of [0, 0.25, 0.5, 0.75]) {
+        await chorus.evaluate((node, fraction) => {
+          node.parentElement!.style.paddingTop = `${fraction}px`
+          scrollTo(0, document.documentElement.scrollHeight)
+        }, fraction)
+        await expect
+          .poll(() =>
+            stage.evaluate(
+              (node) => node.getBoundingClientRect().top - parseFloat(getComputedStyle(node).top),
+            ),
+          )
+          .toBeCloseTo(0, 2)
       }
     } finally {
       await context.close()
