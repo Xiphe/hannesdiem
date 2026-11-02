@@ -488,3 +488,15 @@ Artist supplies the final verse and invokes making-art. The melodies / words / h
 **Progress hover reopened, 2026-11-02.** Artist: “pieces are nice, the progress effect is super cheap”. Keep the enlarged pieces. The travelling glow at `e99226f` is rejected; greater visibility did not make its visual language acceptable. Reopen the progress effect before producing another variation of that premise. Artist confirms all three are rejected: fuzzy glow, predictable repeating motion and the whole travelling-light idea. Remove that effect, preserving warm text hover, enlarged pieces and reading progress. Ask which existing page material could inform a different interaction; no replacement selected.
 
 **Integrate accepted navigation and Visit through the existing feature branch, 2026-11-02.** Artist asks to integrate this work and bring it to main on the existing feature branch. Use `codex/temple-navigation-and-visit`, retain main's latest complete poem and iOS ending fixes, and transfer the accepted separator/progress/warm-hover changes from `8ac8104`. The glow remains removed and its replacement is parked. Watch/Create explorations stay on their separate branch; production's progress stops at the first unavailable fact. This authorizes the feature merge and publication of Visit/header/navigation, not the separate studies.
+
+**Publish Watch and Create — 2026-11-02.** After the shared feature checkpoint
+`ed03a03`, the artist asks to bring the work to main. Promote the current Watch
+and Create compositions into the normal CMX page: after the first and second
+complete verse/refrain pairs, respectively. Preserve supplied wording, image
+order, contours and responsive composition. Resolve imported media in the
+existing server adapter; native content and contact links remain usable without
+JavaScript. Own material fitting through Remix task cancellation and retain
+main's current poem and navigation. Retire the development proxy; its checkpoint
+remains recoverable in Git. The dedicated Temple newsletter audience is still
+unimplemented, so “get notified” stays disabled rather than enrolling visitors
+in the general list.

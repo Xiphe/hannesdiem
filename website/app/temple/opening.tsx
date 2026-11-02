@@ -5,6 +5,7 @@ import { mountArtwork } from './artwork.ts'
 import { FirstPair, Phrase, Refrain } from './first-pair.tsx'
 import { VerseDrop } from './verse-drop.tsx'
 import type { OpeningProps } from './types.ts'
+import { Fact } from './facts/view.tsx'
 import { Location } from './location/view.tsx'
 import { mountLocation } from './location/enhance.ts'
 import { TopNavigation } from './top-navigation.tsx'
@@ -52,7 +53,7 @@ export function Opening(handle: Handle<OpeningProps>) {
     }
   })
   return () => {
-    const { title, dates, image, pair, pairs, bridge, bridgeBody, location, finalVerse } =
+    const { title, dates, image, pair, pairs, bridge, bridgeBody, location, finalVerse, facts } =
       handle.props
     const format = (date: string) =>
       new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
@@ -108,11 +109,18 @@ export function Opening(handle: Handle<OpeningProps>) {
           <div class="poem-pairs">
             {location && <Location {...location} />}
             {(pairs ?? (pair ? [pair] : [])).map((pair, index) => (
-              <FirstPair
-                id={`${handle.props.id}-pair-${index + 1}`}
-                pair={pair}
-                index={index}
-              />
+              <>
+                <FirstPair
+                  id={`${handle.props.id}-pair-${index + 1}`}
+                  pair={pair}
+                  index={index}
+                />
+                {facts
+                  ?.filter((fact) => fact.afterPair === index + 1)
+                  .map((fact) => (
+                    <Fact {...fact} />
+                  ))}
+              </>
             ))}
             {bridge && (
               <section class="verse-copy bridge-copy">

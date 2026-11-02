@@ -1,4 +1,4 @@
-// Artist-supplied working material. Not included in the published page.
+// Artist-supplied wording for the published Temple fact.
 export const watchActionContext = "I'll drop new content here regularly"
 export const watchIntroduction =
   'Thoughts, Songs, Improvisation and Meditation here on this website.'

@@ -36,6 +36,7 @@ export interface PoemOpeningProps {
   image: ImageSource
   lightSource: { x: number; y: number }
   location?: PoemLocation
+  facts?: readonly PoemFact[]
   navigation?: readonly {
     label: string
     href?: string
@@ -57,6 +58,17 @@ export interface PoemOpeningProps {
     refrain?: PoemPair['refrain']
   }
   children?: RemixNode
+}
+/** An authored photographic fact, placed after a complete verse/refrain pair. */
+export interface PoemFact {
+  id: string
+  afterPair: number
+  layout: 'watch' | 'create'
+  images: readonly [ImageSource, ImageSource]
+  heading: string
+  paragraphs: readonly string[]
+  /** An omitted href keeps an unfinished action disabled. */
+  action: { prompt: string; label: string; href?: string }
 }
 export interface PoemLocation {
   image: ImageSource

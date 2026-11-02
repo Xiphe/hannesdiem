@@ -206,7 +206,14 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['href', 'id', 'data-location-ready', 'data-nav-visual', 'data-nav-clip'],
+    attributeFilter: [
+      'href',
+      'id',
+      'data-location-ready',
+      'data-material-ready',
+      'data-nav-visual',
+      'data-nav-clip',
+    ],
   })
   window.addEventListener('resize', schedule, { passive: true, signal })
   window.addEventListener('pageshow', schedule, { passive: true, signal })

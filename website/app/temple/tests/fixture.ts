@@ -71,6 +71,7 @@ function fixtureContent(
   location?: PoemOpeningProps['location'],
   navigation?: PoemOpeningProps['navigation'],
   finalVerse?: PoemOpeningProps['finalVerse'],
+  facts?: PoemOpeningProps['facts'],
 ): CmxDocument['content'] {
   return {
     title: 'Temple of Sound',
@@ -95,6 +96,7 @@ function fixtureContent(
             ...(location ? { location } : {}),
             ...(navigation ? { navigation } : {}),
             ...(finalVerse ? { finalVerse } : {}),
+            ...(facts ? { facts } : {}),
           },
           ...(finalVerse?.refrain
             ? {}
@@ -249,6 +251,57 @@ export const fourPhraseTempleContent = fixtureContent(
           .repeat(10)
           .trimEnd() +
         '**',
+    },
+  ],
+)
+
+export const factsTempleContent = fixtureContent(
+  [actionlessPair, secondPair],
+  undefined,
+  undefined,
+  fixtureLocation,
+  [
+    { label: 'Location', href: '#facts' },
+    {
+      label: 'Updates',
+      href: '#fixture-watch',
+      verseBefore: { label: 'First verse', href: '#verse-fixture-pair-1' },
+    },
+    {
+      label: 'Contact',
+      href: '#fixture-create',
+      verseBefore: { label: 'Second verse', href: '#verse-fixture-pair-2' },
+    },
+  ],
+  undefined,
+  [
+    {
+      id: 'fixture-watch',
+      afterPair: 1,
+      layout: 'watch',
+      images: ['fixture-image', 'fixture-image'],
+      heading: 'A synthetic update heading that spans several lines on small screens.',
+      paragraphs: [
+        'Synthetic opening paragraph. '.repeat(12).trim(),
+        'A second synthetic paragraph. '.repeat(8).trim(),
+      ],
+      action: { prompt: 'Synthetic update invitation', label: 'Fixture pending action' },
+    },
+    {
+      id: 'fixture-create',
+      afterPair: 2,
+      layout: 'create',
+      images: ['fixture-image', 'fixture-image'],
+      heading: 'A synthetic contact heading',
+      paragraphs: [
+        'A separate fixture invitation. '.repeat(9).trim(),
+        'Synthetic collaboration details. '.repeat(7).trim(),
+      ],
+      action: {
+        prompt: 'Synthetic contact invitation',
+        label: 'Fixture contact action',
+        href: 'mailto:fixture@example.com',
+      },
     },
   ],
 )

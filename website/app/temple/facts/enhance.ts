@@ -1,38 +1,19 @@
-// THROWAWAY: share the current fitted material between fact studies.
-export function mountReadingMaterial(section, sourceMaterial, contour) {
-  // Keep Visit's colours, but give this reading surface a broader, softer
-  // fragment contour. Round the geometry itself, not just the outline stroke.
-  const copyTile = section.querySelector('.watch-copy-tile')
-  const material = sourceMaterial.cloneNode(true)
-  material.classList.add('watch-material')
-  material.setAttribute('preserveAspectRatio', 'none')
-  material.setAttribute('viewBox', '-100 -100 1250 1300')
-  material
-    .querySelector('path')
-    .setAttribute(
-      'd',
-      contour ??
-        'M135 70C80 44 38 64 36 124C18 370 40 626 18 858Q12 925 80 935C350 958 580 972 854 986Q922 994 930 926C950 686 966 418 984 166Q991 95 920 108C648 162 400 164 135 70Z',
-    )
-  const gradient = material.querySelector('linearGradient')
-  const oldId = gradient.id
-  gradient.id = `${section.id}-text-material`
-  material.innerHTML = material.innerHTML.replaceAll(`url(#${oldId})`, `url(#${gradient.id})`)
-  const materialBoundary = document.createElement('div')
-  materialBoundary.className = 'watch-material-boundary'
-  materialBoundary.setAttribute('aria-hidden', 'true')
-  materialBoundary.append(material)
-  section.prepend(materialBoundary)
+/** Fit the selected contour around native text; own no animation clock. */
+export function mountReadingMaterial(section: HTMLElement, signal: AbortSignal) {
+  if (signal.aborted) return
+  const copyTile = section.querySelector<HTMLElement>('.fact-copy-tile')!
+  const material = section.querySelector<SVGSVGElement>('.fact-material')!
+  const materialBoundary = section.querySelector<HTMLElement>('.fact-material-boundary')!
   // Find the largest clear rectangle in the actual concave silhouette once.
   // Map that interior onto the padded text, so every line has ground behind it.
   const view = material.viewBox.baseVal
-  const group = material.querySelector('g')
+  const group = material.querySelector('g')!
   const shape = new Path2D()
   shape.addPath(
-    new Path2D(material.querySelector('path').getAttribute('d')),
-    DOMMatrix.fromMatrix(group.transform.baseVal.consolidate().matrix),
+    new Path2D(material.querySelector('path')!.getAttribute('d')!),
+    DOMMatrix.fromMatrix(group.transform.baseVal.consolidate()!.matrix),
   )
-  const probe = document.createElement('canvas').getContext('2d')
+  const probe = document.createElement('canvas').getContext('2d')!
   const cells = 64
   const cellWidth = view.width / cells
   const cellHeight = view.height / cells
@@ -59,8 +40,9 @@ export function mountReadingMaterial(section, sourceMaterial, contour) {
       }
     }
   }
-  const photograph = section.querySelector('.watch-daylight')
+  const photograph = section.querySelector<HTMLElement>('.fact-primary-photo')!
   const layout = () => {
+    if (signal.aborted) return
     const photoRight =
       photograph.getBoundingClientRect().right - section.getBoundingClientRect().left
     const reach = innerWidth > 760 ? Math.max(0, copyTile.offsetLeft - photoRight + 24) : 0
@@ -78,5 +60,15 @@ export function mountReadingMaterial(section, sourceMaterial, contour) {
   const observer = new ResizeObserver(layout)
   observer.observe(copyTile)
   observer.observe(photograph)
+  addEventListener('resize', layout, { signal })
+  signal.addEventListener(
+    'abort',
+    () => {
+      observer.disconnect()
+      section.removeAttribute('data-material-ready')
+    },
+    { once: true },
+  )
   layout()
+  section.dataset.materialReady = ''
 }

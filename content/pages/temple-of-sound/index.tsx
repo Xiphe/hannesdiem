@@ -3,6 +3,12 @@ import { PoemCanvas, PoemOpening, type PoemPair } from '@hannesdiem/content-comp
 
 import forest from '../../media/IMG_6257.JPG'
 import room from '../../media/steinfurth-grand-piano.jpeg'
+import tos from '../../media/tos.jpg'
+import tos2 from '../../media/tos2.jpg'
+import tos4 from '../../media/tos4.jpg'
+import mixing from '../../media/mixing-scene-one-week-retreat-1803-2fadbcefea805a0a.webp'
+import { watchActionContext, watchIntroduction, watchFragments } from './_watch.ts'
+import { createCopy } from './_create.ts'
 
 export const metadata = { kind: 'temple', image: forest } satisfies PageMetadata
 
@@ -147,10 +153,12 @@ export default function Content() {
           { label: 'Visit', href: '#facts' },
           {
             label: 'Watch',
+            href: '#watch',
             verseBefore: { label: 'First verse and refrain', href: '#verse-1-pair-1' },
           },
           {
             label: 'Create',
+            href: '#create',
             verseBefore: { label: 'Second verse and refrain', href: '#verse-1-pair-2' },
           },
           { label: 'Share' },
@@ -177,6 +185,30 @@ export default function Content() {
             href: 'mailto:sound@hannesdiem.de',
           },
         }}
+        facts={[
+          {
+            id: 'watch',
+            afterPair: 1,
+            layout: 'watch',
+            images: [tos4, tos2],
+            heading: watchIntroduction,
+            paragraphs: watchFragments,
+            action: { prompt: watchActionContext, label: 'get notified' },
+          },
+          {
+            id: 'create',
+            afterPair: 2,
+            layout: 'create',
+            images: [tos, mixing],
+            heading: createCopy.headline,
+            paragraphs: [createCopy.invitation, createCopy.musicians, createCopy.beyondSound],
+            action: {
+              prompt: createCopy.actionContext,
+              label: createCopy.actionLabel,
+              href: 'mailto:sound@hannesdiem.de',
+            },
+          },
+        ]}
         pairs={[firstPair, secondPair, thirdPair]}
         bridge={[
           [

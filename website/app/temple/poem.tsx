@@ -38,6 +38,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
       bridge,
       bridgeBody,
       location,
+      facts,
       navigation,
       finalVerse,
       children,
@@ -63,6 +64,10 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
           pairs={pairs}
           bridge={bridge}
           bridgeBody={bridgeBody}
+          facts={facts?.map((fact) => ({
+            ...fact,
+            images: [getMedia(site.media, fact.images[0]), getMedia(site.media, fact.images[1])],
+          }))}
           location={
             location
               ? {

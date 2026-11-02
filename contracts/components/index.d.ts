@@ -155,4 +155,5 @@ export type {
   PoemLine,
   PoemPair,
   PoemLocation,
+  PoemFact,
 } from './temple.d.ts'

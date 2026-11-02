@@ -1,4 +1,4 @@
-// Artist-supplied working material. Not included in the published page.
+// Artist-supplied wording for the published Temple fact.
 export const createCopy = {
   headline: 'Collaborate on music',
   invitation:
