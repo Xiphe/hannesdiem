@@ -174,7 +174,7 @@ export function Page(
           />
           <link
             rel="icon"
-            href={path === '/temple-of-sound' ? assets.templeMark : assets.mark}
+            href={temple ? assets.templeMark : assets.mark}
             type="image/svg+xml"
           />
           <link
@@ -202,9 +202,12 @@ export function Page(
               loading
             </p>
           )}
-          {!plain && !temple && (
+          {!plain && (
             <>
-              <Chrome path={path} />
+              <Chrome
+                path={path}
+                hideMenu={temple}
+              />
               <NavigationDialog pathname={path} />
             </>
           )}

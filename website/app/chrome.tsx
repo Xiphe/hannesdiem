@@ -32,7 +32,7 @@ const dialogStyle = css({
     backdropFilter: 'blur(4px)',
   },
 })
-export function Chrome(handle: Handle<{ path: string }>) {
+export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
   let dialog: HTMLDialogElement | undefined
   let welcome = false
   let navigationOpen = false
@@ -72,8 +72,14 @@ export function Chrome(handle: Handle<{ path: string }>) {
     delete navigation.dataset.closing
     if (!navigation.open) navigation.showModal()
     navigationOpen = true
+    navigationTriggerState(true)
     navigation.dispatchEvent(new Event('navigation-open'))
     void handle.update()
+  }
+  function navigationTriggerState(open: boolean) {
+    document.querySelectorAll('[data-open-navigation]').forEach((trigger) => {
+      trigger.setAttribute('aria-expanded', String(open))
+    })
   }
   handle.queueTask(() => {
     handle.signal.addEventListener('abort', cancelOverlayClose, { once: true })
@@ -94,6 +100,10 @@ export function Chrome(handle: Handle<{ path: string }>) {
       'click',
       (event) => {
         const target = event.target as Element
+        if (target.closest('[data-open-navigation]')) {
+          openNavigation(event)
+          return
+        }
         const navigation = target.closest('[data-navigation-dialog]')
         if (
           navigation &&
@@ -120,6 +130,7 @@ export function Chrome(handle: Handle<{ path: string }>) {
       (event) => {
         if ((event.target as Element).matches('[data-navigation-dialog]')) {
           navigationOpen = (event.target as HTMLDialogElement).open
+          navigationTriggerState(navigationOpen)
           void handle.update()
         }
       },
@@ -212,21 +223,23 @@ export function Chrome(handle: Handle<{ path: string }>) {
           Welcome! You are now logged in.
         </div>
       )}
-      <button
-        type="button"
-        aria-label="Open menu"
-        aria-haspopup="dialog"
-        aria-expanded={navigationOpen}
-        aria-controls="site-navigation"
-        command="show-modal"
-        commandFor="site-navigation"
-        mix={[menuStyle, on<HTMLButtonElement, 'click'>('click', openNavigation)]}
-      >
-        <Bars3Icon
-          width={24}
-          height={24}
-        />
-      </button>
+      {!handle.props.hideMenu && (
+        <button
+          type="button"
+          aria-label="Open menu"
+          aria-haspopup="dialog"
+          aria-expanded={navigationOpen}
+          aria-controls="site-navigation"
+          command="show-modal"
+          commandFor="site-navigation"
+          mix={[menuStyle, on<HTMLButtonElement, 'click'>('click', openNavigation)]}
+        >
+          <Bars3Icon
+            width={24}
+            height={24}
+          />
+        </button>
+      )}
       <dialog
         class="page-dialog lyrics-dialog"
         aria-label="Page dialog"

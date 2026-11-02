@@ -12,9 +12,18 @@ export function colourCopy(
   request: () => void,
   date?: HTMLElement,
 ) {
+  const space = root.querySelector<HTMLElement>('.poem-pairs') ?? root
   const paragraphs = [...root.querySelectorAll<HTMLElement>('.verse-copy > p')]
   const lines = [...root.querySelectorAll<HTMLElement>('.phrase-entry, .bridge-body-copy')]
-  const elements = date ? [...lines, date] : lines
+  const inline = [...root.querySelectorAll<HTMLElement>('[data-copy-inline]')]
+  const elements = [...lines, ...inline, ...(date ? [date] : [])]
+  const inlineBaselines = inline.map((element) => {
+    const baseline = document.createElement('span')
+    baseline.className = 'block-baseline'
+    baseline.ariaHidden = 'true'
+    element.appendChild(baseline)
+    return baseline
+  })
   const dateBaseline = document.createElement('span')
   dateBaseline.className = 'block-baseline'
   dateBaseline.ariaHidden = 'true'
@@ -36,10 +45,19 @@ export function colourCopy(
       visible: false,
       revision: -1,
       bridge: !!element.closest('.bridge-copy, .bridge-body'),
+      inline: element.hasAttribute('data-copy-inline'),
+      header: element.closest<HTMLElement>('header'),
       reveal: element.matches('.bridge-body-copy') ? createBridgeReveal(element) : undefined,
     }
   }
   const layers = elements.map(makeLayer)
+  const visible = (layer: (typeof layers)[number]) =>
+    layer.visible &&
+    !(
+      layer.inline &&
+      layer.header?.hasAttribute('data-nav-mounted') &&
+      !layer.header.hasAttribute('data-nav-visible')
+    )
   const updateSelection = () => {
     const selection = document.getSelection()
     for (const layer of layers) {
@@ -86,6 +104,7 @@ export function colourCopy(
     () => {
       observer.disconnect()
       dateBaseline.remove()
+      inlineBaselines.forEach((baseline) => baseline.remove())
       canvas.width = canvas.height = bridgeCanvas.width = bridgeCanvas.height = 0
       for (const { element, canvas, mask, reveal } of layers) {
         element.removeAttribute('data-copy-cloud')
@@ -117,9 +136,9 @@ export function colourCopy(
         layers.push(makeLayer(element))
         observer.observe(element)
       }
-    const bounds = root.getBoundingClientRect()
-    cssWidth = paragraphs[0].clientWidth
-    cssHeight = root.scrollHeight
+    const bounds = space.getBoundingClientRect()
+    cssWidth = paragraphs[0]?.clientWidth ?? space.clientWidth
+    cssHeight = space.scrollHeight
     const ratio = Math.min(3, devicePixelRatio || 1)
     for (const layer of layers) {
       const { element, canvas, mask, maskInk } = layer
@@ -135,7 +154,9 @@ export function colourCopy(
       maskInk!.setTransform(mask.width / rect.width, 0, 0, mask.height / rect.height, 0, 0)
       maskInk!.fillStyle = '#fff'
       const rows =
-        element === date ? [element] : [...element.querySelectorAll<HTMLElement>('.block-row-ink')]
+        element === date || layer.inline
+          ? [element]
+          : [...element.querySelectorAll<HTMLElement>('.block-row-ink')]
       for (const row of rows) {
         const style = getComputedStyle(row)
         const position = row.getBoundingClientRect()
@@ -241,15 +262,14 @@ export function colourCopy(
     draw(now: number, reduced: boolean) {
       if (!reduced) phase += Math.min(0.25, (now - clock) / 1000) * speed
       clock = now
-      if (!supported || signal.aborted || !cssWidth || !layers.some((layer) => layer.visible))
-        return
+      if (!supported || signal.aborted || !cssWidth || !layers.some(visible)) return
       if (dirty || (!reduced && speed > 0 && variance > 0 && now - last >= 100)) {
         paintClouds(phase)
         dirty = false
         last = now
       }
       for (const layer of layers) {
-        if (!layer.visible) continue
+        if (!visible(layer)) continue
         const changed = layer.reveal?.paint(
           layer.maskInk!,
           layer.element.getBoundingClientRect().top,
@@ -274,6 +294,15 @@ export function colourCopy(
         if (layer.reveal) {
           context.fillStyle = lightInk ? '#1a2136' : '#c0cde2'
           context.fillRect(0, 0, layer.width, layer.height)
+        } else if (layer.inline) {
+          // Fixed navigation samples one shared horizontal strip of the verse ink.
+          context.drawImage(
+            canvas,
+            -layer.element.getBoundingClientRect().left,
+            0,
+            innerWidth,
+            innerHeight,
+          )
         } else {
           context.drawImage(
             layer.bridge ? bridgeCanvas : canvas,

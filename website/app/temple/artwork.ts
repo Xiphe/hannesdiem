@@ -12,6 +12,7 @@ import { createEscapes } from './escapes.ts'
 import { colourCopy } from './copy-colour.ts'
 import { blockType } from './block-type.ts'
 import { mountFragmentGround } from './fragment-button/ground.ts'
+import { createNavigationArtwork } from './top-navigation-artwork.ts'
 export async function mountArtwork(
   host: HTMLElement,
   props: OpeningProps,
@@ -23,14 +24,42 @@ export async function mountArtwork(
   const root = host.querySelector<HTMLElement>('.temple-opening')!
   const stage = root.querySelector<HTMLElement>('.temple-stage')!
   const poem = host.querySelector<HTMLElement>('.poem-pairs')!
-  if (!poem) {
+  if (!poem || !poem.querySelector('.verse-copy')) {
     const escapes = createEscapes(signal)
-    await mountOpening(root, props, signal, {
-      escapes,
-      paintMist: createAtmosphere(signal),
-      drawType: () => false,
-      ready,
-    })
+    let requestScene = () => {}
+    const navigation = createNavigationArtwork(host, signal, () => requestScene(), escapes)
+    const copy = colourCopy(host, signal, () => requestScene())
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+    const appearance = matchMedia('(prefers-color-scheme: dark)')
+    const sync = () => {
+      copy.setBase(
+        getComputedStyle(host)
+          .getPropertyValue(appearance.matches ? '--copy-ink-dark' : '--copy-ink-light')
+          .trim(),
+        !appearance.matches,
+      )
+      requestScene()
+    }
+    appearance.addEventListener('change', sync, { signal })
+    sync()
+    await document.fonts.load('350 28px UnboundedCopy')
+    if (signal.aborted) return
+    copy.resize()
+    requestScene =
+      (await mountOpening(root, props, signal, {
+        escapes,
+        paintMist: createAtmosphere(signal),
+        drawType: (now, frame) => {
+          copy.draw(now, reduced.matches)
+          return navigation?.draw(now, frame) ?? false
+        },
+        paintType: (frame) => navigation?.paint(frame),
+        ready: () => {
+          navigation?.resize()
+          ready()
+          requestScene()
+        },
+      })) ?? (() => {})
     return
   }
   const refrains = [...host.querySelectorAll<HTMLElement>('.refrain-composition')].map(
@@ -73,8 +102,9 @@ export async function mountArtwork(
   const escapes = createEscapes(abort.signal)
   const paintMist = createAtmosphere(abort.signal)
   let requestScene = () => {}
+  const navigation = createNavigationArtwork(host, abort.signal, request, escapes)
   const copyColour = colourCopy(
-    poem,
+    host,
     abort.signal,
     request,
     root.querySelector<HTMLElement>('.temple-date')!,
@@ -213,6 +243,7 @@ export async function mountArtwork(
         for (const { ink } of refrains) ink!.resize()
         copyColour.resize()
         bridgeLinger.resize(reduced.matches)
+        navigation?.resize()
       } else request()
     }
     const scrolling = now - lastScroll < 140
@@ -225,6 +256,7 @@ export async function mountArtwork(
       copyColour.bridgeBounds(),
       !appearance.matches,
     )
+    activeFrame = navigation?.draw(now, frame) || activeFrame
     for (const [chorusIndex, { refrain, refrainStage, ink, final }] of refrains.entries()) {
       const transitions = timings[chorusIndex]
       const section = refrain.getBoundingClientRect()
@@ -296,6 +328,7 @@ export async function mountArtwork(
         item.ink.resize()
       }
       copyColour.resize()
+      navigation?.resize()
       bridgeLinger.resize(reduced.matches)
       on(window, 'scroll', () => {
         lastScroll = performance.now()
@@ -345,6 +378,7 @@ export async function mountArtwork(
           drawType: draw,
           paintType: (frame) => {
             for (const { ink } of refrains) ink!.paint(frame)
+            navigation?.paint(frame)
           },
           ready,
         })) ?? (() => {})

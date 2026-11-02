@@ -154,4 +154,5 @@ export type {
   PoemSectionProps,
   PoemLine,
   PoemPair,
+  PoemLocation,
 } from './temple.d.ts'

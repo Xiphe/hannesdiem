@@ -35,6 +35,13 @@ export interface PoemOpeningProps {
   dates: { start: string; end: string }
   image: ImageSource
   lightSource: { x: number; y: number }
+  location?: PoemLocation
+  navigation?: readonly {
+    label: string
+    href?: string
+    /** The poem section represented by the piece immediately before this item. */
+    verseBefore?: { label: string; href: string }
+  }[]
   pair?: PoemPair
   pairs?: readonly PoemPair[]
   bridge?: readonly (readonly PoemLine[])[]
@@ -50,6 +57,20 @@ export interface PoemOpeningProps {
     refrain?: PoemPair['refrain']
   }
   children?: RemixNode
+}
+export interface PoemLocation {
+  image: ImageSource
+  imageAlt: string
+  heading: string
+  venue: {
+    name: string
+    href: string
+    travel: string
+    latitude: number
+    longitude: number
+  }
+  invitation: string
+  action: { prompt: string; label: string; href: string }
 }
 export interface PoemSectionProps {
   id: string

@@ -5,12 +5,21 @@ import { mountArtwork } from './artwork.ts'
 import { FirstPair, Phrase, Refrain } from './first-pair.tsx'
 import { VerseDrop } from './verse-drop.tsx'
 import type { OpeningProps } from './types.ts'
+import { Location } from './location/view.tsx'
+import { mountLocation } from './location/enhance.ts'
+import { TopNavigation } from './top-navigation.tsx'
+import { mountNavigationPosition } from './top-navigation-position.ts'
+import { mountNavigationScroll } from './top-navigation-scroll.ts'
+import { mountNavigationProgress } from './top-navigation-progress.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
   handle.queueTask(async (signal) => {
     if (!root || signal.aborted) return
     const host = root
+    mountNavigationPosition(host, signal)
+    mountNavigationProgress(host, signal)
+    mountNavigationScroll(host, signal)
     const controller = new AbortController()
     signal.addEventListener('abort', () => controller.abort(), { once: true })
     host.dataset.state = 'loading'
@@ -34,6 +43,7 @@ export function Opening(handle: Handle<OpeningProps>) {
       { once: true },
     )
     try {
+      if (handle.props.location) mountLocation(host, handle.props.location, controller.signal)
       await mountArtwork(host, handle.props, controller.signal, () => reveal('ready'))
     } catch (error) {
       controller.abort()
@@ -42,7 +52,8 @@ export function Opening(handle: Handle<OpeningProps>) {
     }
   })
   return () => {
-    const { title, dates, image, pair, pairs, bridge, bridgeBody, finalVerse } = handle.props
+    const { title, dates, image, pair, pairs, bridge, bridgeBody, location, finalVerse } =
+      handle.props
     const format = (date: string) =>
       new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
         new Date(date + 'T12:00:00Z'),
@@ -56,6 +67,7 @@ export function Opening(handle: Handle<OpeningProps>) {
       >
         <section
           class="temple-opening"
+          id={`temple-top-${handle.props.id}`}
           aria-label={title}
         >
           <div class="temple-title-track">
@@ -86,15 +98,18 @@ export function Opening(handle: Handle<OpeningProps>) {
             </div>
           </div>
         </section>
+        {handle.props.navigation && <TopNavigation {...handle.props} />}
         <canvas
           class="temple-escapes"
           aria-hidden="true"
         />
 
-        {(pairs?.length || pair) && (
+        {(pairs?.length || pair || location) && (
           <div class="poem-pairs">
-            {(pairs ?? [pair!]).map((pair, index) => (
+            {location && <Location {...location} />}
+            {(pairs ?? (pair ? [pair] : [])).map((pair, index) => (
               <FirstPair
+                id={`${handle.props.id}-pair-${index + 1}`}
                 pair={pair}
                 index={index}
               />

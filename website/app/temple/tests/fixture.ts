@@ -68,6 +68,8 @@ function fixtureContent(
   pairs?: readonly PoemPair[],
   bridge?: readonly (readonly PoemLine[])[],
   bridgeBody?: PoemOpeningProps['bridgeBody'],
+  location?: PoemOpeningProps['location'],
+  navigation?: PoemOpeningProps['navigation'],
   finalVerse?: PoemOpeningProps['finalVerse'],
 ): CmxDocument['content'] {
   return {
@@ -90,6 +92,8 @@ function fixtureContent(
             ...(pairs ? { pairs } : { pair: firstPair }),
             ...(bridge ? { bridge } : {}),
             ...(bridgeBody ? { bridgeBody } : {}),
+            ...(location ? { location } : {}),
+            ...(navigation ? { navigation } : {}),
             ...(finalVerse ? { finalVerse } : {}),
           },
           ...(finalVerse?.refrain
@@ -128,15 +132,69 @@ const finalVerse = {
     { text: 'The closing phrase', display: 'The closing phrase', face: 'cinzel' },
   ],
 } satisfies NonNullable<PoemOpeningProps['finalVerse']>
-export const riseTempleContent = fixtureContent([firstPair], undefined, undefined, finalVerse)
+export const riseTempleContent = fixtureContent(
+  [firstPair],
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  finalVerse,
+)
 export const bridgeFinaleTempleContent = fixtureContent(
   [firstPair],
   [[{ text: 'A synthetic bridge introduction.' }]],
   ['A synthetic reading paragraph stays clear of the sculpture. '.repeat(12).trim()],
+  undefined,
+  undefined,
   finalVerse,
 )
 const { action: _action, ...actionlessPair } = firstPair
 export const actionlessTempleContent = fixtureContent([actionlessPair, secondPair])
+const fixtureLocation = {
+  image: 'fixture-image',
+  imageAlt: 'Synthetic room image',
+  heading: 'A synthetic invitation with enough words to wrap naturally in the narrow layout.',
+  venue: {
+    name: 'Synthetic studio',
+    href: 'https://example.com/studio',
+    travel: 'Synthetic travel information',
+    latitude: 52.5,
+    longitude: 13.4,
+  },
+  invitation: 'A synthetic personal invitation for the location component fixture.',
+  action: {
+    prompt: 'Arrange a fixture visit',
+    label: 'Contact fixture',
+    href: 'mailto:fixture@example.com',
+  },
+} satisfies NonNullable<PoemOpeningProps['location']>
+export const locationTempleContent = fixtureContent(
+  [actionlessPair, secondPair],
+  undefined,
+  undefined,
+  fixtureLocation,
+)
+export const navigationTempleContent = fixtureContent(
+  [actionlessPair, secondPair],
+  undefined,
+  undefined,
+  fixtureLocation,
+  [
+    { label: 'First target', href: '#facts' },
+    {
+      label: 'Second target',
+      verseBefore: { label: 'First fixture verse', href: '#verse-fixture-pair-1' },
+    },
+    {
+      label: 'Third target',
+      verseBefore: { label: 'Second fixture verse', href: '#verse-fixture-pair-2' },
+    },
+    { label: 'Fourth target' },
+    { label: 'Fifth target' },
+    { label: 'Sixth target' },
+    { label: 'Seventh target' },
+  ],
+)
 
 const thirdPair = {
   paragraphs: [

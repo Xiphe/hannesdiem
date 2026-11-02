@@ -50,11 +50,12 @@ export function Phrase(handle: Handle<{ lines: readonly PoemLine[]; firstStatic?
   }
 }
 
-export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
+export function FirstPair(handle: Handle<{ id: string; pair: PoemPair; index: number }>) {
   return () => {
     const { pair } = handle.props
     return (
       <article
+        id={handle.props.id}
         class="first-pair"
         aria-label={
           handle.props.index === 0
@@ -64,7 +65,7 @@ export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
       >
         <div class="verse-copy">
           {pair.paragraphs.map((lines, index) => (
-            <p>
+            <p data-nav-visual>
               <Phrase
                 lines={lines}
                 firstStatic={index === 0}
@@ -100,7 +101,7 @@ export function FirstPair(handle: Handle<{ pair: PoemPair; index: number }>) {
           data-has-action={pair.action ? '' : undefined}
         >
           {[pair.coda, ...(pair.continuation ?? [])].map((lines, index) => (
-            <p>
+            <p data-nav-visual>
               <Phrase
                 lines={lines}
                 firstStatic={index === 0}

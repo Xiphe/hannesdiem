@@ -2,6 +2,7 @@ import type { PageMetadata } from '../../types.ts'
 import { PoemCanvas, PoemOpening, type PoemPair } from '@hannesdiem/content-components'
 
 import forest from '../../media/IMG_6257.JPG'
+import room from '../../media/steinfurth-grand-piano.jpeg'
 
 export const metadata = { kind: 'temple', image: forest } satisfies PageMetadata
 
@@ -142,6 +143,40 @@ export default function Content() {
         dates={{ start: '2026-11-01', end: '2026-12-20' }}
         image={forest}
         lightSource={{ x: 53.24, y: 54.07 }}
+        navigation={[
+          { label: 'Visit', href: '#facts' },
+          {
+            label: 'Watch',
+            verseBefore: { label: 'First verse and refrain', href: '#verse-1-pair-1' },
+          },
+          {
+            label: 'Create',
+            verseBefore: { label: 'Second verse and refrain', href: '#verse-1-pair-2' },
+          },
+          { label: 'Share' },
+          { label: 'Inspire' },
+          { label: 'Be Held' },
+          { label: 'Wish' },
+        ]}
+        location={{
+          image: room,
+          imageAlt: 'The piano and room at Kulturhaus Steinfurth',
+          heading: 'In essence this is us, the piano, and something to be said, sung and played.',
+          venue: {
+            name: 'Kulturhaus Steinfurth',
+            href: 'https://kulturhaus-steinfurth.de/',
+            travel: '3 hours by train from Berlin',
+            latitude: 53.9722597,
+            longitude: 13.643702,
+          },
+          invitation:
+            'I would love to get visited in this cocoon and share meals, music, words, touch, tears and laughter.',
+          action: {
+            prompt: 'Lets connect and arrange your stay.',
+            label: 'join me in person',
+            href: 'mailto:sound@hannesdiem.de',
+          },
+        }}
         pairs={[firstPair, secondPair, thirdPair]}
         bridge={[
           [

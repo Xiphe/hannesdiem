@@ -37,6 +37,8 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
       pairs,
       bridge,
       bridgeBody,
+      location,
+      navigation,
       finalVerse,
       children,
     } = handle.props
@@ -50,6 +52,9 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
     return (
       <>
         <Opening
+          id={id}
+          mark={assets.templeMark}
+          navigation={navigation}
           title={title}
           dates={dates}
           image={{ src: source, width: item.width, height: item.height }}
@@ -58,6 +63,16 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
           pairs={pairs}
           bridge={bridge}
           bridgeBody={bridgeBody}
+          location={
+            location
+              ? {
+                  ...location,
+                  id: `temple-location-${id}`,
+                  image: getMedia(site.media, location.image),
+                  mapAsset: assets.templeEurope,
+                }
+              : undefined
+          }
           finalVerse={finalVerse}
         />
         {children != null && (
