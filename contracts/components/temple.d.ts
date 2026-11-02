@@ -36,6 +36,7 @@ export interface PoemOpeningProps {
   image: ImageSource
   lightSource: { x: number; y: number }
   location?: PoemLocation
+  navigation?: readonly { label: string; href?: string }[]
   pair?: PoemPair
   pairs?: readonly PoemPair[]
   bridge?: readonly (readonly PoemLine[])[]

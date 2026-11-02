@@ -10,6 +10,7 @@ import { createEscapes } from './escapes.ts'
 import { colourCopy } from './copy-colour.ts'
 import { blockType } from './block-type.ts'
 import { mountFragmentGround } from './fragment-button/ground.ts'
+import { createNavigationArtwork } from './top-navigation-artwork.ts'
 export async function mountArtwork(
   host: HTMLElement,
   props: OpeningProps,
@@ -23,12 +24,20 @@ export async function mountArtwork(
   const poem = host.querySelector<HTMLElement>('.poem-pairs')!
   if (!poem || !poem.querySelector('.verse-copy')) {
     const escapes = createEscapes(signal)
-    await mountOpening(root, props, signal, {
-      escapes,
-      paintMist: createAtmosphere(signal),
-      drawType: () => false,
-      ready,
-    })
+    let requestScene = () => {}
+    const navigation = createNavigationArtwork(host, signal, () => requestScene(), escapes)
+    requestScene =
+      (await mountOpening(root, props, signal, {
+        escapes,
+        paintMist: createAtmosphere(signal),
+        drawType: (now, frame) => navigation?.draw(now, frame) ?? false,
+        paintType: (frame) => navigation?.paint(frame),
+        ready: () => {
+          navigation?.resize()
+          ready()
+          requestScene()
+        },
+      })) ?? (() => {})
     return
   }
   const refrains = [...host.querySelectorAll<HTMLElement>('.refrain-composition')].map(
@@ -69,6 +78,7 @@ export async function mountArtwork(
   const escapes = createEscapes(abort.signal)
   const paintMist = createAtmosphere(abort.signal)
   let requestScene = () => {}
+  const navigation = createNavigationArtwork(host, abort.signal, request, escapes)
   const copyColour = colourCopy(
     poem,
     abort.signal,
@@ -194,6 +204,7 @@ export async function mountArtwork(
         for (const { ink } of refrains) ink!.resize()
         copyColour.resize()
         bridgeLinger.resize(reduced.matches)
+        navigation?.resize()
       } else request()
     }
     if (bridgeBody) {
@@ -217,6 +228,7 @@ export async function mountArtwork(
       copyColour.bridgeBounds(),
       !appearance.matches,
     )
+    activeFrame = navigation?.draw(now, frame) || activeFrame
     for (const [chorusIndex, { refrain, refrainStage, ink }] of refrains.entries()) {
       const transitions = timings[chorusIndex]
       const section = refrain.getBoundingClientRect()
@@ -284,6 +296,7 @@ export async function mountArtwork(
         item.ink.resize()
       }
       copyColour.resize()
+      navigation?.resize()
       bridgeLinger.resize(reduced.matches)
       on(window, 'scroll', () => {
         lastScroll = performance.now()
@@ -332,6 +345,7 @@ export async function mountArtwork(
           drawType: draw,
           paintType: (frame) => {
             for (const { ink } of refrains) ink!.paint(frame)
+            navigation?.paint(frame)
           },
           ready,
         })) ?? (() => {})

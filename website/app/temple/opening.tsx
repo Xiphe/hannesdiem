@@ -6,6 +6,7 @@ import { FirstPair, Phrase } from './first-pair.tsx'
 import type { OpeningProps } from './types.ts'
 import { Location } from './location/view.tsx'
 import { mountLocation } from './location/enhance.ts'
+import { TopNavigation } from './top-navigation.tsx'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
@@ -58,6 +59,7 @@ export function Opening(handle: Handle<OpeningProps>) {
       >
         <section
           class="temple-opening"
+          id={`temple-top-${handle.props.id}`}
           aria-label={title}
         >
           <div class="temple-title-track">
@@ -88,6 +90,7 @@ export function Opening(handle: Handle<OpeningProps>) {
             </div>
           </div>
         </section>
+        {handle.props.navigation && <TopNavigation {...handle.props} />}
         <canvas
           class="temple-escapes"
           aria-hidden="true"

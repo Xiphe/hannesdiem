@@ -521,7 +521,7 @@ test('Temple opening enhances only its island and leaves static verse unchanged'
   const opening = page.locator('.temple-opening')
   await expect(opening).toHaveAttribute('data-ready', 'true')
   await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
-  await expect(page.locator('select, input, nav')).toHaveCount(0)
+  await expect(page.locator('.temple-page').locator('select, input, nav')).toHaveCount(0)
   await page.evaluate(() => {
     const verse = document.querySelector('[data-poem-text]')!
     Object.assign(window, {

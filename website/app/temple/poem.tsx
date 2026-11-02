@@ -38,6 +38,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
       bridge,
       bridgeBody,
       location,
+      navigation,
       children,
     } = handle.props
     const item = getMedia(site.media, image)
@@ -50,6 +51,9 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
     return (
       <>
         <Opening
+          id={id}
+          mark={assets.mark}
+          navigation={navigation}
           title={title}
           dates={dates}
           image={{ src: source, width: item.width, height: item.height }}

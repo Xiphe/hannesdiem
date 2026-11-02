@@ -5,6 +5,9 @@ export type LocationProps = Omit<PoemLocation, 'image'> & {
   mapAsset: string
 }
 export interface OpeningProps {
+  id: string
+  mark: string
+  navigation?: readonly { label: string; href?: string }[]
   location?: LocationProps
   pair?: PoemPair
   pairs?: readonly PoemPair[]

@@ -143,6 +143,15 @@ export default function Content() {
         dates={{ start: '2026-11-01', end: '2026-12-20' }}
         image={forest}
         lightSource={{ x: 53.24, y: 54.07 }}
+        navigation={[
+          { label: 'Visit', href: '#facts' },
+          { label: 'Watch' },
+          { label: 'Create' },
+          { label: 'Share' },
+          { label: 'Inspire' },
+          { label: 'Be Held' },
+          { label: 'Wish' },
+        ]}
         location={{
           image: room,
           imageAlt: 'The piano and room at Kulturhaus Steinfurth',

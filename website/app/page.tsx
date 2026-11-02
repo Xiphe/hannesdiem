@@ -202,9 +202,12 @@ export function Page(
               loading
             </p>
           )}
-          {!plain && !temple && (
+          {!plain && (
             <>
-              <Chrome path={path} />
+              <Chrome
+                path={path}
+                hideMenu={temple}
+              />
               <NavigationDialog pathname={path} />
             </>
           )}

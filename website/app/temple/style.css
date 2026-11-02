@@ -1,5 +1,6 @@
 @import './fragment-button/style.css';
 @import './location/style.css';
+@import './top-navigation.css';
 
 html[data-layout='temple'] {
   color-scheme: light dark;
