@@ -194,14 +194,21 @@ export async function mountOpening(
     if (cinzel) baselines[2] -= originalGap / 2
     const totalHeight = baselines[2] + Math.max(0, bounds[2].actualBoundingBoxDescent)
     const inset = bricolage ? 0 : Math.max(16, width * 0.03)
-    const scale = portrait.matches
-      ? Math.min((width - inset * 2) / Math.max(...rowWidths), (height * 0.78) / totalHeight)
-      : bricolage
-        ? width / extent
-        : Math.min((width * 0.88) / extent, (height * 0.78) / totalHeight)
+    // Edge contact yields to the date's actual size, including safe-area insets.
+    // Keep the accepted centre while fitting every face below its breathing room.
+    const minimumTop = date.offsetTop + date.offsetHeight + 24
+    const availableHeight = Math.max(1, height * 0.95 - minimumTop * 2)
+    const scale = Math.min(
+      availableHeight / totalHeight,
+      portrait.matches
+        ? Math.min((width - inset * 2) / Math.max(...rowWidths), (height * 0.78) / totalHeight)
+        : bricolage
+          ? width / extent
+          : Math.min((width * 0.88) / extent, (height * 0.78) / totalHeight),
+    )
     const size = unitSize * scale
     const left = (width - extent * scale) / 2
-    const top = (height - totalHeight * scale) / 2 - height * 0.025
+    const top = Math.max(minimumTop, (height - totalHeight * scale) / 2 - height * 0.025)
     const joint = left + (rowWidths[0] - rowWidths[1]) * scale
     const glyphs: Glyph[] = []
     const rows = text.map((word, row) => {
@@ -591,6 +598,7 @@ export async function mountOpening(
   )
   const sizeObserver = new ResizeObserver(resize)
   sizeObserver.observe(stage)
+  sizeObserver.observe(date)
   reduced.addEventListener(
     'change',
     () => {
