@@ -5,10 +5,14 @@ import { imageElement } from './imagery.tsx'
 import { Icon } from './icons.tsx'
 import { ServiceLogo } from '../icons.tsx'
 import { md, dark, focus, buttonBase } from './styles.ts'
+import { contactHref } from '../contact/link.tsx'
 export function Button(handle: Handle<ButtonProps>) {
   return () => (
     <a
-      href={handle.props.href}
+      href={handle.props.contact ? contactHref(handle.props.href) : handle.props.href}
+      data-rmx-target={handle.props.contact ? 'overlay' : undefined}
+      data-rmx-reset-scroll={handle.props.contact ? 'false' : undefined}
+      aria-haspopup={handle.props.contact ? 'dialog' : undefined}
       target={handle.props.blank ? '_blank' : undefined}
       rel="noopener noreferrer"
       mix={css({

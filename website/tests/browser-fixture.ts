@@ -41,6 +41,18 @@ const release = (title: string, count: number) =>
     })),
   })
 const pages: Record<string, { kind: string; title: string; body: CmxNode }> = {
+  'fixture-contact': {
+    kind: 'page',
+    title: 'Fixture contact',
+    body: component('Page', {}, [
+      component('Button', {
+        label: 'Contact fixture',
+        href: 'mailto:fixture@example.org?subject=Fixture',
+        contact: true,
+      }),
+      component('ContactLink', { href: 'mailto:retreat@example.org' }, ['Contact retreat']),
+    ]),
+  },
   'fixture-release': {
     kind: 'release',
     title: 'Fixture release',
@@ -90,8 +102,29 @@ const pages: Record<string, { kind: string; title: string; body: CmxNode }> = {
     }),
   },
 }
+for (const kind of ['contact', 'long-release']) {
+  const page = pages[`fixture-${kind}`]
+  pages[`fixture-scrolled-${kind}`] = {
+    ...page,
+    title: `Scrolled ${page.title}`,
+    body: {
+      type: 'element',
+      tag: 'div',
+      props: { style: { paddingBlock: '1600px' } },
+      children: [page.body],
+    },
+  }
+}
 export const documents = structuredClone(minimal)
 export const site = documents._site.content.site as SiteMetadata
+site.contact = {
+  name: 'Fixture Person',
+  message: 'Synthetic contact greeting.',
+  website: 'https://fixture.example.org',
+  portrait: { ...image, vcardPhoto: 'c3ludGhldGljLXBob3Rv' },
+  signal: { href: 'https://signal.me/#eu/fixture-share-token', username: '@fixture.01' },
+  telegram: { href: 'https://t.me/fixture', username: '@fixture' },
+}
 documents._redirects.content.redirects = [
   { path: '/', to: '/fixture-links', status: 307, preserveSearch: true },
   { path: '/fixture-alias', to: '/fixture-release', status: 308 },

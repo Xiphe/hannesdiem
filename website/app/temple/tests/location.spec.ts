@@ -13,7 +13,7 @@ test('location is readable before enhancement, with native contact and map links
   )
   await expect(location.locator('.location-button')).toHaveAttribute(
     'href',
-    'mailto:fixture@example.com',
+    '/_contact?email=mailto%3Afixture%40example.com',
   )
   await expect(location.locator('[data-map-link]')).toHaveAttribute(
     'href',

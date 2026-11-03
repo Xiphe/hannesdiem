@@ -76,8 +76,6 @@
 }
 .temple-nav-items {
   --nav-gap: clamp(9px, 0.95vw, 16px);
-  --nav-warm-start: light-dark(#84442b, #b46a49);
-  --nav-warm-end: light-dark(#b46a49, #f2ad78);
   position: relative;
   display: flex;
   align-items: center;

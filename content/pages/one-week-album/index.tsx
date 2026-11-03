@@ -12,6 +12,7 @@ import moodAmp from '../../media/mood_amp.jpeg'
 import hannesDiemOnGuitarOneWeekAlbum from '../../media/hannes-diem-on-guitar-one-week-album.jpg'
 import {
   Button,
+  ContactLink,
   Hero,
   IconList,
   ImageBand,
@@ -75,6 +76,7 @@ export default function Content() {
             <Button
               label={'Join us!'}
               href={'mailto:oneweekalbum@hannesdiem.de'}
+              contact
             />
           </p>
         </TextBlock>
@@ -356,7 +358,9 @@ export default function Content() {
             {'Questions, uncertainties, feedback?'}
             <br />
             {'Please '}
-            <a href={'mailto:oneweekalbum@hannesdiem.de'}>{'get in touch with us'}</a>
+            <ContactLink href={'mailto:oneweekalbum@hannesdiem.de'}>
+              {'get in touch with us'}
+            </ContactLink>
             {'!'}
           </p>
           <p>
@@ -452,13 +456,9 @@ export default function Content() {
           </p>
           <p>
             {'When you have questions, please '}
-            <a
-              href={'mailto:oneweekalbum@hannesdiem.de'}
-              target={'_blank'}
-              rel={'noopener noreferrer'}
-            >
+            <ContactLink href={'mailto:oneweekalbum@hannesdiem.de'}>
               {'get in touch with us'}
-            </a>
+            </ContactLink>
             {'.'}
           </p>
         </TextBlock>

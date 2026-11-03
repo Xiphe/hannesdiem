@@ -1,6 +1,43 @@
 import type { Handle, Props } from 'remix/component'
 type SvgProps = Props<'svg'> & { className?: string }
 
+export function SignalIcon(handle: Handle<SvgProps>) {
+  return () => (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      {...handle.props}
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeDasharray="2.4 1.7"
+      />
+      <path
+        d="M18.6 11.5a6.6 6.6 0 0 1-9.9 5.7L5 18l.8-3.7a6.6 6.6 0 1 1 12.8-2.8Z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}
+
+export function TelegramIcon(handle: Handle<SvgProps>) {
+  return () => (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      {...handle.props}
+    >
+      <path d="M21.4 3.1 2.9 10.3c-1.3.5-1.3 1.3-.2 1.7l4.8 1.5L19 6.2c.5-.3.9-.1.5.2l-9.3 8.4-.4 5.1c.6 0 .9-.3 1.3-.6l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.9l3.1-14.9c.3-1.4-.5-2-1.5-1.7Z" />
+    </svg>
+  )
+}
+
 export function CheckCircle(handle: Handle<SvgProps>) {
   const { className, ...rest } = handle.props
   const props = { ...rest, class: rest.class ?? className }
@@ -451,6 +488,8 @@ export function YouTubeMusicLogo(handle: Handle<SvgProps>) {
 }
 
 const services = {
+  signal: SignalIcon,
+  telegram: TelegramIcon,
   checkcircle: CheckCircle,
   exclamationcircle: ExclamationCircle,
   facebook: FacebookIcon,

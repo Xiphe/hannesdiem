@@ -1,7 +1,7 @@
 import type { PageMetadata } from '../../types.ts'
 import photo20250415191136 from '../../media/PHOTO-2025-04-15-19-11-36.jpg'
 
-import { Button, Hero, Page, TextBlock } from '@hannesdiem/content-components'
+import { Button, ContactLink, Hero, Page, TextBlock } from '@hannesdiem/content-components'
 
 export const metadata = {
   description:
@@ -188,7 +188,9 @@ export default function Content() {
           </p>
           <p style={{ textAlign: 'center' }}>
             {'Or '}
-            <a href={'mailto:oneweekalbum@hannesdiem.de'}>{'write us a E-Mail'}</a>
+            <ContactLink href={'mailto:oneweekalbum@hannesdiem.de'}>
+              {'write us a E-Mail'}
+            </ContactLink>
           </p>
           <p style={{ textAlign: 'center' }}>
             <br />

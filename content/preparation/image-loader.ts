@@ -10,6 +10,7 @@ type Source = {
   alt: string
   focalX: number
   focalY: number
+  contactPhoto?: boolean
 }
 export function mediaBase(value: string): string {
   if (/[\s\u0000-\u001f\u007f\\?#]/.test(value))
@@ -30,7 +31,7 @@ export function mediaBase(value: string): string {
 }
 
 export const imageLoader = {
-  version: `5:bounded-palette:vibrant-${vibrantPackage.version}:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
+  version: `6:contact-photo:vibrant-${vibrantPackage.version}:sharp-${sharp.versions.sharp}:vips-${sharp.versions.vips}`,
   extensions: ['.jpg', '.jpeg', '.png', '.webp', '.avif'],
   async load({ bytes, relativePath, options }) {
     const filename = basename(relativePath)
@@ -82,6 +83,15 @@ export const imageLoader = {
       const src = await storeMedia(options.storage, key, image, 'image/webp')
       variants.push({ src, width: variantWidth })
     }
+    const vcardPhoto = options.sources[filename]?.contactPhoto
+      ? (
+          await sharp(input)
+            .rotate()
+            .resize(384, 384, { fit: 'cover' })
+            .jpeg({ quality: 82 })
+            .toBuffer()
+        ).toString('base64')
+      : undefined
     return {
       ...(options.sources[filename] ?? {}),
       filename,
@@ -91,6 +101,7 @@ export const imageLoader = {
       height,
       color,
       palette,
+      ...(vcardPhoto ? { vcardPhoto } : {}),
     }
   },
 } satisfies CmxAssetLoader<{

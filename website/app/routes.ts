@@ -1,6 +1,7 @@
 import { get, route } from 'remix/routes'
 export const routes = route({
   health: get('/health'),
+  contact: get('/_contact'),
   emptyOverlay: get('/_overlay'),
   songOverlay: get('/m/*path'),
   sitemap: get('/sitemap.xml'),

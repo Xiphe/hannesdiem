@@ -936,7 +936,7 @@ test('sidebar respects reduced motion and keyboard disclosure controls', async (
 })
 
 for (const colorScheme of ['light', 'dark'] as const) {
-  test(`sidebar keyboard focus uses the original visible outline in ${colorScheme} mode`, async ({
+  test(`sidebar keyboard focus uses rounded visible outlines in ${colorScheme} mode`, async ({
     page,
   }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' })
@@ -964,10 +964,16 @@ for (const colorScheme of ['light', 'dark'] as const) {
               width: style.outlineWidth,
               offset: style.outlineOffset,
               color: style.outlineColor,
+              rounded: [
+                style.borderTopLeftRadius,
+                style.borderTopRightRadius,
+                style.borderBottomLeftRadius,
+                style.borderBottomRightRadius,
+              ].every((radius) => parseFloat(radius) > 0),
             }
           }),
         )
-        .toEqual({ visible: true, width: '4px', offset: '4px', color: themeColor })
+        .toEqual({ visible: true, width: '4px', offset: '4px', color: themeColor, rounded: true })
     }
     const email = dialog.getByRole('textbox', { name: 'Email address' })
     await email.focus()
@@ -977,12 +983,19 @@ for (const colorScheme of ['light', 'dark'] as const) {
           visible: el.matches(':focus-visible'),
           outline: getComputedStyle(el).outlineStyle,
           shadow: getComputedStyle(el).boxShadow,
+          rounded: [
+            getComputedStyle(el).borderTopLeftRadius,
+            getComputedStyle(el).borderTopRightRadius,
+            getComputedStyle(el).borderBottomLeftRadius,
+            getComputedStyle(el).borderBottomRightRadius,
+          ].every((radius) => parseFloat(radius) > 0),
         })),
       )
       .toEqual({
         visible: true,
-        outline: 'none',
-        shadow: `${themeColor} 0px 0px 0px 1px inset`,
+        outline: 'solid',
+        shadow: 'none',
+        rounded: true,
       })
     expect(
       await dialog

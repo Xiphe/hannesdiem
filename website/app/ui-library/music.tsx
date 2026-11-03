@@ -258,6 +258,7 @@ export function Release(handle: Handle<ReleaseProps>) {
                             {track.song ? (
                               <a
                                 data-rmx-target="overlay"
+                                data-rmx-reset-scroll="false"
                                 href={'/' + track.song.slug.replace(/^\//, '')}
                                 data-rmx-src={'/m/' + track.song.slug.replace(/^\//, '')}
                                 title={`Lyrics for "${track.title}"`}

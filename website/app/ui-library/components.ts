@@ -2,6 +2,7 @@ export { Image, Hero, ImageBand } from './imagery.tsx'
 export { StreamVideo } from './video.tsx'
 export { Page, TextBlock, TwoColumnText, Prose, IconList, Timetable } from './text.tsx'
 export { Button, LinkTree } from './links.tsx'
+export { ContactLink } from '../contact/link.tsx'
 export { Icon } from './icons.tsx'
 export { Release, Song } from './music.tsx'
 

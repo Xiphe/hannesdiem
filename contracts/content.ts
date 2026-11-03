@@ -49,9 +49,18 @@ export interface SocialLink {
   href: string
   name: string
 }
+export interface ContactDetails {
+  name: string
+  message?: string
+  website?: string
+  portrait?: MediaImage & { vcardPhoto?: string }
+  signal: { href: string; username: string }
+  telegram: { href: string; username: string }
+}
 export interface SiteMetadata {
   version: 2
   media: Record<string, MediaImage>
+  contact?: ContactDetails
   navigation: {
     primary?: NavigationLink[]
     sections: { name: string; items: NavigationLink[]; collection?: 'release' }[]
@@ -113,6 +122,26 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
   )
     throw new Error('Invalid site metadata')
   const navigation = site.navigation
+  if (site.contact !== undefined) {
+    const contact = site.contact
+    if (
+      !record(contact) ||
+      typeof contact.name !== 'string' ||
+      (contact.message !== undefined && typeof contact.message !== 'string') ||
+      (contact.website !== undefined && !safeUrl(contact.website)) ||
+      (contact.portrait !== undefined &&
+        (!record(contact.portrait) ||
+          !image(contact.portrait) ||
+          (contact.portrait.vcardPhoto !== undefined &&
+            (typeof contact.portrait.vcardPhoto !== 'string' ||
+              !/^[A-Za-z0-9+/]+={0,2}$/.test(contact.portrait.vcardPhoto))))) ||
+      ![contact.signal, contact.telegram].every(
+        (service) =>
+          record(service) && safeUrl(service.href) && typeof service.username === 'string',
+      )
+    )
+      throw new Error('Invalid contact metadata')
+  }
   const links = (value: unknown, label: 'name' | 'title') =>
     Array.isArray(value) &&
     value.every(

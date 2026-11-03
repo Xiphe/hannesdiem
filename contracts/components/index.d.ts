@@ -83,6 +83,11 @@ export interface ButtonProps {
   blank?: boolean
   icon?: string
   iconLabel?: string
+  contact?: boolean
+}
+export interface ContactLinkProps {
+  href: string
+  children?: RemixNode
 }
 export interface IconListProps {
   list: { icon: string; iconLabel?: string; text: string }[]
@@ -147,6 +152,7 @@ export declare const ImageBand: Component<ImageBandProps>
 export declare const TwoColumnText: Component<TwoColumnTextProps>
 export declare const Prose: Component<ProseProps>
 export declare const Button: Component<ButtonProps>
+export declare const ContactLink: Component<ContactLinkProps>
 export declare const Icon: Component<IconProps>
 export declare const IconList: Component<IconListProps>
 export declare const Timetable: Component<TimetableProps>

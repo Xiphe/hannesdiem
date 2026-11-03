@@ -1,4 +1,10 @@
 {
+  "fresse13.jpg": {
+    "alt": "Portrait of Hannes Diem",
+    "focalX": 50,
+    "focalY": 45,
+    "contactPhoto": true
+  },
   "hygge.jpg": {
     "alt": "Roxy enjoying some cozy time on the sofa",
     "focalX": 50,

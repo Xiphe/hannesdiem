@@ -39,6 +39,23 @@ test('images are auto-rotated into immutable WebP files without enlargement', as
   assert.equal(image.srcSet, `${image.src} 40w`)
 })
 
+test('contact portraits include a standalone square JPEG only when requested', async (t) => {
+  const { options, load } = await fixture(t)
+  assert.equal((await load()).vcardPhoto, undefined)
+  options.sources['image.jpg'] = {
+    alt: 'Synthetic contact portrait',
+    focalX: 50,
+    focalY: 50,
+    contactPhoto: true,
+  }
+  const image = await load()
+  const photo = await sharp(Buffer.from(image.vcardPhoto!, 'base64')).metadata()
+  assert.equal(photo.format, 'jpeg')
+  assert.equal(photo.width, 384)
+  assert.equal(photo.height, 384)
+  assert.equal(photo.exif, undefined)
+})
+
 test('responsive variants use the configured widths and stop at 2560px', async (t) => {
   const { options, directory, load } = await fixture(t)
   options.storage.base = 'https://media.example.com/nested'

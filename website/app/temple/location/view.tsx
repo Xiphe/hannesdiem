@@ -3,6 +3,7 @@ import type { LocationProps } from '../types.ts'
 import { mapPiece, textPiece } from './material.ts'
 import { mapLink, projectVenue } from './maps.ts'
 import { pinPath } from './pin.ts'
+import { ContactLink } from '../../contact/link.tsx'
 
 export function Location(handle: Handle<LocationProps>) {
   return () => {
@@ -158,12 +159,12 @@ export function Location(handle: Handle<LocationProps>) {
           data-nav-visual
         >
           <p class="location-prompt">{action.prompt}</p>
-          <a
+          <ContactLink
             class="location-button"
             href={action.href}
           >
             {action.label}
-          </a>
+          </ContactLink>
         </div>
       </section>
     )

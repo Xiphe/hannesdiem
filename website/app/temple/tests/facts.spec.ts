@@ -16,7 +16,7 @@ test('facts publish native CMX text, images and action states without JavaScript
   )
   await expect(page.locator('#fixture-create .fact-action a')).toHaveAttribute(
     'href',
-    'mailto:fixture@example.com',
+    '/_contact?email=mailto%3Afixture%40example.com',
   )
   expect(
     await page

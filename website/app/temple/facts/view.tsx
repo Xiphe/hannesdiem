@@ -5,6 +5,7 @@ import { mountReadingMaterial } from './enhance.ts'
 import { readingContours } from './material.ts'
 import { FactCircle } from './circle.tsx'
 import { TempleSignup } from '../../newsletter/temple-form.tsx'
+import { ContactLink } from '../../contact/link.tsx'
 
 /** Native CMX content; the fitted silhouette is optional enhancement. */
 export function Fact(handle: Handle<FactProps>) {
@@ -111,7 +112,11 @@ export function Fact(handle: Handle<FactProps>) {
                 label={action.label}
               />
             ) : action.href ? (
-              <a href={action.href}>{action.label}</a>
+              action.href.startsWith('mailto:') ? (
+                <ContactLink href={action.href}>{action.label}</ContactLink>
+              ) : (
+                <a href={action.href}>{action.label}</a>
+              )
             ) : (
               <button
                 type="button"

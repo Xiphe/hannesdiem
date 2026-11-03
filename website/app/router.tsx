@@ -8,6 +8,7 @@ import type { ContentLoader } from './document-host/index.ts'
 import { Page } from './page.tsx'
 import { routes } from './routes.ts'
 import { contentCacheTag } from './document-host/index.ts'
+import { ContactCard } from './contact/card.tsx'
 
 const privateHeaders = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
 const xml = (value: string) =>
@@ -18,6 +19,38 @@ export function createApp(content: ContentLoader) {
     defaultHandler: () => new Response('Not found', { status: 404, headers: privateHeaders }),
   })
   router.get(routes.health, () => Response.json({ ok: true }, { headers: privateHeaders }))
+  router.get(routes.contact, async ({ request, render }) => {
+    const mailto = new URL(request.url).searchParams.get('email') ?? ''
+    if (!/^mailto:[^\s?@]+@[^\s?@]+(?:\?[^\r\n]*)?$/i.test(mailto))
+      return new Response('Invalid email address', { status: 400, headers: privateHeaders })
+    const page = await content(request)
+    const overlay = request.headers.get('X-Remix-Target') === 'overlay'
+    const card = (
+      <ContactCard
+        contact={page.site.contact}
+        mailto={mailto}
+        overlay={overlay}
+      />
+    )
+    return render(
+      <SiteContent
+        site={page.site}
+        routes={page.routes}
+      >
+        {overlay ? (
+          card
+        ) : (
+          <Page
+            title="Contact"
+            body={card}
+            path="/_contact"
+            noindex
+          />
+        )}
+      </SiteContent>,
+      { headers: privateHeaders },
+    )
+  })
   router.get(
     routes.emptyOverlay,
     () =>
