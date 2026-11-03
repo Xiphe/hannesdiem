@@ -654,7 +654,7 @@
 .temple-notification-piece {
   position: relative;
   isolation: isolate;
-  padding: 18px 24px 22px;
+  padding: 18px 24px 22px 39px;
   color: light-dark(#302920, #e8ddd0);
 }
 .temple-signup .temple-notification-control {
@@ -716,7 +716,6 @@
 }
 .temple-notification-state {
   text-align: left;
-  padding-left: 15px;
   display: grid;
   align-content: center;
   min-height: 3em;
