@@ -1,4 +1,5 @@
 import { on, ref, type Handle } from 'remix/component'
+import { NotificationSwitch } from './notification-switch.tsx'
 import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
 import {
   templeMessages,
@@ -39,6 +40,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
   let name = handle.props.nameValue ?? state.name ?? ''
   let email = handle.props.emailValue ?? state.email ?? ''
   let pending = false
+  let optimisticSubscription: boolean | undefined
   let cooldown =
     result?.type === 'spam_protection'
       ? result.remainingSeconds
@@ -168,6 +170,8 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
     email = String(body.get('email') ?? email)
     pending = true
     result = undefined
+    if (state.email && !state.unsubscribed)
+      optimisticSubscription = body.get('intent') === 'subscribe'
     void handle.update()
     try {
       const response = await fetch(templeNewsletterPath, {
@@ -197,6 +201,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
     } finally {
       if (!handle.signal.aborted) {
         pending = false
+        optimisticSubscription = undefined
         void handle.update()
       }
     }
@@ -208,11 +213,11 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
     confirmed = false
     expanded = false
     await handle.update()
-    root?.querySelector<HTMLElement>('a, button[role="switch"]')?.focus({ preventScroll: true })
+    root?.querySelector<HTMLElement>('a, input[role="switch"]')?.focus({ preventScroll: true })
   }
 
   return () => {
-    const subscribed = Boolean(state.subscribed && !state.unsubscribed)
+    const subscribed = optimisticSubscription ?? Boolean(state.subscribed && !state.unsubscribed)
     const disabled = !state.ready || pending || cooldown > 0
     const floating = handle.props.floating !== false
     const inline = Boolean(state.email && !awaitingConfirmation && !confirmed && !expanded)
@@ -237,21 +242,11 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
               name="_csrf"
               value={state.csrfToken ?? ''}
             />
-            <button
-              type="submit"
-              name="intent"
-              value={subscribed ? 'unsubscribe' : 'subscribe'}
-              role="switch"
-              aria-checked={subscribed}
+            <NotificationSwitch
+              checked={subscribed}
               disabled={disabled}
-            >
-              <span
-                class="temple-signup-switch"
-                aria-hidden="true"
-              />
-              Receive notifications via mail
-              {pending && LoadingSpinner()}
-            </button>
+              pending={pending}
+            />
             {state.unsubscribed && (
               <p class="temple-signup-reactivation">{templeMessages.reactivation}</p>
             )}
@@ -334,22 +329,11 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
                   <p class="temple-signup-reactivation">{templeMessages.reactivation}</p>
                 )}
                 {state.email ? (
-                  <button
-                    type="submit"
-                    name="intent"
-                    value={subscribed ? 'unsubscribe' : 'subscribe'}
-                    formNoValidate={subscribed}
-                    role="switch"
-                    aria-checked={subscribed}
+                  <NotificationSwitch
+                    checked={subscribed}
                     disabled={disabled}
-                  >
-                    <span
-                      class="temple-signup-switch"
-                      aria-hidden="true"
-                    />
-                    Receive notifications via mail
-                    {pending && LoadingSpinner()}
-                  </button>
+                    pending={pending}
+                  />
                 ) : (
                   <button
                     type="submit"

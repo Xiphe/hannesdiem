@@ -631,30 +631,82 @@
 .temple-signup .temple-signup-feedback {
   margin-top: 16px;
 }
-.temple-signup button[role='switch'] {
-  display: flex;
-  gap: 12px;
+.temple-signup .temple-notification-control {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 18px;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+  padding-block: 6px;
+  font-weight: 400;
+  cursor: pointer;
 }
-.temple-signup-switch {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 18px;
-  border: 1px solid currentColor;
-  border-radius: 12px;
+.temple-signup .temple-notification-input {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.temple-notification-track {
+  box-sizing: border-box;
+  width: 40px;
+  height: 24px;
   padding: 2px;
+  border: 1px solid light-dark(#8d8173, #8d8479);
+  border-radius: 14px;
+  background: light-dark(#d3cfc9, #403a33);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
 }
-.temple-signup-switch::after {
+.temple-notification-track::after {
   content: '';
   display: block;
-  width: 12px;
-  height: 12px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: currentColor;
+  background: light-dark(#6b6056, #d8d0c5);
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
 }
-[aria-checked='true'] > .temple-signup-switch::after {
-  transform: translateX(12px);
+.temple-notification-input:checked + .temple-notification-track {
+  background: light-dark(#b66f32, #eab77e);
+  border-color: light-dark(#b66f32, #eab77e);
+}
+.temple-notification-input:checked + .temple-notification-track::after {
+  transform: translateX(16px);
+  background: light-dark(#fff7ed, #201a14);
+}
+.temple-notification-input:focus-visible + .temple-notification-track {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.temple-notification-state {
+  display: grid;
+  align-content: center;
+  min-height: 3em;
+}
+.temple-notification-saving {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+.temple-notification-saving .temple-loading-spinner {
+  margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .temple-notification-track,
+  .temple-notification-track::after {
+    transition: none;
+  }
 }
 
 /* Both interest flows use the same piece and field proportions. */

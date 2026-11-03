@@ -17,10 +17,9 @@ The shared session and independent Watch/Circle topics from
   piece close below the center button.
 - The Watch email link opens a separate confirmation piece: bold “Great, this
   worked!” followed by a line break and “I'll notify you when we've created
-  something new.” Center the confirmation piece
-  in the viewport after rendering. Dismissal returns to the inline “Receive
-  notifications via mail”
-  switch. Normal signed-in Watch shows that switch, without email or subscription
+  something new.” Center the confirmation piece in the viewport after rendering.
+  Dismissal returns to an inline switch. Normal signed-in Watch shows that switch,
+  without email or subscription
   success copy. Older contacts need no missing-name field to toggle updates.
 - Segment membership determines returning visitors. New-interest email subject is
   “Temple of Sound: Confirm your interest” with “Confirm interest”; returning mail
@@ -67,3 +66,13 @@ The new UI reuses the existing piece material and private-island lifecycle. No
 new CMX component contract or public publication state is needed. Keep fixtures
 synthetic and verify website checks with `content/` absent using a temporary copy,
 so shared authored work stays available to the other agents.
+
+## Notification switch review
+
+The artist confirmed a plain row with a colored slider, rather than a filled
+button. Use “You will receive notifications via email” when on and “You will not
+receive notifications” when off. Change the thumb position, track color and
+sentence together immediately for ordinary topic changes. Reserve the spinner
+space and sentence height so saving never shifts the row; prevent duplicate
+requests and revert with an inline error on failure. Global email reactivation
+still waits for the confirmation email before displaying the subscribed state.
