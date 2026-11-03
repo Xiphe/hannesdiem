@@ -600,47 +600,58 @@ for (const scheme of ['light', 'dark'] as const) {
   })
 }
 
-test('Temple stays black while fonts load, then reveals the completed scene', async ({ page }) => {
-  let release!: () => void
-  const ready = new Promise<void>((resolve) => {
-    release = resolve
+for (const scheme of ['light', 'dark'] as const) {
+  test(`Temple follows ${scheme} appearance while fonts load, then reveals the completed scene`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme })
+    let release!: () => void
+    const ready = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    await page.route('**/*.ttf', async (route) => {
+      await ready
+      await route.continue()
+    })
+    await page.goto('/temple-of-sound', { waitUntil: 'commit' })
+    await expect(page.locator('html')).toHaveAttribute('data-temple-loading', '')
+    await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'hidden')
+    const ground = scheme === 'light' ? 'rgb(247, 236, 223)' : 'rgb(0, 0, 0)'
+    await expect(page.locator('html')).toHaveCSS('background-color', ground)
+    await expect(page.locator('body')).toHaveCSS('background-color', ground)
+    const seekSpinner = (time: number) =>
+      page.evaluate((time) => {
+        const animations = document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation instanceof CSSAnimation &&
+              animation.animationName.startsWith('temple-spinner-'),
+          )
+        if (!animations.length) throw new Error('Loading spinner animations missing')
+        for (const animation of animations) {
+          animation.pause()
+          animation.currentTime = time
+        }
+        return getComputedStyle(document.body, '::before').opacity
+      }, time)
+    expect(await seekSpinner(299)).toBe('0')
+    await expect(page.getByRole('status')).toHaveCount(0)
+    expect(await seekSpinner(300)).toBe('1')
+    await expect(page.getByRole('status')).toHaveText('loading')
+    await page.emulateMedia({ colorScheme: scheme === 'light' ? 'dark' : 'light' })
+    const changedGround = scheme === 'light' ? 'rgb(0, 0, 0)' : 'rgb(247, 236, 223)'
+    await expect(page.locator('html')).toHaveCSS('background-color', changedGround)
+    await expect(page.locator('body')).toHaveCSS('background-color', changedGround)
+    release()
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'visible')
+    await expect(page.getByRole('status')).toHaveCount(0)
+    expect(await page.evaluate(() => getComputedStyle(document.body, '::before').content)).toBe(
+      'none',
+    )
   })
-  await page.route('**/*.ttf', async (route) => {
-    await ready
-    await route.continue()
-  })
-  await page.goto('/temple-of-sound', { waitUntil: 'commit' })
-  await expect(page.locator('html')).toHaveAttribute('data-temple-loading', '')
-  await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'hidden')
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(0, 0, 0)')
-  const seekSpinner = (time: number) =>
-    page.evaluate((time) => {
-      const animations = document
-        .getAnimations()
-        .filter(
-          (animation) =>
-            animation instanceof CSSAnimation &&
-            animation.animationName.startsWith('temple-spinner-'),
-        )
-      if (!animations.length) throw new Error('Loading spinner animations missing')
-      for (const animation of animations) {
-        animation.pause()
-        animation.currentTime = time
-      }
-      return getComputedStyle(document.body, '::before').opacity
-    }, time)
-  expect(await seekSpinner(299)).toBe('0')
-  await expect(page.getByRole('status')).toHaveCount(0)
-  expect(await seekSpinner(300)).toBe('1')
-  await expect(page.getByRole('status')).toHaveText('loading')
-  release()
-  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-  await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'visible')
-  await expect(page.getByRole('status')).toHaveCount(0)
-  expect(await page.evaluate(() => getComputedStyle(document.body, '::before').content)).toBe(
-    'none',
-  )
-})
+}
 
 for (const failure of ['font', 'image'] as const) {
   test(`Temple recovers readable native text after ${failure} failure`, async ({ page }) => {
