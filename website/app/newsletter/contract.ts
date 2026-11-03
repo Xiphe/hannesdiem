@@ -14,7 +14,7 @@ export const templeNewsletterPath = '/newsletter/temple'
 export const templeReturnPath = '/temple-of-sound#watch'
 export const templeMessages = {
   pending: 'Awesome, please check your email to confirm your interest',
-  confirmed: 'Great! Your interest is confirmed.',
+  confirmed: "Great! This worked, I'll notify you when we've created something new.",
   subscribed: 'You’re subscribed to Temple of Sound updates.',
   unsubscribed: 'You’re unsubscribed from Temple of Sound updates.',
   failure: 'Something went wrong. Please try again.',

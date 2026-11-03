@@ -217,22 +217,34 @@ for (const width of [390, 1440]) {
   })
 }
 
-test('Watch deep link displays a dismissible confirmation view before the inline switch', async ({
-  page,
-}) => {
-  await page.route(endpoint, (route) =>
-    route.fulfill({ json: { ...anonymous, email: address, subscribed: true } }),
-  )
-  await page.goto('/temple-facts?newsletter=confirmed#fixture-watch')
-  const signup = page.locator('#fixture-watch .temple-signup')
-  await expect(signup.getByRole('status')).toHaveText('Great! Your interest is confirmed.')
-  await expect(signup.locator('input')).toHaveCount(0)
-  await signup.getByRole('button', { name: 'Close signup' }).click()
-  await expect(signup.getByRole('switch')).toBeVisible()
-  await expect(signup.getByRole('switch')).toBeFocused()
-  await expect(signup.getByRole('dialog')).toHaveCount(0)
-  await expect(signup).not.toContainText(address)
-})
+for (const width of [390, 1440]) {
+  test(`Watch confirmation is centered and dismissible at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.route(endpoint, (route) =>
+      route.fulfill({ json: { ...anonymous, email: address, subscribed: true } }),
+    )
+    await page.goto('/temple-facts?newsletter=confirmed#fixture-watch')
+    const signup = page.locator('#fixture-watch .temple-signup')
+    await expect(signup.getByRole('status')).toHaveText(
+      "Great! This worked, I'll notify you when we've created something new.",
+    )
+    await expect(signup.getByRole('dialog')).toBeVisible()
+    await expect
+      .poll(() =>
+        signup.getByRole('dialog').evaluate((node) => {
+          const box = node.getBoundingClientRect()
+          return Math.abs(box.top + box.height / 2 - innerHeight / 2)
+        }),
+      )
+      .toBeLessThan(2)
+    await expect(signup.locator('input')).toHaveCount(0)
+    await signup.getByRole('button', { name: 'Close signup' }).click()
+    await expect(signup.getByRole('switch')).toBeVisible()
+    await expect(signup.getByRole('switch')).toBeFocused()
+    await expect(signup.getByRole('dialog')).toHaveCount(0)
+    await expect(signup).not.toContainText(address)
+  })
+}
 
 test('mobile Watch piece fills 90% of the viewport and shows a spinner during sending', async ({
   page,

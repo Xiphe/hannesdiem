@@ -14,8 +14,10 @@ The shared session and independent Watch/Circle topics from
   After sending, hide the inputs and display “Awesome, please check your email to
   confirm your interest”. Circle explains “Confirm your email to choose a name
   and claim your spot.”
-- The Watch email link opens a separate confirmation piece: “Great! Your interest
-  is confirmed.” Dismissal returns to the inline “Receive notifications via mail”
+- The Watch email link opens a separate confirmation piece: “Great! This worked,
+  I'll notify you when we've created something new.” Center the confirmation piece
+  in the viewport after rendering. Dismissal returns to the inline “Receive
+  notifications via mail”
   switch. Normal signed-in Watch shows that switch, without email or subscription
   success copy. Older contacts need no missing-name field to toggle updates.
 - Segment membership determines returning visitors. New-interest email subject is

@@ -63,6 +63,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
     request?.abort()
     const controller = new AbortController()
     request = controller
+    let centerConfirmation = false
     try {
       const response = await fetch(templeNewsletterPath, {
         headers: { Accept: 'application/json' },
@@ -95,9 +96,10 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
       if (notice) {
         expanded = true
 
-        if (notice === 'confirmed' && value.email && value.subscribed && !value.unsubscribed)
+        if (notice === 'confirmed' && value.email && value.subscribed && !value.unsubscribed) {
           confirmed = true
-        else if (notice !== 'confirmed')
+          centerConfirmation = true
+        } else if (notice !== 'confirmed')
           result = {
             type: 'error',
             message:
@@ -114,7 +116,17 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
       result = { type: 'error', message: templeMessages.failure }
     } finally {
       if (request === controller) request = undefined
-      if (!handle.signal.aborted) void handle.update()
+      if (!handle.signal.aborted) {
+        await handle.update()
+        if (centerConfirmation) {
+          await document.fonts.ready
+          if (!handle.signal.aborted)
+            root?.querySelector<HTMLElement>('[role="dialog"]')?.scrollIntoView({
+              block: 'center',
+              behavior: 'instant',
+            })
+        }
+      }
     }
   }
 
