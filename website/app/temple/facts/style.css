@@ -626,9 +626,9 @@
   opacity: 0.6;
 }
 .temple-signup button[name='intent'][value='subscribe'] {
-  --temple-submit-fill: light-dark(#84442b, #f2ad78);
+  --temple-submit-fill: light-dark(#245989, #9cc6ee);
   background: var(--temple-submit-fill);
-  color: light-dark(#fff9df, #11120b);
+  color: light-dark(#f7ecdf, #11120b);
 }
 .temple-signup button[name='intent'][value='subscribe']:not(:disabled):hover {
   background: color-mix(in oklab, var(--temple-submit-fill) 88%, #11120b);
