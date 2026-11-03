@@ -42,4 +42,4 @@ Header progress alone uses `linear-gradient(25deg in srgb, #32608b, #60cbcd)`. A
 
 The [button inventory](buttons.md) records which controls receive the secondary treatment and which retain their existing role. The palette lab is preserved separately on `codex/temple-light-palette-lab`.
 
-Map refinement, 2026-11-03: the artist requests darker water than land but a much lighter map overall. Give the map its own light-mode roles: pale blue-gray water `#d8e2e8` → `#e4ebef`, near-white land `#f8f8f4` → `#fdfcf9`. Both enhanced and native fallback maps share these roles; Visit’s reading piece retains the common section material. Dark-mode map colors, pin and camera behavior remain unchanged.
+Map refinement, 2026-11-03: the artist requests darker water than land but a much lighter map overall. Give the map its own light-mode roles: neutral light-gray water `#e0e0de` → `#ebebe8` (the artist explicitly rejects a blue tint), near-white land `#f8f8f4` → `#fdfcf9`. Both enhanced and native fallback maps share these roles; Visit’s reading piece retains the common section material. Dark-mode map colors, pin and camera behavior remain unchanged.
