@@ -436,6 +436,7 @@
 }
 
 .fact-circle-area {
+  position: relative;
   grid-column: 1;
   grid-row: 2;
   width: min(100%, 280px);
@@ -507,6 +508,15 @@
   font: inherit;
   cursor: pointer;
 }
+@media (prefers-color-scheme: light) {
+  .circle-fields button[type='submit']:not(.circle-release) {
+    background: var(--temple-primary);
+    color: var(--temple-on-primary);
+  }
+  .circle-fields button[type='submit']:not(.circle-release):not(:disabled):hover {
+    background: color-mix(in oklab, var(--temple-primary) 88%, #11120b);
+  }
+}
 .circle-fields button:disabled {
   opacity: 0.6;
   cursor: default;
@@ -566,13 +576,16 @@
   padding: 44px 38px 64px;
   color: light-dark(#302920, #e8ddd0);
 }
-.temple-signup-expanded > .piece-tooltip-piece {
+.temple-signup-expanded > .piece-tooltip-piece,
+.temple-notification-piece > .piece-tooltip-piece {
   z-index: -1;
 }
-.temple-signup-expanded .piece-tooltip-top {
+.temple-signup-expanded .piece-tooltip-top,
+.temple-notification-piece .piece-tooltip-top {
   stop-color: light-dark(#e6ddd0, #1d1c19);
 }
-.temple-signup-expanded .piece-tooltip-bottom {
+.temple-signup-expanded .piece-tooltip-bottom,
+.temple-notification-piece .piece-tooltip-bottom {
   stop-color: light-dark(#d6cbbd, #111110);
 }
 .temple-signup .temple-signup-close {
@@ -627,6 +640,14 @@
 .temple-signup button:disabled {
   opacity: 0.6;
 }
+.temple-signup button[name='intent'][value='subscribe'] {
+  --temple-submit-fill: var(--temple-primary);
+  background: var(--temple-submit-fill);
+  color: var(--temple-on-primary);
+}
+.temple-signup button[name='intent'][value='subscribe']:not(:disabled):hover {
+  background: color-mix(in oklab, var(--temple-submit-fill) 88%, #11120b);
+}
 .temple-signup .temple-signup-feedback,
 .temple-signup .temple-signup-address,
 .temple-signup .temple-signup-reactivation {
@@ -636,28 +657,186 @@
 .temple-signup .temple-signup-feedback {
   margin-top: 16px;
 }
-.temple-signup button[role='switch'] {
-  display: flex;
-  gap: 12px;
+.temple-notification-piece {
+  position: relative;
+  isolation: isolate;
+  padding: 18px 24px 22px 39px;
+  color: light-dark(#302920, #e8ddd0);
+}
+.temple-signup .temple-notification-control {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+  padding-block: 6px;
+  font-weight: 400;
+  cursor: pointer;
 }
-.temple-signup-switch {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 18px;
-  border: 1px solid currentColor;
-  border-radius: 12px;
+.temple-signup .temple-notification-input {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.temple-notification-track {
+  box-sizing: border-box;
+  width: 40px;
+  height: 24px;
   padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: light-dark(#d3cfc9, #403a33);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
 }
-.temple-signup-switch::after {
+.temple-notification-track::after {
   content: '';
   display: block;
-  width: 12px;
-  height: 12px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: currentColor;
+  background: light-dark(#6b6056, #d8d0c5);
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
 }
-[aria-checked='true'] > .temple-signup-switch::after {
-  transform: translateX(12px);
+.temple-notification-input:checked + .temple-notification-track {
+  background: light-dark(var(--temple-primary-light), #eab77e);
+  border-color: light-dark(var(--temple-primary-light), #eab77e);
+}
+.temple-notification-input:checked + .temple-notification-track::after {
+  transform: translateX(16px);
+  background: light-dark(#fff7ed, #201a14);
+}
+.temple-notification-input:focus-visible + .temple-notification-track {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.temple-notification-state {
+  text-align: left;
+  display: grid;
+  align-content: center;
+  min-height: 3em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .temple-notification-track,
+  .temple-notification-track::after {
+    transition: none;
+  }
+}
+
+/* Both interest flows use the same piece and field proportions. */
+.temple-signup[data-floating] {
+  width: min(90vw, 480px);
+}
+.temple-signup-expanded {
+  box-sizing: border-box;
+}
+.temple-loading-spinner {
+  display: inline-block;
+  vertical-align: -0.12em;
+  width: 0.9em;
+  height: 0.9em;
+  margin-inline-end: 0.5em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: temple-loading 800ms linear infinite;
+}
+@keyframes temple-loading {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.circle-signup[data-floating] {
+  position: absolute;
+  top: calc(50% + 44px);
+  left: 0;
+  width: 100%;
+}
+.circle-signup[data-floating] > .temple-signup-expanded {
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90vw, 480px);
+}
+.circle-signup .circle-fields {
+  margin-top: 0;
+}
+.circle-fields p {
+  margin: 0;
+}
+.circle-fields .circle-login-explanation {
+  color: var(--fact-story-copy, light-dark(#5d5046, #bdb2a5));
+}
+.circle-fields .circle-disclaimer {
+  margin-top: -8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.circle-rename {
+  display: flex;
+  align-items: stretch;
+}
+.circle-rename input {
+  flex: 1;
+}
+.circle-rename:has(button) input {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+.circle-rename button {
+  flex: none;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+.circle-fields .circle-release {
+  justify-self: start;
+  padding-inline: 0;
+  background: transparent;
+  color: light-dark(#a33d38, #e4968e);
+}
+.circle-move-actions {
+  display: flex;
+  gap: 12px;
+}
+.fact-circle-dot[data-own] {
+  border: 3px solid light-dark(var(--temple-primary-light), #eab77e);
+  box-shadow: 0 0 0 3px
+    light-dark(
+      color-mix(in srgb, var(--temple-primary-light) 25%, transparent),
+      rgb(234 183 126 / 25%)
+    );
+  animation: temple-owned-seat 2.4s ease-in-out infinite;
+}
+@keyframes temple-owned-seat {
+  50% {
+    box-shadow: 0 0 0 7px
+      light-dark(
+        color-mix(in srgb, var(--temple-primary-light) 5%, transparent),
+        rgb(234 183 126 / 5%)
+      );
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fact-circle-dot[data-own],
+  .temple-loading-spinner {
+    animation: none;
+  }
+}
+@media (max-width: 760px) {
+  .temple-signup-expanded {
+    padding-inline: 22px;
+  }
+}
+
+.temple-artwork:has(.temple-signup-expanded) {
+  z-index: 3;
 }

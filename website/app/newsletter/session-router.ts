@@ -20,7 +20,7 @@ export function createNewsletterSessionRouter(env: NewsletterEnvironment) {
     middleware: [
       cop(),
       session(cookie, sessionStorage(env)),
-      formData({ maxFiles: 0, maxParts: 4, maxTotalSize: 4096 }),
+      formData({ maxFiles: 0, maxParts: 5, maxTotalSize: 4096 }),
       csrf(),
       render(),
     ],

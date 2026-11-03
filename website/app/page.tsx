@@ -40,8 +40,15 @@ export function Page(
           {temple && (
             <>
               <style>{`
-              html[data-temple-loading] { background: #000; }
-              html[data-layout='temple'][data-temple-loading] body { background: #000; animation: temple-load-ground 0s 8s forwards; }
+              html[data-temple-loading] {
+                color-scheme: light dark;
+                --temple-loading-ground: light-dark(#f7ecdf, #000);
+                --temple-loading-cool: light-dark(var(--temple-primary-light, #245989), #bdd7e3);
+                --temple-loading-warm: light-dark(#8e441c, #edcaa4);
+                --temple-loading-ink: light-dark(#11120b, #d2d0c8);
+                background: var(--temple-loading-ground);
+              }
+              html[data-layout='temple'][data-temple-loading] body { background: var(--temple-loading-ground); animation: temple-load-ground 0s 8s forwards; }
               html[data-temple-loading] .temple-page { visibility: hidden; animation: temple-load-document 0s 8s forwards; }
               .temple-loading-word { display: none; }
               html[data-temple-loading] .temple-loading-word {
@@ -49,7 +56,7 @@ export function Page(
                 margin: 22px 0 0; transform: translateX(-50%); pointer-events: none;
                 font-family: system-ui, sans-serif; font-size: 11px; font-weight: 500;
                 line-height: 1.4; letter-spacing: 0.18em; padding-left: 0.18em;
-                color: transparent; background: radial-gradient(ellipse at 15% 30%, #bdd7e3, transparent 65%), radial-gradient(ellipse at 80% 70%, #edcaa4, transparent 65%), #d2d0c8;
+                color: transparent; background: radial-gradient(ellipse at 15% 30%, var(--temple-loading-cool), transparent 65%), radial-gradient(ellipse at 80% 70%, var(--temple-loading-warm), transparent 65%), var(--temple-loading-ink);
                 background-size: 180% 180%; background-clip: text;
                 opacity: 0; visibility: hidden;
                 animation: temple-spinner-show 0s 300ms forwards, temple-spinner-hide 0s 8s forwards, temple-loading-clouds 4s 300ms ease-in-out infinite alternate;
@@ -57,7 +64,7 @@ export function Page(
               html[data-temple-loading] body::before {
                 content: ''; position: fixed; z-index: 100; top: 50%; left: 50%;
                 width: 28px; height: 28px; margin: -22px 0 0 -14px;
-                background: conic-gradient(#bdd7e3 0deg 35deg, transparent 35deg 70deg, #d2d0c8 70deg 175deg, transparent 175deg 220deg, #edcaa4 220deg 300deg, transparent 300deg);
+                background: conic-gradient(var(--temple-loading-cool) 0deg 35deg, transparent 35deg 70deg, var(--temple-loading-ink) 70deg 175deg, transparent 175deg 220deg, var(--temple-loading-warm) 220deg 300deg, transparent 300deg);
                 mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
                 pointer-events: none; opacity: 0; visibility: hidden;
                 animation: temple-spinner-show 0s 300ms forwards, temple-spinner-hide 0s 8s forwards, temple-spinner-turn 1800ms 300ms steps(18, end) infinite;

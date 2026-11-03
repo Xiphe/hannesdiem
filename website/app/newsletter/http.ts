@@ -29,6 +29,8 @@ import type { NewsletterEnvironment, NewsletterServices } from './config.ts'
 import { storageClient, digest, tokenPattern, type NewsletterIdentity } from './storage.ts'
 import {
   sendConfirmation,
+  isTempleMember,
+  ensureTempleProfile,
   ensureNewsletterContact,
   readTempleContact,
   setTempleTopic,
@@ -160,7 +162,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
         state: { ...state, subscribed: false },
       })
     }
-    if (!name || name.length > 120)
+    if ((!signedIn && !name) || name.length > 120)
       return reply({ type: 'error', message: 'Please enter your name.' }, 400)
     values.set('email', typeof email === 'string' ? email : '')
     const parsed = s.parseSafe(loginForm, values)
@@ -203,7 +205,8 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       link.searchParams.set('scope', 'temple')
       const recipient = contact ?? (await readTempleContact(parsed.value.email, env, services))
       await sendConfirmation(parsed.value.email, link.href, tokenHash, env, services, {
-        name,
+        name: recipient.name,
+        returning: recipient.exists && (await isTempleMember(parsed.value.email, env, services)),
         reactivate: recipient.unsubscribed,
       })
     } catch {
@@ -294,9 +297,9 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
     const { email, name, scope } = identity
     try {
       if (scope === 'circle') {
-        // Verification authenticates and resumes; only the later explicit claim
-        // subscribes the topic and publishes the alias.
-      } else if (scope === 'temple') await subscribeTemple(email, name!, env, services, true)
+        // Verification stores the private profile; only claiming subscribes the topic.
+        await ensureTempleProfile(email, name ?? '', env, services)
+      } else if (scope === 'temple') await subscribeTemple(email, name ?? '', env, services, true)
       else await ensureNewsletterContact(email, env, services)
     } catch {
       return failure('verification_failed')

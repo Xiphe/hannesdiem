@@ -1,5 +1,8 @@
 # Share circle / CTA coordination
 
+The [2026-11-03 interest-flow interview](temple-interest-flow.md) supersedes the
+full-circle, conflict and owner-button decisions recorded historically below.
+
 From the Share thread, 2026-11-03. The artist explicitly requests coordination
 with the “ctas” thread. Thread messaging is unavailable here; this is a handoff,
 not an agreed interface. Share worktree:

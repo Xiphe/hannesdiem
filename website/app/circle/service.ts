@@ -1,4 +1,4 @@
-import { circleCapacity, type PublicPlace } from './contract.ts'
+import { circleCapacity, validCircleAlias, type PublicPlace } from './contract.ts'
 import type { CircleProvider } from './provider.ts'
 
 interface Place {
@@ -6,6 +6,7 @@ interface Place {
   email: string
   alias: string
   notificationAlias: string
+  notificationSpot?: number
   spot: number
   phase: 'claiming' | 'active' | 'releasing'
   reactivate: boolean
@@ -14,8 +15,18 @@ interface Place {
   created: number
   checked: number
 }
+interface WaitingInterest {
+  id: string
+  email: string
+  alias: string
+  notified: boolean
+  notificationStopped?: boolean
+  created: number
+  checked: number
+}
 interface CircleData {
   places: Place[]
+  waiting: WaitingInterest[]
 }
 interface CircleTransaction {
   put<T>(key: string, value: T): Promise<void>
@@ -35,7 +46,8 @@ export class CircleService {
     private now = Date.now,
   ) {}
   private async read(): Promise<CircleData> {
-    return (await this.storage.get<CircleData>('circle')) ?? { places: [] }
+    const data = await this.storage.get<CircleData>('circle')
+    return { places: data?.places ?? [], waiting: data?.waiting ?? [] }
   }
   private async save(data: CircleData) {
     await this.storage.transaction(async (tx) => {
@@ -49,6 +61,7 @@ export class CircleService {
     const owner = data.places.find((p) => p.email === email?.toLowerCase())
     const publicPlace = (p: Place): PublicPlace => ({ spot: p.spot, alias: p.alias })
     return {
+      waiting: data.waiting.some((p) => p.email === email?.toLowerCase()),
       places: data.places.filter((p) => p.phase !== 'claiming').map(publicPlace),
       unavailable: data.places.filter((p) => p.phase === 'claiming').map((p) => p.spot),
       ...(owner
@@ -61,14 +74,7 @@ export class CircleService {
   }
   async claim(email: string, alias: string, spot: number, reactivate = false) {
     email = email.toLowerCase()
-    if (
-      !Number.isInteger(spot) ||
-      spot < 1 ||
-      spot > circleCapacity ||
-      !alias.trim() ||
-      alias.length > 120 ||
-      /[\u0000-\u001f\u007f]/u.test(alias)
-    )
+    if (!Number.isInteger(spot) || spot < 1 || spot > circleCapacity || !validCircleAlias(alias))
       throw new TypeError('Invalid claim')
     const data = await this.read()
     let place = data.places.find((p) => p.email === email)
@@ -83,12 +89,36 @@ export class CircleService {
       }
     }
     if (!place) {
-      if (data.places.some((p) => p.spot === spot)) throw new CircleConflict('Spot taken')
+      const free = this.freeSpot(data, spot)
+      if (free === undefined) {
+        let interest = data.waiting.find((p) => p.email === email)
+        if (!interest) {
+          interest = {
+            id: crypto.randomUUID(),
+            email,
+            alias: alias.trim(),
+            notified: false,
+            created: this.now(),
+            checked: this.now(),
+          }
+          data.waiting.push(interest)
+          await this.save(data)
+        }
+        try {
+          await this.notifyWaiting(data, interest)
+        } catch {
+          /* durable outbox retries */
+        }
+        return this.view(email)
+      }
+      spot = free
+      data.waiting = data.waiting.filter((p) => p.email !== email)
       place = {
         id: crypto.randomUUID(),
         email,
         alias: alias.trim(),
         notificationAlias: alias.trim(),
+        notificationSpot: spot,
         spot,
         phase: 'claiming',
         reactivate,
@@ -126,13 +156,56 @@ export class CircleService {
       await this.save(data)
       return
     }
-    await this.provider.notify(place.id, place.email, place.notificationAlias, place.spot)
+    await this.provider.notify(
+      place.id,
+      place.email,
+      place.notificationAlias,
+      place.notificationSpot ?? place.spot,
+    )
     place.notified = true
     await this.save(data)
   }
+  private freeSpot(data: CircleData, preferred: number): number | undefined {
+    return [preferred, ...Array.from({ length: circleCapacity }, (_, index) => index + 1)].find(
+      (spot) => !data.places.some((p) => p.spot === spot),
+    )
+  }
+  /** Moving changes only the seat, inside the same serialized reservation authority. */
+  async move(email: string, spot: number) {
+    if (!Number.isInteger(spot) || spot < 1 || spot > circleCapacity)
+      throw new TypeError('Invalid spot')
+    const data = await this.read()
+    const place = data.places.find((p) => p.email === email.toLowerCase())
+    if (!place || place.phase !== 'active') throw new CircleConflict('No active place')
+    if (place.spot !== spot) {
+      const free = this.freeSpot(data, spot)
+      if (free !== undefined) {
+        place.notificationSpot ??= place.spot
+        place.spot = free
+        await this.save(data)
+      }
+    }
+    return this.view(email)
+  }
+  private async notifyWaiting(data: CircleData, interest: WaitingInterest) {
+    if (interest.notified || interest.notificationStopped) return
+    if (this.now() - interest.created > 23 * 60 * 60_000) {
+      console.error(
+        JSON.stringify({
+          message: 'Circle notification needs manual recovery',
+          claim: interest.id,
+        }),
+      )
+      interest.notificationStopped = true
+      await this.save(data)
+      return
+    }
+    await this.provider.notify(interest.id, interest.email, interest.alias)
+    interest.notified = true
+    await this.save(data)
+  }
   async rename(email: string, alias: string) {
-    if (!alias.trim() || alias.length > 120 || /[\u0000-\u001f\u007f]/u.test(alias))
-      throw new TypeError('Invalid alias')
+    if (!validCircleAlias(alias)) throw new TypeError('Invalid alias')
     const data = await this.read()
     const place = data.places.find((p) => p.email === email.toLowerCase())
     if (!place || place.phase !== 'active') throw new CircleConflict('No active place')
@@ -174,6 +247,19 @@ export class CircleService {
   async maintain() {
     const data = await this.read()
     const place = [...data.places].sort((a, b) => a.checked - b.checked)[0]
+    const interest = data.waiting
+      .filter((p) => !p.notified && !p.notificationStopped)
+      .sort((a, b) => a.checked - b.checked)[0]
+    if (interest && (!place || interest.checked <= place.checked)) {
+      interest.checked = this.now()
+      await this.save(data)
+      try {
+        await this.notifyWaiting(data, interest)
+      } finally {
+        await this.storage.transaction((tx) => tx.setAlarm(this.now() + 60_000))
+      }
+      return
+    }
     if (!place) return
     // Rotate even failed work, so one bad contact cannot starve the other places.
     place.checked = this.now()

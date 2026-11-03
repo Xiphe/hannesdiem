@@ -12,6 +12,8 @@ export interface CircleView {
   places: PublicPlace[]
   unavailable?: number[]
   email?: string
+  name?: string
+  waiting?: boolean
   csrfToken?: string
   own?: PublicPlace
   processing?: boolean
@@ -43,10 +45,19 @@ export interface CircleResult {
 }
 export const circleMessages = {
   failure: 'Something went wrong. Please try again.',
-  pending: 'Check your email to confirm your subscription.',
+  pending: 'Awesome, please check your email to confirm your interest',
   claimed: 'welcome',
-  full: 'The circle is full.',
+  full: 'The circle is full. You’re on the waiting list.',
   taken: 'This spot is reserved. Please choose another.',
-  alias: 'Please enter your public name or alias.',
+  alias: 'Please enter a name or alias of 1–20 characters.',
   released: 'Your place has been released.',
 } as const
+
+export function validCircleAlias(alias: unknown): alias is string {
+  return (
+    typeof alias === 'string' &&
+    alias.trim().length >= 1 &&
+    alias.trim().length <= 20 &&
+    !/[\u0000-\u001f\u007f]/u.test(alias)
+  )
+}

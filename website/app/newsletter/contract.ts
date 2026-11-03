@@ -13,7 +13,9 @@ export interface TempleNewsletterState extends NewsletterState {
 export const templeNewsletterPath = '/newsletter/temple'
 export const templeReturnPath = '/temple-of-sound#watch'
 export const templeMessages = {
-  pending: 'Check your email to confirm your subscription.',
+  pending: 'Awesome, please check your email to confirm your interest',
+  confirmed: 'Great, this worked!',
+  confirmedDetail: "I'll notify you when we've created something new.",
   subscribed: 'You’re subscribed to Temple of Sound updates.',
   unsubscribed: 'You’re unsubscribed from Temple of Sound updates.',
   failure: 'Something went wrong. Please try again.',

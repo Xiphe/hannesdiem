@@ -6,6 +6,9 @@
 
 html[data-layout='temple'] {
   color-scheme: light dark;
+  --temple-primary-light: #245989;
+  --temple-primary: light-dark(var(--temple-primary-light), #9cc6ee);
+  --temple-on-primary: light-dark(#f7ecdf, #11120b);
   --temple-ground-light: #f7ecdf;
   --temple-ground-dark: #000000;
   --copy-ink-light: #11120b;

@@ -56,7 +56,7 @@ export function circleProvider(env: NewsletterEnvironment, services: NewsletterS
       const contact = await readTempleContact(email, env, services, circleTopic)
       if (contact.exists) await setTempleTopic(email, false, env, services, circleTopic)
     },
-    async notify(id: string, email: string, alias: string, spot: number) {
+    async notify(id: string, email: string, alias: string, spot?: number) {
       const response = await resendRequest(
         '/emails',
         {
@@ -67,7 +67,7 @@ export function circleProvider(env: NewsletterEnvironment, services: NewsletterS
             to: ['sound@hannesdiem.de'],
             reply_to: email,
             subject: 'Temple of Sound — circle',
-            text: `${alias}\n${email}\nSpot ${spot}`,
+            text: `${alias}\n${email}\n${spot === undefined ? 'Waiting list' : `Spot ${spot}`}`,
           }),
         },
         env,

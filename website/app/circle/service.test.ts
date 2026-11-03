@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { CircleService, CircleConflict, type CircleStorage } from './service.ts'
+import { CircleService, type CircleStorage } from './service.ts'
 import type { CircleProvider } from './provider.ts'
 
 function harness() {
@@ -83,13 +83,13 @@ test('claim owns one place per identity, exposes only aliases publicly and notif
     { spot: 2, alias: 'Shared alias' },
   ])
   assert.equal(JSON.stringify(await h.service.view()).includes('@'), false)
-  await assert.rejects(h.service.claim('three@example.org', 'Third', 1), CircleConflict)
+  assert.equal((await h.service.claim('three@example.org', 'Third', 1)).own?.spot, 3)
 })
 
 test('all ten places can be claimed, and full circles do not create another reservation', async () => {
   const h = harness()
   for (let i = 1; i <= 10; i++) await h.service.claim(`person${i}@example.org`, `Alias ${i}`, i)
-  await assert.rejects(h.service.claim('extra@example.org', 'Extra', 3), CircleConflict)
+  assert.equal((await h.service.claim('extra@example.org', 'Extra', 3)).waiting, true)
   assert.equal((await h.service.view()).places.length, 10)
   assert.equal(h.subscriptions.has('extra@example.org'), false)
 })
@@ -129,11 +129,11 @@ test('releasing and subscription opt-out finish together, retry survives upstrea
   h.failure('unsubscribe', true)
   await assert.rejects(h.service.release('one@example.org'))
   assert.equal((await h.service.view()).places.length, 1)
-  await assert.rejects(h.service.claim('two@example.org', 'Two', 1), CircleConflict)
+  assert.equal((await h.service.claim('two@example.org', 'Two', 1)).own?.spot, 2)
   h.failure('unsubscribe', false)
   await h.service.maintain()
   assert.equal(h.subscriptions.get('one@example.org'), false)
-  assert.equal((await h.service.view()).places.length, 0)
+  assert.equal((await h.service.view()).places.length, 1)
 })
 
 test('unsubscribe removes a reservation; old/replayed events cannot undo a new claim', async () => {
@@ -159,6 +159,45 @@ test('claims do not expire with time; invalid aliases and slots cannot acquire p
   assert.equal((await h.service.view()).places.length, 1)
   for (const slot of [0, 11, 1.5])
     await assert.rejects(h.service.claim('two@example.org', 'Two', slot), TypeError)
-  for (const alias of ['', 'x'.repeat(121), 'broken\nname'])
+  for (const alias of ['', 'x'.repeat(21), 'broken\nname'])
     await assert.rejects(h.service.claim('two@example.org', alias, 2), TypeError)
+})
+
+test('moving keeps identity, alias and subscriptions, silently relocates conflicts and does not notify twice', async () => {
+  const h = harness()
+  await h.service.claim('one@example.org', 'One', 1)
+  await h.service.claim('two@example.org', 'Two', 2)
+  const before = structuredClone(h.records.get('circle')) as { places: { id: string }[] }
+  const moved = await h.service.move('one@example.org', 2)
+  assert.deepEqual(moved.own, { spot: 3, alias: 'One' })
+  assert.equal(h.notifications.size, 2)
+  assert.equal(h.attempts, 2)
+  const after = h.records.get('circle') as typeof before
+  assert.equal(after.places[0].id, before.places[0].id)
+  assert.equal(h.subscriptions.get('one@example.org'), true)
+  for (let i = 4; i <= 10; i++) await h.service.claim(`other${i}@example.org`, `Other ${i}`, i)
+  await h.service.claim('last@example.org', 'Last', 1)
+  assert.equal((await h.service.move('one@example.org', 2)).own?.spot, 3)
+})
+
+test('waiting interest is private, durable and idempotent, and never subscribes until a later explicit claim', async () => {
+  const h = harness()
+  for (let i = 1; i <= 10; i++) await h.service.claim(`person${i}@example.org`, `Alias ${i}`, i)
+  h.failure('notify', true)
+  assert.equal((await h.service.claim('extra@example.org', 'Extra', 1)).waiting, true)
+  assert.equal(h.subscriptions.has('extra@example.org'), false)
+  assert.equal((await h.service.view()).waiting, false)
+  assert.equal(JSON.stringify(await h.service.view()).includes('Extra'), false)
+  h.failure('notify', false)
+  await h.service.maintain()
+  assert.equal(h.notifications.size, 11)
+  await h.service.claim('extra@example.org', 'Other', 1)
+  assert.equal(h.notifications.size, 11)
+  await h.service.release('person1@example.org')
+  assert.equal((await h.service.view('extra@example.org')).waiting, true)
+  const claimed = await h.service.claim('extra@example.org', 'Extra', 1)
+  assert.equal(claimed.waiting, false)
+  assert.equal(claimed.own?.spot, 1)
+  assert.equal(h.subscriptions.get('extra@example.org'), true)
+  assert.equal(h.notifications.size, 12)
 })
