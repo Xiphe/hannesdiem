@@ -144,7 +144,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
             <button
               class="fact-circle-invite"
               type="button"
-              aria-label={persistent && state.own ? 'welcome' : label}
+              aria-label={persistent && state.own ? 'Welcome' : label}
               disabled={persistent && (!state.ready || full)}
             >
               <svg
@@ -155,7 +155,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
               >
                 <path d={circleSurface()} />
               </svg>
-              <span class="fact-circle-prompt">{persistent && state.own ? 'welcome' : label}</span>
+              <span class="fact-circle-prompt">{persistent && state.own ? 'Welcome' : label}</span>
             </button>
           )}
           {Array.from({ length: places }, (_, index) => {

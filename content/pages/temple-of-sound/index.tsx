@@ -196,7 +196,7 @@ export default function Content() {
             'I would love to get visited in this cocoon and share meals, music, words, touch, tears and laughter.',
           action: {
             prompt: 'Lets connect and arrange your stay.',
-            label: 'join me in person',
+            label: 'Join me in person',
             href: 'mailto:sound@hannesdiem.de',
           },
         }}
@@ -208,7 +208,7 @@ export default function Content() {
             images: [tos4, tos2],
             heading: watchIntroduction,
             paragraphs: watchFragments,
-            action: { prompt: watchActionContext, label: 'get notified', newsletter: 'temple' },
+            action: { prompt: watchActionContext, label: 'Get notified', newsletter: 'temple' },
             after: techCheck,
           },
           {

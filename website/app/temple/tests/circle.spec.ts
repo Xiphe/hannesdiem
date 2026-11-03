@@ -49,7 +49,7 @@ for (const width of [390, 1440]) {
     await expect(circle.locator('input:checked')).toHaveCount(0)
     holdClaim = false
     pendingClaim!()
-    await expect(circle.getByRole('button', { name: 'welcome', exact: true })).toBeVisible()
+    await expect(circle.getByRole('button', { name: 'Welcome', exact: true })).toBeVisible()
     await expect(circle.locator('input:checked')).toHaveCount(1)
     const owner = circle
       .locator('.fact-circle-place')
@@ -60,7 +60,7 @@ for (const width of [390, 1440]) {
       .filter({ hasText: 'Another participant' })
     await publicName.locator('..').hover()
     await expect(publicName).toHaveCSS('opacity', '1')
-    await circle.getByRole('button', { name: 'welcome', exact: true }).click()
+    await circle.getByRole('button', { name: 'Welcome', exact: true }).click()
     await panel.getByLabel('Public name or alias').fill('Renamed alias')
     await panel.getByRole('button', { name: 'Save', exact: true }).click()
     await expect(
@@ -184,5 +184,5 @@ test('a conflicting claim updates availability and lets the visitor retry a free
   await expect(section.getByRole('alert')).toHaveText('Synthetic conflict.')
   await expect(section.getByLabel('Public name or alias')).toHaveValue('Synthetic alias')
   await section.getByRole('button', { name: 'Claim your spot', exact: true }).click()
-  await expect(section.getByRole('button', { name: 'welcome', exact: true })).toBeVisible()
+  await expect(section.getByRole('button', { name: 'Welcome', exact: true })).toBeVisible()
 })

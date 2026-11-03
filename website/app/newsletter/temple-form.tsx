@@ -238,7 +238,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
                 ?.focus()
             })}
           >
-            {handle.props.label ?? 'get notified'}
+            {handle.props.label ?? 'Get notified'}
           </a>
         )}
         {expanded && (
@@ -331,7 +331,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
                   value="subscribe"
                   disabled={disabled}
                 >
-                  {pending ? 'Sending…' : (handle.props.label ?? 'get notified')}
+                  {pending ? 'Sending…' : (handle.props.label ?? 'Get notified')}
                 </button>
               )}
             </form>
