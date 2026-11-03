@@ -18,6 +18,8 @@ export function FactCircle(handle: Handle<CircleProps>) {
   let state: CircleView = { ready: false, places: [] }
   let expanded = false
   let selected = 1
+  let hasSelection = false
+  let moving = false
   let feedback: CircleResult | undefined
   let refreshing = false
   const persistent = handle.props.reservation === 'temple-circle'
@@ -43,11 +45,13 @@ export function FactCircle(handle: Handle<CircleProps>) {
       )
         throw new Error('Circle state unavailable')
       state = value
-      if (value.selected) selected = value.selected
+      if (!hasSelection && value.selected) selected = value.selected
       const url = new URL(location.href)
       const notice = url.searchParams.get('circle')
       if (notice) {
-        expanded = true
+        expanded = !state.own
+        hasSelection = Boolean(state.email && !state.own && availableCircleSpot(state, selected))
+        moving = false
         const wanted = Number(url.searchParams.get('spot'))
         if (Number.isInteger(wanted) && wanted >= 1 && wanted <= 10) selected = wanted
         if (notice !== 'confirmed') feedback = { type: 'error', message: circleMessages.failure }
@@ -62,15 +66,21 @@ export function FactCircle(handle: Handle<CircleProps>) {
       feedback = { type: 'error', message: circleMessages.failure }
     } finally {
       refreshing = false
-      if (!handle.signal.aborted) void handle.update()
+      if (!handle.signal.aborted) {
+        await handle.update()
+        root?.dispatchEvent(new Event('circle-selection'))
+      }
     }
   }
   async function choose(spot: number) {
     if (!state.ready) return
-    selected = state.own?.spot ?? spot
+    moving = Boolean(state.own && state.own.spot !== spot)
+    selected = spot
+    hasSelection = Boolean(state.email && !state.own && availableCircleSpot(state, spot))
     expanded = true
     feedback = undefined
     await handle.update()
+    root?.dispatchEvent(new Event('circle-selection'))
     root?.parentElement
       ?.querySelector<HTMLElement>('.circle-fields input:not([type="hidden"]):not(:disabled)')
       ?.focus()
@@ -80,10 +90,21 @@ export function FactCircle(handle: Handle<CircleProps>) {
     if (value.state) state = value.state
     selected = availableCircleSpot(state, state.selected ?? selected) ?? selected
     feedback = value
-    if (value.type === 'success' && !value.confirmationPending && !state.own) expanded = false
+    if (value.type === 'success' && !value.confirmationPending) {
+      expanded = Boolean(state.waiting)
+      hasSelection = false
+      moving = false
+    }
     await handle.update()
+    root?.dispatchEvent(new Event('circle-selection'))
     if (!previous && state.own)
       root?.dispatchEvent(new CustomEvent('circle-claimed', { detail: state.own.spot }))
+    if (!expanded)
+      root
+        ?.querySelector<HTMLElement>(
+          state.own ? `input[value="${state.own.spot}"]` : '.fact-circle-invite',
+        )
+        ?.focus({ preventScroll: true })
   }
   handle.queueTask(() => {
     // These listeners belong to the component, not a single render commit.
@@ -98,6 +119,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
                 void choose(spot)
               },
               owner: () => state.own?.spot,
+              selected: () => (hasSelection ? selected : undefined),
             }
           : undefined,
       )
@@ -128,6 +150,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
   })
   return () => {
     const { id, places, label, occupied = [] } = handle.props
+    const inviteLabel = persistent && hasSelection ? 'welcome' : label
     const full =
       persistent && state.places.length + (state.unavailable?.length ?? 0) >= places && !state.own
     return (
@@ -144,8 +167,9 @@ export function FactCircle(handle: Handle<CircleProps>) {
             <button
               class="fact-circle-invite"
               type="button"
-              aria-label={persistent && state.own ? 'welcome' : label}
-              disabled={persistent && (!state.ready || full)}
+              aria-label={full ? 'Join the waiting list' : inviteLabel}
+              hidden={persistent && Boolean(state.own)}
+              disabled={persistent && !state.ready}
             >
               <svg
                 class="fact-circle-surface"
@@ -155,7 +179,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
               >
                 <path d={circleSurface()} />
               </svg>
-              <span class="fact-circle-prompt">{persistent && state.own ? 'welcome' : label}</span>
+              <span class="fact-circle-prompt">{full ? 'Join the waiting list' : inviteLabel}</span>
             </button>
           )}
           {Array.from({ length: places }, (_, index) => {
@@ -179,15 +203,23 @@ export function FactCircle(handle: Handle<CircleProps>) {
                   type="radio"
                   name={held ? `${id}-held-${place}` : `${id}-spot`}
                   value={String(place)}
-                  {...(persistent ? { checked: mine } : { defaultChecked: held })}
+                  {...(persistent
+                    ? {
+                        checked:
+                          mine || (hasSelection && !state.own && !held && selected === place),
+                      }
+                    : { defaultChecked: held })}
                   disabled={held || (persistent && !state.ready)}
                   aria-label={`Spot ${place}${reserved ? `: ${reserved.alias}` : held ? ' (occupied)' : ''}`}
                 />
                 <span
                   class="fact-circle-dot"
+                  data-own={mine ? '' : undefined}
                   data-reserved={persistent && reserved ? '' : undefined}
                   data-candidate={
-                    persistent && expanded && !state.own && selected === place ? '' : undefined
+                    persistent && hasSelection && !state.own && !held && selected === place
+                      ? ''
+                      : undefined
                   }
                   aria-hidden="true"
                 />
@@ -205,11 +237,25 @@ export function FactCircle(handle: Handle<CircleProps>) {
             <noscript>
               <a href={circlePath}>{label}</a>
             </noscript>
-            {full && <p role="status">{circleMessages.full}</p>}
             {expanded && (
               <CirclePanel
                 state={state}
                 spot={selected}
+                moving={moving}
+                close={async () => {
+                  expanded = false
+                  moving = false
+                  await handle.update()
+                  root
+                    ?.querySelector<HTMLInputElement>(
+                      `input[value="${state.own?.spot ?? selected}"]`,
+                    )
+                    ?.focus({ preventScroll: true })
+                  if (!state.own && !hasSelection)
+                    root
+                      ?.querySelector<HTMLButtonElement>('.fact-circle-invite')
+                      ?.focus({ preventScroll: true })
+                }}
                 result={feedback}
                 onResult={(value) => {
                   void result(value)

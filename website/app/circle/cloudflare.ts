@@ -34,6 +34,8 @@ export class CircleState extends DurableObject<Env> {
           return Response.json(
             await service.claim(body.email, body.alias ?? '', body.spot!, body.reactivate),
           )
+        if (path === '/move' && body.email)
+          return Response.json(await service.move(body.email, body.spot!))
         if (path === '/rename' && body.email)
           return Response.json(await service.rename(body.email, body.alias ?? ''))
         if (path === '/release' && body.email)

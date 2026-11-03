@@ -39,21 +39,27 @@ export async function sendConfirmation(
   tokenHash: string,
   env: NewsletterEnvironment,
   services: NewsletterServices,
-  temple?: { name: string; reactivate?: boolean },
+  temple?: { name: string; reactivate?: boolean; returning?: boolean },
 ) {
   const content = temple
     ? html`<!doctype html>
         <html>
           <body style="margin:0;background:#fff8fb;color:#020024;font-family:system-ui,sans-serif">
             <main style="max-width:500px;margin:auto;padding:40px 20px">
-              <p>Hey ${temple.name},</p>
-              <p>I'm so excited to build this space together with you!</p>
-              <p>Please confirm your E-Mail so that I can make sure it's actually you.</p>
+              <p>
+                Hey${temple.name ? ` ${temple.name}` : ''},${temple.returning ? ' welcome back to the Temple, click this button to get logged into the page.' : ''}
+              </p>
+              ${
+                !temple.returning
+                  ? html`<p>I'm so excited to build this space together with you!</p>
+                      <p>Please confirm your E-Mail so that I can make sure it's actually you.</p>`
+                  : ''
+              }
               <p>
                 <a
                   href="${link}"
                   style="display:inline-block;background:#282624;color:#f7ecdf;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold"
-                  >Confirm subscription</a
+                  >${temple.returning ? 'Login' : 'Confirm interest'}</a
                 >
               </p>
               <p>
@@ -108,11 +114,13 @@ export async function sendConfirmation(
         from: 'Hannes Diem <hi@hannesdiem.de>',
         to: [email],
         subject: temple
-          ? 'Confirm your Temple of Sound subscription'
+          ? temple.returning
+            ? 'Temple of Sound: Login'
+            : 'Temple of Sound: Confirm your interest'
           : 'Please confirm your email address',
         html: String(content),
         text: temple
-          ? `Hey ${temple.name},\n\nI'm so excited to build this space together with you!\n\nPlease confirm your E-Mail so that I can make sure it's actually you.\n\nConfirm subscription: ${link}\n\nThis link expires in one hour. If you didn’t request this, you can ignore this email.\n\nLots of Love,\nHannes${temple.reactivate ? `\n\n${templeMessages.reactivation}` : ''}\n\nImprint: https://hannesdiem.de/imprint\nPrivacy: https://hannesdiem.de/privacy`
+          ? `Hey${temple.name ? ` ${temple.name}` : ''},${temple.returning ? ' welcome back to the Temple, click this button to get logged into the page.' : `\n\nI'm so excited to build this space together with you!\n\nPlease confirm your E-Mail so that I can make sure it's actually you.`}\n\n${temple.returning ? 'Login' : 'Confirm interest'}: ${link}\n\nThis link expires in one hour. If you didn’t request this, you can ignore this email.\n\nLots of Love,\nHannes${temple.reactivate ? `\n\n${templeMessages.reactivation}` : ''}\n\nImprint: https://hannesdiem.de/imprint\nPrivacy: https://hannesdiem.de/privacy`
           : `Hi there!\n\nHappy to see you joining us on hannesdiem.de!\n\nConfirm Email: ${link}\n(This link expires in 1 hour)\n\nI'll sometimes send you updates about new releases, concerts, events, and things I find interesting. You can unsubscribe anytime.\n\nCheers, Hannes\n\nIf you didn't request this email, please just ignore it.\n\nImprint: https://hannesdiem.de/imprint\nPrivacy: https://hannesdiem.de/privacy`,
       }),
     },
@@ -265,4 +273,75 @@ export async function subscribeTemple(
   )
   if (!response.ok) throw new Error('Newsletter subscription failed')
   await response.body?.cancel()
+}
+
+/** Segment membership, rather than contact existence, distinguishes returning visitors. */
+export async function isTempleMember(
+  email: string,
+  env: NewsletterEnvironment,
+  services: NewsletterServices,
+) {
+  let after: string | undefined
+  const seen = new Set<string>()
+  while (true) {
+    const query = new URLSearchParams({ limit: '100' })
+    if (after) query.set('after', after)
+    const response = await resendRequest(
+      `/contacts/${encodeURIComponent(email)}/segments?${query}`,
+      { method: 'GET' },
+      env,
+      services,
+    )
+    if (response.status === 404) {
+      await response.body?.cancel()
+      return false
+    }
+    if (!response.ok) throw new Error('Contact segment lookup failed')
+    const page = (await response.json()) as { data: { id: string }[]; has_more?: boolean }
+    if (!Array.isArray(page.data) || page.data.some((segment) => typeof segment.id !== 'string'))
+      throw new Error('Invalid segment response')
+    if (page.data.some((segment) => segment.id === templeSegment)) return true
+    if (!page.has_more) return false
+    after = page.data.at(-1)?.id
+    if (!after || seen.has(after)) throw new Error('Incomplete segment response')
+    seen.add(after)
+  }
+}
+
+/** Verification stores the private name, without opting into either topic. */
+export async function ensureTempleProfile(
+  email: string,
+  name: string,
+  env: NewsletterEnvironment,
+  services: NewsletterServices,
+) {
+  const contact = await readTempleContact(email, env, services)
+  const path = `/contacts/${encodeURIComponent(email)}`
+  if (!contact.exists || (!contact.name && name)) {
+    const response = await resendRequest(
+      contact.exists ? path : '/contacts',
+      {
+        method: contact.exists ? 'PATCH' : 'POST',
+        body: JSON.stringify(
+          contact.exists
+            ? { first_name: name }
+            : { email, first_name: name, unsubscribed: false, segments: [{ id: templeSegment }] },
+        ),
+      },
+      env,
+      services,
+    )
+    if (!response.ok) throw new Error('Contact profile update failed')
+    await response.body?.cancel()
+  }
+  if (contact.exists) {
+    const segment = await resendRequest(
+      `${path}/segments/${templeSegment}`,
+      { method: 'POST' },
+      env,
+      services,
+    )
+    if (!segment.ok) throw new Error('Contact segment update failed')
+    await segment.body?.cancel()
+  }
 }

@@ -4,7 +4,7 @@ import { build } from 'esbuild'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { Webhook } from 'standardwebhooks'
 import { circleTopic } from './contract.ts'
-import { templeTopic } from '../newsletter/temple-config.ts'
+import { templeTopic, templeSegment } from '../newsletter/temple-config.ts'
 
 async function harness() {
   const compiled = await build({
@@ -67,10 +67,10 @@ async function harness() {
           contacts.set(String(body!.email), {
             unsubscribed: false,
             first_name: String(body!.first_name ?? ''),
-            subscribed: (body!.topics as { id: string; subscription: string }[]).some(
+            subscribed: ((body!.topics ?? []) as { id: string; subscription: string }[]).some(
               (topic) => topic.id === circleTopic && topic.subscription === 'opt_in',
             ),
-            templeSubscribed: (body!.topics as { id: string; subscription: string }[]).some(
+            templeSubscribed: ((body!.topics ?? []) as { id: string; subscription: string }[]).some(
               (topic) => topic.id === templeTopic && topic.subscription === 'opt_in',
             ),
           })
@@ -81,6 +81,8 @@ async function harness() {
         const email = decodeURIComponent(match[1])
         const contact = contacts.get(email)
         if (!contact) return Response.json({ error: 'not_found' }, { status: 404 })
+        if (request.method === 'GET' && match[2] === '/segments')
+          return Response.json({ data: [{ id: templeSegment }], has_more: false })
         if (request.method === 'GET')
           return Response.json(
             match[2] === '/topics'
@@ -124,6 +126,8 @@ async function harness() {
         csrfToken: string
         places: { spot: number; alias: string }[]
         email?: string
+        name?: string
+        waiting?: boolean
         reactivation?: boolean
         own?: { spot: number; alias: string }
       },
@@ -140,12 +144,13 @@ async function harness() {
     const initial = await read()
     const sent = await submit(initial.cookie, initial.state.csrfToken, {
       intent: 'verify',
+      name: 'Fixture private name',
       email,
       spot: String(spot),
     })
     assert.equal(sent.status, 200)
     const text = emails.findLast((e) => e.to.includes(email))!.text
-    const link = text.match(/Confirm subscription: (https:\/\/\S+)/)![1]
+    const link = text.match(/(?:Confirm interest|Login): (https:\/\/\S+)/)![1]
     const confirmed = await mf.dispatchFetch(link, { redirect: 'manual' })
     assert.equal(confirmed.status, 303)
     assert.match(confirmed.headers.get('Location')!, /#share$/)
@@ -210,7 +215,7 @@ test('verified claim uses shared auth, keeps alias private until confirmation, t
       alias: 'New alias',
     })
     assert.equal(renamed.status, 200)
-    assert.equal(h.contacts.get('one@example.org')!.first_name, '')
+    assert.equal(h.contacts.get('one@example.org')!.first_name, 'Fixture private name')
     const html = await h.request('/circle', { headers: { Cookie: own.cookie } })
     assert.match(await html.text(), /New alias/)
     const forgery = await h.submit(own.cookie, 'invalid', { intent: 'release' })
@@ -234,17 +239,14 @@ test('simultaneous real Durable Object requests cannot reserve the same place tw
       h.submit(a.cookie, a.state.csrfToken, { intent: 'claim', spot: '4', alias: 'Same' }),
       h.submit(b.cookie, b.state.csrfToken, { intent: 'claim', spot: '4', alias: 'Same' }),
     ])
-    assert.deepEqual(responses.map((r) => r.status).sort(), [200, 409])
-    const conflict = (await responses.find((response) => response.status === 409)!.json()) as {
-      state: { selected: number; places: { spot: number }[] }
-    }
     assert.deepEqual(
-      conflict.state.places.map((place) => place.spot),
-      [4],
+      responses.map((r) => r.status),
+      [200, 200],
     )
-    assert.notEqual(conflict.state.selected, 4, 'the losing visitor can retry an available place')
-    assert.equal((await h.read()).state.places.length, 1)
-    assert.equal(h.emails.filter((e) => e.to.includes('sound@hannesdiem.de')).length, 1)
+    const places = (await h.read()).state.places
+    assert.equal(places.length, 2)
+    assert.equal(new Set(places.map((place) => place.spot)).size, 2)
+    assert.equal(h.emails.filter((e) => e.to.includes('sound@hannesdiem.de')).length, 2)
   } finally {
     await h.dispose()
   }
@@ -370,6 +372,8 @@ test('Watch and Share reuse verified identity while keeping their subscriptions 
         state: (await response.json()) as {
           csrfToken: string
           email?: string
+          name?: string
+          waiting?: boolean
           subscribed?: boolean
         },
         cookie: response.headers.getSetCookie()[0]?.split(';')[0] ?? cookie!,
@@ -402,7 +406,7 @@ test('Watch and Share reuse verified identity while keeping their subscriptions 
     const claimed = await h.submit(user.cookie, user.state.csrfToken, {
       intent: 'claim',
       spot: '3',
-      alias: 'Synthetic public alias',
+      alias: 'Synthetic alias',
     })
     assert.equal(claimed.status, 200)
     assert.equal(h.emails.length, 2, 'shared identity needs no second verification email')
@@ -432,6 +436,90 @@ test('Watch and Share reuse verified identity while keeping their subscriptions 
     assert.equal(h.contacts.get('combined@example.org')!.subscribed, false)
     assert.equal((await watch(cookie)).state.subscribed, true)
     assert.equal((await h.read()).state.places.length, 0)
+  } finally {
+    await h.dispose()
+  }
+})
+
+test('verified private names prefill aliases, and moving retains one reservation without another notification', async () => {
+  const h = await harness()
+  try {
+    const user = await h.signIn('profile@example.org', 6)
+    assert.equal(user.state.name, 'Fixture private name')
+    assert.equal(h.contacts.get('profile@example.org')!.subscribed, false)
+    const invalid = await h.submit(user.cookie, user.state.csrfToken, {
+      intent: 'claim',
+      spot: '6',
+      alias: 'x'.repeat(21),
+    })
+    assert.equal(invalid.status, 400)
+    assert.equal((await h.read()).state.places.length, 0)
+    assert.equal(
+      (
+        await h.submit(user.cookie, user.state.csrfToken, {
+          intent: 'claim',
+          spot: '6',
+          alias: 'Public alias',
+        })
+      ).status,
+      200,
+    )
+    assert.equal(
+      (await h.submit(user.cookie, user.state.csrfToken, { intent: 'move', spot: '8' })).status,
+      200,
+    )
+    assert.deepEqual((await h.read(user.cookie)).state.own, { spot: 8, alias: 'Public alias' })
+    assert.equal(h.emails.filter((e) => e.to.includes('sound@hannesdiem.de')).length, 1)
+    assert.equal(h.contacts.get('profile@example.org')!.first_name, 'Fixture private name')
+    const anonymous = await h.read()
+    assert.equal(
+      (await h.submit(anonymous.cookie, anonymous.state.csrfToken, { intent: 'move', spot: '9' }))
+        .status,
+      401,
+    )
+  } finally {
+    await h.dispose()
+  }
+})
+
+test('a verified visitor can register full-circle interest without a Circle subscription or public alias', async () => {
+  const h = await harness()
+  try {
+    for (let spot = 1; spot <= 10; spot++) {
+      const user = await h.signIn(`fixture${spot}@example.org`, spot)
+      assert.equal(
+        (
+          await h.submit(user.cookie, user.state.csrfToken, {
+            intent: 'claim',
+            spot: String(spot),
+            alias: `Fixture ${spot}`,
+          })
+        ).status,
+        200,
+      )
+    }
+    const waiting = await h.signIn('waiting@example.org')
+    for (let repeat = 0; repeat < 2; repeat++) {
+      assert.equal(
+        (
+          await h.submit(waiting.cookie, waiting.state.csrfToken, {
+            intent: 'claim',
+            spot: '1',
+            alias: 'Private waiting name',
+          })
+        ).status,
+        200,
+      )
+    }
+    assert.equal((await h.read(waiting.cookie)).state.waiting, true)
+    assert.equal((await h.read()).state.waiting, false)
+    assert.equal((await h.read()).state.places.length, 10)
+    assert.equal(h.contacts.get('waiting@example.org')!.subscribed, false)
+    const notices = h.emails.filter(
+      (e) => e.to.includes('sound@hannesdiem.de') && e.text.includes('waiting@example.org'),
+    )
+    assert.equal(notices.length, 1)
+    assert.match(notices[0].text, /Waiting list/)
   } finally {
     await h.dispose()
   }

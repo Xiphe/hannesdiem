@@ -75,6 +75,7 @@ test('Temple signup validates name, floats through retry and updates after confi
   await expect(signup.getByLabel('Name', { exact: true })).toHaveValue('Aster')
   await signup.getByRole('button', { name: 'Fixture pending action' }).click()
   await expect(signup.getByRole('status')).toHaveText('Synthetic pending confirmation.')
+  await expect(signup.locator('form')).toHaveCount(0)
   await expect(page).toHaveURL(/\/temple-facts$/)
   verified = true
   await page.evaluate(() => window.dispatchEvent(new Event('focus')))
@@ -124,14 +125,13 @@ test('Temple signed-in toggle sends explicit topic intents and rolls back on fai
   await expect(toggle).toHaveAttribute('aria-checked', 'true')
   expect(intents).toEqual(['unsubscribe', 'unsubscribe', 'subscribe'])
   await expect(page).toHaveURL(/\/temple-facts$/)
-  await signup.getByRole('button', { name: 'Close signup' }).click()
-  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
-  await expect(signup.locator('form')).toHaveCount(0)
-  await signup.getByRole('link', { name: 'Fixture pending action' }).click()
-  await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  await expect(signup.getByRole('dialog')).toHaveCount(0)
+  await expect(signup.getByRole('link')).toHaveCount(0)
+  await expect(signup).not.toContainText(address)
+  await expect(toggle).toHaveAccessibleName('Receive notifications via mail')
 })
 
-test('Temple requires a missing name for verified subscribers and keeps global reactivation pending', async ({
+test('Temple needs no missing name for verified subscribers and keeps global reactivation pending', async ({
   page,
 }) => {
   const state = { ...anonymous, name: '', email: address, subscribed: false, unsubscribed: true }
@@ -139,7 +139,7 @@ test('Temple requires a missing name for verified subscribers and keeps global r
   await page.route(endpoint, async (route) => {
     if (route.request().method() === 'GET') return route.fulfill({ json: state })
     submits++
-    expect((await submittedFields(route)).get('name')).toBe('Aster')
+    expect((await submittedFields(route)).has('name')).toBe(false)
     return route.fulfill({
       json: {
         type: 'success',
@@ -153,11 +153,10 @@ test('Temple requires a missing name for verified subscribers and keeps global r
   await expect(signup.locator('.temple-signup-reactivation')).toBeVisible()
   const toggle = signup.getByRole('switch')
   await toggle.click()
-  expect(submits).toBe(0)
-  await signup.getByLabel('Name', { exact: true }).fill('Aster')
-  await toggle.click()
   await expect(signup.getByRole('status')).toHaveText('Synthetic pending reactivation.')
-  await expect(toggle).toHaveAttribute('aria-checked', 'false')
+  expect(submits).toBe(1)
+  await expect(signup.locator('input:not([type=hidden])')).toHaveCount(0)
+  await expect(signup.getByRole('switch')).toHaveCount(0)
 })
 
 test('Temple signup can recover when loading private state fails', async ({ page }) => {
@@ -188,7 +187,7 @@ test('a verified subscriber can unsubscribe even when their older contact has no
   })
   await page.goto('/temple-facts', { waitUntil: 'networkidle' })
   const signup = page.locator('#fixture-watch .temple-signup')
-  await expect(signup.getByLabel('Name', { exact: true })).toHaveValue('')
+  await expect(signup.getByLabel('Name', { exact: true })).toHaveCount(0)
   await signup.getByRole('switch').click()
   await expect(signup.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
 })
@@ -217,3 +216,50 @@ for (const width of [390, 1440]) {
     ).toBe(true)
   })
 }
+
+test('Watch deep link displays a dismissible confirmation view before the inline switch', async ({
+  page,
+}) => {
+  await page.route(endpoint, (route) =>
+    route.fulfill({ json: { ...anonymous, email: address, subscribed: true } }),
+  )
+  await page.goto('/temple-facts?newsletter=confirmed#fixture-watch')
+  const signup = page.locator('#fixture-watch .temple-signup')
+  await expect(signup.getByRole('status')).toHaveText('Great! Your interest is confirmed.')
+  await expect(signup.locator('input')).toHaveCount(0)
+  await signup.getByRole('button', { name: 'Close signup' }).click()
+  await expect(signup.getByRole('switch')).toBeVisible()
+  await expect(signup.getByRole('switch')).toBeFocused()
+  await expect(signup.getByRole('dialog')).toHaveCount(0)
+  await expect(signup).not.toContainText(address)
+})
+
+test('mobile Watch piece fills 90% of the viewport and shows a spinner during sending', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  let complete: (() => void) | undefined
+  await page.route(endpoint, async (route) => {
+    if (route.request().method() === 'GET') return route.fulfill({ json: anonymous })
+    await new Promise<void>((resolve) => {
+      complete = resolve
+    })
+    return route.fulfill({
+      json: { type: 'success', message: 'Synthetic pending.', confirmationPending: true },
+    })
+  })
+  const signup = await openSignup(page)
+  const box = await signup.getByRole('dialog').boundingBox()
+  expect(box!.width).toBeCloseTo(390 * 0.9, 0)
+  expect(box!.x).toBeGreaterThanOrEqual(0)
+  expect(box!.x + box!.width).toBeLessThanOrEqual(390)
+  await signup.getByLabel('Name', { exact: true }).fill('Aster')
+  await signup.getByLabel('Email address').fill(address)
+  await signup.getByRole('button', { name: 'Fixture pending action' }).click()
+  await expect(signup.locator('.temple-loading-spinner')).toBeVisible()
+  await expect(signup.getByRole('button', { name: 'Fixture pending action' })).toBeDisabled()
+  await expect.poll(() => Boolean(complete)).toBe(true)
+  complete!()
+  await expect(signup.getByRole('status')).toHaveText('Synthetic pending.')
+  await expect(signup.locator('input')).toHaveCount(0)
+})

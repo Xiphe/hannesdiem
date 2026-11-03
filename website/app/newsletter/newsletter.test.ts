@@ -62,6 +62,8 @@ function harness() {
   let unsubscribed = true
   let templeSubscribed = false
   let name = ''
+  let member = false
+  let pagedMembership = false
   const calls: { url: string; method: string; body: Record<string, unknown> | null }[] = []
   const env: NewsletterEnvironment = {
     NEWSLETTER_SESSION_SECRET: 'test-only-secret-with-at-least-thirty-two-bytes',
@@ -82,6 +84,12 @@ function harness() {
     if (url.endsWith('/emails'))
       return Response.json({ id: 'mock-email' }, { status: failDelivery ? 500 : 200 })
     if (failContact) return Response.json({ error: 'mock failure' }, { status: 500 })
+    if (url.includes('/segments?') && method === 'GET')
+      return Response.json(
+        pagedMembership && !url.includes('after=')
+          ? { data: [{ id: 'synthetic-other-segment' }], has_more: true }
+          : { data: member ? [{ id: templeSegment }] : [], has_more: false },
+      )
     if (url.endsWith('/topics') && method === 'GET')
       return Response.json({
         data: [
@@ -145,7 +153,7 @@ function harness() {
     const email = calls.findLast((call) => call.url.endsWith('/emails'))
     assert.ok(email)
     const link = String(email.body?.text).match(
-      /Confirm (?:Email|subscription): (https:\/\/\S+)/,
+      /(?:Confirm (?:Email|interest)|Login): (https:\/\/\S+)/,
     )?.[1]
     assert.ok(link)
     return new URL(link).pathname + new URL(link).search
@@ -173,6 +181,10 @@ function harness() {
         headers: { Origin: 'https://example.com', Accept: 'application/json', Cookie: cookie },
         body: new URLSearchParams({ intent: 'subscribe', ...values, _csrf: csrfToken }),
       })
+    },
+    setMember(value: boolean, paged = false) {
+      member = value
+      pagedMembership = paged
     },
     setUnsubscribed(value: boolean) {
       unsubscribed = value
@@ -512,7 +524,8 @@ test('Temple requires a bounded name and email and never enrolls before confirma
   assert.equal(sent.status, 200)
   assert.equal(h.calls.filter((call) => call.method !== 'GET').length, 1)
   const email = h.calls.find((call) => call.url.endsWith('/emails'))!.body!
-  assert.ok(String(email.html).includes('Aster'))
+  assert.match(String(email.html), /Hey,/)
+  assert.equal(email.subject, 'Temple of Sound: Confirm your interest')
   assert.deepEqual(email.to, ['aster@example.org'])
   const link = h.confirmation()
   const confirmed = await h.handle(link)
@@ -649,6 +662,7 @@ test('Temple escapes names in email HTML, and failed delivery allows a retry', a
   const h = harness()
   const state = await h.templeState()
   const values = { name: '<img src=x onerror=alert(1)>', email: 'aster@example.org' }
+  h.setName(values.name)
   h.setFailDelivery(true)
   assert.equal((await h.submitTemple(values, state.csrfToken!, state.cookie)).status, 503)
   h.setFailDelivery(false)
@@ -685,7 +699,7 @@ test('Temple native form includes required name and email, preserves failed valu
   const pending = await post('Aster')
   assert.equal(pending.status, 200)
   assert.equal(pending.headers.get('Location'), null)
-  assert.ok((await pending.text()).includes('aster@example.org'))
+  assert.doesNotMatch(await pending.text(), /name="(?:name|email)"/)
   assert.equal(
     (await h.handle(h.confirmation())).headers.get('Location'),
     '/temple-of-sound?newsletter=confirmed#watch',
@@ -708,4 +722,44 @@ test('Temple does not reactivate global delivery when the topic update fails', a
   )
   assert.ok(!h.calls.some((call) => call.method === 'PATCH' && call.body?.unsubscribed === false))
   assert.equal((await h.state(state.cookie)).email, undefined)
+})
+
+test('Temple email login variant follows paginated segment membership, not contact existence or topic opt-in', async () => {
+  for (const member of [false, true]) {
+    const h = harness()
+    h.setMember(member, true)
+    h.setName('Saved private name')
+    const state = await h.templeState()
+    const sent = await h.submitTemple(
+      { name: 'Submitted name', email: 'aster@example.org' },
+      state.csrfToken!,
+      state.cookie,
+    )
+    assert.equal(sent.status, 200)
+    const email = h.calls.findLast((call) => call.url.endsWith('/emails'))!.body!
+    assert.equal(
+      email.subject,
+      member ? 'Temple of Sound: Login' : 'Temple of Sound: Confirm your interest',
+    )
+    assert.match(String(email.text), /Hey Saved private name,/)
+    assert.match(String(email.text), member ? /Login: https:/ : /Confirm interest: https:/)
+    assert.ok(h.calls.some((call) => call.url.includes('after=synthetic-other-segment')))
+  }
+})
+
+test('an older verified contact can opt in and confirm reactivation without adding a name', async () => {
+  const h = harness()
+  h.setUnsubscribed(false)
+  const initial = await h.state()
+  await h.submit('aster@example.org', initial.csrfToken!, initial.cookie)
+  const login = await h.handle(h.confirmation())
+  const user = await h.templeState(cookieFrom(login.headers))
+  assert.equal((await h.submitTemple({}, user.csrfToken!, user.cookie)).status, 200)
+  h.setUnsubscribed(true)
+  assert.equal((await h.submitTemple({}, user.csrfToken!, user.cookie)).status, 200)
+  const verified = await h.handle(h.confirmation())
+  assert.match(verified.headers.get('Location')!, /newsletter=confirmed/)
+  const current = await h.templeState(cookieFrom(verified.headers))
+  assert.equal(current.unsubscribed, false)
+  assert.equal(current.subscribed, true)
 })

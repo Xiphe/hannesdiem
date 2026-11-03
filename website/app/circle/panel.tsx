@@ -1,23 +1,48 @@
 import { on, type Handle } from 'remix/component'
 import { templeMessages } from '../newsletter/contract.ts'
-import { circlePath, circleMessages, type CircleView, type CircleResult } from './contract.ts'
+import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
+import {
+  circlePath,
+  circleMessages,
+  validCircleAlias,
+  type CircleView,
+  type CircleResult,
+} from './contract.ts'
 
 type FieldsProps = {
   state: CircleView
   spot: number
   result?: CircleResult
   pending?: boolean
+  moving?: boolean
+  aliasValue?: string
+  onAlias?: (value: string) => void
+  close?: () => void | Promise<void>
   submit?: (event: SubmitEvent) => void
 }
-/** Shared native form: account email is private; alias is an explicit public choice. */
-export function CircleFields({ state, spot, result, pending, submit }: FieldsProps) {
+/** The same native form serves the island and the non-JavaScript fallback. */
+export function CircleFields({
+  state,
+  spot,
+  result,
+  pending,
+  moving,
+  aliasValue,
+  onAlias,
+  close,
+  submit,
+}: FieldsProps) {
   const loggedIn = Boolean(state.email)
-  const full = state.places.length + (state.unavailable?.length ?? 0) >= 10 && !state.own
   const verify = !loggedIn || (state.reactivation && !state.own)
+  const full = state.places.length + (state.unavailable?.length ?? 0) >= 10 && !state.own
+  const alias = aliasValue ?? state.own?.alias ?? state.name ?? ''
+  const changed = alias.trim() !== state.own?.alias
   return (
     <div class="circle-fields">
-      {full ? (
-        <p role="status">{circleMessages.full}</p>
+      {result?.confirmationPending || (state.waiting && full) ? (
+        <p role="status">
+          {result?.confirmationPending ? circleMessages.pending : circleMessages.full}
+        </p>
       ) : (
         <form
           method="post"
@@ -35,21 +60,54 @@ export function CircleFields({ state, spot, result, pending, submit }: FieldsPro
             name="spot"
             value={spot}
           />
-          {loggedIn && <p class="circle-private-email">{state.email}</p>}
-          {verify ? (
+          {moving ? (
             <>
+              <p>change seat?</p>
+              <div class="circle-move-actions">
+                <button
+                  type="submit"
+                  name="intent"
+                  value="move"
+                  disabled={pending}
+                >
+                  {pending && LoadingSpinner()}yes
+                </button>
+                <button
+                  type="button"
+                  disabled={pending}
+                  mix={on('click', () => close?.())}
+                >
+                  no
+                </button>
+              </div>
+            </>
+          ) : verify ? (
+            <>
+              <p>Confirm your email to choose a name and claim your spot.</p>
               {!loggedIn && (
-                <label>
-                  Email address
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    autoComplete="email"
-                    maxLength={254}
-                    disabled={pending}
-                  />
-                </label>
+                <>
+                  <label>
+                    Name
+                    <input
+                      name="name"
+                      required
+                      autoComplete="name"
+                      maxLength={120}
+                      disabled={pending}
+                    />
+                  </label>
+                  <label>
+                    Email address
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      autoComplete="email"
+                      maxLength={254}
+                      disabled={pending}
+                    />
+                  </label>
+                </>
               )}
               {state.reactivation && <p>{templeMessages.reactivation}</p>}
               <button
@@ -58,35 +116,66 @@ export function CircleFields({ state, spot, result, pending, submit }: FieldsPro
                 value="verify"
                 disabled={!state.ready || pending}
               >
-                Get Login Link
+                {pending && LoadingSpinner()}get notified
               </button>
             </>
           ) : (
             <>
               <label>
-                Public name or alias
-                <input
-                  name="alias"
-                  autoComplete="off"
-                  required
-                  maxLength={120}
-                  defaultValue={state.own?.alias ?? ''}
-                  disabled={pending || state.processing}
-                />
+                Name or Alias
+                <span class="circle-rename">
+                  <input
+                    name="alias"
+                    autoComplete="off"
+                    required
+                    minLength={1}
+                    maxLength={20}
+                    {...(onAlias ? { value: alias } : { defaultValue: alias })}
+                    mix={on('input', (event) => onAlias?.(event.currentTarget.value))}
+                    aria-describedby="circle-alias-disclaimer"
+                    disabled={pending || state.processing}
+                  />
+                  {state.own && (changed || !onAlias) && (
+                    <button
+                      type="submit"
+                      name="intent"
+                      value="rename"
+                      disabled={!validCircleAlias(alias) || pending || state.processing}
+                    >
+                      Rename
+                    </button>
+                  )}
+                </span>
               </label>
-              <button
-                type="submit"
-                name="intent"
-                value={state.own ? 'rename' : 'claim'}
-                disabled={!state.ready || pending || state.processing}
+              <p
+                id="circle-alias-disclaimer"
+                class="circle-disclaimer"
               >
-                {state.own ? 'Save' : 'Claim your spot'}
-              </button>
+                this name will be visible publicly on this website
+              </p>
+              {alias.length > 20 && <p role="status">{circleMessages.alias}</p>}
+              {!state.own && (
+                <button
+                  type="submit"
+                  name="intent"
+                  value="claim"
+                  disabled={
+                    !state.ready ||
+                    (Boolean(onAlias) && !validCircleAlias(alias)) ||
+                    pending ||
+                    state.processing
+                  }
+                >
+                  {pending && LoadingSpinner()}
+                  {full ? 'Join the waiting list' : 'Claim your spot'}
+                </button>
+              )}
               {state.own && (
                 <button
                   type="submit"
                   name="intent"
                   value="release"
+                  class="circle-release"
                   formNoValidate
                   disabled={pending || state.processing}
                 >
@@ -97,7 +186,9 @@ export function CircleFields({ state, spot, result, pending, submit }: FieldsPro
           )}
         </form>
       )}
-      {result && <p role={result.type === 'error' ? 'alert' : 'status'}>{result.message}</p>}
+      {result && !result.confirmationPending && result.type === 'error' && (
+        <p role="alert">{result.message}</p>
+      )}
     </div>
   )
 }
@@ -109,17 +200,19 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
   let pending = false
   let result = handle.props.result
   let identity = handle.props.state.email
+  let alias = handle.props.state.own?.alias ?? handle.props.state.name ?? ''
   async function submit(event: SubmitEvent) {
     event.preventDefault()
     if (pending) return
+    const form = event.currentTarget as HTMLFormElement
+    const body = new FormData(form, event.submitter)
     pending = true
     result = undefined
     void handle.update()
     try {
-      const form = event.currentTarget as HTMLFormElement
       const response = await fetch(circlePath, {
         method: 'POST',
-        body: new FormData(form, event.submitter),
+        body,
         headers: { Accept: 'application/json' },
         credentials: 'same-origin',
         mode: 'same-origin',
@@ -144,7 +237,31 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
     if (identity !== handle.props.state.email) {
       identity = handle.props.state.email
       result = handle.props.result
+      alias = handle.props.state.own?.alias ?? handle.props.state.name ?? ''
     }
-    return CircleFields({ ...handle.props, result, pending, submit })
+    return (
+      <div
+        class="temple-signup circle-signup"
+        data-floating=""
+      >
+        <PiecePanel
+          id="temple-circle-signup"
+          label={handle.props.moving ? 'change seat?' : 'Claim your spot'}
+          close={handle.props.close}
+        >
+          {CircleFields({
+            ...handle.props,
+            result,
+            pending,
+            submit,
+            aliasValue: alias,
+            onAlias: (value) => {
+              alias = value
+              void handle.update()
+            },
+          })}
+        </PiecePanel>
+      </div>
+    )
   }
 }

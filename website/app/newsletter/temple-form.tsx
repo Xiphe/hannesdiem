@@ -1,6 +1,5 @@
 import { on, ref, type Handle } from 'remix/component'
-import { PieceSurface } from '../temple/piece-tooltip/surface.tsx'
-import { XMarkIcon } from '../heroicons.tsx'
+import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
 import {
   templeMessages,
   templeNewsletterPath,
@@ -34,7 +33,7 @@ export function StandaloneTempleSignup(handle: Handle<TempleSignupProps>) {
 export function TempleSignup(handle: Handle<TempleSignupProps>) {
   let state = handle.props.state ?? { ready: false }
   let expanded = handle.props.expanded ?? false
-  let dismissed = false
+  let confirmed = false
   let result = handle.props.result
   let awaitingConfirmation = result?.confirmationPending ?? false
   let name = handle.props.nameValue ?? state.name ?? ''
@@ -83,20 +82,21 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
       if (value.name) name = value.name
       if (value.email) {
         email = value.email
-        if (!dismissed) expanded = true
       }
       if (value.email && value.subscribed && !value.unsubscribed && awaitingConfirmation) {
-        result = { type: 'success', message: templeMessages.subscribed }
+        result = undefined
         awaitingConfirmation = false
+        expanded = false
         clearTimeout(retryTimer)
         cooldown = 0
       }
       const url = new URL(location.href)
       const notice = url.searchParams.get('newsletter')
       if (notice) {
-        if (!dismissed) expanded = true
+        expanded = true
+
         if (notice === 'confirmed' && value.email && value.subscribed && !value.unsubscribed)
-          result = { type: 'success', message: templeMessages.subscribed }
+          confirmed = true
         else if (notice !== 'confirmed')
           result = {
             type: 'error',
@@ -174,6 +174,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
         throw new Error('Invalid signup response')
       result = value
       awaitingConfirmation = value.confirmationPending ?? false
+      if (awaitingConfirmation) expanded = true
       if (value.csrfToken) state = { ...state, csrfToken: value.csrfToken }
       if (value.state) state = value.state
       if (value.type === 'spam_protection') scheduleRetry(value.remainingSeconds)
@@ -192,16 +193,17 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
   async function close() {
     name = root?.querySelector<HTMLInputElement>('input[name="name"]')?.value ?? name
     email = root?.querySelector<HTMLInputElement>('input[name="email"]')?.value ?? email
-    dismissed = true
+    confirmed = false
     expanded = false
     await handle.update()
-    root?.querySelector<HTMLAnchorElement>('a')?.focus({ preventScroll: true })
+    root?.querySelector<HTMLElement>('a, button[role="switch"]')?.focus({ preventScroll: true })
   }
 
   return () => {
     const subscribed = Boolean(state.subscribed && !state.unsubscribed)
     const disabled = !state.ready || pending || cooldown > 0
     const floating = handle.props.floating !== false
+    const inline = Boolean(state.email && !awaitingConfirmation && !confirmed && !expanded)
     const panelId = `${handle.props.id ?? 'temple-newsletter-signup'}-panel`
     return (
       <div
@@ -212,7 +214,39 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
           root = node
         })}
       >
-        {(floating || !expanded) && (
+        {inline && (
+          <form
+            method="post"
+            action={templeNewsletterPath}
+            mix={on<HTMLFormElement, 'submit'>('submit', submit)}
+          >
+            <input
+              type="hidden"
+              name="_csrf"
+              value={state.csrfToken ?? ''}
+            />
+            <button
+              type="submit"
+              name="intent"
+              value={subscribed ? 'unsubscribe' : 'subscribe'}
+              role="switch"
+              aria-checked={subscribed}
+              disabled={disabled}
+            >
+              <span
+                class="temple-signup-switch"
+                aria-hidden="true"
+              />
+              Receive notifications via mail
+              {pending && LoadingSpinner()}
+            </button>
+            {state.unsubscribed && (
+              <p class="temple-signup-reactivation">{templeMessages.reactivation}</p>
+            )}
+            {result?.type === 'error' && <p role="alert">{result.message}</p>}
+          </form>
+        )}
+        {!inline && (floating || !expanded) && (
           <a
             key="trigger"
             href={templeNewsletterPath}
@@ -230,7 +264,6 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
               )
                 return
               event.preventDefault()
-              dismissed = false
               expanded = true
               await handle.update()
               root
@@ -242,100 +275,91 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
           </a>
         )}
         {expanded && (
-          <div
-            class="temple-signup-expanded"
-            key="panel"
-            id={panelId}
-            role="dialog"
-            aria-label="Temple of Sound updates"
-            mix={on('keydown', (event) => {
-              if (event.key !== 'Escape') return
-              event.preventDefault()
-              event.stopPropagation()
-              void close()
-            })}
+          <PiecePanel
+            id={handle.props.id ?? 'temple-newsletter-signup'}
+            label="Temple of Sound updates"
+            close={close}
           >
-            <PieceSurface id={handle.props.id ?? 'temple-newsletter-signup'} />
-            <button
-              type="button"
-              class="temple-signup-close"
-              aria-label="Close signup"
-              mix={on('click', close)}
-            >
-              <XMarkIcon
-                width={20}
-                height={20}
-              />
-            </button>
-            <form
-              method="post"
-              action={templeNewsletterPath}
-              mix={on<HTMLFormElement, 'submit'>('submit', submit)}
-            >
-              <input
-                type="hidden"
-                name="_csrf"
-                value={state.csrfToken ?? ''}
-              />
-              {state.email && <p class="temple-signup-address">{state.email}</p>}
-              {(!state.email || !state.name) && (
-                <label>
-                  Name
-                  <input
-                    name="name"
-                    autoComplete="name"
-                    required
-                    maxLength={120}
-                    defaultValue={name}
-                    disabled={!state.ready || pending}
-                  />
-                </label>
-              )}
-              {!state.email && (
-                <label>
-                  Email address
-                  <input
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    maxLength={254}
-                    defaultValue={email}
-                    disabled={!state.ready || pending}
-                  />
-                </label>
-              )}
-              {state.unsubscribed && (
-                <p class="temple-signup-reactivation">{templeMessages.reactivation}</p>
-              )}
-              {state.email ? (
-                <button
-                  type="submit"
-                  name="intent"
-                  value={subscribed ? 'unsubscribe' : 'subscribe'}
-                  formNoValidate={subscribed}
-                  role="switch"
-                  aria-checked={subscribed}
-                  disabled={disabled}
-                >
-                  <span
-                    class="temple-signup-switch"
-                    aria-hidden="true"
-                  />
-                  Temple of Sound updates
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  name="intent"
-                  value="subscribe"
-                  disabled={disabled}
-                >
-                  {pending ? 'Sending…' : (handle.props.label ?? 'get notified')}
-                </button>
-              )}
-            </form>
-            {result && (
+            {!awaitingConfirmation && !confirmed && (
+              <form
+                method="post"
+                action={templeNewsletterPath}
+                mix={on<HTMLFormElement, 'submit'>('submit', submit)}
+              >
+                <input
+                  type="hidden"
+                  name="_csrf"
+                  value={state.csrfToken ?? ''}
+                />
+                {!state.email && (
+                  <label>
+                    Name
+                    <input
+                      name="name"
+                      autoComplete="name"
+                      required
+                      maxLength={120}
+                      defaultValue={name}
+                      disabled={!state.ready || pending}
+                    />
+                  </label>
+                )}
+                {!state.email && (
+                  <label>
+                    Email address
+                    <input
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      maxLength={254}
+                      defaultValue={email}
+                      disabled={!state.ready || pending}
+                    />
+                  </label>
+                )}
+                {state.unsubscribed && (
+                  <p class="temple-signup-reactivation">{templeMessages.reactivation}</p>
+                )}
+                {state.email ? (
+                  <button
+                    type="submit"
+                    name="intent"
+                    value={subscribed ? 'unsubscribe' : 'subscribe'}
+                    formNoValidate={subscribed}
+                    role="switch"
+                    aria-checked={subscribed}
+                    disabled={disabled}
+                  >
+                    <span
+                      class="temple-signup-switch"
+                      aria-hidden="true"
+                    />
+                    Receive notifications via mail
+                    {pending && LoadingSpinner()}
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    name="intent"
+                    value="subscribe"
+                    disabled={disabled}
+                  >
+                    {pending && LoadingSpinner()}
+                    {handle.props.label ?? 'get notified'}
+                  </button>
+                )}
+              </form>
+            )}
+            {confirmed && (
+              <p
+                class="temple-signup-feedback"
+                role="status"
+              >
+                {templeMessages.confirmed}
+              </p>
+            )}
+            {!confirmed && result && (
               <p
                 class="temple-signup-feedback"
                 role={result.type === 'error' ? 'alert' : 'status'}
@@ -353,7 +377,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
                 Retry
               </button>
             )}
-          </div>
+          </PiecePanel>
         )}
       </div>
     )

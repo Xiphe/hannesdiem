@@ -4,13 +4,14 @@ import * as s from 'remix/data-schema'
 import * as checks from 'remix/data-schema/checks'
 import type { NewsletterEnvironment, NewsletterServices } from '../newsletter/config.ts'
 import { storageClient, digest } from '../newsletter/storage.ts'
-import { sendConfirmation } from '../newsletter/resend.ts'
+import { sendConfirmation, isTempleMember } from '../newsletter/resend.ts'
 import { circleProvider } from './provider.ts'
 import { circleClient } from './client.ts'
 import {
   circlePath,
   circleMessages,
   availableCircleSpot,
+  validCircleAlias,
   type CircleView,
   type CircleResult,
 } from './contract.ts'
@@ -47,6 +48,7 @@ export function registerCircleRoutes(
       ...(typeof email === 'string'
         ? {
             email,
+            name: contact?.name,
             reactivation: Boolean(
               contact?.unsubscribed &&
               Number(context.session.get('circleConfirmedUntil') ?? 0) <= Date.now(),
@@ -66,6 +68,8 @@ export function registerCircleRoutes(
     const intent = context.formData.get('intent')
     const spot = Number(context.formData.get('spot'))
     const alias = context.formData.get('alias')
+    const rawName = context.formData.get('name')
+    const name = typeof rawName === 'string' ? rawName.trim() : ''
     const state: CircleView = {
       ready: true,
       places: [],
@@ -85,7 +89,14 @@ export function registerCircleRoutes(
           .pipe(checks.email(), checks.maxLength(254)),
         email,
       )
-      if (!parsed.success || !Number.isInteger(spot) || spot < 1 || spot > 10)
+      if (
+        (!authenticated && !name) ||
+        name.length > 120 ||
+        !parsed.success ||
+        !Number.isInteger(spot) ||
+        spot < 1 ||
+        spot > 10
+      )
         return reply({ type: 'error', message: circleMessages.failure }, 400)
       const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
         byte.toString(16).padStart(2, '0'),
@@ -94,6 +105,7 @@ export function registerCircleRoutes(
       const issued = await storageClient(env)('/tokens/issue', {
         email: parsed.value,
         scope: 'circle',
+        ...(name ? { name } : {}),
         spot,
         tokenHash,
       })
@@ -114,7 +126,8 @@ export function registerCircleRoutes(
         link.searchParams.set('token', token)
         link.searchParams.set('scope', 'circle')
         await sendConfirmation(parsed.value, link.href, tokenHash, env, services, {
-          name: contact.name || 'there',
+          name: contact.name,
+          returning: contact.exists && (await isTempleMember(parsed.value, env, services)),
           reactivate: contact.unsubscribed,
         })
       } catch {
@@ -132,12 +145,9 @@ export function registerCircleRoutes(
         { type: 'error', message: circleMessages.pending, state: { ...state, reactivation: true } },
         409,
       )
-    if (
-      (intent === 'claim' || intent === 'rename') &&
-      (typeof alias !== 'string' || !alias.trim() || alias.length > 120)
-    )
+    if ((intent === 'claim' || intent === 'rename') && !validCircleAlias(alias))
       return reply({ type: 'error', message: circleMessages.alias }, 400)
-    if (!['claim', 'rename', 'release'].includes(String(intent)))
+    if (!['claim', 'rename', 'release', 'move'].includes(String(intent)))
       return reply({ type: 'error', message: circleMessages.failure }, 400)
     const response = await call(`/${intent}`, { email: authenticated, alias, spot, reactivate })
     // A verification authorizes one claim, including its durable retry. Keeping
@@ -160,10 +170,14 @@ export function registerCircleRoutes(
     const value = (await current.json()) as CircleView
     return reply({
       type: 'success',
-      message: intent === 'release' ? circleMessages.released : circleMessages.claimed,
+      message: value.waiting
+        ? circleMessages.full
+        : intent === 'release'
+          ? circleMessages.released
+          : circleMessages.claimed,
       state: {
-        ...value,
         ...state,
+        ...value,
         places: value.places,
         own: value.own,
         processing: value.processing,

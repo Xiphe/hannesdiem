@@ -120,9 +120,12 @@ export async function handleNewsletterStorage(
       body.scope !== undefined &&
       ((body.scope !== 'temple' && body.scope !== 'circle') ||
         (body.scope === 'circle' &&
-          (!Number.isInteger(body.spot) || body.spot! < 1 || body.spot! > 10)) ||
-        (body.scope === 'temple' &&
-          (typeof body.name !== 'string' || !body.name.trim() || body.name.length > 120)))
+          (!Number.isInteger(body.spot) ||
+            body.spot! < 1 ||
+            body.spot! > 10 ||
+            (body.name !== undefined &&
+              (typeof body.name !== 'string' || body.name.length > 120)))) ||
+        (body.scope === 'temple' && (typeof body.name !== 'string' || body.name.length > 120)))
     )
       return new Response(null, { status: 400 })
     const cooldownKey = `cooldown:${await digest(email.toLowerCase())}`

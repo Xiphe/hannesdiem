@@ -4,7 +4,11 @@ import { circleSurface } from './circle-shape.ts'
 export function mountCircle(
   root: HTMLFieldSetElement,
   signal: AbortSignal,
-  membership?: { choose(spot: number): void; owner(): number | undefined },
+  membership?: {
+    choose(spot: number): void
+    owner(): number | undefined
+    selected(): number | undefined
+  },
 ) {
   const invite = root.querySelector<HTMLButtonElement>('.fact-circle-invite')
   if (!invite || signal.aborted) return
@@ -24,6 +28,14 @@ export function mountCircle(
     ripples.clear()
   }
   const reset = () => {
+    const selected = membership?.selected()
+    if (selected && !membership?.owner() && !signal.aborted) {
+      const input = places.find((p) => Number(p.value) === selected)
+      if (input) {
+        point(input)
+        return
+      }
+    }
     active = false
     target = undefined
     delete root.dataset.pointing
@@ -44,6 +56,10 @@ export function mountCircle(
       reset()
       return
     }
+    point(target)
+  }
+  const point = (input: HTMLInputElement) => {
+    target = input
     const box = target.getBoundingClientRect()
     const centre = invite.getBoundingClientRect()
     const dx = box.x + box.width / 2 - (centre.x + centre.width / 2)
@@ -63,7 +79,7 @@ export function mountCircle(
     'pointerenter',
     (event) => {
       if (event.pointerType === 'touch') return
-      if (membership?.owner()) return
+      if (membership?.owner() || membership?.selected()) return
       active = true
       aim(event.clientX, event.clientY)
     },
@@ -73,7 +89,7 @@ export function mountCircle(
     'pointermove',
     (event) => {
       if (event.pointerType === 'touch') return
-      if (membership?.owner()) return
+      if (membership?.owner() || membership?.selected()) return
       const hoveredPlace = (event.target as Element)
         .closest('.fact-circle-place')
         ?.querySelector<HTMLInputElement>('input')
@@ -93,7 +109,7 @@ export function mountCircle(
   invite.addEventListener(
     'focus',
     () => {
-      if (membership?.owner()) return
+      if (membership?.owner() || membership?.selected()) return
       if (active) return
       const box = invite.getBoundingClientRect()
       aim(box.x + box.width / 2, box.y)
@@ -105,6 +121,14 @@ export function mountCircle(
     () => {
       if (membership?.owner()) {
         membership.choose(membership.owner()!)
+        return
+      }
+      if (membership && !places.some((p) => !p.disabled)) {
+        membership.choose(1)
+        return
+      }
+      if (membership?.selected()) {
+        membership.choose(membership.selected()!)
         return
       }
       if (!target) {
@@ -146,13 +170,32 @@ export function mountCircle(
     }
     void animation.finished.then(finished, finished)
   }
+  root.addEventListener('circle-selection', reset, { signal })
+  if (membership) {
+    root.addEventListener(
+      'click',
+      (event) => {
+        if (!(event.target instanceof HTMLInputElement) || event.target.disabled) return
+        event.preventDefault()
+        const spot = Number(event.target.value)
+        // Let the canceled radio activation restore its native state before rendering.
+        setTimeout(() => {
+          if (!signal.aborted) membership.choose(spot)
+        }, 0)
+      },
+      { signal },
+    )
+  }
   root.addEventListener(
     'change',
     (event) => {
       reset()
       if (membership && event.target instanceof HTMLInputElement) {
+        const spot = Number(event.target.value)
         event.target.checked = false
-        membership.choose(Number(event.target.value))
+        const owner = places.find((p) => Number(p.value) === membership.owner())
+        if (owner) owner.checked = true
+        membership.choose(spot)
       } else ripple(event.target)
     },
     { signal },

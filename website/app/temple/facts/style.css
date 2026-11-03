@@ -655,3 +655,97 @@
 [aria-checked='true'] > .temple-signup-switch::after {
   transform: translateX(12px);
 }
+
+/* Both interest flows use the same piece and field proportions. */
+.temple-signup[data-floating] {
+  width: min(90vw, 480px);
+}
+.temple-signup-expanded {
+  box-sizing: border-box;
+}
+.temple-loading-spinner {
+  display: inline-block;
+  vertical-align: -0.12em;
+  width: 0.9em;
+  height: 0.9em;
+  margin-inline-end: 0.5em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: temple-loading 800ms linear infinite;
+}
+@keyframes temple-loading {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.circle-signup[data-floating] {
+  width: 100%;
+}
+.circle-signup[data-floating] > .temple-signup-expanded {
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90vw, 480px);
+}
+.circle-signup .circle-fields {
+  margin-top: 0;
+}
+.circle-fields p {
+  margin: 0;
+}
+.circle-fields .circle-disclaimer {
+  margin-top: -8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.circle-rename {
+  display: flex;
+  align-items: stretch;
+}
+.circle-rename input {
+  flex: 1;
+}
+.circle-rename:has(button) input {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+.circle-rename button {
+  flex: none;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+.circle-fields .circle-release {
+  justify-self: start;
+  padding-inline: 0;
+  background: transparent;
+  color: light-dark(#a33d38, #e4968e);
+}
+.circle-move-actions {
+  display: flex;
+  gap: 12px;
+}
+.fact-circle-dot[data-own] {
+  border: 3px solid light-dark(#b66f32, #eab77e);
+  box-shadow: 0 0 0 3px light-dark(rgb(182 111 50 / 25%), rgb(234 183 126 / 25%));
+  animation: temple-owned-seat 2.4s ease-in-out infinite;
+}
+@keyframes temple-owned-seat {
+  50% {
+    box-shadow: 0 0 0 7px light-dark(rgb(182 111 50 / 5%), rgb(234 183 126 / 5%));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fact-circle-dot[data-own],
+  .temple-loading-spinner {
+    animation: none;
+  }
+}
+@media (max-width: 760px) {
+  .temple-signup-expanded {
+    padding-inline: 22px;
+  }
+}
+
+.temple-artwork:has(.temple-signup-expanded) {
+  z-index: 3;
+}
