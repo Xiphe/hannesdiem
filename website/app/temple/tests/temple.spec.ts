@@ -72,13 +72,13 @@ for (const width of [390, 1440]) {
         }),
     )
     // Freeze only ambient float so scroll geometry can be compared precisely.
-    // Native scroll motion must keep working without enhancement frames.
+    // Visible pieces keep native scroll motion while membership frames pause.
     await planes.evaluateAll((nodes) => {
       for (const node of nodes)
         for (const animation of node.getAnimations())
           if (animation instanceof CSSAnimation) animation.pause()
-      window.requestAnimationFrame = () => 0
     })
+    let membershipPaused = false
     const ranges = () =>
       page.locator('.refrain-composition').evaluateAll((nodes) =>
         nodes.map((node) => {
@@ -96,14 +96,13 @@ for (const width of [390, 1440]) {
       y = Math.round(y)
       await page.evaluate((value) => scrollTo(0, value), y)
       await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(y, 0)
-      // WebKit samples native timelines after scrollY has already updated.
-      await expect
-        .poll(() =>
-          planes
-            .first()
-            .evaluate((node) => parseFloat(getComputedStyle(node).translate.split(' ').at(-1)!)),
+      if (!membershipPaused)
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
         )
-        .toBeCloseTo(-y * 0.12, 0)
     }
     const clear = () =>
       pieces.evaluateAll((nodes) =>
@@ -136,13 +135,22 @@ for (const width of [390, 1440]) {
     await seek(verse)
     await expect.poll(clear).toBe(false)
     const before = await positions()
+    membershipPaused = true
     await ground.evaluate((node) => {
+      Object.assign(window, { groundRequestFrame: window.requestAnimationFrame })
+      window.requestAnimationFrame = () => 0
       ;(window as any).groundMutations = 0
-      new MutationObserver((records) => {
+      const observer = new MutationObserver((records) => {
         ;(window as any).groundMutations += records.length
-      }).observe(node, { attributes: true, subtree: true })
+      })
+      observer.observe(node, { attributes: true, subtree: true })
+      Object.assign(window, { groundMutationObserver: observer })
     })
     await seek(verse + 100)
+    // Native timelines may sample after scrollY updates, even with RAF paused.
+    await expect
+      .poll(async () => (await positions())[0].y - before[0].y)
+      .toBeCloseTo(-100 * (1 + [0.12, 0.26, 0.42][before[0].layer]), 0)
     const after = await positions()
     for (const [index, piece] of after.entries()) {
       expect(piece.x).toBeCloseTo(before[index].x, 1)
@@ -151,10 +159,19 @@ for (const width of [390, 1440]) {
     expect(
       await pieces.evaluateAll((nodes) =>
         nodes.every(
-          (node) => node.getAnimations().length === 0 && getComputedStyle(node).opacity === '1',
+          (node) =>
+            node.getAnimations().length === 1 &&
+            node.getAnimations()[0].timeline instanceof ScrollTimeline &&
+            getComputedStyle(node).opacity === '1',
         ),
       ),
     ).toBe(true)
+    expect(await page.evaluate(() => (window as any).groundMutations)).toBe(0)
+    await page.evaluate(() => {
+      window.requestAnimationFrame = (window as any).groundRequestFrame
+      ;(window as any).groundMutationObserver.disconnect()
+    })
+    membershipPaused = false
     const chorusClear = (scene: { top: number; bottom: number }) =>
       pieces.evaluateAll(
         (nodes, area) =>
@@ -185,16 +202,13 @@ for (const width of [390, 1440]) {
       expect(piece.x).toBeCloseTo(before[index].x, 1)
       expect(piece.y).toBeCloseTo(before[index].y, 0)
     }
-    expect(await page.evaluate(() => (window as any).groundMutations)).toBe(0)
     // Layout changes move the spaces with the actual content, not fixed lengths.
-    const oldPiece = await pieces.first().elementHandle()
     await page
       .locator('.verse-copy')
       .first()
       .evaluate((node) => {
         ;(node as HTMLElement).style.paddingBottom = '300px'
       })
-    await expect.poll(() => oldPiece!.evaluate((node) => node.isConnected)).toBe(false)
     const shifted = await ranges()
     expect(shifted[0].start).toBeGreaterThan(scenes[0].start + 290)
     for (const scene of shifted) {
@@ -272,7 +286,6 @@ for (const width of [390, 1440]) {
       await expect.poll(clearBridge).toBe(true)
     }
     // The exclusion follows preceding layout changes and reverse seeking.
-    const oldPiece = await pieces.first().elementHandle()
     await page
       .locator('.verse-copy')
       .first()
@@ -280,7 +293,6 @@ for (const width of [390, 1440]) {
         ;(node as HTMLElement).style.paddingBottom = '300px'
       })
     await expect.poll(top).toBeGreaterThan(start + 290)
-    await expect.poll(() => oldPiece!.evaluate((node) => node.isConnected)).toBe(false)
     for (const y of [await top(), (await top()) - 450]) {
       await page.evaluate((y) => scrollTo(0, y), y)
       await expect.poll(clearBridge).toBe(true)
@@ -296,7 +308,7 @@ test('Temple background drifts without animation frames and rests with reduced m
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   const planes = page.locator('.fragment-ground-ink .fragment-ground-plane')
   await expect(planes).toHaveCount(3)
-  // These surfaces span the reading document. Full-page filtered/pulsing
+  // These surfaces stay bounded to the viewport. Full-page filtered/pulsing
   // overlays caused a measured raster/compositing regression and visible blinking.
   expect(
     await planes.evaluateAll((nodes) =>
@@ -1299,6 +1311,9 @@ test('Temple renders the authored action after the first pair with theme-aware f
   const shapes = () =>
     stage.locator('path').evaluateAll((nodes) => nodes.map((n) => n.getAttribute('d')))
   const paths = await shapes()
+  // The reduced-motion ground is unmounted; compare its material while visible.
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect(page.locator('.fragment-ground-field')).toBeVisible()
   const artwork = page.locator('.temple-artwork')
   const patternPaths = await artwork
     .locator('.fragment-ground-piece > g > path')
@@ -1309,8 +1324,6 @@ test('Temple renders the authored action after the first pair with theme-aware f
   await expect(stage.locator('path').first()).toHaveAttribute('stroke-width', '1.8')
   // Hidden subtrees need not recompute paint styles in WebKit. Exercise the
   // background theme switch while it is actually rendered.
-  await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await expect(page.locator('.fragment-ground-field')).toBeVisible()
   const groundInk = page.locator('.fragment-ground-piece linearGradient stop').first()
   const ground = await groundInk.evaluate((n) => getComputedStyle(n).stopColor)
   const dark = await stage

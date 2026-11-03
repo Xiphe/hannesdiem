@@ -905,3 +905,28 @@ opener, retain8px below mobile navigation and its grey rail, render native date
 text with the supplied responsive tracking and theme colours, and use the softer
 light-mode shadow without a border. Remove the retired date-material painter.
 Keep the current main release and other agents' pending work intact.
+
+**iOS scrub crash: bound the decorative ground — 2026-11-03.** The artist
+reproduces repeated Safari crashes during rapid scrubbing after the collapsed-width
+guard. Device logs show WebContent terminated at its 2048MB per-process limit.
+Hiding only `.fragment-ground` appears to stop the crash on the affected iPhone.
+A desktop probe keeps a steady440px width and223 SVGs without rebuilds during119
+scrub updates, while three animated ground planes each extend to34121px tall.
+The allocation responsible for the device limit is not directly measured.
+
+Keep the seeded shapes, overlap order, chorus/bridge gaps, three parallax depths,
+ambient drift and outline signals. Build the composition in detached containers,
+then attach only nearby SVGs inside viewport-sized, clipped planes. Native scroll
+timelines move the individual visible shapes; cancel their animations when they
+leave the window or the island aborts. Preserve normal document geometry. The
+synthetic regression fails against the previous page-length planes and covers
+forward/reverse seeking, responsive clipping and animation cleanup. Real iPhone
+confirmation of this replacement remains pending.
+
+Local validation: the same119-update replay keeps each plane at1084px rather
+than34121px with no page errors. The complete199-case Chromium suite passes
+across the run and one native-touch rerun;84 runtime checks, formatting and
+TypeScript pass. Related WebKit checks cover the sculpture, reading gaps,
+material, signals and lifecycle. Two unrelated focus/menu assertions also fail
+on unchanged040a168; one disposal assertion passes on rerun. The new renderer
+requires the artist's iPhone retest after deployment.

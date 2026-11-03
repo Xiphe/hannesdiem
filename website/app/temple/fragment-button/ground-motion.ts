@@ -1,4 +1,5 @@
 import { paintGroundPieces, type GroundBand } from './ground-pieces.ts'
+import { createGroundViewport } from './ground-viewport.ts'
 
 type Refrain = { refrain: HTMLElement; refrainStage: HTMLElement }
 
@@ -16,13 +17,8 @@ export function createGroundMotion(
   const planes = [...field.querySelectorAll<HTMLElement>('.fragment-ground-plane')]
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const scroll = new ScrollTimeline({ source: document.scrollingElement, axis: 'block' })
-  let animations: Animation[] = []
-  function clear() {
-    for (const animation of animations) animation.cancel()
-    animations = []
-  }
+  const viewport = createGroundViewport(host, field, planes, scroll, signal)
   function resize() {
-    clear()
     const height = host.querySelector<HTMLElement>('.temple-stage')!.clientHeight
     const distance = Math.max(1, document.documentElement.scrollHeight - innerHeight)
     const origin = scrollY + host.getBoundingClientRect().top
@@ -38,7 +34,6 @@ export function createGroundMotion(
     const finalVerse = host.querySelector<HTMLElement>('.final-verse')
     const finalStart = finalVerse ? scrollY + finalVerse.getBoundingClientRect().top : undefined
     const depths = [-0.12, -0.26, -0.42]
-    field.style.setProperty('--ground-parallax-pad', `${Math.ceil(distance * 0.42)}px`)
     const holds = refrains.map(({ refrain, refrainStage }) => {
       const section = refrain.getBoundingClientRect()
       const top = parseFloat(getComputedStyle(refrainStage).top)
@@ -101,19 +96,12 @@ export function createGroundMotion(
       })
     })
     field.hidden = reduced.matches
-    paintGroundPieces(host, planes, bands)
-    if (reduced.matches) return
-    for (const [i, plane] of planes.entries()) {
-      animations.push(
-        plane.animate([{ translate: '0px 0px' }, { translate: `0px ${distance * depths[i]}px` }], {
-          timeline: scroll,
-          duration: 'auto',
-          fill: 'both',
-        }),
-      )
-    }
+    // Build the unchanged composition in detached containers. Attaching its
+    // full document extent, even briefly, can create enormous Safari surfaces.
+    const staging = planes.map(() => document.createElement('div'))
+    if (!reduced.matches) paintGroundPieces(host, staging, bands)
+    viewport.layout(staging, distance, depths)
   }
   reduced.addEventListener('change', resize, { signal })
-  signal.addEventListener('abort', clear, { once: true })
   return { resize }
 }

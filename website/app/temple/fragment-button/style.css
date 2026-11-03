@@ -50,7 +50,7 @@
   isolation: isolate;
 }
 .fragment-ground {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
@@ -70,7 +70,8 @@
 /* The sculpture scrolls vertically at three depths, with gentle ambient drift. */
 .fragment-ground-plane {
   position: absolute;
-  inset: -64px -64px calc(-64px - var(--ground-parallax-pad, 0px));
+  inset: -64px;
+  overflow: clip;
   --drift-x: 36px;
   --drift-y: -26px;
 }
