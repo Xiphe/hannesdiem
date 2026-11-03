@@ -134,7 +134,7 @@ export function paintGroundPieces(
         svg.style.top = `${64 + y}px`
         const id = `ground-shade-${crypto.randomUUID()}`
         const colour = (shift: number) =>
-          `light-dark(rgb(${247 - tone + shift} ${236 - tone + shift} ${223 - tone + shift}), rgb(${tone + shift} ${tone + 1 + shift} ${tone + shift}))`
+          `light-dark(color-mix(in srgb, var(--temple-fragment-light) ${Math.round([65, 82, 100][layer] * (shift > 0 ? 0.88 : 1))}%, var(--temple-ground-light)), rgb(${tone + shift} ${tone + 1 + shift} ${tone + shift}))`
         svg.innerHTML = `<defs><linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%"><stop style="stop-color:${colour(2)}"/><stop offset="1" style="stop-color:${colour(-2)}"/></linearGradient></defs><g transform="rotate(${angle})"><path d="${material.pieces[index].d}" fill="url(#${id})" stroke="url(#${id})" stroke-width="${fragmentStroke}" stroke-linejoin="round" stroke-linecap="round"/></g>`
         planes[layer].appendChild(svg)
         if (flowing && y + h * scale >= space.end - 0.01) break

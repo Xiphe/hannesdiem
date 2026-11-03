@@ -4,7 +4,7 @@
   padding-inline: clamp(24px, 5vw, 100px);
   margin-bottom: 24svh;
   scroll-margin-top: 90px;
-  color: light-dark(#2c2721, #e1d9ce);
+  color: light-dark(var(--temple-ink-light), #e1d9ce);
 }
 .fact-story:has(+ .temple-video) {
   margin-bottom: clamp(48px, 8svh, 96px);
@@ -49,7 +49,7 @@
 .temple-video-description {
   position: relative;
   padding: 8px 0 20px;
-  color: light-dark(#5d5046, #bdb2a5);
+  color: light-dark(var(--temple-muted-light), #bdb2a5);
   font:
     400 clamp(15px, 1.1vw, 16px)/1.55 ui-sans-serif,
     system-ui,

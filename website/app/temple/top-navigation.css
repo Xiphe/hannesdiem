@@ -9,8 +9,8 @@
   min-height: 72px;
   padding: calc(10px + env(safe-area-inset-top, 0px)) 10px 10px;
   padding-left: 18px;
-  background: light-dark(#f7ecdf, #030503);
-  color: light-dark(#28231d, #d2d0c8);
+  background: light-dark(var(--temple-ground-light), #030503);
+  color: light-dark(var(--temple-ink-light), #d2d0c8);
 }
 .temple-top-navigation[data-nav-mounted] {
   position: fixed;
@@ -117,13 +117,14 @@
 .temple-nav-progress span {
   display: block;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    light-dark(var(--temple-primary-light), var(--nav-warm-start, #b46a49)),
-    light-dark(var(--temple-primary-light), var(--nav-warm-end, #f2ad78))
-  );
+  background: linear-gradient(90deg, var(--nav-warm-start, #b46a49), var(--nav-warm-end, #f2ad78));
   transform: scaleX(var(--nav-progress, 0));
   transform-origin: left;
+}
+@media (prefers-color-scheme: light) {
+  .temple-nav-progress span {
+    background: var(--temple-progress-gradient);
+  }
 }
 .temple-nav-separator-slot {
   position: relative;
@@ -156,7 +157,7 @@
   text-decoration: underline;
 }
 .temple-nav-items a[aria-disabled] {
-  color: light-dark(#756d63, #8c8981);
+  color: light-dark(var(--temple-muted-light), #8c8981);
   opacity: 0.7;
 }
 .temple-nav-items > a[href]:not(.temple-nav-separator-link):is(:hover, :focus-visible) {

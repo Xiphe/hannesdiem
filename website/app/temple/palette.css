@@ -1,0 +1,62 @@
+/* Selected light-mode UI roles. Artwork and dark-mode materials keep their own palettes. */
+html[data-layout='temple'] {
+  --temple-ground-light: #fffefd;
+  --temple-fragment-light: #f6f6f5;
+  --temple-tile-start-light: #e9e7e7;
+  --temple-tile-end-light: #f3f0ec;
+  --temple-panel-start-light: #e3e0de;
+  --temple-panel-end-light: #e1dfdb;
+  --temple-ink-light: #1e2933;
+  --temple-muted-light: #64707d;
+  --temple-input-light: #fafcfc;
+  --temple-input-border-light: #fafcfc;
+  --temple-primary-light: #32608b;
+  --temple-primary-end-light: #60cbcd;
+  --temple-button-ink-light: #ffffff;
+  --temple-secondary-light: #6b6966;
+  --temple-secondary-hover-light: color-mix(in oklab, var(--temple-secondary-light) 88%, #11120b);
+  --temple-inactive-light: #cac8bf;
+  --temple-thumb-light: #7f7e7a;
+  --temple-danger-light: #c24029;
+  --temple-progress-gradient: linear-gradient(
+    25deg in srgb,
+    var(--temple-primary-light),
+    var(--temple-primary-end-light)
+  );
+}
+@media (prefers-color-scheme: light) {
+  html[data-layout='temple'] {
+    --fact-story-ink: var(--temple-ink-light);
+    --fact-story-copy: var(--temple-muted-light);
+    --theme-bg: var(--temple-ground-light);
+    --theme-bg-via: var(--temple-ground-light);
+    --theme-bg-to: var(--temple-ground-light);
+    --theme-fg: var(--temple-ink-light);
+    --theme-contrast: var(--temple-panel-start-light);
+    --theme-primary: var(--temple-primary-light);
+  }
+  html[data-layout='temple'] .contact-card {
+    --contact-ink: var(--temple-ink-light);
+  }
+  html[data-layout='temple'] .contact-piece-top {
+    stop-color: var(--temple-panel-start-light);
+  }
+  html[data-layout='temple'] .contact-piece-bottom {
+    stop-color: var(--temple-panel-end-light);
+  }
+}
+
+/* Text actions in the main menu share the page's secondary button treatment. */
+@media (prefers-color-scheme: light) {
+  html[data-layout='temple'] :is(.newsletter-controls, .newsletter-area) button,
+  html[data-layout='temple'] .fact-circle-area > button {
+    background: var(--temple-secondary-light);
+    color: var(--temple-button-ink-light);
+  }
+  html[data-layout='temple']
+    :is(.newsletter-controls, .newsletter-area)
+    button:not(:disabled):hover,
+  html[data-layout='temple'] .fact-circle-area > button:not(:disabled):hover {
+    background: var(--temple-secondary-hover-light);
+  }
+}

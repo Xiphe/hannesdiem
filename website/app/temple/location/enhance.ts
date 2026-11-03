@@ -88,8 +88,8 @@ export function mountLocation(host: HTMLElement, props: LocationProps, signal: A
     const isMap = material.face.classList.contains('map-face')
     const colour = (n: number) =>
       isMap
-        ? `light-dark(rgb(${211 + n} ${207 + n} ${201 + n}),rgb(${40 + n} ${38 + n} ${36 + n}))`
-        : `light-dark(rgb(${237 - tone + n} ${226 - tone + n} ${213 - tone + n}),rgb(${tone + 7 + n} ${tone + 8 + n} ${tone + 7 + n}))`
+        ? `light-dark(var(--temple-tile-${n > 0 ? 'start' : 'end'}-light),rgb(${40 + n} ${38 + n} ${36 + n}))`
+        : `light-dark(var(--temple-tile-${n > 0 ? 'start' : 'end'}-light),rgb(${tone + 7 + n} ${tone + 8 + n} ${tone + 7 + n}))`
     if (isMap) root.querySelector('.map-water')!.setAttribute('fill', `url(#${id})`)
     material.svg.innerHTML = `<defs><linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%"><stop style="stop-color:${colour(2)}"/><stop offset="1" style="stop-color:${colour(-2)}"/></linearGradient></defs><g transform="rotate(${material.angle})"><path d="${material.piece.d}" fill="url(#${id})" stroke="${isMap ? 'none' : `url(#${id})`}" stroke-width="${fragmentStroke}" stroke-linejoin="round" stroke-linecap="round"/></g>`
   }

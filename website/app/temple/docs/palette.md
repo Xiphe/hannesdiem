@@ -4,9 +4,9 @@
 
 | Role                        | Light          | Dark           |
 | --------------------------- | -------------- | -------------- |
-| Background / canvas veil    | `#f7ecdf`      | `#000000`      |
+| Background / canvas veil    | `#fffefd`      | `#000000`      |
 | Foreground / fallback title | `#11120b`      | `#d2d0c8`      |
-| Primary UI accent           | `#245989`      | Per component  |
+| Primary UI accent           | `#32608b`      | Per component  |
 | Scroll indicator            | `#84442b`      | `#343434`      |
 | Date                        | Copy cloud ink | Copy cloud ink |
 | Date shadow                 | None           | None           |
@@ -31,3 +31,13 @@ Fragment button update,2026-11-01: eleven floating pieces use the copy cloud's e
 Primary UI update, 2026-11-03: the artist selects the copy’s blue for light-mode primary UI. `--temple-primary-light` is the shared source for the signup CTA, header progress and navigation hover, Circle form actions, enabled notification switch and owned-seat highlight. Use it for future light-mode primary controls; keep neutral surfaces and destructive actions distinct. The signup CTA retains its pale blue dark-mode fill; the other controls retain their existing dark-mode treatments.
 
 Loading appearance update, 2026-11-03: the loading screen follows the visitor’s system appearance from the initial HTML, before stylesheets or JavaScript load. Light mode uses the warm paper ground and dark copy inks; dark mode retains the black ground and pale spinner/text. Appearance changes also apply while loading; the reveal timing, reduced-motion behavior and fallback remain unchanged.
+
+## Selected light UI palette — 2026-11-03
+
+The artist selects the [exported lab values](light-palette-2026-11-03.json), with these explicit refinements: reserve the blue-to-teal gradient for header progress; use solid secondary buttons with white text wherever an action button fits; match Visit’s background pieces to the other section pieces. Keep Release as a red ghost action and retain icon, inline-tooltip and switch semantics. This supersedes the earlier light-mode primary-action fill. No deployment is requested.
+
+`../palette.css` is the shared source for the light UI roles. Page/loading/header use `#fffefd`; background fragments use `#f6f6f5` mixed with the paper for depth. Reading pieces, including Visit’s enhanced and fallback materials, use `#e9e7e7` → `#f3f0ec`; floating pieces use `#e3e0de` → `#e1dfdb`, with no extra edge. UI ink is `#1e2933`, dimmed text `#64707d`, and input fill/border `#fafcfc`.
+
+Header progress alone uses `linear-gradient(25deg in srgb, #32608b, #60cbcd)`. Action buttons use `#6b6966` and white text; Release uses `#c24029`. The switch keeps its plain-English state, a solid blue on track, and `#cac8bf` / `#7f7e7a` for its off track/thumb. Solid blue also marks focus and owned seats. Dark-mode materials and the photographic lettering, animated poem ink and favicon artwork retain their existing palettes, as in the reviewed lab.
+
+The [button inventory](buttons.md) records which controls receive the secondary treatment and which retain their existing role. The palette lab is preserved separately on `codex/temple-light-palette-lab`.

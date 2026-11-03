@@ -24,7 +24,7 @@
   padding: 30px 32px;
   border: 0;
   background: transparent;
-  color: light-dark(#302920, #e8ddd0);
+  color: light-dark(var(--temple-ink-light, #302920), #e8ddd0);
   font:
     400 16px/1.5 ui-sans-serif,
     system-ui,
@@ -41,10 +41,10 @@
   transform: scaleY(-1);
 }
 .piece-tooltip-top {
-  stop-color: light-dark(#e6ddd0, #34322d);
+  stop-color: light-dark(var(--temple-panel-start-light, #e6ddd0), #34322d);
 }
 .piece-tooltip-bottom {
-  stop-color: light-dark(#d6cbbd, #25241f);
+  stop-color: light-dark(var(--temple-panel-end-light, #d6cbbd), #25241f);
 }
 .piece-tooltip em {
   position: relative;

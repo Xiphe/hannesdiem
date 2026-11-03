@@ -42,10 +42,10 @@ export function Page(
               <style>{`
               html[data-temple-loading] {
                 color-scheme: light dark;
-                --temple-loading-ground: light-dark(#f7ecdf, #000);
-                --temple-loading-cool: light-dark(var(--temple-primary-light, #245989), #bdd7e3);
-                --temple-loading-warm: light-dark(#8e441c, #edcaa4);
-                --temple-loading-ink: light-dark(#11120b, #d2d0c8);
+                --temple-loading-ground: light-dark(var(--temple-ground-light, #fffefd), #000);
+                --temple-loading-cool: light-dark(var(--temple-primary-light, #32608b), #bdd7e3);
+                --temple-loading-warm: light-dark(var(--temple-muted-light, #64707d), #edcaa4);
+                --temple-loading-ink: light-dark(var(--temple-ink-light, #1e2933), #d2d0c8);
                 background: var(--temple-loading-ground);
               }
               html[data-layout='temple'][data-temple-loading] body { background: var(--temple-loading-ground); animation: temple-load-ground 0s 8s forwards; }
@@ -80,11 +80,11 @@ export function Page(
                 }
               }
               @keyframes temple-load-document { to { visibility: visible; } }
-              @keyframes temple-load-ground { to { background: light-dark(#f7ecdf, #000); } }
+              @keyframes temple-load-ground { to { background: light-dark(var(--temple-ground-light, #fffefd), #000); } }
             `}</style>
               <noscript>
                 <style>{`
-              html[data-temple-loading] body { background: light-dark(#f7ecdf, #000) !important; animation: none; }
+              html[data-temple-loading] body { background: light-dark(var(--temple-ground-light, #fffefd), #000) !important; animation: none; }
               html[data-temple-loading] .temple-page { visibility: visible; animation: none; }
               html[data-temple-loading] body::before,
               html[data-temple-loading] .temple-loading-word { display: none; }
