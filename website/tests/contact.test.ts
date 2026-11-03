@@ -18,8 +18,15 @@ test('contact card uses publication messaging links and preserves the CTA email'
   assert.match(html, /mailto:retreat@example.org\?subject=Fixture/)
   assert.ok(html.includes(site.contact!.signal.href))
   assert.ok(html.includes(site.contact!.telegram.href))
-  const encoded = html.match(/data:text\/vcard;charset=utf-8,([^"]+)/)![1]
-  const vcard = decodeURIComponent(encoded).replaceAll('\r\n ', '')
+  assert.match(html, /href="\/_contact\.vcf\?email=/)
+  assert.match(html, /data-rmx-document/)
+  assert.doesNotMatch(html, /download="|href="data:/)
+  const fileResponse = await app.fetch(url.replace('/_contact?', '/_contact.vcf?'))
+  assert.equal(fileResponse.status, 200)
+  assert.equal(fileResponse.headers.get('Content-Type'), 'text/vcard; charset=utf-8')
+  assert.equal(fileResponse.headers.get('Content-Disposition'), 'inline; filename="contact.vcf"')
+  assert.equal(fileResponse.headers.get('Cache-Control'), 'no-store')
+  const vcard = (await fileResponse.text()).replaceAll('\r\n ', '')
   assert.match(vcard, /FN:Fixture Person\r\n/)
   assert.match(vcard, /EMAIL;TYPE=INTERNET:retreat@example.org\r\n/)
   assert.doesNotMatch(vcard, /(?:TEL|ADR):|subject=/)
@@ -35,6 +42,13 @@ test('contact card uses publication messaging links and preserves the CTA email'
     (await app.fetch('https://example.org/_contact?email=javascript:alert(1)')).status,
     400,
   )
+  for (const email of ['', 'javascript:alert(1)', 'mailto:fixture@example.org\r\nTEL:private']) {
+    assert.equal(
+      (await app.fetch('https://example.org/_contact.vcf?email=' + encodeURIComponent(email)))
+        .status,
+      400,
+    )
+  }
 })
 
 test('vCard escapes values and folds long Unicode lines without adding fields', () => {

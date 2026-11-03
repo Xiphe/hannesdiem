@@ -9,8 +9,13 @@ import { Page } from './page.tsx'
 import { routes } from './routes.ts'
 import { contentCacheTag } from './document-host/index.ts'
 import { ContactCard } from './contact/card.tsx'
+import { contactVcard } from './contact/vcard.ts'
 
 const privateHeaders = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
+function contactMailto(request: Request) {
+  const mailto = new URL(request.url).searchParams.get('email') ?? ''
+  return /^mailto:[^\s?@]+@[^\s?@]+(?:\?[^\r\n]*)?$/i.test(mailto) ? mailto : undefined
+}
 const xml = (value: string) =>
   value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 export function createApp(content: ContentLoader) {
@@ -19,9 +24,23 @@ export function createApp(content: ContentLoader) {
     defaultHandler: () => new Response('Not found', { status: 404, headers: privateHeaders }),
   })
   router.get(routes.health, () => Response.json({ ok: true }, { headers: privateHeaders }))
+  router.get(routes.contactFile, async ({ request }) => {
+    const mailto = contactMailto(request)
+    if (!mailto)
+      return new Response('Invalid email address', { status: 400, headers: privateHeaders })
+    const { site } = await content(request)
+    if (!site.contact) return new Response('Not found', { status: 404, headers: privateHeaders })
+    return new Response(contactVcard(site.contact, mailto.slice(7).split('?')[0]), {
+      headers: {
+        ...privateHeaders,
+        'Content-Type': 'text/vcard; charset=utf-8',
+        'Content-Disposition': 'inline; filename="contact.vcf"',
+      },
+    })
+  })
   router.get(routes.contact, async ({ request, render }) => {
-    const mailto = new URL(request.url).searchParams.get('email') ?? ''
-    if (!/^mailto:[^\s?@]+@[^\s?@]+(?:\?[^\r\n]*)?$/i.test(mailto))
+    const mailto = contactMailto(request)
+    if (!mailto)
       return new Response('Invalid email address', { status: 400, headers: privateHeaders })
     const page = await content(request)
     const overlay = request.headers.get('X-Remix-Target') === 'overlay'

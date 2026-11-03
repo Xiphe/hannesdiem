@@ -1,9 +1,14 @@
-import type { Handle } from 'remix/component'
+import { clientEntry, type Handle } from 'remix/component'
+import assets from '../../../.generated/assets.json' with { type: 'json' }
 import type { ContactDetails } from '../../../contracts/content.ts'
-import { EnvelopeIcon, UserIcon, XMarkIcon } from '../heroicons.tsx'
+import { EnvelopeIcon, XMarkIcon } from '../heroicons.tsx'
 import { SignalIcon, TelegramIcon } from '../icons.tsx'
+import { routes } from '../routes.ts'
 import { readingContours } from '../temple/facts/material.ts'
+import { SaveContact as SaveContactComponent } from './save.tsx'
 import { contactVcard } from './vcard.ts'
+
+const SaveContact = clientEntry(assets.contact + '#SaveContact', SaveContactComponent)
 
 export function ContactCard(
   handle: Handle<{ contact?: ContactDetails; mailto: string; overlay: boolean }>,
@@ -108,17 +113,10 @@ export function ContactCard(
             )}
           </div>
           {contact && (
-            <a
-              class="contact-save"
-              href={`data:text/vcard;charset=utf-8,${encodeURIComponent(contactVcard(contact, email))}`}
-              download="contact.vcf"
-            >
-              <UserIcon
-                width={22}
-                height={22}
-              />
-              Add contact card
-            </a>
+            <SaveContact
+              href={routes.contactFile.href() + '?email=' + encodeURIComponent(mailto)}
+              vcard={contactVcard(contact, email)}
+            />
           )}
         </section>
       </div>
