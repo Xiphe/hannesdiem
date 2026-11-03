@@ -5,14 +5,22 @@ export function mountNavigationPosition(host: HTMLElement, signal: AbortSignal) 
   if (!header || !stage || signal.aborted) return
   const title = header.querySelector<HTMLElement>('.temple-nav-title')
   const date = header.querySelector<HTMLElement>('.temple-nav-date')
+  const measure = document.createElement('canvas').getContext('2d')
   const fitDate = () => {
-    if (!title || !date || signal.aborted) return
-    const range = document.createRange()
-    range.selectNodeContents(date)
-    const width = range.getBoundingClientRect().width
-    if (!width) return
-    const size = parseFloat(getComputedStyle(date).fontSize)
-    date.style.fontSize = `${(size * title.getBoundingClientRect().width) / width}px`
+    if (!title || !date || !measure || signal.aborted) return
+    const style = getComputedStyle(date)
+    let size = parseFloat(style.fontSize)
+    const target = title.getBoundingClientRect().width
+    // Measure just the native text; its absolutely positioned material canvas
+    // must not influence fitting or introduce extra letter spacing.
+    for (let i = 0; i < 3; i++) {
+      measure.font = `${style.fontWeight} ${size}px ${style.fontFamily}`
+      measure.fontKerning = 'normal'
+      const width = measure.measureText(date.textContent ?? '').width
+      if (!width) return
+      size *= target / width
+    }
+    date.style.fontSize = `${size}px`
   }
   // Fit native date text when the wordmark changes size, never on scroll.
   const sizeObserver = new ResizeObserver(fitDate)

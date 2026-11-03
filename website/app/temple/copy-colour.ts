@@ -296,13 +296,12 @@ export function colourCopy(
           context.fillRect(0, 0, layer.width, layer.height)
         } else if (layer.inline) {
           // Fixed navigation samples one shared horizontal strip of the verse ink.
-          context.drawImage(
-            canvas,
-            -layer.element.getBoundingClientRect().left,
+          // Keep the whole mask painted when a label starts outside the scroll area.
+          const left = Math.max(
             0,
-            innerWidth,
-            innerHeight,
+            Math.min(innerWidth - layer.width, layer.element.getBoundingClientRect().left),
           )
+          context.drawImage(canvas, -left, 0, innerWidth, innerHeight)
         } else {
           context.drawImage(
             layer.bridge ? bridgeCanvas : canvas,

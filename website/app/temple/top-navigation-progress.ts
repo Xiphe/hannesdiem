@@ -1,3 +1,5 @@
+import { mountNavigationScrub } from './top-navigation-scrub.ts'
+
 /** Painted scene bounds, including raised images and clipped irregular material. */
 function visualBounds(node: Element) {
   const rect = node.getBoundingClientRect()
@@ -63,13 +65,12 @@ function visualBounds(node: Element) {
 export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) {
   const header = host.querySelector<HTMLElement>('.temple-top-navigation')
   const nav = header?.querySelector<HTMLElement>('.temple-nav-items')
-  const progress = nav?.querySelector<HTMLElement>('.temple-nav-progress')
+  const progress = header?.querySelector<HTMLElement>('.temple-nav-progress')
   const fill = progress?.querySelector<HTMLElement>('span')
   if (!header || !nav || !progress || !fill || signal.aborted) return
   let layoutFrame = 0
   let scrollFrame = 0
   let animation: Animation | undefined
-  let listening = false
   let points: { at: number; value: number }[] = []
   let observed = new Set<Element>()
   const root = document.documentElement
@@ -86,20 +87,25 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       if (position <= after.at) break
     }
     progress.style.setProperty('--nav-progress', String(value))
+    scrubber.follow()
   }
   const scroll = () => {
-    if (!animation && !scrollFrame) scrollFrame = requestAnimationFrame(draw)
+    if ((!animation || scrubber.active) && !scrollFrame) scrollFrame = requestAnimationFrame(draw)
   }
   const schedule = () => {
     if (!layoutFrame) layoutFrame = requestAnimationFrame(layout)
   }
+  const scrubber = mountNavigationScrub(nav, signal, schedule)
   const observer = new ResizeObserver(schedule)
   function layout() {
     layoutFrame = 0
     if (signal.aborted) return
     const stops = [...nav!.querySelectorAll<HTMLAnchorElement>('[data-nav-stop]')]
     if (!stops.length) return
-    const navLeft = nav!.getBoundingClientRect().left
+    scrubber.measure(stops)
+    const navBounds = nav!.getBoundingClientRect()
+    const headerBounds = header!.getBoundingClientRect()
+    const navLeft = navBounds.left
     const x = (node: HTMLElement) => {
       const rect = node.getBoundingClientRect()
       return rect.left - navLeft + nav!.scrollLeft
@@ -107,19 +113,18 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
     const left = x(stops[0])
     const last = stops[stops.length - 1]
     const width = Math.max(1, x(last) + last.getBoundingClientRect().width - left)
-    progress!.style.left = `${left}px`
-    progress!.style.width = `${width}px`
-    const known: { node: HTMLElement; target: HTMLElement }[] = []
+    progress!.style.left = scrubber.active ? '0px' : `${navLeft - headerBounds.left + left}px`
+    progress!.style.width = scrubber.active ? '100%' : `${width}px`
+    progress!.style.bottom = scrubber.active ? '0px' : `${headerBounds.bottom - navBounds.bottom}px`
+    const known: { node: HTMLAnchorElement; target: HTMLElement }[] = []
     for (const node of stops) {
       const hash = node.getAttribute('href')
       const target = hash?.startsWith('#') ? document.getElementById(hash.slice(1)) : null
-      // A future fact is a real boundary, not permission to skip to later verses.
-      if (!target) {
-        break
-      }
+      // Mobile also follows the connected poem pieces after unfinished facts.
+      if (!target) continue
       known.push({ node, target })
     }
-    const scenes = known.map(({ node, target }) => {
+    const allScenes = known.map(({ node, target }) => {
       const visuals = [...target.querySelectorAll('[data-nav-visual]')]
       const bounds = visuals.map(visualBounds).filter((b) => b !== undefined)
       const fallback = target.getBoundingClientRect()
@@ -137,13 +142,30 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       document.body,
       header!,
       nav!,
-      ...scenes.flatMap(({ target, visuals }) => [target, ...visuals]),
+      ...allScenes.flatMap(({ target, visuals }) => [target, ...visuals]),
     ])
     for (const node of observed) if (!nextObserved.has(node)) observer.unobserve(node)
     for (const node of nextObserved) if (!observed.has(node)) observer.observe(node)
     observed = nextObserved
     const range = Math.max(0, root.scrollHeight - root.clientHeight)
     const clamp = (n: number) => Math.max(0, Math.min(range, n))
+    const firstCentre = x(stops[0]) + stops[0].getBoundingClientRect().width / 2
+    const mobilePoints = [{ at: 0, value: firstCentre }]
+    for (const { node, top, bottom } of allScenes) {
+      mobilePoints.push({
+        at: clamp((top + bottom - innerHeight) / 2),
+        value: x(node) + node.getBoundingClientRect().width / 2,
+      })
+    }
+    const lastStop = stops.at(-1)!
+    mobilePoints.push({
+      at: range,
+      value: x(lastStop) + lastStop.getBoundingClientRect().width / 2,
+    })
+    scrubber.layout(mobilePoints)
+    // Desktop keeps its original progress boundary at the first unfinished fact.
+    const boundary = stops.findIndex((node) => !known.some((scene) => scene.node === node))
+    const scenes = allScenes.filter(({ node }) => boundary < 0 || stops.indexOf(node) < boundary)
     points = [{ at: 0, value: 0 }]
     let endValue = 0
     for (let i = 0; i < scenes.length; i++) {
@@ -171,7 +193,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
     scrollFrame = 0
     animation?.cancel()
     animation = undefined
-    if (typeof ScrollTimeline !== 'undefined' && range > 0) {
+    if (typeof ScrollTimeline !== 'undefined' && range > 0 && !scrubber.active) {
       animation = fill!.animate(
         points.map(({ at, value }) => ({ offset: at / range, transform: `scaleX(${value})` })),
         {
@@ -181,10 +203,6 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
         },
       )
     } else {
-      if (!listening) {
-        window.addEventListener('scroll', scroll, { passive: true, signal })
-        listening = true
-      }
       draw()
     }
   }
@@ -216,6 +234,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
     ],
   })
   window.addEventListener('resize', schedule, { passive: true, signal })
+  window.addEventListener('scroll', scroll, { passive: true, signal })
   window.addEventListener('pageshow', schedule, { passive: true, signal })
   void document.fonts.ready.then(() => {
     if (!signal.aborted) schedule()
@@ -232,6 +251,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       progress.style.removeProperty('--nav-progress')
       progress.style.removeProperty('left')
       progress.style.removeProperty('width')
+      progress.style.removeProperty('bottom')
     },
     { once: true },
   )

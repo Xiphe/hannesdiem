@@ -775,3 +775,76 @@ recording and CTA work and requests deployment. Publish the localized posting
 date below the video, the description material shifted12px left, Watch signup
 after the caption, sentence-case buttons,16px less space above the video and32px
 more before its CTA. Keep unrelated navigation and signup-flow work separate.
+
+**Mobile navigation as a scrubber — 2026-11-03.** The artist selects horizontal
+timeline dragging to move continuously through the vertical page, with ordinary
+page scrolling moving the timeline in return. Centre Visit at the start, allow
+empty space at both ends, retain direct section links and stop where released
+without snapping. Replace mobile progress fill with a short fixed warm segment
+on the bottom border; fade both horizontal edges and hide the scrollbar. Centre
+the Temple wordmark/date and move the logo menu trigger to the left on mobile.
+The main menu enters from the left and initially focuses its container rather
+than outlining Hannes Diem; keyboard link indicators remain. Preserve desktop
+progress and the header's appearance as the opener exits. Fix narrow-screen
+wordmark material coverage and complete offscreen label painting through the
+existing renderers. Local review; no deployment requested.
+
+**Centre section labels and lower the rail — 2026-11-03.** The artist asks for
+Watch and later labels to reach the scrubber's centre when the corresponding
+area is centred in the viewport. Use each area's measured visual midpoint for
+mobile alignment, preserving Visit's initial position and desktop's first-paint
+progress mapping. Move the rail to the header's bottom edge with a1px overlap
+and remove horizontal header padding on small screens. The artist then removes
+the overlap on small screens, keeping the rail flush with the header's bottom,
+and restores its position beneath the navigation items on larger screens.
+Local review only.
+
+**Month-only event dates — 2026-11-03.** The artist requests “November & December
+2026” everywhere. Both opener and header use the existing shared date formatter
+without day numbers and join the months with an ampersand. Retain the calendar
+values for native time metadata. Local review only.
+
+**Textured header date — 2026-11-03.** The artist asks to include the date in
+the wordmark's background effect and darken it slightly. Both header rows sample
+one continuous region of the existing opener material on its shared clock; the
+date uses75% brightness. Preserve native localized time elements, date fitting,
+reduced motion and plain-text fallback. Local review only.
+
+**Header date colour controls — 2026-11-03.** The artist asks for a darker
+middle and more orange at the edges, with controls to tune both. Add a temporary
+`?date-tuning` panel to the current page: centre darkness, edge orange strength,
+edge width, overall brightness and edge colour. Apply spatial overlays to the
+existing material on its shared clock; controls request a repaint even with
+reduced motion. Values live in memory with reset/copy controls. Initial values
+are a proposal for review; no final colour selection or deployment requested.
+
+**Even out the header date — 2026-11-03.** The artist finds the date's tone too
+uneven. Give its moving material a consistent warm base, reduce centre/edge
+contrast and expose “Tone evenness” in the existing tuning panel. Preserve some
+material variation and the subtler orange edges. Local review only.
+
+**Restore date texture and favour the wordmark — 2026-11-03.** The artist finds
+the even warm treatment too flat and bright. Reduce its evenness wash to25% and
+overall brightness to50%, restoring material variation while keeping the date
+visually subordinate to the wordmark. Keep all tuning controls available.
+Local review only.
+
+**Theme-specific date lightness — 2026-11-03.** The artist asks for a tiny
+lift in dark mode and a much lighter date in light mode. Raise dark brightness
+from50% to55%; in light mode lift the previous material35% towards the header's
+warm paper, keeping the wordmark dominant. Expose separate dark brightness and
+light lightness controls, retaining texture and live theme changes. Local review
+only.
+
+**Paler, more visible light-mode date texture — 2026-11-03.** Dark mode is
+accepted. For light mode, the artist requests more visible material and a still
+lighter date. Remove the light-mode material dimming and raise the paper lift
+to50%, increasing texture variation while making the overall tone paler.
+Keep the accepted dark-mode treatment. Local review only.
+
+**Navigation and date release approved — 2026-11-03.** The artist accepts the
+final theme-specific date material and requests cleanup and deployment. Remove
+the temporary tuning panel and its CSS, retaining the approved values and native
+fallbacks. Release the mobile scrubber, centred wordmark, left-opening menu,
+month-only dates and accepted date texture through the normal main deployment.
+Keep unrelated work in the shared directory outside this release.

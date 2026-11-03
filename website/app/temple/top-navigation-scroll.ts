@@ -8,6 +8,7 @@ export function mountNavigationScroll(host: HTMLElement, signal: AbortSignal) {
     cancelAnimationFrame(frame)
     frame = 0
   }
+  header.addEventListener('navigation-scrub', cancel, { signal })
   header.addEventListener(
     'click',
     (event) => {

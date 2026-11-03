@@ -157,7 +157,7 @@ export function Navigation(
 ) {
   const { primary = [], sections } = handle.context.get(SiteContent).navigation
   return () => (
-    <div mix={css({ display: 'flex', minHeight: '100dvh', justifyContent: 'end' })}>
+    <div mix={css({ display: 'flex', minHeight: '100dvh', justifyContent: 'start' })}>
       <div
         data-overlay-panel
         data-navigation-panel
@@ -165,6 +165,8 @@ export function Navigation(
       >
         <div
           class="navigation-menu"
+          tabIndex={-1}
+          autoFocus
           mix={navStyle}
         >
           <div

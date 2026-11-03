@@ -398,7 +398,10 @@
   opacity: 0;
 }
 .page-dialog[data-closing='true'] [data-navigation-panel] {
-  transform: translateX(100%);
+  transform: translateX(-100%);
+}
+.navigation-menu:focus {
+  outline: none;
 }
 .lyrics-dialog [data-overlay-panel] {
   opacity: 1;
@@ -416,7 +419,7 @@
     opacity: 0;
   }
   .page-dialog[open] [data-navigation-panel] {
-    transform: translateX(100%);
+    transform: translateX(-100%);
   }
 }
 

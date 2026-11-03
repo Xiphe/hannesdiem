@@ -168,32 +168,35 @@ export function createTypeSurface(
     const wordBounds: { x: number; y: number; width: number; height: number }[] = []
     for (const group of groups) {
       const firstGlyph = glyphs.length
-      const node = group.firstChild!
-      const range = document.createRange()
-      const text = node.textContent!
       const lines: { text: string; x: number; baseline: number; y: number }[] = []
-      for (let i = 0; i < text.length; i++) {
-        range.setStart(node, i)
-        range.setEnd(node, i + 1)
-        const rect = range.getBoundingClientRect()
-        const baseline = rect.top - hostRect.top + fm.fontBoundingBoxAscent
-        let line = lines.find((line) => Math.abs(line.y - rect.top) < 2)
-        if (!line) {
-          line = { text: '', x: rect.left - hostRect.left, baseline, y: rect.top }
-          lines.push(line)
+      // Native inline elements (including time) keep their semantic HTML in the mask.
+      const textNodes = document.createTreeWalker(group, NodeFilter.SHOW_TEXT)
+      for (let node = textNodes.nextNode(); node; node = textNodes.nextNode()) {
+        const range = document.createRange()
+        const text = node.textContent!
+        for (let i = 0; i < text.length; i++) {
+          range.setStart(node, i)
+          range.setEnd(node, i + 1)
+          const rect = range.getBoundingClientRect()
+          const baseline = rect.top - hostRect.top + fm.fontBoundingBoxAscent
+          let line = lines.find((line) => Math.abs(line.y - rect.top) < 2)
+          if (!line) {
+            line = { text: '', x: rect.left - hostRect.left, baseline, y: rect.top }
+            lines.push(line)
+          }
+          line.text += text[i]
+          if (!text[i].trim()) continue
+          const metrics = ink.measureText(text[i])
+          const glyph = tile(text[i], style.fontFamily, Number(style.fontWeight), size)
+          glyphs.push({
+            ...glyph,
+            char: text[i],
+            origin: rect.left - hostRect.left,
+            baseline,
+            x: rect.left - hostRect.left - metrics.actualBoundingBoxLeft,
+            y: baseline - metrics.actualBoundingBoxAscent,
+          })
         }
-        line.text += text[i]
-        if (!text[i].trim()) continue
-        const metrics = ink.measureText(text[i])
-        const glyph = tile(text[i], style.fontFamily, Number(style.fontWeight), size)
-        glyphs.push({
-          ...glyph,
-          char: text[i],
-          origin: rect.left - hostRect.left,
-          baseline,
-          x: rect.left - hostRect.left - metrics.actualBoundingBoxLeft,
-          y: baseline - metrics.actualBoundingBoxAscent,
-        })
       }
       for (const line of lines) ink.fillText(line.text.trimEnd(), line.x, line.baseline)
       const wordGlyphs = glyphs.slice(firstGlyph)

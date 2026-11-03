@@ -17,68 +17,77 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
           <canvas aria-hidden="true" />
         </a>
         <div class="temple-nav-date">
-          <LocalDate
-            value={handle.props.dates.start}
-            hideYear
-          />
-          {' – '}
-          <LocalDate value={handle.props.dates.end} />
+          <span class="temple-nav-date-ink">
+            <LocalDate
+              value={handle.props.dates.start}
+              hideDay
+              hideYear
+            />
+            {' & '}
+            <LocalDate
+              value={handle.props.dates.end}
+              hideDay
+            />
+          </span>
+          <canvas aria-hidden="true" />
         </div>
       </div>
-      <nav
-        class="temple-nav-items"
-        aria-label={handle.props.title}
-      >
-        {handle.props.navigation?.map(({ label, href, verseBefore }, index) => {
-          const piece = index > 0 && (
-            <svg
-              class="temple-nav-separator"
-              viewBox="-20 -20 40 40"
-              aria-hidden="true"
-            >
-              <path
-                d={pieces[(index - 1) % pieces.length].d}
-                transform={`rotate(${[35, 115, -30, 70, -75, 145][(index - 1) % pieces.length]}) translate(0 5)`}
-              />
-            </svg>
-          )
-          return (
-            <>
-              {piece &&
-                (verseBefore ? (
-                  <a
-                    class="temple-nav-separator-slot temple-nav-separator-link"
-                    href={verseBefore.href}
-                    aria-label={verseBefore.label}
-                    data-nav-stop
-                  >
-                    {piece}
-                  </a>
-                ) : (
-                  <span class="temple-nav-separator-slot">{piece}</span>
-                ))}
-              <a
-                href={href}
-                aria-disabled={!href || undefined}
-                data-nav-stop
-              >
-                <span
-                  class="temple-nav-item-ink"
-                  data-copy-inline
-                >
-                  {label}
-                </span>
-              </a>
-            </>
-          )
-        })}
-        <div
-          class="temple-nav-progress"
-          aria-hidden="true"
+      <div class="temple-nav-track">
+        <nav
+          class="temple-nav-items"
+          aria-label={handle.props.title}
         >
-          <span />
-        </div>
-      </nav>
+          {handle.props.navigation?.map(({ label, href, verseBefore }, index) => {
+            const piece = index > 0 && (
+              <svg
+                class="temple-nav-separator"
+                viewBox="-20 -20 40 40"
+                aria-hidden="true"
+              >
+                <path
+                  d={pieces[(index - 1) % pieces.length].d}
+                  transform={`rotate(${[35, 115, -30, 70, -75, 145][(index - 1) % pieces.length]}) translate(0 5)`}
+                />
+              </svg>
+            )
+            return (
+              <>
+                {piece &&
+                  (verseBefore ? (
+                    <a
+                      class="temple-nav-separator-slot temple-nav-separator-link"
+                      href={verseBefore.href}
+                      aria-label={verseBefore.label}
+                      data-nav-stop
+                    >
+                      {piece}
+                    </a>
+                  ) : (
+                    <span class="temple-nav-separator-slot">{piece}</span>
+                  ))}
+                <a
+                  href={href}
+                  aria-disabled={!href || undefined}
+                  data-nav-stop
+                >
+                  <span
+                    class="temple-nav-item-ink"
+                    data-copy-inline
+                  >
+                    {label}
+                  </span>
+                </a>
+              </>
+            )
+          })}
+        </nav>
+      </div>
+      <div
+        class="temple-nav-progress"
+        aria-hidden="true"
+      >
+        <span />
+      </div>
       <button
         class="temple-nav-logo"
         type="button"

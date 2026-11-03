@@ -38,11 +38,15 @@
   justify-self: start;
 }
 .temple-nav-date {
+  position: relative;
   white-space: nowrap;
   font:
     500 10px/1.1 Bricolage,
     sans-serif;
   color: var(--copy-color);
+}
+.temple-nav-date-ink {
+  display: inline-block;
   opacity: 0.65;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -60,7 +64,8 @@
   letter-spacing: -0.04em;
   text-decoration: none;
 }
-.temple-nav-title canvas {
+.temple-nav-title canvas,
+.temple-nav-date canvas {
   position: absolute;
   inset: -5px -7px;
   width: calc(100% + 14px);
@@ -68,10 +73,12 @@
   pointer-events: none;
   opacity: 0;
 }
-.temple-nav-title[data-ink-ready] canvas {
+.temple-nav-title[data-ink-ready] canvas,
+.temple-nav-date[data-ink-ready] canvas {
   opacity: 1;
 }
-.temple-nav-title[data-ink-ready] .temple-nav-title-ink {
+.temple-nav-title[data-ink-ready] .temple-nav-title-ink,
+.temple-nav-date[data-ink-ready] .temple-nav-date-ink {
   color: transparent;
 }
 .temple-nav-items {
@@ -84,6 +91,9 @@
     350 14px/1.4 UnboundedCopy,
     sans-serif;
   white-space: nowrap;
+}
+.temple-nav-track {
+  min-width: 0;
 }
 .temple-nav-item-ink {
   position: relative;
@@ -186,6 +196,10 @@
   outline: 2px solid currentColor;
   outline-offset: 4px;
 }
+.temple-artwork [tabindex='-1']:focus {
+  /* Section arrival transfers focus without outlining the entire artwork. */
+  outline: none;
+}
 .temple-artwork:has(.temple-top-navigation) {
   --temple-nav-clearance: 88px;
 }
@@ -209,40 +223,71 @@
 }
 @media (max-width: 1050px) {
   .temple-top-navigation {
-    grid-template-columns: minmax(0, 1fr) 44px;
-    gap: 0 16px;
-    padding-inline: 10px;
-    padding-left: 18px;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    gap: 0 4px;
+    padding-inline: 0;
   }
-  .temple-nav-title {
-    font-size: 23px;
-  }
-  .temple-nav-logo {
+  .temple-nav-brand {
     grid-column: 2;
     grid-row: 1;
+    justify-self: center;
+    align-items: center;
+  }
+  .temple-nav-title {
+    font-size: clamp(18px, 5.9vw, 23px);
+  }
+  .temple-nav-logo {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+  .temple-nav-track {
+    grid-column: 1 / -1;
   }
   .temple-nav-items {
     --nav-gap: 12px;
-    grid-column: 1 / -1;
     min-width: 0;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    padding-inline: 4px;
-    margin-inline: -4px;
+    scrollbar-width: none;
+    padding-inline: var(--nav-leading, 0px) var(--nav-trailing, 0px);
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 24px,
+      #000 calc(100% - 24px),
+      transparent
+    );
+  }
+  .temple-nav-items::-webkit-scrollbar {
+    display: none;
+  }
+  .temple-nav-items a {
+    flex: none;
+  }
+  .temple-nav-items[data-dragging] {
+    cursor: grabbing;
+    user-select: none;
+  }
+  .temple-nav-progress span {
+    width: 64px;
+    margin-inline: auto;
+    transform: none;
   }
   .temple-artwork:has(.temple-top-navigation) {
     --temple-nav-clearance: 128px;
   }
 }
 @media print, (forced-colors: active) {
-  .temple-nav-title[data-ink-ready] .temple-nav-title-ink {
+  .temple-nav-title[data-ink-ready] .temple-nav-title-ink,
+  .temple-nav-date[data-ink-ready] .temple-nav-date-ink {
     color: CanvasText;
   }
   .temple-nav-item-ink[data-copy-cloud] {
     color: CanvasText;
   }
-  .temple-nav-title canvas {
+  .temple-nav-title canvas,
+  .temple-nav-date canvas {
     display: none;
   }
 }

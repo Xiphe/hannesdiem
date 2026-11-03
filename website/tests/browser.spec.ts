@@ -722,7 +722,7 @@ test('outside clicks close overlays and local menu navigation adds no menu histo
   const title = await page.locator('main h1').textContent()
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
-  await page.mouse.click(20, 400)
+  await page.mouse.click(page.viewportSize()!.width - 20, 400)
   await expect(page.getByRole('dialog')).not.toBeVisible()
   await expect(page).toHaveURL(/\/fixture-release$/)
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
@@ -837,7 +837,7 @@ test('sidebar slide and backdrop share the opening timeline on every open', asyn
                 slide.currentTime = Number(timing[0].duration) * progress
                 backdrop.currentTime = Number(timing[1].duration) * progress
                 return {
-                  right: panel.getBoundingClientRect().right,
+                  left: panel.getBoundingClientRect().left,
                   opacity: Number(getComputedStyle(dialog, '::backdrop').opacity),
                   scrollLeft: dialog.scrollLeft,
                 }
@@ -876,12 +876,12 @@ test('sidebar slide and backdrop share the opening timeline on every open', asyn
       expect(sample.scrollLeft).toBe(0)
       expect(sample.opacity).toBeGreaterThanOrEqual(0)
       expect(sample.opacity).toBeLessThanOrEqual(1)
-      expect(sample.right).toBeGreaterThanOrEqual(motion.viewport)
-      expect(sample.right).toBeLessThanOrEqual(motion.viewport + motion.width)
-      expect(sample.right - motion.viewport).toBeCloseTo(motion.width * (1 - sample.opacity), 0)
+      expect(sample.left).toBeGreaterThanOrEqual(-motion.width)
+      expect(sample.left).toBeLessThanOrEqual(0)
+      expect(sample.left).toBeCloseTo(-motion.width * (1 - sample.opacity), 0)
       if (index > 0) {
         expect(sample.opacity).toBeGreaterThanOrEqual(motion.samples[index - 1].opacity)
-        expect(sample.right).toBeLessThanOrEqual(motion.samples[index - 1].right)
+        expect(sample.left).toBeGreaterThanOrEqual(motion.samples[index - 1].left)
       }
     }
     await dialog.getByRole('button', { name: 'Close navigation' }).click()

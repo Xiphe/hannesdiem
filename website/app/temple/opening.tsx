@@ -94,10 +94,14 @@ export function Opening(handle: Handle<OpeningProps>) {
               <div class="temple-date">
                 <LocalDate
                   value={dates.start}
+                  hideDay
                   hideYear
                 />
-                {' – '}
-                <LocalDate value={dates.end} />
+                {' & '}
+                <LocalDate
+                  value={dates.end}
+                  hideDay
+                />
               </div>
               <div
                 class="temple-scroll-hint"

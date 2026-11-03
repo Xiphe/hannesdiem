@@ -289,12 +289,14 @@ test('navigation shares the material renderer, freezes with reduced motion and d
   await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
   await page.goto('/temple-navigation')
   const title = page.locator('.temple-nav-title')
+  const date = page.locator('.temple-nav-date')
   await page
     .locator('.temple-opening')
     .evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().bottom + 30))
   await expect(title).toHaveAttribute('data-ink-ready', '')
-  const pixels = () =>
-    title.locator('canvas').evaluate((node) => {
+  await expect(date).toHaveAttribute('data-ink-ready', '')
+  const pixels = (element = title) =>
+    element.locator('canvas').evaluate((node) => {
       const canvas = node as HTMLCanvasElement
       const data = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
       return {
@@ -303,6 +305,7 @@ test('navigation shares the material renderer, freezes with reduced motion and d
       }
     })
   await expect.poll(async () => (await pixels()).alpha).toBeGreaterThan(1000)
+  await expect.poll(async () => (await pixels(date)).alpha).toBeGreaterThan(1000)
   const item = page.locator('.temple-nav-item-ink').first()
   await expect(item).toHaveAttribute('data-copy-cloud', '')
   expect(await item.evaluate((node) => getComputedStyle(node).fontFamily)).toContain(
@@ -338,6 +341,7 @@ test('navigation shares the material renderer, freezes with reduced motion and d
   })
   expect(readable).toBeGreaterThan(0.9)
   const before = await pixels()
+  const dateBefore = await pixels(date)
   await page.evaluate(
     () =>
       new Promise<void>((resolve) =>
@@ -345,20 +349,27 @@ test('navigation shares the material renderer, freezes with reduced motion and d
       ),
   )
   expect((await pixels()).frame).toBe(before.frame)
+  expect((await pixels(date)).frame).toBe(dateBefore.frame)
   await title.locator('canvas').evaluate((node) => {
     Object.assign(window, { oldNavigationCanvas: node })
+  })
+  await date.locator('canvas').evaluate((node) => {
+    Object.assign(window, { oldNavigationDateCanvas: node })
   })
   await page.getByRole('link', { name: 'Return to fixture' }).click()
   await expect(page).toHaveURL('/fixture')
   expect(
     await page.evaluate(() => {
-      const canvas = (window as typeof window & { oldNavigationCanvas: HTMLCanvasElement })
-        .oldNavigationCanvas
-      return (
-        !canvas.isConnected &&
-        canvas.width === 0 &&
-        canvas.height === 0 &&
-        !canvas.parentElement!.hasAttribute('data-ink-ready')
+      const old = window as typeof window & {
+        oldNavigationCanvas: HTMLCanvasElement
+        oldNavigationDateCanvas: HTMLCanvasElement
+      }
+      return [old.oldNavigationCanvas, old.oldNavigationDateCanvas].every(
+        (canvas) =>
+          !canvas.isConnected &&
+          canvas.width === 0 &&
+          canvas.height === 0 &&
+          !canvas.parentElement!.hasAttribute('data-ink-ready'),
       )
     }),
   ).toBe(true)
@@ -413,6 +424,8 @@ test('header slides down from above and keeps its dates beneath the wordmark', a
   expect(motion!.y).toBeLessThan(-0.5)
   await expect.poll(async () => (await header.boundingBox())!.y).toBeCloseTo(0, 0)
   const date = header.locator('.temple-nav-date')
+  await expect(date).toHaveText('January & February 2030')
+  await expect(page.locator('.temple-date')).toHaveText('January & February 2030')
   await expect(date.locator('time').first()).toHaveAttribute('datetime', '2030-01-01')
   await expect(date.locator('time').last()).toHaveAttribute('datetime', '2030-02-02')
   expect((await date.boundingBox())!.y).toBeGreaterThanOrEqual(
@@ -425,7 +438,7 @@ test('header slides down from above and keeps its dates beneath the wordmark', a
       .poll(() =>
         date.evaluate((node) => {
           const text = document.createRange()
-          text.selectNodeContents(node)
+          text.selectNodeContents(node.querySelector('.temple-nav-date-ink') ?? node)
           const title = node.parentElement!.querySelector('.temple-nav-title')!
           return Math.abs(text.getBoundingClientRect().width - title.getBoundingClientRect().width)
         }),
