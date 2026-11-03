@@ -1,5 +1,4 @@
 import { on, type Handle } from 'remix/component'
-import { LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
 
 /** Native checkbox semantics with one stable row for both states and saving. */
 export function NotificationSwitch(
@@ -37,14 +36,8 @@ export function NotificationSwitch(
         />
         <span class="temple-notification-state">
           {handle.props.checked
-            ? 'You will receive notifications via email'
+            ? 'You are receiving notifications via email'
             : 'You will not receive notifications'}
-        </span>
-        <span
-          class="temple-notification-saving"
-          aria-hidden="true"
-        >
-          {handle.props.pending && LoadingSpinner()}
         </span>
       </label>
       <input

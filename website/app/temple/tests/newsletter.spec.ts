@@ -122,8 +122,9 @@ for (const width of [390, 1440]) {
     const toggle = signup.getByRole('switch')
     const row = signup.locator('.temple-notification-control')
     const track = signup.locator('.temple-notification-track')
+    await expect(signup.locator('.temple-notification-piece > .piece-tooltip-piece')).toHaveCount(1)
     await expect(toggle).toBeChecked()
-    await expect(toggle).toHaveAccessibleName('You will receive notifications via email')
+    await expect(toggle).toHaveAccessibleName('You are receiving notifications via email')
     expect(await toggle.evaluate((node) => node.tagName)).toBe('INPUT')
     await row.scrollIntoViewIfNeeded()
     const before = (await row.boundingBox())!
@@ -131,10 +132,12 @@ for (const width of [390, 1440]) {
     const onColor = await track.evaluate((node) => getComputedStyle(node).backgroundColor)
     await toggle.click()
     await expect(toggle).not.toBeChecked()
+    await expect(track).toHaveCSS('border-top-color', 'rgba(0, 0, 0, 0)')
     await expect(toggle).toHaveAccessibleName('You will not receive notifications')
     await expect(toggle).toBeDisabled()
     await expect(toggle).toBeFocused()
-    await expect(signup.locator('.temple-loading-spinner')).toBeVisible()
+    await expect(signup.locator('.temple-loading-spinner')).toHaveCount(0)
+    await expect(signup).toHaveAttribute('aria-busy', 'true')
     await expect(row).toHaveCSS('opacity', '1')
     const during = (await row.boundingBox())!
     const inputDuring = (await toggle.boundingBox())!
@@ -148,7 +151,7 @@ for (const width of [390, 1440]) {
     await expect(signup.getByRole('alert')).toHaveText('Synthetic preference failure.')
     await expect(toggle).toBeChecked()
     await expect(toggle).toBeFocused()
-    await expect(toggle).toHaveAccessibleName('You will receive notifications via email')
+    await expect(toggle).toHaveAccessibleName('You are receiving notifications via email')
     fail = false
     complete = undefined
     await toggle.click()
@@ -196,7 +199,8 @@ test('Temple needs no missing name for verified subscribers and keeps global rea
   const toggle = signup.getByRole('switch')
   await toggle.click()
   await expect(toggle).not.toBeChecked()
-  await expect(signup.locator('.temple-loading-spinner')).toBeVisible()
+  await expect(signup.locator('.temple-loading-spinner')).toHaveCount(0)
+  await expect(signup).toHaveAttribute('aria-busy', 'true')
   await expect.poll(() => Boolean(complete)).toBe(true)
   complete!()
   await expect(signup.getByRole('status')).toHaveText('Synthetic pending reactivation.')

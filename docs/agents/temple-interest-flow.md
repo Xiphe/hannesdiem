@@ -69,10 +69,11 @@ so shared authored work stays available to the other agents.
 
 ## Notification switch review
 
-The artist confirmed a plain row with a colored slider, rather than a filled
-button. Use “You will receive notifications via email” when on and “You will not
-receive notifications” when off. Change the thumb position, track color and
-sentence together immediately for ordinary topic changes. Reserve the spinner
-space and sentence height so saving never shifts the row; prevent duplicate
-requests and revert with an inline error on failure. Global email reactivation
+The artist confirmed a setting in an inline piece with a colored slider, rather
+than a filled button. Use “You are receiving notifications via email” when on and
+“You will not receive notifications” when off. Change the thumb position, track
+color and sentence together immediately for ordinary topic changes. Keep sentence
+height stable and show no saving spinner for this setting; prevent duplicate
+requests and revert with an inline error on failure. The inactive track has no
+visible border; retain its keyboard focus indicator. Global email reactivation
 still waits for the confirmation email before displaying the subscribed state.

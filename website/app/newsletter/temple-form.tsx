@@ -1,4 +1,5 @@
 import { on, ref, type Handle } from 'remix/component'
+import { PieceSurface } from '../temple/piece-tooltip/surface.tsx'
 import { NotificationSwitch } from './notification-switch.tsx'
 import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
 import {
@@ -233,10 +234,12 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
       >
         {inline && (
           <form
+            class="temple-notification-piece"
             method="post"
             action={templeNewsletterPath}
             mix={on<HTMLFormElement, 'submit'>('submit', submit)}
           >
+            <PieceSurface id={`${handle.props.id ?? 'temple-newsletter-signup'}-preferences`} />
             <input
               type="hidden"
               name="_csrf"

@@ -561,13 +561,16 @@
   padding: 44px 38px 64px;
   color: light-dark(#302920, #e8ddd0);
 }
-.temple-signup-expanded > .piece-tooltip-piece {
+.temple-signup-expanded > .piece-tooltip-piece,
+.temple-notification-piece > .piece-tooltip-piece {
   z-index: -1;
 }
-.temple-signup-expanded .piece-tooltip-top {
+.temple-signup-expanded .piece-tooltip-top,
+.temple-notification-piece .piece-tooltip-top {
   stop-color: light-dark(#e6ddd0, #1d1c19);
 }
-.temple-signup-expanded .piece-tooltip-bottom {
+.temple-signup-expanded .piece-tooltip-bottom,
+.temple-notification-piece .piece-tooltip-bottom {
   stop-color: light-dark(#d6cbbd, #111110);
 }
 .temple-signup .temple-signup-close {
@@ -631,10 +634,16 @@
 .temple-signup .temple-signup-feedback {
   margin-top: 16px;
 }
+.temple-notification-piece {
+  position: relative;
+  isolation: isolate;
+  padding: 18px 24px 22px;
+  color: light-dark(#302920, #e8ddd0);
+}
 .temple-signup .temple-notification-control {
   position: relative;
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) 18px;
+  grid-template-columns: 40px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   padding-block: 6px;
@@ -658,7 +667,7 @@
   width: 40px;
   height: 24px;
   padding: 2px;
-  border: 1px solid light-dark(#8d8173, #8d8479);
+  border: 1px solid transparent;
   border-radius: 14px;
   background: light-dark(#d3cfc9, #403a33);
   transition:
@@ -692,15 +701,6 @@
   display: grid;
   align-content: center;
   min-height: 3em;
-}
-.temple-notification-saving {
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-}
-.temple-notification-saving .temple-loading-spinner {
-  margin: 0;
 }
 @media (prefers-reduced-motion: reduce) {
   .temple-notification-track,
