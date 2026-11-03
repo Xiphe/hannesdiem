@@ -226,8 +226,9 @@ for (const width of [390, 1440]) {
     await page.goto('/temple-facts?newsletter=confirmed#fixture-watch')
     const signup = page.locator('#fixture-watch .temple-signup')
     await expect(signup.getByRole('status')).toHaveText(
-      "Great! This worked, I'll notify you when we've created something new.",
+      /Great, this worked!\s*I'll notify you when we've created something new\./,
     )
+    await expect(signup.getByRole('status').locator('strong')).toHaveText('Great, this worked!')
     await expect(signup.getByRole('dialog')).toBeVisible()
     await expect
       .poll(() =>

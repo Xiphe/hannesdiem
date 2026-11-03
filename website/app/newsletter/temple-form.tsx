@@ -368,7 +368,9 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
                 class="temple-signup-feedback"
                 role="status"
               >
-                {templeMessages.confirmed}
+                <strong>{templeMessages.confirmed}</strong>
+                <br />
+                {templeMessages.confirmedDetail}
               </p>
             )}
             {!confirmed && result && (

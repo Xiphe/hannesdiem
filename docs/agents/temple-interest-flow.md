@@ -15,8 +15,9 @@ The shared session and independent Watch/Circle topics from
   confirm your interest”. Circle explains “Please log in via your email to join
   us” in dimmed text and uses “Request login email” on its button. Position its
   piece close below the center button.
-- The Watch email link opens a separate confirmation piece: “Great! This worked,
-  I'll notify you when we've created something new.” Center the confirmation piece
+- The Watch email link opens a separate confirmation piece: bold “Great, this
+  worked!” followed by a line break and “I'll notify you when we've created
+  something new.” Center the confirmation piece
   in the viewport after rendering. Dismissal returns to the inline “Receive
   notifications via mail”
   switch. Normal signed-in Watch shows that switch, without email or subscription
