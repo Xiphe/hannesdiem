@@ -3,7 +3,7 @@ html[data-layout='temple']:has(.facts-grid) body {
   overflow-x: clip;
 }
 .facts-grid {
-  --map-sea: light-dark(var(--temple-tile-end-light), #282624);
+  --map-sea: light-dark(var(--temple-map-water-start-light), #282624);
   --fact-heading: light-dark(var(--temple-ink-light), #ece7df);
   --fact-copy: light-dark(var(--temple-muted-light), #bbb5ad);
   --fact-invitation: light-dark(var(--temple-muted-light), #9f9890);
@@ -228,14 +228,16 @@ html[data-layout='temple']:has(.facts-grid) body {
 }
 
 .map-water-start {
-  stop-color: light-dark(var(--temple-tile-start-light), #2a2826);
+  stop-color: light-dark(var(--temple-map-water-start-light), #2a2826);
 }
 .map-water-end {
-  stop-color: light-dark(var(--temple-tile-end-light), #262422);
+  stop-color: light-dark(var(--temple-map-water-end-light), #262422);
 }
-.map-ink-start,
+.map-ink-start {
+  stop-color: light-dark(var(--temple-map-land-start-light), var(--copy-ink-dark));
+}
 .map-ink-end {
-  stop-color: light-dark(var(--copy-ink-light), var(--copy-ink-dark));
+  stop-color: light-dark(var(--temple-map-land-end-light), var(--copy-ink-dark));
 }
 .facts-grid:not([data-location-ready]) .text-face {
   background: light-dark(var(--temple-tile-end-light), #141514);

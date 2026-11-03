@@ -41,3 +41,5 @@ The artist selects the [exported lab values](light-palette-2026-11-03.json), wit
 Header progress alone uses `linear-gradient(25deg in srgb, #32608b, #60cbcd)`. Action buttons use `#6b6966` and white text; Release uses `#c24029`. The switch keeps its plain-English state, a solid blue on track, and `#cac8bf` / `#7f7e7a` for its off track/thumb. Solid blue also marks focus and owned seats. Dark-mode materials and the photographic lettering, animated poem ink and favicon artwork retain their existing palettes, as in the reviewed lab.
 
 The [button inventory](buttons.md) records which controls receive the secondary treatment and which retain their existing role. The palette lab is preserved separately on `codex/temple-light-palette-lab`.
+
+Map refinement, 2026-11-03: the artist requests darker water than land but a much lighter map overall. Give the map its own light-mode roles: pale blue-gray water `#d8e2e8` → `#e4ebef`, near-white land `#f8f8f4` → `#fdfcf9`. Both enhanced and native fallback maps share these roles; Visit’s reading piece retains the common section material. Dark-mode map colors, pin and camera behavior remain unchanged.

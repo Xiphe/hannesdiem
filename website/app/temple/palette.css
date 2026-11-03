@@ -4,6 +4,10 @@ html[data-layout='temple'] {
   --temple-fragment-light: #f6f6f5;
   --temple-tile-start-light: #e9e7e7;
   --temple-tile-end-light: #f3f0ec;
+  --temple-map-water-start-light: #d8e2e8;
+  --temple-map-water-end-light: #e4ebef;
+  --temple-map-land-start-light: #f8f8f4;
+  --temple-map-land-end-light: #fdfcf9;
   --temple-panel-start-light: #e3e0de;
   --temple-panel-end-light: #e1dfdb;
   --temple-ink-light: #1e2933;
