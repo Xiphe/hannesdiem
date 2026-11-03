@@ -1,5 +1,13 @@
 # hannesdiem.de
 
+## Shared workspace
+
+We work together with multiple agents in the same directory (`/workspace/hannesdiem`) and share the webserver on port `8787`.
+
+When work reaches exploratory or competing states, raise this with the user before building ways to show competing states in the same worktree or proactively branching.
+
+When starting in a folder other than `/workspace/hannesdiem`, inform the user and assume you are working in a branch.
+
 ## CMX
 
 This project exists to battle-test CMX. Use CMX primitives wherever possible. Treat custom glue as a potential CMX gap: investigate available primitives and surface the gap before introducing a workaround.
