@@ -1,0 +1,23 @@
+{
+  "phase": "exploration",
+  "theme": "light",
+  "paper": "#fffefd",
+  "fragment": "#f6f6f5",
+  "tileStart": "#e9e7e7",
+  "tileEnd": "#f3f0ec",
+  "panelStart": "#e3e0de",
+  "panelEnd": "#e1dfdb",
+  "ink": "#1e2933",
+  "muted": "#64707d",
+  "input": "#fafcfc",
+  "inputBorder": "#fafcfc",
+  "primaryStart": "#32608b",
+  "primaryEnd": "#60cbcd",
+  "primaryInk": "#ffffff",
+  "angle": 25,
+  "inactive": "#cac8bf",
+  "thumb": "#7f7e7a",
+  "secondary": "#6b6966",
+  "danger": "#c24029",
+  "panelEdge": 0
+}

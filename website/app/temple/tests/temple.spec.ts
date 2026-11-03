@@ -616,7 +616,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.goto('/temple-of-sound', { waitUntil: 'commit' })
     await expect(page.locator('html')).toHaveAttribute('data-temple-loading', '')
     await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'hidden')
-    const ground = scheme === 'light' ? 'rgb(247, 236, 223)' : 'rgb(0, 0, 0)'
+    const ground = scheme === 'light' ? 'rgb(255, 254, 253)' : 'rgb(0, 0, 0)'
     await expect(page.locator('html')).toHaveCSS('background-color', ground)
     await expect(page.locator('body')).toHaveCSS('background-color', ground)
     const seekSpinner = (time: number) =>
@@ -640,7 +640,7 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(await seekSpinner(300)).toBe('1')
     await expect(page.getByRole('status')).toHaveText('loading')
     await page.emulateMedia({ colorScheme: scheme === 'light' ? 'dark' : 'light' })
-    const changedGround = scheme === 'light' ? 'rgb(0, 0, 0)' : 'rgb(247, 236, 223)'
+    const changedGround = scheme === 'light' ? 'rgb(0, 0, 0)' : 'rgb(255, 254, 253)'
     await expect(page.locator('html')).toHaveCSS('background-color', changedGround)
     await expect(page.locator('body')).toHaveCSS('background-color', changedGround)
     release()

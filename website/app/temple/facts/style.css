@@ -1,8 +1,8 @@
 @import '../piece-tooltip/style.css';
 
 .fact-story {
-  --fact-story-ink: light-dark(#2c2721, #e1d9ce);
-  --fact-story-copy: light-dark(#5d5046, #bdb2a5);
+  --fact-story-ink: light-dark(var(--temple-ink-light), #e1d9ce);
+  --fact-story-copy: light-dark(var(--temple-muted-light), #bdb2a5);
   position: relative;
   z-index: 3;
   color: var(--fact-story-ink);
@@ -114,8 +114,8 @@
   border: 0;
   border-radius: 8px;
   padding: 14px 26px;
-  background: light-dark(#d3cfc9, #282624);
-  color: var(--fact-story-ink);
+  background: light-dark(var(--temple-secondary-light), #282624);
+  color: light-dark(var(--temple-button-ink-light), var(--fact-story-ink));
   font:
     600 18px/1.4 ui-sans-serif,
     system-ui,
@@ -128,7 +128,7 @@
   cursor: pointer;
 }
 .fact-action a:hover {
-  background: light-dark(#c9c3bb, #35312d);
+  background: light-dark(var(--temple-secondary-hover-light), #35312d);
 }
 .fact-action a:focus-visible {
   outline: 2px solid currentColor;
@@ -254,17 +254,17 @@
 }
 
 .fact-story:not([data-material-ready]) .fact-copy-tile {
-  background: light-dark(#e1d6c9, #141514);
+  background: light-dark(var(--temple-tile-end-light), #141514);
 }
 .fact-story:not([data-material-ready]) .fact-material {
   visibility: hidden;
 }
 
 .fact-material-start {
-  stop-color: light-dark(rgb(227 216 203), rgb(21 22 21));
+  stop-color: light-dark(var(--temple-tile-start-light), rgb(21 22 21));
 }
 .fact-material-end {
-  stop-color: light-dark(rgb(223 212 199), rgb(17 18 17));
+  stop-color: light-dark(var(--temple-tile-end-light), rgb(17 18 17));
 }
 
 /* First Share study: a whole photograph and an unoccupied symbolic circle. */
@@ -337,7 +337,7 @@
   width: 100%;
   height: 100%;
   overflow: visible;
-  fill: light-dark(#d3cfc9, #282624);
+  fill: light-dark(var(--temple-secondary-light), #282624);
   pointer-events: none;
 }
 .fact-circle-surface path {
@@ -461,7 +461,7 @@
   overflow-wrap: anywhere;
   padding: 5px 9px;
   border-radius: 5px;
-  background: light-dark(#d3cfc9, #282624);
+  background: light-dark(var(--temple-panel-end-light), #282624);
   color: var(--fact-story-ink);
   font:
     500 14px/1.35 system-ui,
@@ -493,9 +493,9 @@
   width: 100%;
   min-width: 0;
   padding: 10px 12px;
-  border: 1px solid light-dark(#aaa39a, #625d56);
+  border: 1px solid light-dark(var(--temple-input-border-light), #625d56);
   border-radius: 6px;
-  background: light-dark(#f7ecdf, #111);
+  background: light-dark(var(--temple-input-light), #111);
   color: inherit;
   font: inherit;
 }
@@ -503,18 +503,18 @@
   border: 0;
   border-radius: 6px;
   padding: 10px 14px;
-  background: light-dark(#d3cfc9, #282624);
+  background: light-dark(var(--temple-secondary-light), #282624);
   color: inherit;
   font: inherit;
   cursor: pointer;
 }
 @media (prefers-color-scheme: light) {
-  .circle-fields button[type='submit']:not(.circle-release) {
-    background: var(--temple-primary);
-    color: var(--temple-on-primary);
+  .circle-fields button:not(.circle-release) {
+    background: var(--temple-secondary-light);
+    color: var(--temple-button-ink-light);
   }
-  .circle-fields button[type='submit']:not(.circle-release):not(:disabled):hover {
-    background: color-mix(in oklab, var(--temple-primary) 88%, #11120b);
+  .circle-fields button:not(.circle-release):not(:disabled):hover {
+    background: var(--temple-secondary-hover-light);
   }
 }
 .circle-fields button:disabled {
@@ -544,7 +544,7 @@
 }
 
 .temple-signup {
-  --fact-story-ink: light-dark(#11120b, #d2d0c8);
+  --fact-story-ink: light-dark(var(--temple-ink-light), #d2d0c8);
   width: min(100%, 480px);
   margin-inline: auto;
   font:
@@ -574,7 +574,7 @@
   position: relative;
   isolation: isolate;
   padding: 44px 38px 64px;
-  color: light-dark(#302920, #e8ddd0);
+  color: light-dark(var(--temple-ink-light), #e8ddd0);
 }
 .temple-signup-expanded > .piece-tooltip-piece,
 .temple-notification-piece > .piece-tooltip-piece {
@@ -582,11 +582,11 @@
 }
 .temple-signup-expanded .piece-tooltip-top,
 .temple-notification-piece .piece-tooltip-top {
-  stop-color: light-dark(#e6ddd0, #1d1c19);
+  stop-color: light-dark(var(--temple-panel-start-light), #1d1c19);
 }
 .temple-signup-expanded .piece-tooltip-bottom,
 .temple-notification-piece .piece-tooltip-bottom {
-  stop-color: light-dark(#d6cbbd, #111110);
+  stop-color: light-dark(var(--temple-panel-end-light), #111110);
 }
 .temple-signup .temple-signup-close {
   position: absolute;
@@ -627,11 +627,21 @@
   padding: 10px 12px;
   border: 0;
   border-radius: 6px;
-  background: light-dark(#f7ecdf, #111);
-  color: light-dark(#11120b, #d2d0c8);
+  background: light-dark(var(--temple-input-light), #111);
+  color: light-dark(var(--temple-ink-light), #d2d0c8);
 }
-.temple-signup input:focus-visible {
-  outline: 2px solid color-mix(in oklab, currentColor 65%, transparent);
+@media (prefers-color-scheme: light) {
+  .temple-signup input:not([type='hidden']):not([type='checkbox']) {
+    border: 1px solid var(--temple-input-border-light);
+  }
+  .fact-circle-invite {
+    color: var(--temple-button-ink-light);
+  }
+}
+.temple-signup input:focus-visible,
+.circle-fields input:focus-visible {
+  outline: 2px solid
+    light-dark(var(--temple-primary-light), color-mix(in oklab, currentColor 65%, transparent));
   outline-offset: 3px;
 }
 .temple-signup button:not(:disabled) {
@@ -641,9 +651,9 @@
   opacity: 0.6;
 }
 .temple-signup button[name='intent'][value='subscribe'] {
-  --temple-submit-fill: var(--temple-primary);
+  --temple-submit-fill: light-dark(var(--temple-secondary-light), #9cc6ee);
   background: var(--temple-submit-fill);
-  color: var(--temple-on-primary);
+  color: light-dark(var(--temple-button-ink-light), #11120b);
 }
 .temple-signup button[name='intent'][value='subscribe']:not(:disabled):hover {
   background: color-mix(in oklab, var(--temple-submit-fill) 88%, #11120b);
@@ -661,7 +671,7 @@
   position: relative;
   isolation: isolate;
   padding: 18px 24px 22px 39px;
-  color: light-dark(#302920, #e8ddd0);
+  color: light-dark(var(--temple-ink-light), #e8ddd0);
 }
 .temple-signup .temple-notification-control {
   position: relative;
@@ -692,7 +702,7 @@
   padding: 2px;
   border: 1px solid transparent;
   border-radius: 14px;
-  background: light-dark(#d3cfc9, #403a33);
+  background: light-dark(var(--temple-inactive-light), #403a33);
   transition:
     background-color 160ms ease,
     border-color 160ms ease;
@@ -703,7 +713,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: light-dark(#6b6056, #d8d0c5);
+  background: light-dark(var(--temple-thumb-light), #d8d0c5);
   transition:
     transform 160ms ease,
     background-color 160ms ease;
@@ -714,7 +724,7 @@
 }
 .temple-notification-input:checked + .temple-notification-track::after {
   transform: translateX(16px);
-  background: light-dark(#fff7ed, #201a14);
+  background: light-dark(var(--temple-button-ink-light), #201a14);
 }
 .temple-notification-input:focus-visible + .temple-notification-track {
   outline: 2px solid currentColor;
@@ -774,7 +784,7 @@
   margin: 0;
 }
 .circle-fields .circle-login-explanation {
-  color: var(--fact-story-copy, light-dark(#5d5046, #bdb2a5));
+  color: var(--fact-story-copy, light-dark(var(--temple-muted-light), #bdb2a5));
 }
 .circle-fields .circle-disclaimer {
   margin-top: -8px;
@@ -788,7 +798,7 @@
 .circle-rename input {
   flex: 1;
 }
-.circle-rename:has(button) input {
+.circle-fields .circle-rename:has(button) input {
   border-start-end-radius: 0;
   border-end-end-radius: 0;
 }
@@ -798,10 +808,17 @@
   border-end-start-radius: 0;
 }
 .circle-fields .circle-release {
-  justify-self: start;
-  padding-inline: 0;
+  justify-self: center;
+  padding-inline: 14px;
   background: transparent;
-  color: light-dark(#a33d38, #e4968e);
+  color: light-dark(var(--temple-danger-light), #e4968e);
+}
+.temple-signup-expanded:has(.circle-release) {
+  padding-bottom: 32px;
+}
+.circle-fields button:focus-visible {
+  outline: 2px solid light-dark(var(--temple-primary-light), currentColor);
+  outline-offset: 3px;
 }
 .circle-move-actions {
   display: flex;
