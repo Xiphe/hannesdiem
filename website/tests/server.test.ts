@@ -120,6 +120,10 @@ test('public pages include a cacheable local navigation dialog', async () => {
     const html = await response.text()
     assert.match(html, /<dialog[^>]*id="site-navigation"[^>]*data-navigation-dialog/)
     assert.match(html, /command="request-close" commandfor="site-navigation"/)
+    assert.match(
+      html,
+      /<a[^>]*href="\/fixture-long-release"[^>]*aria-current="page"[^>]*class="nav-item nav-primary">Featured fixture<\/a>/,
+    )
     assert.match(html, /aria-current="page"/)
     assert.doesNotMatch(html, /href="\/nav|data-rmx-src="\/nav|data-rmx-history="replace"/)
   }

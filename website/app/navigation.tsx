@@ -143,12 +143,19 @@ const navStyle = css({
     borderRadius: 4,
     color: 'color-mix(in oklab,var(--theme-fg) 70%,transparent)',
   },
+  '& .nav-primary': {
+    padding: '.5rem .75rem',
+    fontSize: '1.125rem',
+    lineHeight: '1.75rem',
+    fontWeight: 500,
+    color: 'var(--theme-fg)',
+  },
   '& [aria-current=page]': { fontWeight: 500, color: 'var(--theme-primary)' },
 })
 export function Navigation(
   handle: Handle<{ pathname: string; state: NewsletterState; lazy?: boolean }>,
 ) {
-  const { sections } = handle.context.get(SiteContent).navigation
+  const { primary = [], sections } = handle.context.get(SiteContent).navigation
   return () => (
     <div mix={css({ display: 'flex', minHeight: '100dvh', justifyContent: 'end' })}>
       <div
@@ -187,6 +194,16 @@ export function Navigation(
             aria-label="Main Navigation"
             mix={css({ display: 'flex', flex: 1, flexDirection: 'column', marginTop: '1.5rem' })}
           >
+            {primary.map((item) => (
+              <a
+                class="nav-item nav-primary"
+                href={item.href}
+                data-rmx-document=""
+                aria-current={handle.props.pathname === item.href ? 'page' : undefined}
+              >
+                {item.name}
+              </a>
+            ))}
             {sections.map((section) => (
               <details
                 open={section.items.some((item) => handle.props.pathname.startsWith(item.href))}
@@ -204,6 +221,7 @@ export function Navigation(
                       <a
                         class="nav-item"
                         href={item.href}
+                        data-rmx-document=""
                         aria-current={handle.props.pathname === item.href ? 'page' : undefined}
                       >
                         {item.name}

@@ -739,6 +739,51 @@ test('outside clicks close overlays and local menu navigation adds no menu histo
   expect((await page.goto('/nav'))?.status()).toBe(404)
 })
 
+test('sidebar page navigation starts at the top and history restores reading positions', async ({
+  page,
+}) => {
+  await page.goto('/fixture-long-release', { waitUntil: 'networkidle' })
+  const firstDocument = await page.evaluate(() => performance.timeOrigin)
+  await page.evaluate(() => scrollTo(0, 600))
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(600)
+  await page.getByRole('button', { name: 'Open menu', exact: true }).click()
+  await page
+    .getByRole('dialog', { name: 'Navigation', exact: true })
+    .getByRole('link', { name: 'Fixture release', exact: true })
+    .click()
+  await expect(page).toHaveURL(/\/fixture-release$/)
+  await expect(page.locator('main h1')).toHaveText('Fixture release')
+  expect(await page.evaluate(() => performance.timeOrigin)).not.toBe(firstDocument)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
+
+  await page.evaluate(() => scrollTo(0, 300))
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(300)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/fixture-long-release$/)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(600)
+  await page.goForward()
+  await expect(page).toHaveURL(/\/fixture-release$/)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(300)
+
+  await page.getByRole('button', { name: 'Open menu', exact: true }).click()
+  await page.getByRole('link', { name: 'Temple fixture', exact: true }).click()
+  await expect(page).toHaveURL(/\/temple-navigation$/)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
+  await page.evaluate(() => scrollTo(0, 1200))
+  await page.locator('[data-open-navigation]').click()
+  await page
+    .getByRole('dialog', { name: 'Navigation', exact: true })
+    .locator('summary')
+    .first()
+    .click()
+  await page
+    .getByRole('dialog', { name: 'Navigation', exact: true })
+    .getByRole('link', { name: 'Fixture release', exact: true })
+    .click()
+  await expect(page).toHaveURL(/\/fixture-release$/)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
+})
+
 test('sidebar keeps the original header and menu item spacing with SVG controls', async ({
   page,
 }) => {

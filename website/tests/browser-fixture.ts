@@ -97,6 +97,10 @@ documents._redirects.content.redirects = [
   { path: '/fixture-alias', to: '/fixture-release', status: 308 },
 ]
 site.navigation = {
+  primary: [
+    { name: 'Featured fixture', href: '/fixture-long-release' },
+    { name: 'Temple fixture', href: '/temple-navigation' },
+  ],
   sections: [
     {
       name: 'Fixture',

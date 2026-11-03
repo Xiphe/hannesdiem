@@ -23,6 +23,7 @@ export const listenLinks = [
   { title: 'SoundCloud', href: 'https://soundcloud.com/hannesdiem', name: 'soundcloud' },
 ]
 export const navigation = {
+  primary: [{ name: 'Temple of Sound', href: '/temple-of-sound' }],
   sections: [
     { name: 'Work', collection: 'release', items: [] },
     {

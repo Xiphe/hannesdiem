@@ -53,6 +53,7 @@ export interface SiteMetadata {
   version: 2
   media: Record<string, MediaImage>
   navigation: {
+    primary?: NavigationLink[]
     sections: { name: string; items: NavigationLink[]; collection?: 'release' }[]
     legal: { name: string; items: NavigationLink[] }
     social: SocialLink[]
@@ -122,6 +123,7 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
         (label !== 'title' || typeof item.name === 'string'),
     )
   if (
+    (navigation.primary !== undefined && !links(navigation.primary, 'name')) ||
     !Array.isArray(navigation.sections) ||
     !navigation.sections.every(
       (section) =>
