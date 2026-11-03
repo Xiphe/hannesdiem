@@ -369,7 +369,7 @@
 .fact-circle-dot {
   width: 26px;
   height: 26px;
-  border: 1.5px solid currentColor;
+  border: 3px solid currentColor;
   border-radius: 50%;
   pointer-events: none;
   transition: transform 140ms ease-out;

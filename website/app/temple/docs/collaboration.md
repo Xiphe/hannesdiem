@@ -854,3 +854,12 @@ Keep unrelated work in the shared directory outside this release.
 **Light palette selected — 2026-11-03.** The artist supplies the exact [lab export](light-palette-2026-11-03.json) and asks to use it. Phase: Convergence for this light-mode UI palette. Restrict the 25° blue-to-teal gradient to header progress; use the solid secondary fill with white text for applicable action buttons across the page. Audit native buttons and button-like links rather than styling every control alike. Release explicitly remains a red ghost button; centre it, add horizontal padding for its focus outline and reduce the tile’s bottom space. Remove the alias input’s inner rounding where Rename joins it. Visit’s generated and fallback background pieces must use the same reading material as the other sections. Preserve dark-mode and photographic/canvas artwork treatments. [Palette and scope](palette.md), [button inventory](buttons.md). Local review only.
 
 **Lighter light-mode map — 2026-11-03.** The artist finds the map too dark and reverses its light-mode contrast: water must be darker than land, with both much lighter overall. Use pale blue-gray water and near-white land in the enhanced and fallback maps. Retain the common Visit reading piece, orange pin, scroll camera and dark-mode treatment. Local review only.
+
+**Circle release intent and round borders approved — 2026-11-03.** The artist
+requests deployment of this chat's Circle changes. Participant release records
+private intent, removes the public alias and ownership marker, and keeps the spot
+unavailable until the artist clears it. Notify sound@hannesdiem.de with the
+current alias, verified email and spot through a separate retryable outbox.
+External opt-out retains the same capacity hold. The artist rejects the uneven
+inner-rim experiments and selects the original round spots with a3px border,
+increased from1.5px while retaining the26px outer size.
