@@ -83,7 +83,7 @@ export function CircleFields({
             </>
           ) : verify ? (
             <>
-              <p>Confirm your email to choose a name and claim your spot.</p>
+              <p class="circle-login-explanation">Please log in via your email to join us</p>
               {!loggedIn && (
                 <>
                   <label>
@@ -116,7 +116,7 @@ export function CircleFields({
                 value="verify"
                 disabled={!state.ready || pending}
               >
-                {pending && LoadingSpinner()}get notified
+                {pending && LoadingSpinner()}Request login email
               </button>
             </>
           ) : (

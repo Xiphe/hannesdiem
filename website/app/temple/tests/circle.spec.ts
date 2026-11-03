@@ -123,7 +123,7 @@ test('signed-out claim asks for name, hides sent fields and resumes a free dot w
   await expect(section.getByRole('dialog')).toBeVisible()
   await section.getByLabel('Name', { exact: true }).fill('Fixture private name')
   await section.getByLabel('Email address').fill('synthetic@example.org')
-  await section.getByRole('button', { name: 'get notified', exact: true }).click()
+  await section.getByRole('button', { name: 'Request login email', exact: true }).click()
   await expect(section.getByRole('status')).toHaveText(
     'Awesome, please check your email to confirm your interest',
   )

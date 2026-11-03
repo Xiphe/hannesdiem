@@ -12,8 +12,9 @@ The shared session and independent Watch/Circle topics from
 - Watch and signed-out Circle use the same closable piece, Name/Email fields,
   loading spinner and sent state. The mobile piece can occupy 90% of the viewport.
   After sending, hide the inputs and display “Awesome, please check your email to
-  confirm your interest”. Circle explains “Confirm your email to choose a name
-  and claim your spot.”
+  confirm your interest”. Circle explains “Please log in via your email to join
+  us” in dimmed text and uses “Request login email” on its button. Position its
+  piece close below the center button.
 - The Watch email link opens a separate confirmation piece: “Great! This worked,
   I'll notify you when we've created something new.” Center the confirmation piece
   in the viewport after rendering. Dismissal returns to the inline “Receive

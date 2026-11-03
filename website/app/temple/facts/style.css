@@ -430,6 +430,7 @@
 }
 
 .fact-circle-area {
+  position: relative;
   grid-column: 1;
   grid-row: 2;
   width: min(100%, 280px);
@@ -680,6 +681,9 @@
   }
 }
 .circle-signup[data-floating] {
+  position: absolute;
+  top: calc(50% + 44px);
+  left: 0;
   width: 100%;
 }
 .circle-signup[data-floating] > .temple-signup-expanded {
@@ -692,6 +696,9 @@
 }
 .circle-fields p {
   margin: 0;
+}
+.circle-fields .circle-login-explanation {
+  color: var(--fact-story-copy, light-dark(#5d5046, #bdb2a5));
 }
 .circle-fields .circle-disclaimer {
   margin-top: -8px;
