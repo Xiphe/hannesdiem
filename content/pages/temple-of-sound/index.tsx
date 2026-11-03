@@ -232,7 +232,7 @@ export default function Content() {
             circle: { places: 10, label: 'Claim your spot', reservation: 'temple-circle' },
             heading: "A recurring gathering to co-regulate what's moving us",
             paragraphs: [
-              'We hold an online circle once every Thursday 19:00',
+              'We hold an online circle every Thursday 19:00',
               'The layer of sound is also the layer of speaking honestly, expressing desires and vocalizing boundaries. We share what is in the way of honest (self-)love, and witness one another without advice or discussion.',
             ],
           },
