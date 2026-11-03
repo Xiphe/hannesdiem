@@ -51,7 +51,9 @@ export function paintGroundPieces(
   bands: readonly (readonly GroundBand[])[],
 ) {
   const material = groundMaterial(host)
-  if (!material || host.clientWidth === 0) return
+  // DevTools can briefly collapse the artwork to one pixel while attaching.
+  // Wait for its next resize rather than filling long bands with tiny SVGs.
+  if (!material || host.clientWidth <= 1) return
   // The desktop-sized forms otherwise merge into a solid surface on a phone.
   const compact = Math.min(1, host.clientWidth / 1200)
   const ns = 'http://www.w3.org/2000/svg'
