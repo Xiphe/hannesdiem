@@ -38,6 +38,7 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
   let navigationOpen = false
   let closingNavigation: Promise<void> | undefined
   let closingOverlay: ReturnType<typeof setTimeout> | undefined
+  let contactTrigger: HTMLAnchorElement | undefined
   function cancelOverlayClose() {
     clearTimeout(closingOverlay)
     closingOverlay = undefined
@@ -104,6 +105,25 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
           openNavigation(event)
           return
         }
+        const contact = target.closest<HTMLAnchorElement>('a[data-contact-modal]')
+        if (
+          contact &&
+          !event.defaultPrevented &&
+          event.button === 0 &&
+          !event.metaKey &&
+          !event.ctrlKey &&
+          !event.shiftKey &&
+          !event.altKey &&
+          (!contact.target || contact.target === '_self')
+        ) {
+          const frame = handle.frames.get('overlay')
+          if (!frame) return
+          event.preventDefault()
+          contactTrigger = contact
+          frame.src = contact.href
+          void frame.reload()
+          return
+        }
         const navigation = target.closest('[data-navigation-dialog]')
         if (
           navigation &&
@@ -147,6 +167,7 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
       'reloadComplete',
       () => {
         dialog?.close()
+        contactTrigger = undefined
         navigationOpen = false
         void handle.update()
       },
@@ -158,7 +179,9 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
       'reloadStart',
       () => {
         cancelOverlayClose()
-        if (dialog && !dialog.open) {
+        const path = new URL(frame.src, location.href).pathname
+        if (path !== '/_contact') contactTrigger = undefined
+        if (path !== '/_overlay' && dialog && !dialog.open) {
           dialog.showModal()
         }
       },
@@ -187,6 +210,17 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
         closingOverlay = undefined
         if (handle.signal.aborted || !dialog?.open) return
         dialog.close()
+        if (contactTrigger) {
+          const trigger = contactTrigger
+          contactTrigger = undefined
+          const frame = handle.frames.get('overlay')
+          if (frame) {
+            frame.src = '/_overlay'
+            void frame.reload()
+          }
+          trigger.focus({ preventScroll: true })
+          return
+        }
         // Traversing history can replace the frame; preserve it until the exit finishes.
         history.back()
       },

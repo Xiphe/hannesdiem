@@ -10,8 +10,8 @@ export function Button(handle: Handle<ButtonProps>) {
   return () => (
     <a
       href={handle.props.contact ? contactHref(handle.props.href) : handle.props.href}
-      data-rmx-target={handle.props.contact ? 'overlay' : undefined}
-      data-rmx-reset-scroll={handle.props.contact ? 'false' : undefined}
+      data-contact-modal={handle.props.contact ? '' : undefined}
+      data-rmx-document={handle.props.contact ? '' : undefined}
       aria-haspopup={handle.props.contact ? 'dialog' : undefined}
       target={handle.props.blank ? '_blank' : undefined}
       rel="noopener noreferrer"

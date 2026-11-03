@@ -13,8 +13,8 @@ export function ContactLink(
     <a
       href={contactHref(handle.props.href)}
       class={handle.props.class}
-      data-rmx-target={handle.props.href.startsWith('mailto:') ? 'overlay' : undefined}
-      data-rmx-reset-scroll={handle.props.href.startsWith('mailto:') ? 'false' : undefined}
+      data-contact-modal={handle.props.href.startsWith('mailto:') ? '' : undefined}
+      data-rmx-document={handle.props.href.startsWith('mailto:') ? '' : undefined}
       aria-haspopup={handle.props.href.startsWith('mailto:') ? 'dialog' : undefined}
     >
       {handle.props.children}

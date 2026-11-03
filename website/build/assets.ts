@@ -23,7 +23,6 @@ const result = await build({
   entryPoints: {
     entry: 'website/app/browser.ts',
     chrome: 'website/app/chrome.tsx',
-    contact: 'website/app/contact/save.tsx',
     date: 'website/app/date.tsx',
     newsletter: 'website/app/newsletter/form.tsx',
     style: 'website/app/style.css',
@@ -76,7 +75,6 @@ const entries = Object.fromEntries(
       {
         'website/app/browser.ts': 'entry',
         'website/app/chrome.tsx': 'chrome',
-        'website/app/contact/save.tsx': 'contact',
         'website/app/date.tsx': 'date',
         'website/app/newsletter/form.tsx': 'newsletter',
         'website/app/style.css': 'style',
