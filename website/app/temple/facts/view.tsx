@@ -104,30 +104,48 @@ export function Fact(handle: Handle<FactProps>) {
           />
         )}
         {action && (
-          <div class="fact-action">
-            <p>{action.prompt}</p>
-            {action.newsletter === 'temple' ? (
-              <TempleSignup
-                id={`${id}-signup`}
-                label={action.label}
-              />
-            ) : action.href ? (
-              action.href.startsWith('mailto:') ? (
-                <ContactLink href={action.href}>{action.label}</ContactLink>
-              ) : (
-                <a href={action.href}>{action.label}</a>
-              )
-            ) : (
-              <button
-                type="button"
-                disabled
-              >
-                {action.label}
-              </button>
-            )}
-          </div>
+          <FactAction
+            id={id}
+            action={action}
+          />
         )}
       </section>
+    )
+  }
+}
+
+export function FactAction(
+  handle: Handle<{
+    id: string
+    action: NonNullable<FactProps['action']>
+    afterContent?: boolean
+  }>,
+) {
+  return () => {
+    const { id, action, afterContent } = handle.props
+    return (
+      <div class={`fact-action${afterContent ? ' fact-followup-action' : ''}`}>
+        <p>{action.prompt}</p>
+        {action.newsletter === 'temple' ? (
+          <TempleSignup
+            id={`${id}-signup`}
+            label={action.label}
+          />
+        ) : action.href ? (
+          action.href.startsWith('mailto:') ? (
+            <ContactLink href={action.href}>{action.label}</ContactLink>
+          ) : (
+            <a href={action.href}>{action.label}</a>
+          )
+        ) : (
+          <button
+            type="button"
+            disabled
+          >
+            {action.label}
+          </button>
+        )}
+      </div>
     )
   }
 }

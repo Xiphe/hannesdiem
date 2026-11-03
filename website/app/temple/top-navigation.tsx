@@ -1,11 +1,10 @@
 import type { Handle } from 'remix/component'
 import type { OpeningProps } from './types.ts'
 import { generateFragments } from './fragment-button/fragment-generator.ts'
+import { LocalDate } from '../date.tsx'
 
 export function TopNavigation(handle: Handle<OpeningProps>) {
   const pieces = generateFragments('temple-navigation-separators', 6)
-  const date = new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', timeZone: 'UTC' })
-  const format = (value: string) => date.format(new Date(value + 'T12:00:00Z'))
   return () => (
     <header class="temple-top-navigation">
       <div class="temple-nav-brand">
@@ -18,11 +17,12 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
           <canvas aria-hidden="true" />
         </a>
         <div class="temple-nav-date">
-          <time dateTime={handle.props.dates.start}>{format(handle.props.dates.start)}</time>
+          <LocalDate
+            value={handle.props.dates.start}
+            hideYear
+          />
           {' – '}
-          <time dateTime={handle.props.dates.end}>
-            {format(handle.props.dates.end)}, {handle.props.dates.end.slice(0, 4)}
-          </time>
+          <LocalDate value={handle.props.dates.end} />
         </div>
       </div>
       <nav

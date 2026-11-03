@@ -1,12 +1,16 @@
-import type { Handle } from 'remix/component'
+import { clientEntry, type Handle } from 'remix/component'
 import type { TempleVideoProps } from '@hannesdiem/content-components'
+import { LocalDate as DateComponent } from '../date.tsx'
+import assets from '../../../.generated/assets.json' with { type: 'json' }
 import { StreamVideo } from '../ui-library/video.tsx'
 import { readingContours, watchReadingViewBox } from './facts/material.ts'
 import { fragmentStroke } from './fragment-button/material.ts'
 
+const LocalDate = clientEntry(`${assets.date}#LocalDate`, DateComponent)
+
 export function TempleVideo(handle: Handle<TempleVideoProps>) {
   return () => {
-    const { id, title, children, aspectRatio = 16 / 9 } = handle.props
+    const { id, title, postedAt, children, aspectRatio = 16 / 9 } = handle.props
     const materialId = `${id}-description-material`
     return (
       <section
@@ -18,9 +22,11 @@ export function TempleVideo(handle: Handle<TempleVideoProps>) {
         <div class="temple-video-layout">
           <div class="temple-video-player">
             <StreamVideo {...handle.props} />
-            <h2 id={`${id}-title`}>
-              <a href={`#${encodeURIComponent(id)}`}>{title}</a>
-            </h2>
+            <div class="temple-video-title-screen">
+              <h2 id={`${id}-title`}>
+                <a href={`#${encodeURIComponent(id)}`}>{title}</a>
+              </h2>
+            </div>
           </div>
           <div class="temple-video-description-piece">
             <svg
@@ -60,6 +66,14 @@ export function TempleVideo(handle: Handle<TempleVideoProps>) {
               class="temple-video-description"
               data-nav-visual
             >
+              {postedAt && (
+                <div class="temple-video-posted-at">
+                  <LocalDate
+                    value={postedAt}
+                    showTime
+                  />
+                </div>
+              )}
               {children}
             </div>
           </div>

@@ -47,6 +47,8 @@
   fill: none;
 }
 .fact-action {
+  --fact-story-ink: light-dark(#2c2721, #e1d9ce);
+  --fact-story-copy: light-dark(#5d5046, #bdb2a5);
   position: relative;
   z-index: 3;
   display: flex;
@@ -55,6 +57,10 @@
   gap: 12px;
   text-align: center;
   padding-top: 12px;
+  color: var(--fact-story-ink);
+}
+.fact-followup-action {
+  margin: 0 clamp(24px, 5vw, 100px) 24svh;
 }
 .fact-action p {
   margin: 0;

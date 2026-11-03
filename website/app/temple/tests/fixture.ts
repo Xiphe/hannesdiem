@@ -369,6 +369,7 @@ videoFacts[0].after = {
   props: {
     id: 'fixture-recording',
     title: 'Synthetic recording',
+    postedAt: '2025-04-07T19:30:00+02:00',
     customerCode: 'fixture',
     videoId: '0123456789abcdef0123456789abcdef',
     aspectRatio: 9 / 16,

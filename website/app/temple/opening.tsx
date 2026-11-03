@@ -5,7 +5,7 @@ import { mountArtwork } from './artwork.ts'
 import { FirstPair, Phrase, Refrain } from './first-pair.tsx'
 import { VerseDrop } from './verse-drop.tsx'
 import type { OpeningProps } from './types.ts'
-import { Fact } from './facts/view.tsx'
+import { Fact, FactAction } from './facts/view.tsx'
 import { Location } from './location/view.tsx'
 import { mountLocation } from './location/enhance.ts'
 import { TopNavigation } from './top-navigation.tsx'
@@ -13,6 +13,7 @@ import { mountNavigationPosition } from './top-navigation-position.ts'
 import { mountNavigationScroll } from './top-navigation-scroll.ts'
 import { mountNavigationProgress } from './top-navigation-progress.ts'
 import { mountRecordingTitles } from './video-title.ts'
+import { LocalDate } from '../date.tsx'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
@@ -66,10 +67,6 @@ export function Opening(handle: Handle<OpeningProps>) {
   return () => {
     const { title, dates, image, pair, pairs, bridge, bridgeBody, location, finalVerse, facts } =
       handle.props
-    const format = (date: string) =>
-      new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
-        new Date(date + 'T12:00:00Z'),
-      )
     return (
       <div
         class="temple-artwork"
@@ -95,11 +92,12 @@ export function Opening(handle: Handle<OpeningProps>) {
               <h1 class="temple-fallback-title">{title}</h1>
               <canvas aria-hidden="true" />
               <div class="temple-date">
-                <time dateTime={dates.start}>{format(dates.start)}</time>
+                <LocalDate
+                  value={dates.start}
+                  hideYear
+                />
                 {' – '}
-                <time dateTime={dates.end}>
-                  {format(dates.end)}, {dates.end.slice(0, 4)}
-                </time>
+                <LocalDate value={dates.end} />
               </div>
               <div
                 class="temple-scroll-hint"
@@ -130,8 +128,18 @@ export function Opening(handle: Handle<OpeningProps>) {
                   ?.filter((fact) => fact.afterPair === index + 1)
                   .map((fact) => (
                     <>
-                      <Fact {...fact} />
+                      <Fact
+                        {...fact}
+                        action={fact.after != null ? undefined : fact.action}
+                      />
                       {fact.after}
+                      {fact.after != null && fact.action && (
+                        <FactAction
+                          id={fact.id}
+                          action={fact.action}
+                          afterContent
+                        />
+                      )}
                     </>
                   ))}
               </>

@@ -34,9 +34,18 @@ Publishing a video is a separate content decision from uploading it.
 
 ## Present a recording in Temple of Sound
 
-`TempleVideo` adds a stable `id`, a linked title, and native CMX children for a
-rich-text description around the same player. Place it in a fact's `after` slot
-to render it immediately after that fact and before the next verse. The slot is
+`TempleVideo` adds a stable `id`, a linked title, an optional posting date, and
+native CMX children for a rich-text description around the same player. Supply
+`postedAt="2025-04-07T19:30:00+02:00"` to keep the timestamp in CMX content.
+The shared release-date component formats it in the visitor's locale and timezone,
+including the time. Server rendering falls back to English and Berlin time.
+The date appears below the player and above the caption in small, dimmed text,
+remaining visible during playback. This is a
+typed content component within the page document, not a separate recording model.
+Place it in a fact's `after` slot
+to render it immediately after that fact and before the next verse. The fact's
+action follows this slot, placing Watch's signup beneath the recording and caption.
+The slot is
 resolved by CMX and passed as serializable JSX through the existing Opening
 island. The title is an overlay on the poster, with the description's reading
 piece tucked underneath the rounded player.

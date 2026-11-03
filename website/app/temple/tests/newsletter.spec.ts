@@ -194,7 +194,7 @@ test('a verified subscriber can unsubscribe even when their older contact has no
 })
 
 for (const width of [390, 1440]) {
-  test(`the floating signup remains usable above the following recording at ${width}px`, async ({
+  test(`the floating signup follows the recording and remains usable at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
@@ -203,7 +203,13 @@ for (const width of [390, 1440]) {
       route.fulfill({ contentType: 'text/html', body: '<title>Synthetic player</title>' }),
     )
     await page.goto('/temple-video')
-    const signup = page.locator('#fixture-watch .temple-signup')
+    const signup = page.locator('.fact-followup-action .temple-signup')
+    expect(
+      await signup.evaluate((node) => {
+        const recording = document.querySelector('.temple-video')!.getBoundingClientRect()
+        return node.getBoundingClientRect().top - recording.bottom
+      }),
+    ).toBeGreaterThanOrEqual(0)
     await signup.getByRole('link', { name: 'Fixture pending action' }).click()
     const submit = signup.getByRole('button', { name: 'Fixture pending action' })
     await submit.scrollIntoViewIfNeeded()

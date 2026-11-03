@@ -81,6 +81,8 @@ export interface PoemFact {
 }
 export interface TempleVideoProps extends StreamVideoProps {
   id: string
+  /** ISO posting timestamp with timezone; display is localized by the website. */
+  postedAt?: string
   /** Rich-text description, authored as ordinary CMX children. */
   children?: RemixNode
 }

@@ -750,3 +750,28 @@ both sections had the same stacking level. Raise Watch only while its floating
 form is open, retaining the accepted layout and recording presentation. A
 synthetic combined Watch/recording fixture reproduces the covered submit control
 at phone and desktop widths and checks that the form receives pointer input.
+
+**Use release-date localization throughout — 2026-11-03.** The artist requests
+all dates to follow the established release-date behavior. Use the shared
+`LocalDate` component for the opener, navigation and posting date. Store the
+posting timestamp with its timezone in CMX; derive its label in the visitor's
+locale and timezone. Calendar dates keep their authored day. Server-rendered
+fallbacks remain English, with Berlin time for timestamps. Local review only.
+
+**Posting date below the recording — 2026-11-03.** The artist places the posting
+date below the video and above its caption, in smaller, dimmed text. Keep shared
+date localization and show the date during playback; only the title remains on
+the poster. Local review only.
+
+**Watch signup after the recording; button sentence case — 2026-11-03.** The
+artist moves Watch's existing prompt and signup below the recording and caption.
+Use the existing CMX fact action after its native `after` content, preserving the
+signup identity and behavior. Capitalize only the first letter of each button
+label throughout Temple, including the private signup and circle controls.
+Preserve all other wording. Local review only.
+
+**Recording publication approved — 2026-11-03.** The artist accepts this chat's
+recording and CTA work and requests deployment. Publish the localized posting
+date below the video, the description material shifted12px left, Watch signup
+after the caption, sentence-case buttons,16px less space above the video and32px
+more before its CTA. Keep unrelated navigation and signup-flow work separate.

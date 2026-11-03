@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+test.use({ locale: 'en-US', timezoneId: 'Europe/Berlin' })
+
 const sdkURL = 'https://embed.cloudflarestream.com/embed/sdk.latest.js'
 const fixturePlayer = `<!doctype html><title>Stream fixture</title>
   <button style="position:absolute;left:40%;top:48%" onclick="parent.postMessage({fixtureMediaEvent:'playing'}, '*')">Play fixture</button>
@@ -50,6 +52,8 @@ for (const width of [390, 900, 1440]) {
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
     const recording = page.getByRole('region', { name: 'Synthetic recording' })
     await expect(recording).toBeVisible()
+    await expect(recording.locator('time')).toHaveText('April 7, 2025 at 7:30 PM')
+    await expect(recording.locator('time')).toHaveAttribute('datetime', '2025-04-07T19:30:00+02:00')
     await expect(recording.locator('strong')).toHaveText('independent')
     await expect(recording.locator('em')).toHaveText('formatted')
     await expect(recording.getByRole('link', { name: 'Fixture reference' })).toHaveAttribute(
@@ -60,9 +64,9 @@ for (const width of [390, 900, 1440]) {
     expect(
       await recording.evaluate((node) => ({
         before: node.previousElementSibling?.id,
-        after: node.nextElementSibling?.id,
+        afterAction: node.nextElementSibling?.classList.contains('fact-followup-action'),
       })),
-    ).toEqual({ before: 'fixture-watch', after: 'verse-fixture-pair-2' })
+    ).toEqual({ before: 'fixture-watch', afterAction: true })
     const iframe = recording.locator('iframe')
     await expect(iframe).toHaveAttribute('title', 'Synthetic recording')
     await expect(iframe).toHaveAttribute('loading', 'lazy')
@@ -97,15 +101,18 @@ for (const width of [390, 1440]) {
     await expect.poll(() => page.evaluate(() => (window as any).fixtureStreamConnections)).toBe(1)
     const recording = page.getByRole('region', { name: 'Synthetic recording' })
     const title = recording.getByRole('heading', { name: 'Synthetic recording' })
+    const date = recording.locator('time')
     const frame = recording.frameLocator('iframe')
     const playerBox = (await recording.locator('iframe').boundingBox())!
-    const titleBox = (await title.boundingBox())!
+    const titleBox = (await recording.locator('.temple-video-title-screen').boundingBox())!
     expect(titleBox.y).toBeGreaterThanOrEqual(playerBox.y)
     expect(titleBox.y + titleBox.height).toBeLessThan(playerBox.y + playerBox.height / 2)
     await frame.getByRole('button', { name: 'Play fixture' }).click()
     await expect(title).not.toBeVisible()
+    await expect(date).toBeVisible()
     await frame.getByRole('button', { name: 'Pause fixture' }).click()
     await expect(title).toBeVisible()
+    await expect(date).toBeVisible()
     await frame.getByRole('button', { name: 'Play fixture' }).click()
     await expect(title).not.toBeVisible()
     await frame.getByRole('button', { name: 'End fixture' }).click()
@@ -148,6 +155,7 @@ test('recordings and their rich-text descriptions work without site JavaScript',
     const recording = page.getByRole('region', { name: 'Synthetic recording' })
     await expect(recording).toBeVisible()
     await expect(recording.locator('strong')).toHaveText('independent')
+    await expect(recording.locator('time')).toHaveText('April 7, 2025 at 7:30 PM')
     await expect(
       recording.getByRole('link', { name: 'Synthetic recording', exact: true }),
     ).toHaveAttribute('href', '#fixture-recording')
@@ -156,3 +164,54 @@ test('recordings and their rich-text descriptions work without site JavaScript',
     await context.close()
   }
 })
+
+for (const scenario of [
+  {
+    locale: 'de-DE',
+    timezoneId: 'Europe/Berlin',
+    release: '1. Januar 2020',
+    start: '1. Januar',
+    end: '2. Februar 2030',
+    posting: '7. April 2025 um 19:30',
+  },
+  {
+    locale: 'en-US',
+    timezoneId: 'Pacific/Honolulu',
+    release: 'January 1, 2020',
+    start: 'January 1',
+    end: 'February 2, 2030',
+    posting: 'April 7, 2025 at 7:30 AM',
+  },
+  {
+    locale: 'en-US',
+    timezoneId: 'Pacific/Kiritimati',
+    release: 'January 1, 2020',
+    start: 'January 1',
+    end: 'February 2, 2030',
+    posting: 'April 8, 2025 at 7:30 AM',
+  },
+]) {
+  test.describe(`shared dates in ${scenario.locale}, ${scenario.timezoneId}`, () => {
+    test.use({ locale: scenario.locale, timezoneId: scenario.timezoneId })
+
+    test('localizes release and Temple dates, converting only posting timestamps', async ({
+      page,
+    }) => {
+      const errors: string[] = []
+      page.on('pageerror', (error) => errors.push(error.message))
+      await page.goto('/fixture-release')
+      await expect(page.locator('time[datetime="2020-01-01"]')).toHaveText(scenario.release)
+      await page.goto('/temple-video#fixture-recording')
+      await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+      for (const selector of ['.temple-date', '.temple-nav-date']) {
+        const dates = page.locator(selector).locator('time')
+        await expect(dates.first()).toHaveText(scenario.start)
+        await expect(dates.last()).toHaveText(scenario.end)
+      }
+      const posted = page.locator('.temple-video time')
+      await expect(posted).toHaveText(scenario.posting)
+      await expect(posted).toHaveAttribute('datetime', '2025-04-07T19:30:00+02:00')
+      expect(errors).toEqual([])
+    })
+  })
+}
