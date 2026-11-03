@@ -86,7 +86,7 @@ html[data-layout='temple']:has(.facts-grid) body {
   pointer-events: none;
 }
 .map-pin {
-  fill: light-dark(#ff8800, #b85f00);
+  fill: light-dark(var(--temple-primary-light), #b85f00);
   stroke: none;
 }
 .map-pin:focus-within {
