@@ -562,7 +562,7 @@ for (const scheme of ['light', 'dark'] as const) {
     const artwork = page.locator('.temple-artwork')
     await expect(artwork).toHaveAttribute('data-state', 'ready')
     await expect(page.locator('html')).not.toHaveAttribute('data-temple-loading')
-    await expect(page.locator('.temple-date')).toHaveAttribute('data-copy-cloud', '')
+    await expect(page.locator('.temple-date')).not.toHaveAttribute('data-copy-cloud', '')
     const first = page.locator('.verse-copy > p').first()
     await first.scrollIntoViewIfNeeded()
     await expect(first).toHaveAttribute('data-copy-cloud', '')

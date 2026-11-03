@@ -930,3 +930,12 @@ TypeScript pass. Related WebKit checks cover the sculpture, reading gaps,
 material, signals and lifecycle. Two unrelated focus/menu assertions also fail
 on unchanged040a168; one disposal assertion passes on rerun. The new renderer
 requires the artist's iPhone retest after deployment.
+
+**Larger header branding and plain opener date approved — 2026-11-03.** The
+artist approves deployment of a roughly20% larger header wordmark and date,
+15px below the mobile scrub labels, and a plain opener date using the header's
+dimmed uppercase Bricolage treatment. Remove the opener date's cloud canvas;
+retain its native localized time elements and position. Header date tracking is
+2.8px on small screens and3.6px above1050px, with a-1px top margin and0.5px
+desktop left margin. Add a subtle1px bottom border only to the dark desktop
+header; retain the accepted light-mode shadow and mobile rail.

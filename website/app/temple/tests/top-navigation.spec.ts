@@ -424,16 +424,16 @@ test('header slides down from above and keeps its dates beneath the wordmark', a
   await expect(date.locator('time').last()).toHaveAttribute('datetime', '2030-02-02')
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 900 })
-    await expect(date).toHaveCSS('font-size', '9.6px')
-    await expect(date).toHaveCSS('letter-spacing', width > 1050 ? '3.1px' : '2.4px')
-    await expect(date).toHaveCSS('margin-left', width > 1050 ? '1px' : '1.5px')
+    await expect(date).toHaveCSS('font-size', '11.52px')
+    await expect(date).toHaveCSS('letter-spacing', width > 1050 ? '3.6px' : '2.8px')
+    await expect(date).toHaveCSS('margin-left', width > 1050 ? '0.5px' : '1.5px')
     await expect(date).toHaveCSS('text-transform', 'uppercase')
     const gap = await date.evaluate((node) => {
       const title = node.parentElement!.querySelector('.temple-nav-title')!
       return node.getBoundingClientRect().top - title.getBoundingClientRect().bottom
     })
     const label = (await date.boundingBox())!
-    expect(gap).toBeCloseTo(-2, 0)
+    expect(gap).toBeCloseTo(-1, 0)
     expect(label.x).toBeGreaterThanOrEqual(0)
     expect(label.x + label.width).toBeLessThanOrEqual(width)
   }

@@ -27,6 +27,11 @@
     box-shadow: 0 6px 28px rgb(30 41 51 / 0.045);
   }
 }
+@media (prefers-color-scheme: dark) and (width > 1050px) {
+  .temple-top-navigation {
+    border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  }
+}
 .temple-top-navigation[data-nav-mounted]:not([data-nav-entered]) {
   transition: none;
 }
@@ -42,17 +47,21 @@
   align-items: flex-start;
   justify-self: start;
 }
+.temple-date,
 .temple-nav-date {
-  position: relative;
   white-space: nowrap;
   font:
-    500 0.6rem/1.1 Bricolage,
+    500 0.72rem/1.1 Bricolage,
     sans-serif;
   text-transform: uppercase;
   color: light-dark(#bfbbb1, #403d36);
   letter-spacing: 3.1px;
-  margin-left: 1px;
-  margin-top: -2px;
+}
+.temple-nav-date {
+  position: relative;
+  letter-spacing: 3.6px;
+  margin-left: 0.5px;
+  margin-top: -1px;
 }
 .temple-nav-date-ink {
   display: inline-block;
@@ -67,7 +76,7 @@
   justify-self: start;
   white-space: nowrap;
   font:
-    800 25px/1.05 Bricolage,
+    800 30px/1.05 Bricolage,
     sans-serif;
   letter-spacing: -0.04em;
   text-decoration: none;
@@ -236,7 +245,7 @@
     grid-template-columns: 44px minmax(0, 1fr) 44px;
     gap: 0 4px;
     padding-inline: 0;
-    padding-bottom: 8px;
+    padding-bottom: 15px;
   }
   .temple-nav-brand {
     grid-column: 2;
@@ -245,10 +254,14 @@
     align-items: center;
   }
   .temple-nav-title {
-    font-size: clamp(18px, 5.9vw, 23px);
+    font-size: clamp(21.6px, 7.08vw, 27.6px);
   }
+  .temple-date,
   .temple-nav-date {
     letter-spacing: 2.4px;
+  }
+  .temple-nav-date {
+    letter-spacing: 2.8px;
     margin-left: 1.5px;
   }
   .temple-nav-logo {

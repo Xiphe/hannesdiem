@@ -6,17 +6,12 @@ import { defaults } from './defaults.ts'
 import { copyInkChannel } from './copy-palette.ts'
 const bridgeDark = { base: [192, 205, 226], purple: [211, 183, 224], blue: [156, 198, 238] }
 const bridgeLight = { base: [26, 33, 54], purple: [88, 44, 107], blue: [31, 79, 133] }
-export function colourCopy(
-  root: HTMLElement,
-  signal: AbortSignal,
-  request: () => void,
-  date?: HTMLElement,
-) {
+export function colourCopy(root: HTMLElement, signal: AbortSignal, request: () => void) {
   const space = root.querySelector<HTMLElement>('.poem-pairs') ?? root
   const paragraphs = [...root.querySelectorAll<HTMLElement>('.verse-copy > p')]
   const lines = [...root.querySelectorAll<HTMLElement>('.phrase-entry, .bridge-body-copy')]
   const inline = [...root.querySelectorAll<HTMLElement>('[data-copy-inline]')]
-  const elements = [...lines, ...inline, ...(date ? [date] : [])]
+  const elements = [...lines, ...inline]
   const inlineBaselines = inline.map((element) => {
     const baseline = document.createElement('span')
     baseline.className = 'block-baseline'
@@ -24,10 +19,6 @@ export function colourCopy(
     element.appendChild(baseline)
     return baseline
   })
-  const dateBaseline = document.createElement('span')
-  dateBaseline.className = 'block-baseline'
-  dateBaseline.ariaHidden = 'true'
-  date?.appendChild(dateBaseline)
   const makeLayer = (element: HTMLElement) => {
     const canvas = document.createElement('canvas')
     canvas.className = 'copy-cloud-canvas'
@@ -103,7 +94,6 @@ export function colourCopy(
     'abort',
     () => {
       observer.disconnect()
-      dateBaseline.remove()
       inlineBaselines.forEach((baseline) => baseline.remove())
       canvas.width = canvas.height = bridgeCanvas.width = bridgeCanvas.height = 0
       for (const { element, canvas, mask, reveal } of layers) {
@@ -145,7 +135,7 @@ export function colourCopy(
       const rect = element.getBoundingClientRect()
       layer.width = rect.width
       layer.height = rect.height
-      layer.offset = element === date ? 0 : rect.top - bounds.top
+      layer.offset = rect.top - bounds.top
       layer.visible = rect.bottom > -160 && rect.top < innerHeight + 160
       canvas.width = mask.width = Math.ceil(rect.width * ratio)
       canvas.height = mask.height = Math.ceil(rect.height * ratio)
@@ -153,10 +143,9 @@ export function colourCopy(
       canvas.style.height = `${rect.height}px`
       maskInk!.setTransform(mask.width / rect.width, 0, 0, mask.height / rect.height, 0, 0)
       maskInk!.fillStyle = '#fff'
-      const rows =
-        element === date || layer.inline
-          ? [element]
-          : [...element.querySelectorAll<HTMLElement>('.block-row-ink')]
+      const rows = layer.inline
+        ? [element]
+        : [...element.querySelectorAll<HTMLElement>('.block-row-ink')]
       for (const row of rows) {
         const style = getComputedStyle(row)
         const position = row.getBoundingClientRect()
@@ -305,7 +294,7 @@ export function colourCopy(
         } else {
           context.drawImage(
             layer.bridge ? bridgeCanvas : canvas,
-            layer.element === date ? (layer.width - cssWidth) / 2 : 0,
+            0,
             -layer.offset,
             cssWidth,
             cssHeight,

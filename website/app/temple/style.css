@@ -131,14 +131,6 @@ html[data-layout='temple'] body {
   top: calc(env(safe-area-inset-top, 0px) + clamp(20px, 3.5svh, 36px));
   left: 50%;
   transform: translateX(-50%);
-  white-space: nowrap;
-  color: light-dark(#84442b, #343434);
-  font-family: 'Bricolage', sans-serif;
-  font-size: clamp(14px, 1.1vw, 17px);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.035em;
-  text-shadow: 0 1px 5px light-dark(var(--temple-ground-light), #030503);
 }
 
 .temple-scroll-hint {
@@ -413,15 +405,8 @@ html[data-layout='temple'] body {
   pointer-events: none;
 }
 .verse-copy > p[data-copy-cloud],
-.bridge-body-copy[data-copy-cloud],
-.temple-date[data-copy-cloud] {
+.bridge-body-copy[data-copy-cloud] {
   color: transparent;
-}
-.temple-date .copy-cloud-canvas {
-  inset: 0 auto auto 0;
-}
-.temple-date[data-copy-cloud] {
-  text-shadow: none;
 }
 @media print, (forced-colors: active) {
   .copy-cloud-canvas {
@@ -429,7 +414,7 @@ html[data-layout='temple'] body {
   }
   .verse-copy > p[data-copy-cloud],
   .bridge-body-copy[data-copy-cloud],
-  .temple-date[data-copy-cloud] {
+  .temple-date {
     color: CanvasText;
   }
 }
@@ -441,7 +426,7 @@ html[data-layout='temple'] body {
   .verse-copy,
   .verse-copy > p[data-copy-cloud],
   .bridge-body-copy[data-copy-cloud],
-  .temple-date[data-copy-cloud] {
+  .temple-date {
     color: #000;
   }
 }

@@ -103,12 +103,7 @@ export async function mountArtwork(
   const paintMist = createAtmosphere(abort.signal)
   let requestScene = () => {}
   const navigation = createNavigationArtwork(host, abort.signal, request, escapes)
-  const copyColour = colourCopy(
-    host,
-    abort.signal,
-    request,
-    root.querySelector<HTMLElement>('.temple-date')!,
-  )
+  const copyColour = colourCopy(host, abort.signal, request)
   const on = (target: EventTarget, event: string, listener: EventListener) =>
     target.addEventListener(event, listener, { signal: abort.signal })
   let lastScroll = -Infinity
