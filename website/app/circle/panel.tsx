@@ -38,7 +38,10 @@ export function CircleFields({
   const alias = aliasValue ?? state.own?.alias ?? state.name ?? ''
   const changed = alias.trim() !== state.own?.alias
   return (
-    <div class="circle-fields">
+    <div
+      class="circle-fields"
+      data-moving={moving ? '' : undefined}
+    >
       {result?.confirmationPending || (state.waiting && full) ? (
         <p role="status">
           {result?.confirmationPending ? circleMessages.pending : circleMessages.full}
@@ -65,19 +68,19 @@ export function CircleFields({
               <p>change seat?</p>
               <div class="circle-move-actions">
                 <button
+                  type="button"
+                  disabled={pending}
+                  mix={on('click', () => close?.())}
+                >
+                  No
+                </button>
+                <button
                   type="submit"
                   name="intent"
                   value="move"
                   disabled={pending}
                 >
-                  {pending && LoadingSpinner()}yes
-                </button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  mix={on('click', () => close?.())}
-                >
-                  no
+                  {pending && LoadingSpinner()}Yes
                 </button>
               </div>
             </>

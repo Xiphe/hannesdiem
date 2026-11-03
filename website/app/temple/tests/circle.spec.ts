@@ -10,6 +10,7 @@ async function fields(route: Route) {
 for (const width of [390, 1440]) {
   test(`selection, claim, rename, move and release at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ colorScheme: 'light' })
     const state: CircleView = {
       ready: true,
       email: 'synthetic@example.org',
@@ -76,11 +77,32 @@ for (const width of [390, 1440]) {
     await expect(
       section.getByRole('radio', { name: 'Spot 3: Renamed alias', exact: true }),
     ).toBeChecked()
-    await expect(section.getByRole('dialog', { name: 'change seat?' })).toBeVisible()
-    await section.getByRole('button', { name: 'no', exact: true }).click()
+    const moveDialog = section.getByRole('dialog', { name: 'change seat?' })
+    await expect(moveDialog).toBeVisible()
+    await expect(moveDialog.locator('.circle-move-actions button')).toHaveText(['No', 'Yes'])
+    const centering = await moveDialog.evaluate((dialog) => {
+      const panel = dialog.getBoundingClientRect()
+      const content = dialog.querySelector('.circle-fields')!.getBoundingClientRect()
+      const actions = dialog.querySelector('.circle-move-actions')!.getBoundingClientRect()
+      return {
+        horizontal: Math.abs(actions.left + actions.width / 2 - panel.left - panel.width / 2),
+        vertical: Math.abs(content.top + content.height / 2 - panel.top - panel.height / 2),
+      }
+    })
+    expect(centering.horizontal).toBeLessThan(1)
+    expect(centering.vertical).toBeLessThan(1)
+    await expect(moveDialog.getByRole('button', { name: 'Yes', exact: true })).toHaveCSS(
+      'background-color',
+      'rgb(50, 96, 139)',
+    )
+    await expect(moveDialog.getByRole('button', { name: 'No', exact: true })).not.toHaveCSS(
+      'background-color',
+      'rgb(50, 96, 139)',
+    )
+    await section.getByRole('button', { name: 'No', exact: true }).click()
     await expect(section.getByRole('dialog')).toHaveCount(0)
     await circle.getByRole('radio', { name: 'Spot 4', exact: true }).click()
-    await section.getByRole('button', { name: 'yes', exact: true }).click()
+    await section.getByRole('button', { name: 'Yes', exact: true }).click()
     const moved = circle.getByRole('radio', { name: 'Spot 4: Renamed alias', exact: true })
     await expect(moved).toBeChecked()
     await moved.click()

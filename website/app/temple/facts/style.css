@@ -824,6 +824,21 @@
   display: flex;
   gap: 12px;
 }
+.circle-signup .temple-signup-expanded:has(.circle-fields[data-moving]) {
+  padding-block: 48px;
+}
+.circle-fields[data-moving] form {
+  justify-items: center;
+  text-align: center;
+}
+.circle-move-actions button[value='move'] {
+  --circle-move-fill: light-dark(var(--temple-primary-light), #9cc6ee);
+  background: var(--circle-move-fill);
+  color: light-dark(var(--temple-button-ink-light), #11120b);
+}
+.circle-move-actions button[value='move']:not(:disabled):hover {
+  background: color-mix(in oklab, var(--circle-move-fill) 88%, #11120b);
+}
 .fact-circle-dot[data-own] {
   border: 3px solid light-dark(var(--temple-primary-light), #eab77e);
   box-shadow: 0 0 0 3px
