@@ -2,7 +2,7 @@ import { createContentSource } from '../app/document-host/index.ts'
 import { createWorker } from '../app/worker.ts'
 import { documents, image, imageSvg } from './browser-fixture.ts'
 
-export { ContentState, NewsletterState } from '../app/worker.ts'
+export { ContentState, NewsletterState, CircleState } from '../app/worker.ts'
 const worker = createWorker({ source: createContentSource(documents, 'fixture') })
 export default {
   ...worker,

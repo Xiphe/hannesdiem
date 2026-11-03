@@ -3,6 +3,8 @@ import type { FactProps } from '../types.ts'
 import { fragmentStroke } from '../fragment-button/material.ts'
 import { mountReadingMaterial } from './enhance.ts'
 import { readingContours } from './material.ts'
+import { FactCircle } from './circle.tsx'
+import { TempleSignup } from '../../newsletter/temple-form.tsx'
 
 /** Native CMX content; the fitted silhouette is optional enhancement. */
 export function Fact(handle: Handle<FactProps>) {
@@ -11,7 +13,7 @@ export function Fact(handle: Handle<FactProps>) {
     if (section) mountReadingMaterial(section, signal)
   })
   return () => {
-    const { id, layout, images, heading, paragraphs, action } = handle.props
+    const { id, layout, images, circle, heading, paragraphs, action } = handle.props
     const materialId = `${id}-text-material`
     return (
       <section
@@ -94,19 +96,32 @@ export function Fact(handle: Handle<FactProps>) {
             ))}
           </div>
         </div>
-        <div class="fact-action">
-          <p>{action.prompt}</p>
-          {action.href ? (
-            <a href={action.href}>{action.label}</a>
-          ) : (
-            <button
-              type="button"
-              disabled
-            >
-              {action.label}
-            </button>
-          )}
-        </div>
+        {circle && (
+          <FactCircle
+            id={id}
+            {...circle}
+          />
+        )}
+        {action && (
+          <div class="fact-action">
+            <p>{action.prompt}</p>
+            {action.newsletter === 'temple' ? (
+              <TempleSignup
+                id={`${id}-signup`}
+                label={action.label}
+              />
+            ) : action.href ? (
+              <a href={action.href}>{action.label}</a>
+            ) : (
+              <button
+                type="button"
+                disabled
+              >
+                {action.label}
+              </button>
+            )}
+          </div>
+        )}
       </section>
     )
   }

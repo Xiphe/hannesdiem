@@ -60,6 +60,8 @@ export function mountReadingMaterial(section: HTMLElement, signal: AbortSignal) 
   const observer = new ResizeObserver(layout)
   observer.observe(copyTile)
   observer.observe(photograph)
+  // Expanding circle controls can move centred copy without resizing the copy itself.
+  observer.observe(section)
   addEventListener('resize', layout, { signal })
   signal.addEventListener(
     'abort',

@@ -1,0 +1,45 @@
+# Newsletter flows
+
+The general sidebar signup keeps its existing `/login` behavior and segments.
+Temple's Watch action uses `newsletter: 'temple'` in the CMX fact contract and a
+private `/newsletter/temple` form endpoint. Public CMX HTML contains no session or
+subscription state. Both flows reuse the existing Remix session, CSRF middleware,
+Resend transport and Workers Durable Object; no provider SDK or parallel auth store.
+
+Temple requires a name and email. Its one-hour, one-use token stores the trimmed
+name, email and Temple intent server-side. Older general-login tokens still work.
+Only confirmation adds an anonymous contact to the segment and topic in
+`temple-config.ts`. Names are stored verbatim in Resend's `first_name` field,
+without guessing how to split a person's name. The artist supplies the Temple
+email wording in `resend.ts`; keep that text unchanged unless requested.
+
+For an authenticated contact, the inline switch changes only the Temple topic.
+Turning it off preserves segment membership, other topics and global delivery
+status. Global unsubscribes always require a fresh confirmation before delivery
+is restored, including for authenticated visitors. The reactivation notice is
+shown inline and included in that person's email. Confirmation returns to Watch;
+an original tab refreshes its private state when it regains focus. Native forms
+remain available at `/newsletter/temple` without JavaScript.
+
+The embedded form belongs to the Opening island. The standalone page registers a
+separate wrapper as its client entry: Remix's `clientEntry` decorates its function,
+so registering the embedded component itself would give it two hydration owners.
+
+## Provider contract and deployment
+
+- Segment: `38f5bf95-30c9-4aac-aeb3-db79f71baf03`.
+- Topic: `305223dd-b22b-46e2-a6c7-f2366d846440`.
+- [Topic defaults](https://resend.com/docs/dashboard/contacts/manage-topics): the
+  Temple topic must default to **opt_out**, so an explicit subscription is needed.
+  The default is immutable after topic creation. Deployment's existing read-only
+  newsletter check now verifies the Temple segment and that topic configuration.
+- [Contact topics](https://resend.com/docs/api-reference/contacts/update-contact-topics):
+  PATCH `/contacts/{email}/topics` receives a **bare array**, matching Resend's
+  official Node SDK and cURL example. The endpoint documentation's parameter
+  grouping can look like a `{ topics: [...] }` wrapper; do not send that wrapper.
+- Temple broadcasts must specify both the segment and topic. Topic preferences do
+  not restrict broadcasts sent without a topic. Global unsubscribe takes priority.
+
+The user declined credential access. No live topic configuration, provider write,
+or email delivery was verified during this implementation. Tests use synthetic
+contacts and intercepted provider requests only; deployment has not been requested.

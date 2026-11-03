@@ -88,13 +88,17 @@ jobs:
           NEWSLETTER_SESSION_SECRET: ${{ secrets.NEWSLETTER_SESSION_SECRET }}
           RESEND_HANNESDIEM_DE_API_KEY: ${{ secrets.RESEND_HANNESDIEM_DE_API_KEY }}
           RESEND_HANNESDIEM_DE_SEGMENT_ID: ${{ vars.RESEND_HANNESDIEM_DE_SEGMENT_ID }}
+          RESEND_CIRCLE_WEBHOOK_SECRET: ${{ secrets.RESEND_CIRCLE_WEBHOOK_SECRET }}
         run: |
           if [[ -n "$NEWSLETTER_SESSION_SECRET" && -n "$RESEND_HANNESDIEM_DE_API_KEY" && -n "$RESEND_HANNESDIEM_DE_SEGMENT_ID" ]]; then
             node website/build/verify-newsletter.ts
             secrets_file="$RUNNER_TEMP/newsletter-secrets.json"
-            node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({NEWSLETTER_SESSION_SECRET:process.env.NEWSLETTER_SESSION_SECRET,RESEND_HANNESDIEM_DE_API_KEY:process.env.RESEND_HANNESDIEM_DE_API_KEY}), {mode:0o600})' "$secrets_file"
+            node -e 'const names = ["NEWSLETTER_SESSION_SECRET", "RESEND_HANNESDIEM_DE_API_KEY", "RESEND_CIRCLE_WEBHOOK_SECRET"]; require("node:fs").writeFileSync(process.argv[1], JSON.stringify(Object.fromEntries(names.filter(name => process.env[name]).map(name => [name, process.env[name]]))), {mode:0o600})' "$secrets_file"
             trap 'rm -f "$secrets_file"' EXIT
             npm run deploy -- --var "CMX_PUBLISH_PUBLIC_KEYS:$CMX_PUBLISH_PUBLIC_KEYS" --secrets-file "$secrets_file" --var "RESEND_HANNESDIEM_DE_SEGMENT_ID:$RESEND_HANNESDIEM_DE_SEGMENT_ID"
+            if [[ -z "$RESEND_CIRCLE_WEBHOOK_SECRET" ]]; then
+              echo 'Circle external unsubscribe synchronization uses periodic reconciliation until its Resend webhook signing secret is configured.' >> "$GITHUB_STEP_SUMMARY"
+            fi
           else
             npm run deploy -- --var "CMX_PUBLISH_PUBLIC_KEYS:$CMX_PUBLISH_PUBLIC_KEYS"
             echo 'Newsletter disabled until its Production secrets and segment variable are configured.' >> "$GITHUB_STEP_SUMMARY"

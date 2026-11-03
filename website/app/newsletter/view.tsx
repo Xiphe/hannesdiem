@@ -3,6 +3,57 @@ import assets from '../../../.generated/assets.json' with { type: 'json' }
 import type { NewsletterState, NewsletterResult } from './contract.ts'
 import { NewsletterArea as NewsletterAreaComponent, StandaloneNewsletterForm } from './form.tsx'
 import { defaultTheme, themeCss } from '../theme.ts'
+import { StandaloneTempleSignup, type TempleSignupProps } from './temple-form.tsx'
+const TempleForm = clientEntry(
+  assets.newsletter + '#StandaloneTempleSignup',
+  StandaloneTempleSignup,
+)
+
+export function TempleNewsletterPage(props: TempleSignupProps) {
+  return (
+    <html
+      lang="en"
+      data-layout="temple"
+    >
+      <head>
+        <meta charSet="utf-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1"
+        />
+        <meta
+          name="robots"
+          content="noindex"
+        />
+        <title>Temple of Sound</title>
+        <link
+          rel="stylesheet"
+          href={assets.style}
+        />
+        <link
+          rel="stylesheet"
+          href={assets.templeStyle}
+        />
+        <style>{themeCss(defaultTheme)}</style>
+        <script
+          type="module"
+          src={assets.entry}
+        ></script>
+      </head>
+      <body>
+        <main class="newsletter-page">
+          <div class="newsletter-card fact-action">
+            <a href="/temple-of-sound#watch">Temple of Sound</a>
+            <TempleForm
+              {...props}
+              expanded
+            />
+          </div>
+        </main>
+      </body>
+    </html>
+  )
+}
 
 export const NewsletterArea = clientEntry(
   assets.newsletter + '#NewsletterArea',

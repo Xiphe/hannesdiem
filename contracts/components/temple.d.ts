@@ -63,12 +63,19 @@ export interface PoemOpeningProps {
 export interface PoemFact {
   id: string
   afterPair: number
-  layout: 'watch' | 'create'
-  images: readonly [ImageSource, ImageSource]
+  layout: 'watch' | 'create' | 'share'
+  images: readonly [ImageSource, ...ImageSource[]]
+  /** Public circle structure; membership remains private runtime state. */
+  circle?: {
+    places: number
+    label?: string
+    occupied?: readonly number[]
+    reservation?: 'temple-circle'
+  }
   heading: string
   paragraphs: readonly string[]
   /** An omitted href keeps an unfinished action disabled. */
-  action: { prompt: string; label: string; href?: string }
+  action?: { prompt: string; label: string; href?: string; newsletter?: 'temple' }
   /** Native CMX content immediately following this fact. */
   after?: RemixNode
 }

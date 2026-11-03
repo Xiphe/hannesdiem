@@ -66,7 +66,10 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
           bridgeBody={bridgeBody}
           facts={facts?.map((fact) => ({
             ...fact,
-            images: [getMedia(site.media, fact.images[0]), getMedia(site.media, fact.images[1])],
+            images: [
+              getMedia(site.media, fact.images[0]),
+              ...fact.images.slice(1).map((image) => getMedia(site.media, image)),
+            ],
           }))}
           location={
             location

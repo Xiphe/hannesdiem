@@ -7,6 +7,7 @@ import tos from '../../media/tos.jpg'
 import tos2 from '../../media/tos2.jpg'
 import tos4 from '../../media/tos4.jpg'
 import mixing from '../../media/mixing-scene-one-week-retreat-1803-2fadbcefea805a0a.webp'
+import circlePhoto from '../../media/A7406429-1.jpg'
 import { watchActionContext, watchIntroduction, watchFragments } from './_watch.ts'
 import { createCopy } from './_create.ts'
 import { techCheck } from './_recordings.tsx'
@@ -164,6 +165,7 @@ export default function Content() {
           },
           {
             label: 'Share',
+            href: '#share',
             verseBefore: { label: 'Third verse and refrain', href: '#verse-1-pair-3' },
           },
           {
@@ -206,7 +208,7 @@ export default function Content() {
             images: [tos4, tos2],
             heading: watchIntroduction,
             paragraphs: watchFragments,
-            action: { prompt: watchActionContext, label: 'get notified' },
+            action: { prompt: watchActionContext, label: 'get notified', newsletter: 'temple' },
             after: techCheck,
           },
           {
@@ -221,6 +223,18 @@ export default function Content() {
               label: createCopy.actionLabel,
               href: 'mailto:sound@hannesdiem.de',
             },
+          },
+          {
+            id: 'share',
+            afterPair: 3,
+            layout: 'share',
+            images: [circlePhoto],
+            circle: { places: 10, label: 'Claim your spot', reservation: 'temple-circle' },
+            heading: "A recurring gathering to co-regulate what's moving us",
+            paragraphs: [
+              'We hold an online circle once every Thursday 19:00',
+              'The layer of sound is also the layer of speaking honestly, expressing desires and vocalizing boundaries. We share what is in the way of honest (self-)love, and witness one another without advice or discussion.',
+            ],
           },
         ]}
         pairs={[firstPair, secondPair, thirdPair]}

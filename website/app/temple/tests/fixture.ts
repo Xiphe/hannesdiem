@@ -286,6 +286,7 @@ export const factsTempleContent = fixtureContent(
       href: '#fixture-create',
       verseBefore: { label: 'Second verse', href: '#verse-fixture-pair-2' },
     },
+    { label: 'Circle', href: '#fixture-share' },
   ],
   undefined,
   [
@@ -299,7 +300,11 @@ export const factsTempleContent = fixtureContent(
         'Synthetic opening paragraph. '.repeat(12).trim(),
         'A second synthetic paragraph. '.repeat(8).trim(),
       ],
-      action: { prompt: 'Synthetic update invitation', label: 'Fixture pending action' },
+      action: {
+        prompt: 'Synthetic update invitation',
+        label: 'Fixture pending action',
+        newsletter: 'temple',
+      },
     },
     {
       id: 'fixture-create',
@@ -316,6 +321,38 @@ export const factsTempleContent = fixtureContent(
         label: 'Fixture contact action',
         href: 'mailto:fixture@example.com',
       },
+    },
+    {
+      id: 'fixture-share',
+      afterPair: 2,
+      layout: 'share',
+      images: ['fixture-image'],
+      circle: { places: 10, label: 'Synthetic circle invitation', occupied: [10] },
+      heading: 'A synthetic circle heading',
+      paragraphs: [
+        'Synthetic schedule information.',
+        'Synthetic description of a group practice. '.repeat(5).trim(),
+      ],
+    },
+  ],
+)
+
+export const reservationTempleContent = fixtureContent(
+  [actionlessPair],
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  [
+    {
+      id: 'fixture-reservation',
+      afterPair: 1,
+      layout: 'share',
+      images: ['fixture-image'],
+      circle: { places: 10, label: 'Fixture claim', reservation: 'temple-circle' },
+      heading: 'Synthetic membership circle',
+      paragraphs: ['Synthetic membership description.'],
     },
   ],
 )

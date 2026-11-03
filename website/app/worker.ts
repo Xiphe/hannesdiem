@@ -1,6 +1,8 @@
 import { createApp } from './router.tsx'
 import { PublicationRequestError } from './document-host/index.ts'
 import { createDocumentHost, type DocumentHostOptions } from './document-host/cloudflare.ts'
+import { handleCircleWebhook } from './circle/webhook.ts'
+export { CircleState } from './circle/cloudflare.ts'
 import { handleNewsletter } from './newsletter/index.ts'
 
 export { ContentState } from './document-host/cloudflare.ts'
@@ -14,6 +16,7 @@ export function createWorker(options: DocumentHostOptions = {}): ExportedHandler
         const documentHost = createDocumentHost(env, ctx, options)
         return (
           (await documentHost.handle(request)) ??
+          (await handleCircleWebhook(request, env)) ??
           (await handleNewsletter(request, env)) ??
           (await createApp(documentHost.load).fetch(request))
         )

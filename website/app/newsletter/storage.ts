@@ -21,6 +21,12 @@ type SessionData = Session['data']
 const HOUR = 60 * 60 * 1000
 const SESSION_IDLE = 30 * 24 * HOUR
 export const tokenPattern = /^[a-f0-9]{64}$/
+export interface NewsletterIdentity {
+  email: string
+  name?: string
+  scope?: 'temple' | 'circle'
+  spot?: number
+}
 const sessionPattern = /^[a-f0-9-]{36}$/
 
 export async function digest(value: string): Promise<string> {
@@ -103,18 +109,37 @@ export async function handleNewsletterStorage(
     return new Response(null, { status: 204 })
   }
   if (request.method !== 'POST') return new Response(null, { status: 405 })
-  const body = (await request.json()) as { email?: string; tokenHash: string }
+  const body = (await request.json()) as Partial<NewsletterIdentity> & { tokenHash: string }
   if (!tokenPattern.test(body.tokenHash)) return new Response(null, { status: 400 })
   const tokenKey = `token:${body.tokenHash}`
   if (url.pathname === '/tokens/issue') {
     const parsed = s.parseSafe(s.string().pipe(checks.email(), checks.maxLength(254)), body.email)
     if (!parsed.success) return new Response(null, { status: 400 })
     const email = parsed.value
+    if (
+      body.scope !== undefined &&
+      ((body.scope !== 'temple' && body.scope !== 'circle') ||
+        (body.scope === 'circle' &&
+          (!Number.isInteger(body.spot) || body.spot! < 1 || body.spot! > 10)) ||
+        (body.scope === 'temple' &&
+          (typeof body.name !== 'string' || !body.name.trim() || body.name.length > 120)))
+    )
+      return new Response(null, { status: 400 })
     const cooldownKey = `cooldown:${await digest(email.toLowerCase())}`
     const remaining = await storage.transaction(async (tx) => {
       const existing = await tx.get<Expiring<true>>(cooldownKey)
       if (existing && existing.expires > now) return Math.ceil((existing.expires - now) / 1000)
-      await tx.put(tokenKey, { value: email, expires: now + HOUR })
+      await tx.put(tokenKey, {
+        value: body.scope
+          ? {
+              email,
+              ...(body.name ? { name: body.name.trim() } : {}),
+              scope: body.scope,
+              ...(body.scope === 'circle' ? { spot: body.spot } : {}),
+            }
+          : email,
+        expires: now + HOUR,
+      })
       await tx.put(cooldownKey, { value: true, expires: now + 2 * 60 * 1000 })
       return 0
     })
@@ -124,14 +149,16 @@ export async function handleNewsletterStorage(
       : new Response(null, { status: 204 })
   }
   if (url.pathname === '/tokens/consume' || url.pathname === '/tokens/revoke') {
-    const email = await storage.transaction(async (tx) => {
-      const existing = await tx.get<Expiring<string>>(tokenKey)
+    const identity = await storage.transaction(async (tx) => {
+      const existing = await tx.get<Expiring<string | NewsletterIdentity>>(tokenKey)
       await tx.delete(tokenKey)
       if (!existing || existing.expires <= now) return null
-      await tx.delete(`cooldown:${await digest(existing.value.toLowerCase())}`)
-      return existing.value
+      const identity =
+        typeof existing.value === 'string' ? { email: existing.value } : existing.value
+      await tx.delete(`cooldown:${await digest(identity.email.toLowerCase())}`)
+      return identity
     })
-    return Response.json(email ? { email } : null, { status: email ? 200 : 404 })
+    return Response.json(identity, { status: identity ? 200 : 404 })
   }
   return new Response(null, { status: 404 })
 }

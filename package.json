@@ -19,7 +19,7 @@
     "content:publish": "cmx-publish .generated/publication.json \"$CMX_PUBLISH_URL\" --config content/publishing/config.ts",
     "predeploy": "npm run build:app",
     "typecheck:website": "wrangler types --config website/wrangler.jsonc worker-configuration.d.ts && tsc --noEmit -p website/tsconfig.json",
-    "test:website": "node --import remix/node-tsx --test website/tests/*.test.ts website/app/newsletter/*.test.ts website/app/document-host/*.test.ts && playwright test --config website/playwright.config.ts",
+    "test:website": "node --import remix/node-tsx --test website/tests/*.test.ts website/app/newsletter/*.test.ts website/app/circle/*.test.ts website/app/document-host/*.test.ts && playwright test --config website/playwright.config.ts",
     "check:website": "prettier website contracts dev.ts tsconfig.json package.json .github/workflows --check && npm run typecheck:website && npm run test:website",
     "test:content": "node --import remix/node-tsx --test content/tests/*.test.ts"
   },
@@ -28,7 +28,8 @@
     "@cmx-tools/document-host": "0.2.0",
     "@cmx-tools/remix": "0.2.0",
     "http-message-sig": "0.3.0",
-    "remix": "3.0.0"
+    "remix": "3.0.0",
+    "standardwebhooks": "1.1.1"
   },
   "devDependencies": {
     "@cmx-tools/bundle": "0.2.1",

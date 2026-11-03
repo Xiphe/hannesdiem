@@ -1,4 +1,5 @@
 import { on, ref, type Handle } from 'remix/component'
+export { StandaloneTempleSignup } from './temple-form.tsx'
 import type { NewsletterState, NewsletterResult } from './contract.ts'
 import {
   BellIcon,

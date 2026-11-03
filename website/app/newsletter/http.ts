@@ -1,5 +1,5 @@
+import { createNewsletterSessionRouter } from './session-router.ts'
 import { completeAuth } from 'remix/auth'
-import { createCookie } from 'remix/cookie'
 import * as s from 'remix/data-schema'
 import * as checks from 'remix/data-schema/checks'
 import * as f from 'remix/data-schema/form-data'
@@ -11,20 +11,29 @@ import {
   MaxPartsExceededError,
   MaxTotalSizeExceededError,
 } from 'remix/form-data-parser'
-import { cop } from 'remix/middleware/cop'
-import { csrf, getCsrfToken } from 'remix/middleware/csrf'
-import { formData } from 'remix/middleware/form-data'
-import { render } from 'remix/middleware/render'
-import { session } from 'remix/middleware/session'
+import { getCsrfToken } from 'remix/middleware/csrf'
 import { redirect } from 'remix/response/redirect'
-import { createRouter } from 'remix/router'
 import { renderToString } from 'remix/component/server'
-import { NewsletterPage } from './view.tsx'
+import { registerCircleRoutes } from '../circle/http.tsx'
+import { circlePath } from '../circle/contract.ts'
+import { NewsletterPage, TempleNewsletterPage } from './view.tsx'
 import type { NewsletterResult, NewsletterState } from './contract.ts'
+import {
+  templeMessages,
+  templeNewsletterPath,
+  type TempleNewsletterState,
+  type TempleNewsletterResult,
+} from './contract.ts'
 
 import type { NewsletterEnvironment, NewsletterServices } from './config.ts'
-import { storageClient, sessionStorage, digest, tokenPattern } from './storage.ts'
-import { sendConfirmation, ensureNewsletterContact } from './resend.ts'
+import { storageClient, digest, tokenPattern, type NewsletterIdentity } from './storage.ts'
+import {
+  sendConfirmation,
+  ensureNewsletterContact,
+  readTempleContact,
+  setTempleTopic,
+  subscribeTemple,
+} from './resend.ts'
 
 const loginForm = f.object({
   email: f.field(
@@ -62,21 +71,7 @@ function wantsJson(request: Request): boolean {
 
 function createNewsletterRouter(env: NewsletterEnvironment, services: NewsletterServices) {
   const call = storageClient(env)
-  const cookie = createCookie('hdm_user_session', {
-    secrets: [env.NEWSLETTER_SESSION_SECRET!],
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-  })
-  const router = createRouter({
-    middleware: [
-      cop(),
-      session(cookie, sessionStorage(env)),
-      formData({ maxFiles: 0, maxParts: 4, maxTotalSize: 4096 }),
-      csrf(),
-      render(),
-    ],
-  })
+  const router = createNewsletterSessionRouter(env)
   router.get('/login', (context) => {
     const email = context.session.get('email')
     const state: NewsletterState = {
@@ -101,6 +96,121 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
           typeof message === 'string' ? { type: error ? 'error' : 'success', message } : undefined,
       }),
     )
+  })
+  router.get(templeNewsletterPath, async (context) => {
+    const email = context.session.get('email')
+    const contact =
+      typeof email === 'string' ? await readTempleContact(email, env, services) : undefined
+    const state: TempleNewsletterState = {
+      ready: true,
+      csrfToken: getCsrfToken(context),
+      ...(typeof email === 'string'
+        ? {
+            email,
+            name: contact!.name,
+            subscribed: contact!.subscribed,
+            unsubscribed: contact!.unsubscribed,
+          }
+        : {}),
+    }
+    return wantsJson(context.request)
+      ? Response.json(state)
+      : context.render(TempleNewsletterPage({ state }))
+  })
+  router.post(templeNewsletterPath, async (context) => {
+    const json = wantsJson(context.request)
+    const state: TempleNewsletterState = { ready: true, csrfToken: getCsrfToken(context) }
+    const values = new FormData()
+    const authenticatedEmail = context.session.get('email')
+    const signedIn = typeof authenticatedEmail === 'string'
+    const email = signedIn ? authenticatedEmail : context.formData.get('email')
+    const contact = signedIn
+      ? await readTempleContact(authenticatedEmail, env, services)
+      : undefined
+    if (signedIn)
+      Object.assign(state, {
+        email,
+        name: contact!.name,
+        subscribed: contact!.subscribed,
+        unsubscribed: contact!.unsubscribed,
+      })
+    const intent = context.formData.get('intent')
+    const rawName = context.formData.get('name') ?? contact?.name ?? ''
+    const name = typeof rawName === 'string' ? rawName.trim() : ''
+    const reply = (result: TempleNewsletterResult, status = 200, headers?: HeadersInit) =>
+      json
+        ? Response.json({ ...result, csrfToken: state.csrfToken }, { status, headers })
+        : context.render(
+            TempleNewsletterPage({
+              state: result.state ?? state,
+              result,
+              nameValue: name,
+              emailValue: typeof email === 'string' ? email : '',
+            }),
+            { status, headers },
+          )
+    if (intent !== 'subscribe' && intent !== 'unsubscribe')
+      return reply({ type: 'error', message: templeMessages.failure }, 400)
+    if (intent === 'unsubscribe') {
+      if (!signedIn) return reply({ type: 'error', message: templeMessages.failure }, 401)
+      await setTempleTopic(authenticatedEmail, false, env, services)
+      return reply({
+        type: 'success',
+        message: templeMessages.unsubscribed,
+        state: { ...state, subscribed: false },
+      })
+    }
+    if (!name || name.length > 120)
+      return reply({ type: 'error', message: 'Please enter your name.' }, 400)
+    values.set('email', typeof email === 'string' ? email : '')
+    const parsed = s.parseSafe(loginForm, values)
+    if (!parsed.success)
+      return reply({ type: 'error', message: 'Please enter your email address.' }, 400)
+    if (signedIn && !contact!.unsubscribed) {
+      await subscribeTemple(authenticatedEmail, name, env, services)
+      return reply({
+        type: 'success',
+        message: templeMessages.subscribed,
+        state: { ...state, name, subscribed: true, unsubscribed: false },
+      })
+    }
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
+      byte.toString(16).padStart(2, '0'),
+    ).join('')
+    const tokenHash = await digest(token)
+    const issued = await call('/tokens/issue', {
+      email: parsed.value.email,
+      name,
+      scope: 'temple',
+      tokenHash,
+    })
+    if (issued.status === 429) {
+      const { remainingSeconds } = (await issued.json()) as { remainingSeconds: number }
+      return reply(
+        {
+          type: 'spam_protection',
+          remainingSeconds,
+          message: `Please wait ${remainingSeconds}s before requesting another confirmation email.`,
+        },
+        429,
+        { 'Retry-After': String(remainingSeconds) },
+      )
+    }
+    if (!issued.ok) throw new Error('Newsletter token issue failed')
+    try {
+      const link = new URL('/login/api', context.url)
+      link.searchParams.set('token', token)
+      link.searchParams.set('scope', 'temple')
+      const recipient = contact ?? (await readTempleContact(parsed.value.email, env, services))
+      await sendConfirmation(parsed.value.email, link.href, tokenHash, env, services, {
+        name,
+        reactivate: recipient.unsubscribed,
+      })
+    } catch {
+      await call('/tokens/revoke', { tokenHash })
+      return reply({ type: 'error', message: templeMessages.failure }, 503)
+    }
+    return reply({ type: 'success', message: templeMessages.pending, confirmationPending: true })
   })
   router.post('/login', async (context) => {
     const parsed = s.parseSafe(loginForm, context.formData)
@@ -167,17 +277,40 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       return Response.json(typeof email === 'string' ? { email } : null)
     }
     const token = context.url.searchParams.get('token')
-    if (!token || !tokenPattern.test(token)) return redirect('/login?error=invalid_token', 303)
+    const failure = (error: string) =>
+      redirect(
+        context.url.searchParams.get('scope') === 'circle'
+          ? `/temple-of-sound?circle=${error}#share`
+          : context.url.searchParams.get('scope') === 'temple'
+            ? `/temple-of-sound?newsletter=${error}#watch`
+            : `/login?error=${error}`,
+        303,
+      )
+    if (!token || !tokenPattern.test(token)) return failure('invalid_token')
     const response = await call('/tokens/consume', { tokenHash: await digest(token) })
-    if (response.status === 404) return redirect('/login?error=invalid_token', 303)
+    if (response.status === 404) return failure('invalid_token')
     if (!response.ok) throw new Error('Newsletter token verification failed')
-    const { email } = (await response.json()) as { email: string }
+    const identity = (await response.json()) as NewsletterIdentity
+    const { email, name, scope } = identity
     try {
-      await ensureNewsletterContact(email, env, services)
+      if (scope === 'circle') {
+        // Verification authenticates and resumes; only the later explicit claim
+        // subscribes the topic and publishes the alias.
+      } else if (scope === 'temple') await subscribeTemple(email, name!, env, services, true)
+      else await ensureNewsletterContact(email, env, services)
     } catch {
-      return redirect('/login?error=verification_failed', 303)
+      return failure('verification_failed')
     }
     completeAuth(context).set('email', email)
+    if (scope === 'circle') {
+      context.session.set('circleConfirmedUntil', Date.now() + 60 * 60_000)
+      context.session.set('circleSpot', identity.spot!)
+      return redirect(`/temple-of-sound?circle=confirmed&spot=${identity.spot}#share`, 303)
+    }
+    if (scope === 'temple') {
+      context.session.set('name', name!)
+      return redirect('/temple-of-sound?newsletter=confirmed#watch', 303)
+    }
     return redirect('/?login_success=true', 303)
   })
   router.post('/logout', (context) => {
@@ -193,6 +326,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
     context.session.destroy()
     return Response.json({ success: true, message: 'Logged out successfully' })
   })
+  registerCircleRoutes(router, env, services)
   return router
 }
 
@@ -201,7 +335,12 @@ export async function handleNewsletter(
   env: NewsletterEnvironment,
   services: NewsletterServices = {},
 ): Promise<Response | null> {
-  if (!['/login', '/login/api', '/logout'].includes(new URL(request.url).pathname)) return null
+  if (
+    !['/login', '/login/api', '/logout', templeNewsletterPath, circlePath].includes(
+      new URL(request.url).pathname,
+    )
+  )
+    return null
   if (!configured(env)) {
     if (wantsJson(request))
       return privateResponse(
@@ -216,10 +355,16 @@ export async function handleNewsletter(
     return privateResponse(
       new Response(
         await renderToString(
-          NewsletterPage({
-            state: { ready: false },
-            message: 'Newsletter signup is temporarily unavailable. Please try again later.',
-          }),
+          new URL(request.url).pathname === templeNewsletterPath
+            ? TempleNewsletterPage({
+                expanded: true,
+                state: { ready: false },
+                result: { type: 'error', message: templeMessages.failure },
+              })
+            : NewsletterPage({
+                state: { ready: false },
+                message: 'Newsletter signup is temporarily unavailable. Please try again later.',
+              }),
         ),
         { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
       ),

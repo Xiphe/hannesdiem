@@ -11,7 +11,9 @@ export type LocationProps = Omit<PoemLocation, 'image'> & {
   image: { src: string; srcSet?: string; width: number; height: number }
   mapAsset: string
 }
-export type FactProps = Omit<PoemFact, 'images'> & { images: readonly [MediaImage, MediaImage] }
+export type FactProps = Omit<PoemFact, 'images'> & {
+  images: readonly [MediaImage, ...MediaImage[]]
+}
 export interface OpeningProps {
   id: string
   mark: string

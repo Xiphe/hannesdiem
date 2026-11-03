@@ -5,6 +5,8 @@ export interface NewsletterEnvironment {
   NEWSLETTER_SESSION_SECRET?: string
   RESEND_HANNESDIEM_DE_API_KEY?: string
   RESEND_HANNESDIEM_DE_SEGMENT_ID?: string
+  CIRCLE_STATE?: { getByName(name: string): { fetch(request: Request): Promise<Response> } }
+  RESEND_CIRCLE_WEBHOOK_SECRET?: string
 }
 
 export interface NewsletterServices {

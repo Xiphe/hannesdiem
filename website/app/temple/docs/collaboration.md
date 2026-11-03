@@ -566,3 +566,187 @@ all six poem-piece destinations and first-phrase final-chorus arrival. Transfer
 only this navigation changeset from the recording worktree onto current main;
 the separate recording work is not part of this changeset. Preserve its
 independent release when main advances during validation.
+
+**Share opened — 2026-11-02.** Artist supplies “Explore what's in the way of
+honesty and love”, A7406429-1, a symbolic circle with ten empty dots and two
+paragraphs, requesting help formulating the last one. Local study on
+`codex/temple-share`: after the third verse/refrain pair, using the existing
+CMX fact material, the whole photograph and ten static hollow dots. Supplied
+wording stays verbatim. A proposed extension about sharing and witnessing
+without advice or discussion is in chat only, pending artist review. Composition,
+circle treatment and final copy remain open; application flow is still pending.
+No publication approval. Facts now support one photograph and an omitted action
+through the existing typed CMX contract rather than a separate preview proxy.
+
+**Share circle becomes the CTA.** Artist accepts the complete proposed paragraph
+but reopens the headline because it repeats that paragraph. Keep the old heading
+pending exploration of what matters about the circle itself. Artist requests
+“claim your spot” inside the ten-dot circle and a slight shift right on desktop.
+Use native radio inputs with hollow, hovered/focused and locally selected states;
+selection does not reserve a place. Application interaction remains deferred.
+Preserve the photograph and material. Still local review, no publication approval.
+
+Headline grounding from the artist: one person's story resonates with the others;
+the speaker finds truth/relief in expression and being seen without judgment.
+Witnesses participate through resonance and receive wisdom without reacting or
+discussing. Indirect co-resonance may emerge across sharings. Headline remains open.
+
+**Share authorship correction.** Artist rejects assistant-written headline options
+and explicitly invokes `making-art`. Withdraw the three chat proposals; none was
+applied to the page. Develop the artist's own language with one concrete, open
+question at a time. The accepted paragraph and requested circle CTA remain intact.
+
+**Share headline and pointing CTA.** Artist supplies the headline verbatim:
+“A recurring gathering to co-regulate what's moving us”. Replace the old heading
+with it. Make “Claim your spot” a button that morphs into an arrow pointing to
+the nearest free dot under mouse movement; enlarge the dots and mark the roughly
+11-o'clock dot (place 10 of ten, starting at twelve) as the artist's held place.
+That dot stays filled and unavailable while visitors can select a different dot
+locally. Keep the button hit area stable during the morph and support keyboard
+focus; downstream application interactions remain deferred. Local review only.
+
+**Pointing correction.** Artist rejects the literal arrow: the button should
+maintain its base shape and readable label while its outline softly points
+toward the free dot. Replace the rotating arrow with a rounded button surface
+whose perimeter has a small, smooth local pull toward that dot. Keep the body,
+label, colour and hit area stationary. Preserve targeting and occupied-place
+behaviour. This supersedes the literal-arrow interpretation above.
+
+**Sharper outline and local claiming.** Artist accepts the retained-body morph
+and requests a slightly spikier pull. Hovering a free dot must activate it directly,
+without first hovering the centre button. A button press selects its indicated
+available dot locally; occupied places remain untouched. Keep the label visible
+and the base shape intact. The application/backend flow remains deferred.
+
+**Sharper diagonal tips and longer reach.** Artist's screenshots distinguish a
+blunt diagonal corner from a vertical point that stops too early. Anchor a tip at
+the actual rounded boundary, narrow its flanks and extend toward the dot with a
+small remaining gap, rather than using one fixed pull length. Preserve the body
+and label. Artist also requests a transition for dot-size changes; use a short
+scale transition, disabled with reduced motion. Local review only.
+
+**Soften the long point; fluid connection opened.** Artist likes the progress but
+asks for a less spiky point while retaining its reach, and wonders about a fluid
+connection between button and dots. Widen the current pull's flanks and smooth
+its tip without shortening the gap-based reach. Fluid connection is exploratory:
+the assistant proposes a bounded hover-only SVG bridge, not a full simulation;
+asks what should happen to the dot itself before implementing that behaviour.
+No fluid treatment or dot transformation is selected yet.
+
+**Fluid at the contact, dot preserved.** Artist answers that the dot should stay
+as it is, with fluid appearing around it where the button connects. Try a bounded
+SVG neck in the button's existing colour and a tapered near-side collar outside
+the dot. Preserve its hollow centre, circular border, size transition and
+available/claimed states; no simulated motion at idle. Keep the button body and
+label, direct hover and local claiming. Local experiment for review, no publication.
+
+**Fluid connection rejected.** Artist: “nah, that is creepy. get back to the
+version before”. Remove the neck and collar and restore the preceding softer,
+long-reaching button outline with a gap before the dot. Preserve direct dot hover,
+size transitions, held place and local button claiming. The fluid treatment is
+rejected; do not carry its mechanism forward. Local preview only.
+
+**Fix outline hooks at corner joins.** Artist's screenshot shows a small folded
+edge beside the pointing corner. A synthetic check reproduces backward motion
+inside the generated cubics, including the idle outline. Uniform curve tangents
+borrow too much length across densely sampled arcs and long straight-edge steps.
+Use centripetal, distance-aware tangents while retaining the perimeter samples,
+tip anchor and reach. The same regression passes for the idle outline, an
+upper-left pull and a full direction sweep. Preserve the accepted visual setting,
+direct hover and claiming; local preview only.
+
+The visual replay also exposes a raised shoulder: parallel displacement lifts
+nearby top-edge samples above the body even when the target tip is below that
+edge. A second synthetic regression fails at y=-2.01. Gather the local perimeter
+toward the same target tip instead of translating it in parallel. This removes
+the unrelated bump while keeping the tip position and gap; both regressions pass.
+
+The enlarged replay catches a remaining barb immediately after the tip: nearby
+samples can cross to the other flank when that tip moves diagonally. Keep their
+order relative to the tip and use monotone, distance-weighted tangents so a flat
+shoulder cannot overshoot between samples. A third regression reproduces that
+curl before the change; all three pass afterward. This completes the corner fix,
+without restoring fluid or changing the target gap.
+
+**Round the pointing end explicitly.** Artist reports that the corrected corner
+is too spiky again. Keep the clean flank order and monotone curves, but replace
+the cusp with a small rounded nose whose front remains at the same target point.
+Retain reach, body, label, hover and claiming. No fluid connection. Local review.
+
+**Claim ripple and responsive placement.** Artist requests a small ripple on the
+claimed dot, a slightly more central circle on big screens, then clarifies that
+the circle belongs below the text on small screens. Place the circle after the
+copy in native document order; on desktop keep it below the photograph and align
+it toward the reading column. A single expanding ring plays on a new local claim,
+including the centre button; the held place does not animate on load. Respect
+reduced motion and cancel animations on disposal. Preserve wording and the
+rounded pointing treatment. Local review only.
+
+**Share reservation interview, 2026-11-03.** Artist requests persistent public
+claims tied to Resend topic `dd5708c2-1134-4a8a-a628-0cdf89630bf0`, coordinated
+with the CTA thread. Verified visitors explicitly submit a public name or alias;
+claiming reserves a place as the first step toward membership. Fuller applications
+follow personally afterward. Notify `sound@hannesdiem.de` with the alias and
+verified email only after a confirmed visitor durably holds the place. Signed-out
+visitors verify then resume; hold no place beforehand and offer another if their
+intended dot has been taken. One circle of ten places, no preset host reservation;
+the artist joins through the same user flow. Full means full, no waitlist now.
+Owners may rename or release; the artist may release places. No automatic expiry.
+Topic subscription and reservation are coupled in both directions: releasing
+unsubscribes, and unsubscribing releases. This topic is only circle communication.
+Aliases may duplicate; expose them on hover, focus or tap. Only the owner's button
+becomes `welcome`, opening alias/release controls. Other visitors retain the claim
+CTA. Full shared-understanding confirmation is pending before implementation.
+
+CTA research found active work in the separate `temple-newsletter` worktree,
+currently Watch-specific. A coordination handoff lives there at
+`docs/agents/temple-circle-cta-handoff.md`; no reply or agreed shared interface yet.
+Reuse verified auth and subscription infrastructure with a Share continuation;
+keep public alias separate from contact name. Runtime reservation state belongs
+outside CMX publications. Signed unsubscribe webhooks and reconciliation are
+needed for external preference changes; avoid treating missing topics in a
+partial webhook payload or failed upstream reads as opt-out.
+
+**Share runtime scope accepted and implemented locally, 2026-11-03.** Artist says
+`lgtm` to the final interview summary. Later clarification excludes an admin
+panel; keep own rename/release controls, with exceptional removals through the
+private storage binding. Reuse the CTA worktree's current newsletter baseline;
+extract shared session/CSRF middleware and extend single-use token identities
+with a fixed Share continuation. Alias publication and topic enrollment happen
+only at the explicit verified claim. Persistent ten-place state uses its own
+SQLite Durable Object, with serialized ownership, recoverable subscribe/release
+transitions and an idempotent notification outbox. Signed topic/global opt-out
+and deletion events reconcile current provider state, supplemented by alarms.
+Public responses contain aliases/places only; the private owner control is
+`welcome`. No host seed, waitlist, application form or admin panel. See
+[`circle/README.md`](../../circle/README.md) for contracts, recovery and setup.
+This is local implementation approval, not deployment. Resend credential path
+has been requested for a live check; no real email sent or webhook registered.
+
+**Share / CTA coordination, 2026-11-03.** Artist requests shared signup/auth for
+circle reservations. When modifying CTA token purposes, contact-name handling or
+return paths, read [the circle handoff](../../../../docs/agents/temple-circle-cta-handoff.md)
+in this worktree (actual repository path: `docs/agents/temple-circle-cta-handoff.md`).
+Share implementation is in the separate `ded5` worktree; no direct thread messaging
+is available. Preserve Watch's topic and the new server-owned Share continuation.
+
+**Finalize CTA and Share together — 2026-11-03.** The artist confirms the media
+pipeline works and the iOS lag is resolved, then asks this chat to take over CTA
+and Share in `/workspace/hannesdiem`, remove finished workspaces, stop existing
+webservers, and interview them about other open ends. Preserve the supplied Watch
+email and Share wording, approved circle composition, deployed recording and all
+six poem destinations. Integrate the latest floating Watch form with Share's
+session middleware and server-owned token purposes; Watch and Share preferences
+remain independent, and a verified identity is shared. A failed racing claim
+returns current availability and offers a free place for retry, including native
+forms. Legacy contacts without a name can unsubscribe without supplying one.
+Production webhook configuration and real email verification remain open for the
+artist; credential access is still withheld. Historical worktree changes are
+archived outside the repository before their folders are removed.
+
+**Keep the floating signup above the recording — 2026-11-03.** Consolidation
+review found that the newer recording painted over the floating Watch form:
+both sections had the same stacking level. Raise Watch only while its floating
+form is open, retaining the accepted layout and recording presentation. A
+synthetic combined Watch/recording fixture reproduces the covered submit control
+at phone and desktop widths and checks that the form receives pointer input.

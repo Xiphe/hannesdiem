@@ -10,6 +10,7 @@ import {
   navigationTempleContent,
   factsTempleContent,
   videoTempleContent,
+  reservationTempleContent,
 } from '../app/temple/tests/fixture.ts'
 import assets from '../../.generated/assets.json' with { type: 'json' }
 import { CMX_DOCUMENT_SCHEMA, type CmxDocument } from '@cmx-tools/contracts'
@@ -62,6 +63,10 @@ export const documents: PublishedDocuments = {
   'temple-navigation': {
     ...structuredClone(page),
     content: { ...navigationTempleContent, metadata: { kind: 'temple' } },
+  },
+  'temple-circle': {
+    ...structuredClone(page),
+    content: { ...reservationTempleContent, metadata: { kind: 'temple' } },
   },
   'temple-facts': {
     ...structuredClone(page),
