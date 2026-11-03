@@ -6,6 +6,7 @@
 | --------------------------- | -------------- | -------------- |
 | Background / canvas veil    | `#f7ecdf`      | `#000000`      |
 | Foreground / fallback title | `#11120b`      | `#d2d0c8`      |
+| Primary UI accent           | `#245989`      | Per component  |
 | Scroll indicator            | `#84442b`      | `#343434`      |
 | Date                        | Copy cloud ink | Copy cloud ink |
 | Date shadow                 | None           | None           |
@@ -26,3 +27,5 @@ Working scene: restore system light/dark appearance for opener, poem colour clou
 Integrated-scene update,2026-10-30: the date now shares the copy’s animated colour field in both themes, without a shadow or opacity flicker. Its position and scroll exit remain. The indicator keeps its established colours. Light-mode clouds mix towards warm `#8e441c` and cool `#245989` inks, halfway blended with the original channel-shift output after the artist found the first stronger range excessive. Dark copy output is unchanged. Zero variance restores the theme’s base foreground.
 
 Fragment button update,2026-11-01: eleven floating pieces use the copy cloud's existing warm/cool channel mapping and theme bases, shared through `copy-palette.ts`. Subtle static gradients sample that range; no additional colour animation is introduced. The previous independently generated HSL palette is superseded.
+
+Primary UI update, 2026-11-03: the artist selects the copy’s blue for light-mode primary UI. `--temple-primary-light` is the shared source for the signup CTA, header progress and navigation hover, Circle form actions, enabled notification switch and owned-seat highlight. Use it for future light-mode primary controls; keep neutral surfaces and destructive actions distinct. The signup CTA retains its pale blue dark-mode fill; the other controls retain their existing dark-mode treatments.

@@ -502,6 +502,15 @@
   font: inherit;
   cursor: pointer;
 }
+@media (prefers-color-scheme: light) {
+  .circle-fields button[type='submit']:not(.circle-release) {
+    background: var(--temple-primary);
+    color: var(--temple-on-primary);
+  }
+  .circle-fields button[type='submit']:not(.circle-release):not(:disabled):hover {
+    background: color-mix(in oklab, var(--temple-primary) 88%, #11120b);
+  }
+}
 .circle-fields button:disabled {
   opacity: 0.6;
   cursor: default;
@@ -626,9 +635,9 @@
   opacity: 0.6;
 }
 .temple-signup button[name='intent'][value='subscribe'] {
-  --temple-submit-fill: light-dark(#245989, #9cc6ee);
+  --temple-submit-fill: var(--temple-primary);
   background: var(--temple-submit-fill);
-  color: light-dark(#f7ecdf, #11120b);
+  color: var(--temple-on-primary);
 }
 .temple-signup button[name='intent'][value='subscribe']:not(:disabled):hover {
   background: color-mix(in oklab, var(--temple-submit-fill) 88%, #11120b);
@@ -694,8 +703,8 @@
     background-color 160ms ease;
 }
 .temple-notification-input:checked + .temple-notification-track {
-  background: light-dark(#b66f32, #eab77e);
-  border-color: light-dark(#b66f32, #eab77e);
+  background: light-dark(var(--temple-primary-light), #eab77e);
+  border-color: light-dark(var(--temple-primary-light), #eab77e);
 }
 .temple-notification-input:checked + .temple-notification-track::after {
   transform: translateX(16px);
@@ -794,13 +803,21 @@
   gap: 12px;
 }
 .fact-circle-dot[data-own] {
-  border: 3px solid light-dark(#b66f32, #eab77e);
-  box-shadow: 0 0 0 3px light-dark(rgb(182 111 50 / 25%), rgb(234 183 126 / 25%));
+  border: 3px solid light-dark(var(--temple-primary-light), #eab77e);
+  box-shadow: 0 0 0 3px
+    light-dark(
+      color-mix(in srgb, var(--temple-primary-light) 25%, transparent),
+      rgb(234 183 126 / 25%)
+    );
   animation: temple-owned-seat 2.4s ease-in-out infinite;
 }
 @keyframes temple-owned-seat {
   50% {
-    box-shadow: 0 0 0 7px light-dark(rgb(182 111 50 / 5%), rgb(234 183 126 / 5%));
+    box-shadow: 0 0 0 7px
+      light-dark(
+        color-mix(in srgb, var(--temple-primary-light) 5%, transparent),
+        rgb(234 183 126 / 5%)
+      );
   }
 }
 @media (prefers-reduced-motion: reduce) {

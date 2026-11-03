@@ -117,7 +117,11 @@
 .temple-nav-progress span {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--nav-warm-start), var(--nav-warm-end));
+  background: linear-gradient(
+    90deg,
+    light-dark(var(--temple-primary-light), var(--nav-warm-start, #b46a49)),
+    light-dark(var(--temple-primary-light), var(--nav-warm-end, #f2ad78))
+  );
   transform: scaleX(var(--nav-progress, 0));
   transform-origin: left;
 }
@@ -160,7 +164,7 @@
   opacity: 1;
 }
 .temple-nav-items > a[href]:is(:hover, :focus-visible) .temple-nav-item-ink {
-  color: var(--nav-warm-end);
+  color: light-dark(var(--temple-primary-light), var(--nav-warm-end, #f2ad78));
 }
 .temple-nav-items > a[href]:is(:hover, :focus-visible) .temple-nav-item-ink canvas {
   opacity: 0;
