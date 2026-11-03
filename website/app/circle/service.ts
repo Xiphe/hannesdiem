@@ -8,7 +8,8 @@ interface Place {
   notificationAlias: string
   notificationSpot?: number
   spot: number
-  phase: 'claiming' | 'active' | 'releasing'
+  phase: 'claiming' | 'active' | 'releasing' | 'released'
+  release?: { created: number; notified: boolean; notificationStopped?: boolean }
   reactivate: boolean
   notified: boolean
   notificationStopped?: boolean
@@ -62,12 +63,12 @@ export class CircleService {
     const publicPlace = (p: Place): PublicPlace => ({ spot: p.spot, alias: p.alias })
     return {
       waiting: data.waiting.some((p) => p.email === email?.toLowerCase()),
-      places: data.places.filter((p) => p.phase !== 'claiming').map(publicPlace),
-      unavailable: data.places.filter((p) => p.phase === 'claiming').map((p) => p.spot),
+      places: data.places.filter((p) => p.phase === 'active').map(publicPlace),
+      unavailable: data.places.filter((p) => p.phase !== 'active').map((p) => p.spot),
       ...(owner
         ? {
-            own: owner.phase !== 'claiming' ? publicPlace(owner) : undefined,
-            processing: owner.phase !== 'active',
+            own: owner.phase === 'active' ? publicPlace(owner) : undefined,
+            processing: owner.phase === 'claiming',
           }
         : {}),
     }
@@ -78,13 +79,12 @@ export class CircleService {
       throw new TypeError('Invalid claim')
     const data = await this.read()
     let place = data.places.find((p) => p.email === email)
-    if (place?.phase === 'releasing') throw new CircleConflict('Release in progress')
+    if (place?.phase === 'releasing' || place?.phase === 'released')
+      throw new CircleConflict('Release awaiting review')
     if (place?.phase === 'active') {
       const contact = await this.provider.read(email)
       if (!contact.exists || contact.unsubscribed || !contact.subscribed) {
-        const endedId = place.id
-        data.places = data.places.filter((p) => p.id !== endedId)
-        await this.save(data)
+        await this.requestRelease(data, place, true)
         throw new CircleConflict('Subscription ended')
       }
     }
@@ -217,14 +217,55 @@ export class CircleService {
     const data = await this.read()
     const place = data.places.find((p) => p.email === email.toLowerCase())
     if (!place) return this.view(email)
-    place.phase = 'releasing'
-    await this.save(data)
-    await this.finishRelease(data, place)
+    await this.requestRelease(data, place)
     return this.view(email)
   }
+  private async requestRelease(data: CircleData, place: Place, optedOut = false) {
+    if (place.phase !== 'releasing' && place.phase !== 'released') {
+      place.phase = optedOut ? 'released' : 'releasing'
+      place.release = { created: this.now(), notified: false }
+      place.checked = this.now()
+      // Hide the alias and persist both the capacity hold and email intent first.
+      await this.save(data)
+    }
+    try {
+      await this.finishRelease(data, place)
+    } catch {
+      /* the alarm retries opt-out; receiving the intent does not depend on Resend */
+    }
+    try {
+      await this.notifyRelease(data, place)
+    } catch {
+      /* the alarm retries the independent release outbox */
+    }
+  }
   private async finishRelease(data: CircleData, place: Place) {
+    if (place.phase !== 'releasing') return
+    // Upgrade any in-flight release persisted by the earlier runtime.
+    if (!place.release) {
+      place.release = { created: this.now(), notified: false }
+      await this.save(data)
+    }
     await this.provider.unsubscribe(place.email)
-    data.places = data.places.filter((p) => p.id !== place.id)
+    place.phase = 'released'
+    await this.save(data)
+  }
+  private async notifyRelease(data: CircleData, place: Place) {
+    const intent = place.release
+    if (!intent || intent.notified || intent.notificationStopped) return
+    if (this.now() - intent.created > 23 * 60 * 60_000) {
+      console.error(
+        JSON.stringify({
+          message: 'Circle release notification needs manual recovery',
+          claim: place.id,
+        }),
+      )
+      intent.notificationStopped = true
+      await this.save(data)
+      return
+    }
+    await this.provider.notifyRelease(place.id, place.email, place.alias, place.spot)
+    intent.notified = true
     await this.save(data)
   }
   /** Read current upstream state, so old/replayed webhooks cannot undo a newer opt-in. */
@@ -234,14 +275,23 @@ export class CircleService {
     if (!place || place.phase !== 'active') return
     const contact = await this.provider.read(place.email)
     if (!contact.exists || contact.unsubscribed || !contact.subscribed) {
-      data.places = data.places.filter((p) => p.id !== place.id)
-    } else place.checked = this.now()
+      await this.requestRelease(data, place, true)
+      return
+    }
+    place.checked = this.now()
     await this.save(data)
   }
   async remove(spot: number) {
     const data = await this.read()
     const place = data.places.find((p) => p.spot === spot)
-    if (place) await this.release(place.email)
+    if (!place) return
+    await this.provider.unsubscribe(place.email)
+    // Keep any undelivered intent until its outbox has completed.
+    await this.notifyRelease(data, place)
+    if (place.release?.notificationStopped)
+      throw new CircleConflict('Release notification needs recovery')
+    data.places = data.places.filter((p) => p.id !== place.id)
+    await this.save(data)
   }
   /** One place per alarm keeps API work bounded; the oldest checked place goes first. */
   async maintain() {
@@ -266,8 +316,13 @@ export class CircleService {
     await this.save(data)
     try {
       if (place.phase === 'claiming') await this.finishClaim(data, place)
-      if (place.phase === 'releasing') await this.finishRelease(data, place)
-      else {
+      if (place.phase === 'releasing' || place.phase === 'released') {
+        try {
+          await this.finishRelease(data, place)
+        } finally {
+          await this.notifyRelease(data, place)
+        }
+      } else {
         await this.reconcile(place.email)
         const latest = await this.read()
         const current = latest.places.find((p) => p.id === place.id)

@@ -34,6 +34,7 @@ for (const width of [390, 1440]) {
       } else if (intent === 'rename') state.own!.alias = String(body.get('alias'))
       else if (intent === 'move') state.own!.spot = Number(body.get('spot'))
       else if (intent === 'release') {
+        state.unavailable = [state.own!.spot]
         state.places = state.places.filter((p) => p.spot !== state.own!.spot)
         delete state.own
       }
@@ -87,6 +88,19 @@ for (const width of [390, 1440]) {
     await expect(section).not.toContainText('synthetic@example.org')
     await section.getByRole('button', { name: 'Release my spot' }).click()
     await expect(circle.getByRole('button', { name: 'Fixture claim' })).toBeVisible()
+    await expect(circle.locator('input:checked')).toHaveCount(0)
+    const released = circle.getByRole('radio', { name: 'Spot 4 (occupied)', exact: true })
+    await expect(released).toBeDisabled()
+    await expect(released.locator('+ .fact-circle-dot')).not.toHaveAttribute('data-reserved')
+    await expect(released.locator('+ .fact-circle-dot')).not.toHaveAttribute('data-own')
+    await expect(released.locator('+ .fact-circle-dot')).toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
+    )
+    await expect(circle).not.toContainText('Renamed alias')
+    await page.reload()
+    await expect(circle.getByRole('button', { name: 'Fixture claim' })).toBeEnabled()
+    await expect(released).toBeDisabled()
     await expect(circle.locator('input:checked')).toHaveCount(0)
     expect(intents).toEqual(['claim', 'rename', 'move', 'release'])
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

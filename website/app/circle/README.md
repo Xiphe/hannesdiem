@@ -3,6 +3,10 @@
 A claim is the first step toward membership; the fuller application is personal
 follow-up. Ten places, one per verified email, no seeded host and no waitlist.
 A place and the circle-only topic subscription are linked in both directions.
+Releasing records the participant's intent, hides their public alias and removes
+their ownership marker immediately. The hollow dot remains unavailable for new
+claims until the artist clears it through the private binding. There is no
+automatic expiry or reassignment, including after external subscription opt-out.
 
 The CMX page declares `circle.reservation: 'temple-circle'`. It contains no member
 state. This follows ADR0005/0006: the shared publication stays cacheable; identity
@@ -17,8 +21,9 @@ used for authored structure, not repurposed as a mutable reservation database.
   a claim; it does not subscribe or publish an alias by itself.
 - `service.ts` owns uniqueness, explicit public aliases and durable transitions.
   `claiming` is unavailable but not publicly reserved; `active` is visible;
-  `releasing` remains unavailable until topic opt-out finishes. Provider failure
-  leaves recoverable state. No expiry is applied to reservations.
+  `releasing` and `released` hide the alias and retain capacity for review.
+  `releasing` retries topic opt-out; `released` has completed it. Provider failure
+  leaves recoverable state. No expiry is applied to reservations or release holds.
 - `cloudflare.ts` exports one SQLite-backed `CircleState` Durable Object. It
   serializes operations, bounds upstream work to 20 seconds, and owns alarms.
   The in-flight transition and its recovery alarm are persisted together.
@@ -39,7 +44,13 @@ The notification outbox is persisted with the claim. Email goes to
 verified email and place. Retries use the claim UUID as the Resend idempotency
 key. After 23 hours of unconfirmed delivery, automatic retry stops and emits a
 claim-ID-only log for manual recovery, avoiding a duplicate beyond Resend's 24h
-idempotency window. Releasing cancels any outstanding notification for that claim.
+idempotency window. Releasing cancels any outstanding notification for that claim
+and persists a separate release-intent outbox. It emails the current alias,
+verified email and current place to the same address, using a separate
+`circle-release-<claim UUID>` idempotency key. Its retry window starts when the
+intent is recorded. Email delivery and topic opt-out retry independently, so
+neither failure restores the public alias or frees capacity. Repeated release
+requests and reconciliations do not send another intent email.
 
 Alarms rotate through occupied places, one per minute, retrying incomplete work
 and reconciling subscriptions. This recovers missed webhooks in at most ten
@@ -58,9 +69,11 @@ For prompt external unsubscribe synchronization, configure a Resend webhook at
 `RESEND_CIRCLE_WEBHOOK_SECRET`. Credentials belong in secret bindings/gopass,
 never source or `.env` files. This task has not deployed or registered a webhook.
 
-An operator can release an exceptional place through the private Durable Object
-binding `/remove` operation with `{spot: N}`. It unsubscribes that participant's
-circle topic before freeing their place. This operation has no public HTTP route.
+An operator can clear a reviewed release hold or remove an exceptional place
+through the private Durable Object binding `/remove` operation with `{spot: N}`.
+It unsubscribes that participant's circle topic before freeing their place. A
+pending release email must finish delivery first; an expired notification needs
+manual recovery. This operation has no public HTTP route.
 
 ## Validation
 

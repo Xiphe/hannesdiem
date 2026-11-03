@@ -33,8 +33,15 @@ async function harness() {
     string,
     { unsubscribed: boolean; first_name: string; subscribed: boolean; templeSubscribed?: boolean }
   >()
-  const emails: { text: string; to: string[]; key: string | null }[] = []
+  const emails: {
+    text: string
+    subject: string
+    reply_to?: string
+    to: string[]
+    key: string | null
+  }[] = []
   let failUnsubscribe = false
+  let failReleaseNotification = false
   const secret = 'whsec_' + Buffer.from('synthetic-webhook-secret-for-tests').toString('base64')
   const mf = new Miniflare(
     convertV4MiniflareOptions({
@@ -57,8 +64,13 @@ async function harness() {
         const raw = request.method === 'GET' ? '' : await request.text()
         const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : undefined
         if (url.pathname === '/emails') {
+          if (
+            failReleaseNotification &&
+            request.headers.get('Idempotency-Key')?.startsWith('circle-release-')
+          )
+            return new Response(null, { status: 503 })
           emails.push({
-            ...(body as { text: string; to: string[] }),
+            ...(body as { text: string; subject: string; reply_to?: string; to: string[] }),
             key: request.headers.get('Idempotency-Key'),
           })
           return Response.json({ id: 'synthetic-mail' })
@@ -125,6 +137,7 @@ async function harness() {
       state: (await response.json()) as {
         csrfToken: string
         places: { spot: number; alias: string }[]
+        unavailable: number[]
         email?: string
         name?: string
         waiting?: boolean
@@ -179,9 +192,22 @@ async function harness() {
     webhook,
     contacts,
     emails,
+    async remove(spot: number) {
+      const bindings = await mf.getBindings<{ CIRCLE_STATE: DurableObjectNamespace }>()
+      return bindings.CIRCLE_STATE.getByName('temple-circle').fetch(
+        'https://circle.internal/remove',
+        {
+          method: 'POST',
+          body: JSON.stringify({ spot }),
+        },
+      )
+    },
     dispose: () => mf.dispose(),
     setFailUnsubscribe(value: boolean) {
       failUnsubscribe = value
+    },
+    setFailReleaseNotification(value: boolean) {
+      failReleaseNotification = value
     },
   }
 }
@@ -225,6 +251,29 @@ test('verified claim uses shared auth, keeps alias private until confirmation, t
     assert.equal(released.status, 200)
     assert.equal(h.contacts.get('one@example.org')!.subscribed, false)
     assert.equal((await h.read()).state.places.length, 0)
+    assert.deepEqual((await h.read()).state.unavailable, [1])
+    assert.equal((await h.read(own.cookie)).state.own, undefined)
+    const releaseMail = h.emails.at(-1)!
+    assert.deepEqual(releaseMail.to, ['sound@hannesdiem.de'])
+    assert.equal(releaseMail.reply_to, 'one@example.org')
+    assert.equal(releaseMail.subject, 'Temple of Sound — circle release intent')
+    assert.match(releaseMail.text, /New alias\none@example.org\nSpot 1\nRelease requested/)
+    assert.match(releaseMail.key!, /^circle-release-/)
+    const claimMail = h.emails.find((e) => e.key?.startsWith('circle-claim-'))!
+    assert.equal(
+      releaseMail.key!.replace('circle-release-', ''),
+      claimMail.key!.replace('circle-claim-', ''),
+    )
+    await h.submit(own.cookie, own.state.csrfToken, { intent: 'release' })
+    assert.equal(h.emails.filter((e) => e.key?.startsWith('circle-release-')).length, 1)
+    const other = await h.signIn('other@example.org')
+    const replacement = await h.submit(other.cookie, other.state.csrfToken, {
+      intent: 'claim',
+      spot: '1',
+      alias: 'Other',
+    })
+    assert.equal(replacement.status, 200)
+    assert.equal((await h.read(other.cookie)).state.own?.spot, 2)
   } finally {
     await h.dispose()
   }
@@ -294,21 +343,55 @@ test('signed external opt-out releases, partial updates and stale replays preser
     assert.equal((await h.read()).state.places.length, 1)
     assert.equal((await h.webhook(event)).status, 204)
     assert.equal((await h.read()).state.places.length, 0)
-    await h.submit(user.cookie, user.state.csrfToken, { intent: 'claim', spot: '2', alias: 'One' })
+    assert.deepEqual((await h.read()).state.unavailable, [1])
+    assert.equal(h.emails.filter((e) => e.key?.startsWith('circle-release-')).length, 1)
+    assert.equal((await h.remove(1)).status, 204)
+    // Only the private operator control clears the hold; a later explicit claim
+    // then remains safe from stale opt-out events for the same identity.
+    const current = user
+    await h.submit(current.cookie, current.state.csrfToken, {
+      intent: 'claim',
+      spot: '2',
+      alias: 'One',
+    })
     assert.equal((await h.webhook(event)).status, 204)
     assert.equal((await h.read()).state.places[0].spot, 2)
     h.setFailUnsubscribe(true)
     assert.equal(
-      (await h.submit(user.cookie, user.state.csrfToken, { intent: 'release' })).status,
-      503,
-    )
-    assert.equal((await h.read()).state.places.length, 1)
-    h.setFailUnsubscribe(false)
-    assert.equal(
-      (await h.submit(user.cookie, user.state.csrfToken, { intent: 'release' })).status,
+      (await h.submit(current.cookie, current.state.csrfToken, { intent: 'release' })).status,
       200,
     )
     assert.equal((await h.read()).state.places.length, 0)
+    assert.deepEqual((await h.read()).state.unavailable, [2])
+    assert.equal(h.emails.filter((e) => e.key?.startsWith('circle-release-')).length, 2)
+    h.setFailUnsubscribe(false)
+    assert.equal(
+      (await h.submit(current.cookie, current.state.csrfToken, { intent: 'release' })).status,
+      200,
+    )
+    assert.equal((await h.read()).state.places.length, 0)
+    assert.deepEqual((await h.read()).state.unavailable, [2])
+  } finally {
+    await h.dispose()
+  }
+})
+
+test('release email failure preserves the private intent and capacity hold until a retry succeeds', async () => {
+  const h = await harness()
+  try {
+    const user = await h.signIn('one@example.org')
+    await h.submit(user.cookie, user.state.csrfToken, { intent: 'claim', spot: '1', alias: 'One' })
+    h.setFailReleaseNotification(true)
+    const released = await h.submit(user.cookie, user.state.csrfToken, { intent: 'release' })
+    assert.equal(released.status, 200)
+    assert.equal((await h.read(user.cookie)).state.own, undefined)
+    assert.deepEqual((await h.read()).state.places, [])
+    assert.deepEqual((await h.read()).state.unavailable, [1])
+    assert.equal(h.emails.filter((e) => e.key?.startsWith('circle-release-')).length, 0)
+    h.setFailReleaseNotification(false)
+    await h.submit(user.cookie, user.state.csrfToken, { intent: 'release' })
+    assert.equal(h.emails.filter((e) => e.key?.startsWith('circle-release-')).length, 1)
+    assert.deepEqual((await h.read()).state.unavailable, [1])
   } finally {
     await h.dispose()
   }

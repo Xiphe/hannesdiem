@@ -56,6 +56,26 @@ export function circleProvider(env: NewsletterEnvironment, services: NewsletterS
       const contact = await readTempleContact(email, env, services, circleTopic)
       if (contact.exists) await setTempleTopic(email, false, env, services, circleTopic)
     },
+    async notifyRelease(id: string, email: string, alias: string, spot: number) {
+      const response = await resendRequest(
+        '/emails',
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': `circle-release-${id}` },
+          body: JSON.stringify({
+            from: 'Hannes Diem <hi@hannesdiem.de>',
+            to: ['sound@hannesdiem.de'],
+            reply_to: email,
+            subject: 'Temple of Sound — circle release intent',
+            text: `${alias}\n${email}\nSpot ${spot}\nRelease requested`,
+          }),
+        },
+        env,
+        services,
+      )
+      if (!response.ok) throw new Error('Circle release notification failed')
+      await response.body?.cancel()
+    },
     async notify(id: string, email: string, alias: string, spot?: number) {
       const response = await resendRequest(
         '/emails',

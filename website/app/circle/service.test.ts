@@ -12,6 +12,7 @@ function harness() {
     failRead = false
   const subscriptions = new Map<string, boolean>()
   const notifications = new Map<string, string>()
+  const releases = new Map<string, { email: string; alias: string; spot: number }>()
   let attempts = 0
   const storage: CircleStorage = {
     get: async <T>(key: string) => structuredClone(records.get(key)) as T | undefined,
@@ -46,12 +47,17 @@ function harness() {
       if (failNotify) throw new Error('synthetic outage')
       notifications.set(id, alias)
     },
+    notifyRelease: async (id, email, alias, spot) => {
+      if (failNotify) throw new Error('synthetic outage')
+      releases.set(id, { email, alias, spot })
+    },
   }
   const service = new CircleService(storage, provider, () => now)
   return {
     service,
     subscriptions,
     notifications,
+    releases,
     records,
     get attempts() {
       return attempts
@@ -123,25 +129,69 @@ test('notification outage leaves a valid claim and durable retry, rename does no
   assert.equal(h.attempts, 2)
 })
 
-test('releasing and subscription opt-out finish together, retry survives upstream failure', async () => {
+test('release hides ownership immediately, holds capacity for review and retries subscription opt-out', async () => {
   const h = harness()
   await h.service.claim('one@example.org', 'One', 1)
+  await h.service.rename('one@example.org', 'Updated alias')
+  await h.service.move('one@example.org', 3)
   h.failure('unsubscribe', true)
-  await assert.rejects(h.service.release('one@example.org'))
-  assert.equal((await h.service.view()).places.length, 1)
-  assert.equal((await h.service.claim('two@example.org', 'Two', 1)).own?.spot, 2)
+  const released = await h.service.release('ONE@example.org')
+  assert.equal(released.own, undefined)
+  assert.equal(released.processing, false)
+  assert.deepEqual(released.places, [])
+  assert.deepEqual(released.unavailable, [3])
+  assert.equal(JSON.stringify(await h.service.view()).includes('Updated alias'), false)
+  assert.deepEqual(
+    [...h.releases.values()],
+    [{ email: 'one@example.org', alias: 'Updated alias', spot: 3 }],
+  )
+  assert.equal((await h.service.claim('two@example.org', 'Two', 3)).own?.spot, 1)
   h.failure('unsubscribe', false)
   await h.service.maintain()
   assert.equal(h.subscriptions.get('one@example.org'), false)
   assert.equal((await h.service.view()).places.length, 1)
+  assert.deepEqual((await h.service.view()).unavailable, [3])
+  await h.service.release('one@example.org')
+  await h.service.maintain()
+  assert.equal(h.releases.size, 1)
+  await assert.rejects(h.service.claim('one@example.org', 'One', 3))
+  await assert.rejects(h.service.rename('one@example.org', 'One'))
+  await assert.rejects(h.service.move('one@example.org', 4))
+  await h.service.remove(3)
+  assert.deepEqual((await h.service.view()).unavailable, [])
+  assert.equal((await h.service.claim('three@example.org', 'Three', 3)).own?.spot, 3)
 })
 
-test('unsubscribe removes a reservation; old/replayed events cannot undo a new claim', async () => {
+test('release notification retries durably, independently of the original claim notification', async () => {
+  const h = harness()
+  await h.service.claim('one@example.org', 'One', 1)
+  // The release notification window starts at release, even for an old reservation.
+  h.advance(365 * 24 * 60 * 60_000)
+  h.failure('notify', true)
+  assert.equal((await h.service.release('one@example.org')).own, undefined)
+  assert.equal(h.releases.size, 0)
+  assert.equal(h.subscriptions.get('one@example.org'), false)
+  h.failure('notify', false)
+  await h.service.maintain()
+  assert.equal(h.releases.size, 1)
+  assert.equal(h.notifications.size, 1)
+  await h.service.maintain()
+  await h.service.release('one@example.org')
+  assert.equal(h.releases.size, 1)
+  h.advance(365 * 24 * 60 * 60_000)
+  await h.service.maintain()
+  assert.deepEqual((await h.service.view()).unavailable, [1])
+})
+
+test('unsubscribe hides a reservation but holds capacity; old events cannot undo a newer opt-in', async () => {
   const h = harness()
   await h.service.claim('one@example.org', 'One', 1)
   h.subscriptions.set('one@example.org', false)
   await h.service.reconcile('one@example.org')
   assert.equal((await h.service.view()).places.length, 0)
+  assert.deepEqual((await h.service.view()).unavailable, [1])
+  assert.equal(h.releases.size, 1)
+  await h.service.remove(1)
   await h.service.claim('one@example.org', 'One', 2)
   await h.service.reconcile('one@example.org')
   await h.service.reconcile('one@example.org')
@@ -149,6 +199,31 @@ test('unsubscribe removes a reservation; old/replayed events cannot undo a new c
   h.failure('read', true)
   await assert.rejects(h.service.reconcile('one@example.org'))
   assert.equal((await h.service.view()).places.length, 1)
+})
+
+test('an in-flight release from the previous runtime becomes a private hold with its own notification', async () => {
+  const h = harness()
+  await h.service.claim('one@example.org', 'One', 1)
+  const legacy = h.records.get('circle') as { places: { phase: string }[] }
+  legacy.places[0].phase = 'releasing'
+  assert.deepEqual((await h.service.view()).places, [])
+  await h.service.maintain()
+  assert.equal(h.subscriptions.get('one@example.org'), false)
+  assert.equal(h.releases.size, 1)
+  assert.deepEqual((await h.service.view()).unavailable, [1])
+})
+
+test('operator removal preserves an undelivered release intent and clears the hold after delivery', async () => {
+  const h = harness()
+  await h.service.claim('one@example.org', 'One', 1)
+  h.failure('notify', true)
+  await h.service.release('one@example.org')
+  await assert.rejects(h.service.remove(1))
+  assert.deepEqual((await h.service.view()).unavailable, [1])
+  h.failure('notify', false)
+  await h.service.remove(1)
+  assert.equal(h.releases.size, 1)
+  assert.deepEqual((await h.service.view()).unavailable, [])
 })
 
 test('claims do not expire with time; invalid aliases and slots cannot acquire places', async () => {
@@ -195,6 +270,9 @@ test('waiting interest is private, durable and idempotent, and never subscribes 
   assert.equal(h.notifications.size, 11)
   await h.service.release('person1@example.org')
   assert.equal((await h.service.view('extra@example.org')).waiting, true)
+  assert.equal((await h.service.claim('extra@example.org', 'Extra', 1)).waiting, true)
+  assert.equal(h.notifications.size, 11)
+  await h.service.remove(1)
   const claimed = await h.service.claim('extra@example.org', 'Extra', 1)
   assert.equal(claimed.waiting, false)
   assert.equal(claimed.own?.spot, 1)
