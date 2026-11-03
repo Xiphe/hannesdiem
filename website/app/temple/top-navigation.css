@@ -22,6 +22,11 @@
     transform 500ms cubic-bezier(0.2, 0.7, 0.2, 1),
     visibility 0s 500ms;
 }
+@media (prefers-color-scheme: light) {
+  .temple-top-navigation {
+    box-shadow: 0 6px 28px rgb(30 41 51 / 0.045);
+  }
+}
 .temple-top-navigation[data-nav-mounted]:not([data-nav-entered]) {
   transition: none;
 }
@@ -41,13 +46,16 @@
   position: relative;
   white-space: nowrap;
   font:
-    500 10px/1.1 Bricolage,
+    500 0.6rem/1.1 Bricolage,
     sans-serif;
-  color: var(--copy-color);
+  text-transform: uppercase;
+  color: light-dark(#bfbbb1, #403d36);
+  letter-spacing: 3.1px;
+  margin-left: 1px;
+  margin-top: -2px;
 }
 .temple-nav-date-ink {
   display: inline-block;
-  opacity: 0.65;
 }
 @media (prefers-reduced-motion: reduce) {
   .temple-top-navigation[data-nav-mounted] {
@@ -64,8 +72,7 @@
   letter-spacing: -0.04em;
   text-decoration: none;
 }
-.temple-nav-title canvas,
-.temple-nav-date canvas {
+.temple-nav-title canvas {
   position: absolute;
   inset: -5px -7px;
   width: calc(100% + 14px);
@@ -73,12 +80,10 @@
   pointer-events: none;
   opacity: 0;
 }
-.temple-nav-title[data-ink-ready] canvas,
-.temple-nav-date[data-ink-ready] canvas {
+.temple-nav-title[data-ink-ready] canvas {
   opacity: 1;
 }
-.temple-nav-title[data-ink-ready] .temple-nav-title-ink,
-.temple-nav-date[data-ink-ready] .temple-nav-date-ink {
+.temple-nav-title[data-ink-ready] .temple-nav-title-ink {
   color: transparent;
 }
 .temple-nav-items {
@@ -231,6 +236,7 @@
     grid-template-columns: 44px minmax(0, 1fr) 44px;
     gap: 0 4px;
     padding-inline: 0;
+    padding-bottom: 8px;
   }
   .temple-nav-brand {
     grid-column: 2;
@@ -240,6 +246,10 @@
   }
   .temple-nav-title {
     font-size: clamp(18px, 5.9vw, 23px);
+  }
+  .temple-nav-date {
+    letter-spacing: 2.4px;
+    margin-left: 1.5px;
   }
   .temple-nav-logo {
     grid-column: 1;
@@ -256,6 +266,8 @@
     overscroll-behavior-x: contain;
     scrollbar-width: none;
     padding-inline: var(--nav-leading, 0px) var(--nav-trailing, 0px);
+    /* Keep the text's upper spacing and trim the empty space beneath it. */
+    padding-block-start: calc((44px - 1.4em) / 2);
     mask-image: linear-gradient(
       to right,
       transparent,
@@ -269,6 +281,10 @@
   }
   .temple-nav-items a {
     flex: none;
+  }
+  .temple-nav-items a,
+  .temple-nav-separator-slot {
+    min-height: 1.4em;
   }
   .temple-nav-items[data-dragging] {
     cursor: grabbing;
@@ -284,15 +300,13 @@
   }
 }
 @media print, (forced-colors: active) {
-  .temple-nav-title[data-ink-ready] .temple-nav-title-ink,
-  .temple-nav-date[data-ink-ready] .temple-nav-date-ink {
+  .temple-nav-title[data-ink-ready] .temple-nav-title-ink {
     color: CanvasText;
   }
   .temple-nav-item-ink[data-copy-cloud] {
     color: CanvasText;
   }
-  .temple-nav-title canvas,
-  .temple-nav-date canvas {
+  .temple-nav-title canvas {
     display: none;
   }
 }

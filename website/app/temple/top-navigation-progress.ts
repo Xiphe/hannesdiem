@@ -1,4 +1,5 @@
 import { mountNavigationScrub } from './top-navigation-scrub.ts'
+import { navigationScrollStart } from './top-navigation-position.ts'
 
 /** Painted scene bounds, including raised images and clipped irregular material. */
 function visualBounds(node: Element) {
@@ -67,6 +68,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
   const nav = header?.querySelector<HTMLElement>('.temple-nav-items')
   const progress = header?.querySelector<HTMLElement>('.temple-nav-progress')
   const fill = progress?.querySelector<HTMLElement>('span')
+  const stage = host.querySelector<HTMLElement>('.temple-stage')
   if (!header || !nav || !progress || !fill || signal.aborted) return
   let layoutFrame = 0
   let scrollFrame = 0
@@ -142,6 +144,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       document.body,
       header!,
       nav!,
+      ...(stage ? [stage, stage.parentElement!] : []),
       ...allScenes.flatMap(({ target, visuals }) => [target, ...visuals]),
     ])
     for (const node of observed) if (!nextObserved.has(node)) observer.unobserve(node)
@@ -162,7 +165,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       at: range,
       value: x(lastStop) + lastStop.getBoundingClientRect().width / 2,
     })
-    scrubber.layout(mobilePoints)
+    scrubber.layout(mobilePoints, stage ? clamp(navigationScrollStart(stage)) : 0)
     // Desktop keeps its original progress boundary at the first unfinished fact.
     const boundary = stops.findIndex((node) => !known.some((scene) => scene.node === node))
     const scenes = allScenes.filter(({ node }) => boundary < 0 || stops.indexOf(node) < boundary)

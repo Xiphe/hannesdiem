@@ -29,7 +29,6 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
               hideDay
             />
           </span>
-          <canvas aria-hidden="true" />
         </div>
       </div>
       <div class="temple-nav-track">

@@ -1,5 +1,76 @@
 import { expect, test } from '@playwright/test'
 
+for (const offset of [0, 320]) {
+  test(`scrubbing back stops before the header disappears with ${offset}px before the artwork`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/temple-navigation')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await page.locator('.temple-artwork').evaluate((node, offset) => {
+      const spacer = document.createElement('div')
+      spacer.style.height = `${offset}px`
+      node.parentNode!.insertBefore(spacer, node)
+      // An unmapped first interval exposes the inverse timeline's page-zero end.
+      node.querySelector('a[data-nav-stop]')!.setAttribute('href', '#synthetic-unmapped-start')
+      scrollTo(0, 200 + offset)
+    }, offset)
+    const header = page.locator('.temple-top-navigation')
+    const nav = page.locator('.temple-nav-items')
+    await expect(header).toBeVisible()
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        }),
+    )
+    const box = (await nav.boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.wheel(150, 0)
+    await expect.poll(() => nav.evaluate((node) => node.scrollLeft)).toBeGreaterThan(100)
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(400 + offset)
+    await page.mouse.wheel(-10000, 0)
+    await expect.poll(() => nav.evaluate((node) => node.scrollLeft)).toBe(0)
+    // Let native scrolling, the scrub frame and visibility observation settle.
+    await page.waitForTimeout(200)
+    await expect
+      .poll(() => header.evaluate((node) => node.hasAttribute('data-nav-visible')))
+      .toBe(true)
+    expect(
+      await page.locator('.temple-stage').evaluate((node) => node.getBoundingClientRect().top),
+    ).toBeLessThan(0)
+    await page.setViewportSize({ width: 390, height: 700 })
+    await page.evaluate((offset) => scrollTo(0, 200 + offset), offset)
+    await expect(header).toBeVisible()
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        }),
+    )
+    const resized = (await nav.boundingBox())!
+    await page.mouse.move(195, resized.y + resized.height / 2)
+    await page.mouse.wheel(150, 0)
+    await expect.poll(() => nav.evaluate((node) => node.scrollLeft)).toBeGreaterThan(100)
+    await page.mouse.move(100, resized.y + resized.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(380, resized.y + resized.height / 2, { steps: 12 })
+    await page.mouse.up()
+    await expect.poll(() => nav.evaluate((node) => node.scrollLeft)).toBe(0)
+    await page.waitForTimeout(200)
+    await expect(header).toBeVisible()
+    const top = await page
+      .locator('.temple-stage')
+      .evaluate((node) => node.getBoundingClientRect().top)
+    expect(top).toBeLessThan(0)
+    expect(top).toBeGreaterThan(-2)
+    // Ordinary page scrolling can still reach the opener and hide the header.
+    await page.evaluate((offset) => scrollTo(0, offset), offset)
+    await expect(header).not.toBeVisible()
+  })
+}
+
 test('later section labels align with the centre of their visible areas', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'reduce' })

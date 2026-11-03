@@ -23,6 +23,7 @@ export function mountNavigationScrub(
   let points: TimelinePoint[] = []
   let inverse: TimelinePoint[] = []
   let width = 0
+  let minimum = 0
   let expected = -1
   let frame = 0
   let scrubY: number | undefined
@@ -51,7 +52,8 @@ export function mountNavigationScrub(
     )
       return
     expected = -1
-    scrubY = interpolate(inverse, nav.scrollLeft + width / 2)
+    // A scrub must never remove the header containing its own active input.
+    scrubY = Math.max(minimum, interpolate(inverse, nav.scrollLeft + width / 2))
     nav.dispatchEvent(new Event('navigation-scrub', { bubbles: true }))
     scrollTo({ top: scrubY, behavior: 'instant' })
   }
@@ -181,8 +183,9 @@ export function mountNavigationScrub(
       nav.style.setProperty('--nav-leading', `${Math.max(0, width / 2 - first.offsetWidth / 2)}px`)
       nav.style.setProperty('--nav-trailing', `${Math.max(0, width / 2 - last.offsetWidth / 2)}px`)
     },
-    layout(next: TimelinePoint[]) {
+    layout(next: TimelinePoint[], start: number) {
       points = next
+      minimum = start
       inverse = points.map(({ at, value }) => ({ at: value, value: at }))
       scrubY = undefined
       follow()

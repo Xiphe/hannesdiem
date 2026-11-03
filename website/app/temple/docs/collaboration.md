@@ -863,3 +863,45 @@ current alias, verified email and spot through a separate retryable outbox.
 External opt-out retains the same capacity hold. The artist rejects the uneven
 inner-rim experiments and selects the original round spots with a3px border,
 increased from1.5px while retaining the26px outer size.
+
+**Keep the active scrubber available — 2026-11-03.** The artist reports that
+scrubbing backwards can enter the opener and remove the active header. Clamp
+scrub destinations to the first scroll pixel beyond the opener's native sticky
+hold, recalculating with layout changes. Normal page scrolling and the wordmark
+link still reach the opener. Local correction for review.
+
+**Tighter mobile navigation — 2026-11-03.** The artist asks for about70% less
+space below the navigation text and no grey part of the mobile rail. Preserve
+the text's upper spacing, trim its lower whitespace and leave only the orange
+centre marker at the header bottom. Keep desktop spacing and progress unchanged.
+
+**Restore some mobile breathing room — 2026-11-03.** The artist finds the tighter
+header cramped. Set the gap below the mobile navigation text to8px and restore
+the grey rail behind its centre marker. Preserve the scrubber's opener boundary.
+
+**Plain, dimmed header date — 2026-11-03.** The artist withdraws the header
+date's material effect and requests a dimmed text tone again. Use native date
+text at65% opacity, preserving month formatting and fitting. Remove its canvas
+and the unused date-material painter; keep the wordmark's material treatment.
+
+**Fixed header date typography — 2026-11-03.** The artist supplies Bricolage,
+uppercase,0.6rem size,2.4px tracking and1.5px left margin. Use#403d36 in dark mode
+and#bfbbb1 in light mode at full opacity. Move the date2px closer to the wordmark
+and remove automatic date sizing so the supplied size and tracking are retained.
+The artist clarifies that2.4px tracking and1.5px left margin apply on small
+screens; use3.1px tracking and1px left margin on large screens.
+
+**Desktop header separator — 2026-11-03.** The artist requests a1px separator
+at the header's bottom on larger screens. Use a subtle border above1050px.
+
+**Light-mode header shadow — 2026-11-03.** The artist requests a subtle shadow
+in light mode. Try a soft, low-opacity shadow beneath the header.
+The artist requests a softer, wider shadow and removal of the desktop border;
+increase the blur to28px and reduce opacity to4.5%.
+
+**Header refinement release approved — 2026-11-03.** The artist approves this
+chat's header refinements and requests deployment: clamp scrubbing outside the
+opener, retain8px below mobile navigation and its grey rail, render native date
+text with the supplied responsive tracking and theme colours, and use the softer
+light-mode shadow without a border. Remove the retired date-material painter.
+Keep the current main release and other agents' pending work intact.
