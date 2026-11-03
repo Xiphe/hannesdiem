@@ -643,7 +643,7 @@
 .temple-signup .temple-notification-control {
   position: relative;
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
   align-items: center;
   gap: 12px;
   padding-block: 6px;
@@ -698,6 +698,7 @@
   outline-offset: 3px;
 }
 .temple-notification-state {
+  text-align: center;
   display: grid;
   align-content: center;
   min-height: 3em;
