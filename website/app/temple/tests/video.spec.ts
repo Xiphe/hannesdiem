@@ -166,7 +166,7 @@ test('recordings and their rich-text descriptions work without site JavaScript',
 })
 
 for (const width of [390, 900, 1440]) {
-  test(`recordings scroll vertically from the newest video at ${width}px`, async ({ page }) => {
+  test(`recordings scroll horizontally from the newest video at ${width}px`, async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     await page.setViewportSize({ width, height: 900 })
@@ -180,32 +180,40 @@ for (const width of [390, 900, 1440]) {
       'Synthetic oldest',
     ])
     await expect(feed.locator('strong')).toHaveText(['independent', 'independent', 'independent'])
-    expect(await feed.evaluate((node) => node.scrollTop)).toBe(0)
+    expect(await feed.evaluate((node) => node.scrollLeft)).toBe(0)
     const geometry = await feed.evaluate((node) => ({
       height: node.clientHeight,
       contentHeight: node.scrollHeight,
       width: node.clientWidth,
       contentWidth: node.scrollWidth,
+      latestLeft: node.querySelector('.temple-video')!.getBoundingClientRect().left,
+      olderRight: node.querySelectorAll('.temple-video')[1].getBoundingClientRect().right,
+      left: node.getBoundingClientRect().left,
+      snap: getComputedStyle(node).scrollSnapType,
       actionAfter: node.nextElementSibling?.classList.contains('fact-followup-action'),
     }))
-    expect(geometry.height).toBeLessThanOrEqual(780)
-    expect(geometry.contentHeight).toBeGreaterThan(geometry.height * 2)
-    expect(geometry.contentWidth).toBeLessThanOrEqual(geometry.width)
+    expect(geometry.contentHeight).toBeLessThanOrEqual(geometry.height)
+    expect(geometry.contentWidth).toBeGreaterThan(geometry.width * 2)
+    expect(geometry.width).toBe(width)
+    expect(geometry.height).toBe(900)
+    expect(geometry.latestLeft).toBeCloseTo(geometry.left, 0)
+    expect(geometry.olderRight).toBeLessThanOrEqual(geometry.left + 1)
+    expect(geometry.snap).toBe('x mandatory')
     expect(geometry.actionAfter).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await feed.focus()
-    await page.keyboard.press('ArrowDown')
-    await expect.poll(() => feed.evaluate((node) => node.scrollTop)).toBeGreaterThanOrEqual(39)
+    await page.keyboard.press('ArrowLeft')
+    await expect.poll(() => feed.evaluate((node) => node.scrollLeft)).toBeLessThan(-width + 1)
     await expect(
-      feed.frameLocator('iframe').first().getByRole('button', { name: 'Play fixture' }),
+      feed.frameLocator('iframe').nth(1).getByRole('button', { name: 'Play fixture' }),
     ).toBeVisible()
     await feed.hover()
-    await page.mouse.wheel(0, 500)
-    await expect.poll(() => feed.evaluate((node) => node.scrollTop)).toBeGreaterThan(400)
+    await page.mouse.wheel(-width, 0)
+    await expect.poll(() => feed.evaluate((node) => node.scrollLeft)).toBeLessThan(-2 * width + 1)
     // A fresh visit starts at the newest entry again.
     await page.reload()
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    expect(await feed.evaluate((node) => node.scrollTop)).toBe(0)
+    expect(await feed.evaluate((node) => node.scrollLeft)).toBe(0)
     expect(errors).toEqual([])
   })
 
@@ -218,11 +226,11 @@ for (const width of [390, 900, 1440]) {
     const feed = page.getByRole('region', { name: 'Videos', exact: true })
     const recording = page.getByRole('region', { name: 'Synthetic oldest' })
     await expect(recording.getByRole('heading')).toBeInViewport()
-    expect(await feed.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
+    expect(await feed.evaluate((node) => node.scrollLeft)).toBeLessThan(0)
     const navigation = (await page.locator('.temple-top-navigation').boundingBox())!
-    expect((await recording.boundingBox())!.y).toBeGreaterThanOrEqual(
-      navigation.y + navigation.height + 8,
-    )
+    expect(
+      (await recording.locator('.temple-video-player').boundingBox())!.y,
+    ).toBeGreaterThanOrEqual(navigation.y + navigation.height + 8)
     await recording.getByRole('link', { name: 'Synthetic oldest', exact: true }).click()
     await expect(page).toHaveURL(/#fixture-oldest$/)
     await page.reload()
@@ -253,7 +261,7 @@ test('the recordings feed sorts and scrolls without site JavaScript', async ({
     ])
     await expect(page.getByRole('heading', { name: 'Synthetic middle' })).toBeInViewport()
     await expect(feed.locator('strong')).toHaveText(['independent', 'independent', 'independent'])
-    expect(await feed.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
+    expect(await feed.evaluate((node) => node.scrollLeft)).toBeLessThan(0)
   } finally {
     await context.close()
   }

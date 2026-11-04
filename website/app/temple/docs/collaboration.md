@@ -1,10 +1,15 @@
 # Temple of Sound: client–artist collaboration
 
-**Vertical recording collection — 2026-11-05.** The artist supplies two new
+**Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
-and asks to add a vertical scroll that starts at the newest video. Keep the
+and initially asks for vertical scrolling, then corrects the direction to
+horizontal. They then specify a fullscreen area with snappy transitions: the
+newest recording sits on the right, with the collection initially scrolled all
+the way right. Older recordings remain to its left. Use mandatory native scroll
+snapping for each viewport-width recording. This supersedes the interim edge
+peek and compact scroller. Keep the
 accepted player, title overlay, date and description treatment. Watch's `after`
-slot now holds a native vertical scroll area, with entries automatically sorted
+slot now holds a native horizontal scroll area, with entries automatically sorted
 by their timezone-qualified posting timestamps. Preserve individual recording
 permalinks and place the existing signup after the collection. The supplied
 times use Berlin time. Local review; this request does not include deployment.

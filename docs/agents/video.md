@@ -79,10 +79,13 @@ description slots through the existing Opening island; no collection service
 or separate content format is needed.
 
 The component sorts by timestamp, newest first, before rendering. Its native
-vertical scroll area starts at that first recording on a fresh visit, while
-older title permalinks still address their individual recordings. Keyboard,
-wheel and touch scrolling use browser behavior. Watch's signup remains after
-the complete collection. Printing expands the collection.
+horizontal scroll area fills the viewport and starts at the rightmost recording
+on a fresh visit. RTL flex flow places that newest recording on the right and
+older recordings to its left; each recording keeps LTR text. Mandatory scroll
+snapping stops at each full-width recording. Older title permalinks still
+address their individual recordings. Keyboard, wheel and touch scrolling use
+browser behavior. Watch's signup remains after the complete collection.
+Printing stacks the collection vertically.
 
 The artist supplied `permission-spaces.mov` and `kennt-ihr-das.MP4` on
 2026-11-05, with their titles, descriptions and Berlin posting times. Both

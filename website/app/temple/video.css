@@ -9,30 +9,56 @@
 .temple-recordings {
   position: relative;
   z-index: 3;
-  width: calc(100% - clamp(48px, 10vw, 200px));
-  max-width: max(400px, calc(74svh * var(--video-aspect) + 32px));
-  max-height: calc(100svh - 120px);
+  display: flex;
+  align-items: flex-start;
+  direction: rtl;
+  width: 100%;
+  height: 100svh;
   margin: 0 auto 24svh;
-  overflow-y: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
   scrollbar-width: thin;
   scrollbar-color: light-dark(var(--temple-muted-light), #bdb2a5) transparent;
-  scroll-margin-top: 90px;
+  scroll-margin-top: 0;
 }
 .temple-recordings:focus-visible {
   outline: 2px solid light-dark(var(--temple-muted-light), #bdb2a5);
   outline-offset: 4px;
 }
 .temple-recordings .temple-video {
-  padding-inline: 16px;
-  margin-bottom: 48px;
-}
-.temple-recordings .temple-video:last-child {
+  flex: 0 0 100%;
+  min-width: 0;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  direction: ltr;
+  padding: calc(var(--temple-nav-clearance, 88px) + 16px) 24px 24px;
   margin-bottom: 0;
+  overflow-y: auto;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.temple-recordings .temple-video-layout {
+  width: 100%;
+  max-width: calc(
+    max(160px, 100svh - var(--temple-nav-clearance, 88px) - 200px) * var(--video-aspect)
+  );
+}
+.temple-recordings .temple-video-description-piece {
+  margin-bottom: 16px;
 }
 @media print {
   .temple-recordings {
-    max-height: none;
+    display: block;
+    direction: ltr;
+    height: auto;
     overflow: visible;
+  }
+  .temple-recordings .temple-video {
+    height: auto;
+    overflow: visible;
+    margin-bottom: 48px;
   }
 }
 .fact-story:has(+ :is(.temple-video, .temple-recordings)) {
