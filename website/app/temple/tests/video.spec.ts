@@ -186,30 +186,40 @@ for (const width of [390, 900, 1440]) {
       contentHeight: node.scrollHeight,
       width: node.clientWidth,
       contentWidth: node.scrollWidth,
-      latestLeft: node.querySelector('.temple-video')!.getBoundingClientRect().left,
-      olderRight: node.querySelectorAll('.temple-video')[1].getBoundingClientRect().right,
-      left: node.getBoundingClientRect().left,
+      latestRight: node.querySelector('.temple-video')!.getBoundingClientRect().right,
+      cardWidth: node.querySelector('.temple-video')!.getBoundingClientRect().width,
+      right: node.getBoundingClientRect().right,
+      visibleCards: [...node.querySelectorAll('.temple-video')].filter((card) => {
+        const bounds = card.getBoundingClientRect()
+        const feed = node.getBoundingClientRect()
+        return bounds.left >= feed.left - 1 && bounds.right <= feed.right + 1
+      }).length,
       snap: getComputedStyle(node).scrollSnapType,
       actionAfter: node.nextElementSibling?.classList.contains('fact-followup-action'),
     }))
     expect(geometry.contentHeight).toBeLessThanOrEqual(geometry.height)
-    expect(geometry.contentWidth).toBeGreaterThan(geometry.width * 2)
+    expect(geometry.contentWidth).toBeGreaterThanOrEqual(geometry.width)
     expect(geometry.width).toBe(width)
     expect(geometry.height).toBe(900)
-    expect(geometry.latestLeft).toBeCloseTo(geometry.left, 0)
-    expect(geometry.olderRight).toBeLessThanOrEqual(geometry.left + 1)
+    expect(geometry.latestRight).toBeCloseTo(geometry.right, 0)
+    expect(geometry.visibleCards).toBe(width === 390 ? 1 : width === 900 ? 2 : 3)
     expect(geometry.snap).toBe('x mandatory')
     expect(geometry.actionAfter).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    await feed.focus()
-    await page.keyboard.press('ArrowLeft')
-    await expect.poll(() => feed.evaluate((node) => node.scrollLeft)).toBeLessThan(-width + 1)
-    await expect(
-      feed.frameLocator('iframe').nth(1).getByRole('button', { name: 'Play fixture' }),
-    ).toBeVisible()
-    await feed.hover()
-    await page.mouse.wheel(-width, 0)
-    await expect.poll(() => feed.evaluate((node) => node.scrollLeft)).toBeLessThan(-2 * width + 1)
+    const overflow = geometry.contentWidth - geometry.width
+    if (overflow > 0) {
+      await feed.focus()
+      await page.keyboard.press('ArrowLeft')
+      await expect
+        .poll(() => feed.evaluate((node) => node.scrollLeft))
+        .toBeLessThan(-Math.min(geometry.cardWidth, overflow) + 1)
+      await expect(
+        feed.frameLocator('iframe').nth(1).getByRole('button', { name: 'Play fixture' }),
+      ).toBeVisible()
+      await feed.hover()
+      await page.mouse.wheel(-width, 0)
+      await expect.poll(() => feed.evaluate((node) => node.scrollLeft)).toBeLessThan(-overflow + 1)
+    }
     // A fresh visit starts at the newest entry again.
     await page.reload()
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
@@ -226,7 +236,7 @@ for (const width of [390, 900, 1440]) {
     const feed = page.getByRole('region', { name: 'Videos', exact: true })
     const recording = page.getByRole('region', { name: 'Synthetic oldest' })
     await expect(recording.getByRole('heading')).toBeInViewport()
-    expect(await feed.evaluate((node) => node.scrollLeft)).toBeLessThan(0)
+    expect(await feed.evaluate((node) => node.scrollLeft)).toBeLessThanOrEqual(0)
     const navigation = (await page.locator('.temple-top-navigation').boundingBox())!
     expect(
       (await recording.locator('.temple-video-player').boundingBox())!.y,
@@ -243,7 +253,11 @@ test('the recordings feed sorts and scrolls without site JavaScript', async ({
   browser,
   baseURL,
 }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    baseURL,
+    viewport: { width: 390, height: 900 },
+  })
   try {
     await context.route('https://customer-fixture.cloudflarestream.com/**', (route) =>
       route.fulfill({

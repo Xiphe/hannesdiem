@@ -6,8 +6,11 @@ and initially asks for vertical scrolling, then corrects the direction to
 horizontal. They then specify a fullscreen area with snappy transitions: the
 newest recording sits on the right, with the collection initially scrolled all
 the way right. Older recordings remain to its left. Use mandatory native scroll
-snapping for each viewport-width recording. This supersedes the interim edge
-peek and compact scroller. Keep the
+snapping for each recording. The artist subsequently asks to show multiple
+videos whenever they fit: size each card to its height-fitted player and caption,
+capped at the viewport width, so wider screens show neighboring recordings.
+This supersedes the one-card-per-viewport layout, interim edge peek and compact
+scroller. Keep the
 accepted player, title overlay, date and description treatment. Watch's `after`
 slot now holds a native horizontal scroll area, with entries automatically sorted
 by their timezone-qualified posting timestamps. Preserve individual recording

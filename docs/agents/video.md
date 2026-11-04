@@ -82,7 +82,9 @@ The component sorts by timestamp, newest first, before rendering. Its native
 horizontal scroll area fills the viewport and starts at the rightmost recording
 on a fresh visit. RTL flex flow places that newest recording on the right and
 older recordings to its left; each recording keeps LTR text. Mandatory scroll
-snapping stops at each full-width recording. Older title permalinks still
+snapping stops at each recording. Cards take the width of their height-fitted
+player plus padding, capped at the viewport width, so multiple videos appear
+side by side whenever they fit. Older title permalinks still
 address their individual recordings. Keyboard, wheel and touch scrolling use
 browser behavior. Watch's signup remains after the complete collection.
 Printing stacks the collection vertically.
