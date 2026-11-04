@@ -86,6 +86,9 @@ export interface TempleVideoProps extends StreamVideoProps {
   /** Rich-text description, authored as ordinary CMX children. */
   children?: RemixNode
 }
+export interface TempleRecordingsProps {
+  videos: readonly (TempleVideoProps & { postedAt: string })[]
+}
 export interface PoemLocation {
   image: ImageSource
   imageAlt: string
@@ -109,3 +112,4 @@ export declare const PoemCanvas: Component<PoemCanvasProps>
 export declare const PoemOpening: Component<PoemOpeningProps>
 export declare const PoemSection: Component<PoemSectionProps>
 export declare const TempleVideo: Component<TempleVideoProps>
+export declare const TempleRecordings: Component<TempleRecordingsProps>

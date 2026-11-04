@@ -10,7 +10,7 @@ import mixing from '../../media/mixing-scene-one-week-retreat-1803-2fadbcefea805
 import circlePhoto from '../../media/A7406429-1.jpg'
 import { watchActionContext, watchIntroduction, watchFragments } from './_watch.ts'
 import { createCopy } from './_create.ts'
-import { techCheck } from './_recordings.tsx'
+import { recordings } from './_recordings.tsx'
 
 export const metadata = { kind: 'temple', image: forest } satisfies PageMetadata
 
@@ -209,7 +209,7 @@ export default function Content() {
             heading: watchIntroduction,
             paragraphs: watchFragments,
             action: { prompt: watchActionContext, label: 'Get notified', newsletter: 'temple' },
-            after: techCheck,
+            after: recordings,
           },
           {
             id: 'create',

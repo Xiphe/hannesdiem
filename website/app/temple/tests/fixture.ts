@@ -405,3 +405,28 @@ videoFacts[0].after = {
     },
   ],
 }
+
+export const recordingsTempleContent = structuredClone(videoTempleContent)
+const recordingsOpening = (recordingsTempleContent.default as CmxComponentNode)
+  .children![0] as CmxComponentNode
+const recordingsFacts = recordingsOpening.props!.facts as Record<string, unknown>[]
+const recording = videoFacts[0].after as CmxComponentNode
+recordingsFacts[0].after = {
+  type: 'component',
+  from: '@hannesdiem/content-components',
+  import: 'TempleRecordings',
+  slots: [0, 1, 2].map((index) => ['videos', index, 'children']),
+  props: {
+    // Deliberately unordered; the newest instant is not the last entry or the
+    // lexicographically greatest timestamp (the middle entry has an offset).
+    videos: [
+      { id: 'fixture-middle', title: 'Synthetic middle', postedAt: '2025-04-08T19:30:00Z' },
+      { id: 'fixture-latest', title: 'Synthetic latest', postedAt: '2025-04-08T18:30:00-05:00' },
+      { id: 'fixture-oldest', title: 'Synthetic oldest', postedAt: '2025-04-07T19:30:00Z' },
+    ].map((props) => ({
+      ...recording.props,
+      ...props,
+      children: { type: 'fragment', children: structuredClone(recording.children) },
+    })),
+  },
+}

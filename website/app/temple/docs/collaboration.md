@@ -1,5 +1,14 @@
 # Temple of Sound: client–artist collaboration
 
+**Vertical recording collection — 2026-11-05.** The artist supplies two new
+Cloudflare Stream recordings with exact titles, descriptions and posting times,
+and asks to add a vertical scroll that starts at the newest video. Keep the
+accepted player, title overlay, date and description treatment. Watch's `after`
+slot now holds a native vertical scroll area, with entries automatically sorted
+by their timezone-qualified posting timestamps. Preserve individual recording
+permalinks and place the existing signup after the collection. The supplied
+times use Berlin time. Local review; this request does not include deployment.
+
 Research: 2026-10-22. Small collaborative steps accepted; opener prototype explicitly accepted on 2026-10-23.
 
 ## Current release scope — 2026-11-02

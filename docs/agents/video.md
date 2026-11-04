@@ -70,6 +70,25 @@ so the title stays below the navigation. Synthetic checks cover initial load,
 reload, native links, portrait sizing and rich-text hydration on phone/desktop,
 plus rendering without site JavaScript.
 
+## Present multiple Temple recordings
+
+Use `TempleRecordings` in Watch's `after` slot with a `videos` array of
+`TempleVideo` props. Each entry requires a timezone-qualified `postedAt` and
+keeps its description in native CMX `children`. CMX resolves these nested
+description slots through the existing Opening island; no collection service
+or separate content format is needed.
+
+The component sorts by timestamp, newest first, before rendering. Its native
+vertical scroll area starts at that first recording on a fresh visit, while
+older title permalinks still address their individual recordings. Keyboard,
+wheel and touch scrolling use browser behavior. Watch's signup remains after
+the complete collection. Printing expands the collection.
+
+The artist supplied `permission-spaces.mov` and `kennt-ihr-das.MP4` on
+2026-11-05, with their titles, descriptions and Berlin posting times. Both
+Stream uploads were ready at 1080 × 1920. Their authored entries join the
+existing technical recording in `_recordings.tsx`.
+
 ## Validate the first recording
 
 The artist's local agent saved the Final Cut destination `Cloudflare Stream

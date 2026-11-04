@@ -165,6 +165,100 @@ test('recordings and their rich-text descriptions work without site JavaScript',
   }
 })
 
+for (const width of [390, 900, 1440]) {
+  test(`recordings scroll vertically from the newest video at ${width}px`, async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-recordings')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const feed = page.getByRole('region', { name: 'Videos', exact: true })
+    await feed.scrollIntoViewIfNeeded()
+    await expect(feed.locator('h2')).toHaveText([
+      'Synthetic latest',
+      'Synthetic middle',
+      'Synthetic oldest',
+    ])
+    await expect(feed.locator('strong')).toHaveText(['independent', 'independent', 'independent'])
+    expect(await feed.evaluate((node) => node.scrollTop)).toBe(0)
+    const geometry = await feed.evaluate((node) => ({
+      height: node.clientHeight,
+      contentHeight: node.scrollHeight,
+      width: node.clientWidth,
+      contentWidth: node.scrollWidth,
+      actionAfter: node.nextElementSibling?.classList.contains('fact-followup-action'),
+    }))
+    expect(geometry.height).toBeLessThanOrEqual(780)
+    expect(geometry.contentHeight).toBeGreaterThan(geometry.height * 2)
+    expect(geometry.contentWidth).toBeLessThanOrEqual(geometry.width)
+    expect(geometry.actionAfter).toBe(true)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await feed.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect.poll(() => feed.evaluate((node) => node.scrollTop)).toBeGreaterThanOrEqual(39)
+    await expect(
+      feed.frameLocator('iframe').first().getByRole('button', { name: 'Play fixture' }),
+    ).toBeVisible()
+    await feed.hover()
+    await page.mouse.wheel(0, 500)
+    await expect.poll(() => feed.evaluate((node) => node.scrollTop)).toBeGreaterThan(400)
+    // A fresh visit starts at the newest entry again.
+    await page.reload()
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    expect(await feed.evaluate((node) => node.scrollTop)).toBe(0)
+    expect(errors).toEqual([])
+  })
+
+  test(`older recording permalinks restore both scroll positions at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-recordings#fixture-oldest')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const feed = page.getByRole('region', { name: 'Videos', exact: true })
+    const recording = page.getByRole('region', { name: 'Synthetic oldest' })
+    await expect(recording.getByRole('heading')).toBeInViewport()
+    expect(await feed.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
+    const navigation = (await page.locator('.temple-top-navigation').boundingBox())!
+    expect((await recording.boundingBox())!.y).toBeGreaterThanOrEqual(
+      navigation.y + navigation.height + 8,
+    )
+    await recording.getByRole('link', { name: 'Synthetic oldest', exact: true }).click()
+    await expect(page).toHaveURL(/#fixture-oldest$/)
+    await page.reload()
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await expect(recording.getByRole('heading')).toBeInViewport()
+  })
+}
+
+test('the recordings feed sorts and scrolls without site JavaScript', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
+  try {
+    await context.route('https://customer-fixture.cloudflarestream.com/**', (route) =>
+      route.fulfill({
+        contentType: 'text/html',
+        body: '<!doctype html><title>Stream fixture</title>',
+      }),
+    )
+    const page = await context.newPage()
+    await page.goto('/temple-recordings#fixture-middle')
+    const feed = page.getByRole('region', { name: 'Videos', exact: true })
+    await expect(feed.locator('h2')).toHaveText([
+      'Synthetic latest',
+      'Synthetic middle',
+      'Synthetic oldest',
+    ])
+    await expect(page.getByRole('heading', { name: 'Synthetic middle' })).toBeInViewport()
+    await expect(feed.locator('strong')).toHaveText(['independent', 'independent', 'independent'])
+    expect(await feed.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
+  } finally {
+    await context.close()
+  }
+})
+
 for (const scenario of [
   {
     locale: 'de-DE',
