@@ -187,7 +187,9 @@ for (const width of [390, 900, 1440]) {
       width: node.clientWidth,
       contentWidth: node.scrollWidth,
       latestRight: node.querySelector('.temple-video')!.getBoundingClientRect().right,
+      oldestLeft: node.querySelectorAll('.temple-video')[2].getBoundingClientRect().left,
       cardWidth: node.querySelector('.temple-video')!.getBoundingClientRect().width,
+      left: node.getBoundingClientRect().left,
       right: node.getBoundingClientRect().right,
       visibleCards: [...node.querySelectorAll('.temple-video')].filter((card) => {
         const bounds = card.getBoundingClientRect()
@@ -201,13 +203,13 @@ for (const width of [390, 900, 1440]) {
     expect(geometry.contentWidth).toBeGreaterThanOrEqual(geometry.width)
     expect(geometry.width).toBe(width)
     expect(geometry.height).toBe(900)
-    expect(geometry.latestRight).toBeCloseTo(geometry.right, 0)
     expect(geometry.visibleCards).toBe(width === 390 ? 1 : width === 900 ? 2 : 3)
     expect(geometry.snap).toBe('x mandatory')
     expect(geometry.actionAfter).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     const overflow = geometry.contentWidth - geometry.width
     if (overflow > 0) {
+      expect(geometry.latestRight).toBeCloseTo(geometry.right, 0)
       await feed.focus()
       await page.keyboard.press('ArrowLeft')
       await expect
@@ -219,6 +221,12 @@ for (const width of [390, 900, 1440]) {
       await feed.hover()
       await page.mouse.wheel(-width, 0)
       await expect.poll(() => feed.evaluate((node) => node.scrollLeft)).toBeLessThan(-overflow + 1)
+    } else {
+      expect(geometry.oldestLeft - geometry.left).toBeGreaterThan(0)
+      expect(geometry.oldestLeft - geometry.left).toBeCloseTo(
+        geometry.right - geometry.latestRight,
+        0,
+      )
     }
     // A fresh visit starts at the newest entry again.
     await page.reload()
@@ -227,26 +235,37 @@ for (const width of [390, 900, 1440]) {
     expect(errors).toEqual([])
   })
 
-  test(`older recording permalinks restore both scroll positions at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 900 })
-    await page.goto('/temple-recordings#fixture-oldest')
-    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    const feed = page.getByRole('region', { name: 'Videos', exact: true })
-    const recording = page.getByRole('region', { name: 'Synthetic oldest' })
-    await expect(recording.getByRole('heading')).toBeInViewport()
-    expect(await feed.evaluate((node) => node.scrollLeft)).toBeLessThanOrEqual(0)
-    const navigation = (await page.locator('.temple-top-navigation').boundingBox())!
-    expect(
-      (await recording.locator('.temple-video-player').boundingBox())!.y,
-    ).toBeGreaterThanOrEqual(navigation.y + navigation.height + 8)
-    await recording.getByRole('link', { name: 'Synthetic oldest', exact: true }).click()
-    await expect(page).toHaveURL(/#fixture-oldest$/)
-    await page.reload()
-    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    await expect(recording.getByRole('heading')).toBeInViewport()
-  })
+  for (const entry of ['oldest', 'latest']) {
+    test(`recording permalinks center the ${entry} edge at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto(`/temple-recordings#fixture-${entry}`)
+      await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+      const recording = page.getByRole('region', { name: `Synthetic ${entry}` })
+      const centered = async () => {
+        const box = (await recording.boundingBox())!
+        expect(Math.abs(box.x + box.width / 2 - width / 2)).toBeLessThan(1)
+      }
+      await expect(recording.getByRole('heading')).toBeInViewport()
+      await centered()
+      const navigation = (await page.locator('.temple-top-navigation').boundingBox())!
+      expect(
+        (await recording.locator('.temple-video-player').boundingBox())!.y,
+      ).toBeGreaterThanOrEqual(navigation.y + navigation.height + 8)
+      await page.reload()
+      await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+      await centered()
+      // A native hash link to an already visible neighbor must center it, too.
+      const middle = page.getByRole('region', { name: 'Synthetic middle' })
+      await middle.getByRole('link', { name: 'Synthetic middle', exact: true }).click()
+      await expect(page).toHaveURL(/#fixture-middle$/)
+      await expect
+        .poll(async () => {
+          const box = (await middle.boundingBox())!
+          return Math.abs(box.x + box.width / 2 - width / 2)
+        })
+        .toBeLessThan(1)
+    })
+  }
 }
 
 test('the recordings feed sorts and scrolls without site JavaScript', async ({
@@ -276,6 +295,8 @@ test('the recordings feed sorts and scrolls without site JavaScript', async ({
     await expect(page.getByRole('heading', { name: 'Synthetic middle' })).toBeInViewport()
     await expect(feed.locator('strong')).toHaveText(['independent', 'independent', 'independent'])
     expect(await feed.evaluate((node) => node.scrollLeft)).toBeLessThan(0)
+    const box = (await page.locator('#fixture-middle').boundingBox())!
+    expect(box.x + box.width / 2).toBeCloseTo(195, 0)
   } finally {
     await context.close()
   }

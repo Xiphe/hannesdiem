@@ -37,7 +37,7 @@ export function Opening(handle: Handle<OpeningProps>) {
       try {
         const target = document.getElementById(decodeURIComponent(location.hash.slice(1)))
         if (target?.matches('.temple-video') && host.contains(target))
-          target.scrollIntoView({ block: 'start', behavior: 'instant' })
+          target.scrollIntoView({ block: 'start', inline: 'center', behavior: 'instant' })
       } catch {
         // Malformed fragments must not prevent the artwork from becoming ready.
       }

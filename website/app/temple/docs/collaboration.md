@@ -9,6 +9,10 @@ the way right. Older recordings remain to its left. Use mandatory native scroll
 snapping for each recording. The artist subsequently asks to show multiple
 videos whenever they fit: size each card to its height-fitted player and caption,
 capped at the viewport width, so wider screens show neighboring recordings.
+When the complete collection fits, center it horizontally; overflowing collections
+still start at the newest recording on the right.
+While a recording permalink is active, reserve scroll room at both ends and
+center the selected recording, including the oldest and newest entries.
 This supersedes the one-card-per-viewport layout, interim edge peek and compact
 scroller. Keep the
 accepted player, title overlay, date and description treatment. Watch's `after`

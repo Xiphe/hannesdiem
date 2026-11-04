@@ -84,9 +84,14 @@ on a fresh visit. RTL flex flow places that newest recording on the right and
 older recordings to its left; each recording keeps LTR text. Mandatory scroll
 snapping stops at each recording. Cards take the width of their height-fitted
 player plus padding, capped at the viewport width, so multiple videos appear
-side by side whenever they fit. Older title permalinks still
+side by side whenever they fit. Center the complete collection when there is
+spare horizontal space; safe alignment keeps overflowing collections at the
+rightmost starting position. Older title permalinks still
 address their individual recordings. Keyboard, wheel and touch scrolling use
 browser behavior. Watch's signup remains after the complete collection.
+An active recording permalink reserves room at both ends of the collection so
+even edge recordings can center horizontally. Native scroll margins handle hash
+links; the existing post-layout arrival also requests inline centering.
 Printing stacks the collection vertically.
 
 The artist supplied `permission-spaces.mov` and `kennt-ihr-das.MP4` on
