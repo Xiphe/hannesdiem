@@ -4,6 +4,7 @@ import { hasEnteredTemple } from '../entry-state.ts'
 import { createPlayback } from './playback.ts'
 import { audioPeaks, drawWaveform } from './waveform.ts'
 import { dateLabel } from '../../date.tsx'
+import { mountFeedControls } from './controls.ts'
 
 export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSignal) {
   const articles = [...root.querySelectorAll<HTMLElement>('.feed-post')]
@@ -14,7 +15,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     props.posts.findIndex((post) => post.id === props.selected),
   )
   let active: HTMLElement | undefined
-  let sound = true
+  let intent: 'autoplay' | 'playing' | 'paused' = 'autoplay'
   let ready = false
   let loading = 0
   let resumeVisible = false
@@ -24,11 +25,26 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   let waveformTask: AbortController | undefined
   const options = { signal }
   const post = () => props.posts[index]
+  const controls = mountFeedControls(root, video, signal)
+  const measurePanel = (article: HTMLElement) => {
+    const details = article.querySelector<HTMLElement>('.feed-details')!
+    article.style.setProperty('--caption-height', `${details.getBoundingClientRect().height}px`)
+  }
+  const panelSize = new ResizeObserver((entries) => {
+    for (const entry of entries) measurePanel(entry.target.closest<HTMLElement>('.feed-post')!)
+  })
+  for (const article of articles) panelSize.observe(article.querySelector('.feed-details')!)
+  signal.addEventListener('abort', () => panelSize.disconnect(), { once: true })
+  const reflectOverlay = () => {
+    active?.toggleAttribute('data-overlay', post().kind !== 'video' || intent === 'paused')
+  }
   const blocked = () => {
     if (!active) return
+    intent = 'paused'
     delete active.dataset.playing
     active.dataset.blocked = ''
     active.querySelector<HTMLButtonElement>('.feed-start')!.hidden = post().kind !== 'video'
+    reflectOverlay()
   }
   const mediaFailed = () => {
     ready = false
@@ -46,21 +62,21 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     const pauseIcon = active.querySelector<HTMLElement>('[data-pause-icon]')
     if (playIcon) playIcon.hidden = playing
     if (pauseIcon) pauseIcon.hidden = !playing
-    const soundControl = active.querySelector<HTMLButtonElement>('[data-sound]')!
-    soundControl.setAttribute('aria-label', sound ? 'Mute sound' : 'Enable sound')
-    soundControl.setAttribute('aria-pressed', String(sound))
     if (playing) {
       delete active.dataset.blocked
       active.querySelector<HTMLButtonElement>('.feed-start')!.hidden = true
     }
+    reflectOverlay()
   }
   async function play() {
     if (!ready || signal.aborted || document.hidden || post().kind === 'text') return
     const current = loading
-    video.muted = !sound
+    intent = 'autoplay'
+    reflectOverlay()
     try {
       await video.play()
       if (signal.aborted || current !== loading) return
+      intent = 'playing'
       reflect()
     } catch {
       if (!signal.aborted && current === loading) blocked()
@@ -103,12 +119,18 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       delete active.dataset.playing
     }
     const current = ++loading
+    intent = 'autoplay'
+    controls.cancelAdjustment()
     ready = false
     video.pause()
     waveformTask?.abort()
     index = next
     active = articles[index]
+    delete active.dataset.blocked
+    active.querySelector<HTMLButtonElement>('.feed-start')?.setAttribute('hidden', '')
+    reflectOverlay()
     active.dataset.active = ''
+    measurePanel(active)
     root.dataset.currentPost = post().id
     document.title = `${post().title} • Hannes Diem`
     const path = postPath(post().id)
@@ -145,46 +167,38 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   }
   for (const event of ['playing', 'pause', 'ended']) video.addEventListener(event, reflect, options)
   video.addEventListener('error', mediaFailed, options)
-  video.addEventListener(
-    'volumechange',
-    () => {
-      sound = !video.muted
-      reflect()
-    },
-    options,
-  )
-  video.addEventListener(
-    'timeupdate',
-    () => {
-      if (!active || !Number.isFinite(video.duration) || video.duration <= 0) return
-      const percentage = (video.currentTime / video.duration) * 100
-      const seek = active.querySelector<HTMLInputElement>('.feed-seek')
-      if (seek && document.activeElement !== seek) seek.value = String(percentage)
-      const bars = active.querySelectorAll<SVGRectElement>('.feed-waveform rect')
-      bars.forEach((bar, index) =>
-        bar.toggleAttribute('data-played', (index / bars.length) * 100 <= percentage),
-      )
-    },
-    options,
-  )
+  const updateProgress = () => {
+    if (!active) return
+    const seek = active.querySelector<HTMLInputElement>('.feed-seek')
+    const available = Number.isFinite(video.duration) && video.duration > 0 && video.readyState >= 1
+    if (seek) seek.disabled = !available
+    if (!available) return
+    const percentage = (video.currentTime / video.duration) * 100
+    if (seek && !controls.isAdjusting(seek)) {
+      seek.value = String(percentage)
+      seek.style.setProperty('--progress', `${percentage}%`)
+    }
+    const bars = active.querySelectorAll<SVGRectElement>('.feed-waveform rect')
+    bars.forEach((bar, index) =>
+      bar.toggleAttribute('data-played', (index / bars.length) * 100 <= percentage),
+    )
+  }
+  for (const event of ['timeupdate', 'loadedmetadata', 'durationchange', 'emptied'])
+    video.addEventListener(event, updateProgress, options)
 
   root.addEventListener(
     'click',
     (event) => {
       const target = event.target as Element
       if (target.closest('[data-toggle]')) {
-        if (!video.paused) video.pause()
-        else {
-          if (active?.hasAttribute('data-blocked')) sound = true
+        if (!video.paused) {
+          intent = 'paused'
+          video.pause()
+          reflectOverlay()
+        } else {
           if (ready) void play()
           else void activate(index, true)
         }
-      } else if (target.closest('[data-sound]')) {
-        sound = !sound
-        video.muted = !sound
-        target
-          .closest('[data-sound]')!
-          .setAttribute('aria-label', sound ? 'Mute sound' : 'Enable sound')
       } else if (target.closest('[data-share]')) {
         void share()
       }
@@ -216,8 +230,10 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     'input',
     (event) => {
       const seek = event.target as HTMLInputElement
-      if (seek.matches('.feed-seek') && Number.isFinite(video.duration))
+      if (seek.matches('.feed-seek') && Number.isFinite(video.duration)) {
         video.currentTime = (Number(seek.value) / 100) * video.duration
+        seek.style.setProperty('--progress', `${seek.value}%`)
+      }
     },
     options,
   )
@@ -229,19 +245,19 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       if (event.key === ' ' && post().kind !== 'text') {
         event.preventDefault()
         if (video.paused) void play()
-        else video.pause()
+        else {
+          intent = 'paused'
+          video.pause()
+          reflectOverlay()
+        }
       } else if (event.key === 'Escape') {
         event.preventDefault()
-        if (!video.paused) video.pause()
-        else location.assign(active!.querySelector<HTMLAnchorElement>('[data-back]')!.href)
+        if (!video.paused) {
+          intent = 'paused'
+          video.pause()
+          reflectOverlay()
+        } else location.assign(active!.querySelector<HTMLAnchorElement>('[data-back]')!.href)
       }
-    },
-    options,
-  )
-  root.addEventListener(
-    'focusin',
-    (event) => {
-      if ((event.target as HTMLElement).closest('.feed-chrome')) video.pause()
     },
     options,
   )

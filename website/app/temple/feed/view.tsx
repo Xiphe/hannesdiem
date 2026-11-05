@@ -12,7 +12,9 @@ export interface FeedProps {
   posts: readonly (FeedPost & { dateLabel: string })[]
 }
 
-export function FeedIcon(handle: Handle<{ name: 'back' | 'share' | 'play' | 'pause' | 'sound' }>) {
+export function FeedIcon(
+  handle: Handle<{ name: 'back' | 'share' | 'play' | 'pause' | 'sound' | 'muted' }>,
+) {
   return () => (
     <svg
       viewBox="0 0 24 24"
@@ -40,6 +42,8 @@ export function FeedIcon(handle: Handle<{ name: 'back' | 'share' | 'play' | 'pau
           d="M8 5v14m8-14v14"
           strokeWidth="4"
         />
+      ) : handle.props.name === 'muted' ? (
+        <path d="m11 4-6 5H2v6h3l6 5Zm5 5 6 6m0-6-6 6" />
       ) : (
         <>
           <path d="m11 4-6 5H2v6h3l6 5ZM15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" />
@@ -157,50 +161,91 @@ export function Feed(handle: Handle<FeedProps>) {
               )}
             </div>
           )}
-          <div class="feed-chrome feed-back">
-            <a
-              href={templePath}
-              data-back
-              class="feed-control"
-              aria-label="Back to Temple of Sound"
-              data-rmx-document
-            >
-              <FeedIcon name="back" />
-            </a>
-          </div>
-          <div class="feed-chrome feed-share">
-            <button
-              type="button"
-              class="feed-control"
-              data-share
-              aria-label={`Share ${post.title}`}
-            >
-              <FeedIcon name="share" />
-            </button>
-          </div>
-          <div
-            class="feed-chrome feed-caption"
-            tabIndex={0}
-            aria-label={`Description: ${post.title}`}
-          >
-            <h2 id={`feed-title-${post.id}`}>{post.title}</h2>
-            <time dateTime={post.postedAt}>{post.dateLabel}</time>
-            <div class="feed-description">{post.children}</div>
-            <button
-              type="button"
-              data-sound
-              class="feed-control feed-sound"
-              aria-label="Mute sound"
-            >
-              <FeedIcon name="sound" />
-            </button>
-            <input
-              class="feed-share-url"
-              aria-label="Share link"
-              value={postPath(post.id)}
-              readOnly
-              hidden
-            />
+          <div class="feed-panel">
+            {post.kind !== 'text' && (
+              <div class="feed-transport">
+                {post.kind === 'video' && (
+                  <input
+                    class="feed-seek feed-video-seek"
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    defaultValue={0}
+                    disabled
+                    aria-label={`Playback position: ${post.title}`}
+                  />
+                )}
+                <button
+                  type="button"
+                  data-sound
+                  class="feed-control feed-sound"
+                  aria-label="Mute sound"
+                >
+                  <span data-sound-on>
+                    <FeedIcon name="sound" />
+                  </span>
+                  <span
+                    data-sound-off
+                    hidden
+                  >
+                    <FeedIcon name="muted" />
+                  </span>
+                  <span data-sound-label>Mute</span>
+                </button>
+                <input
+                  class="feed-volume"
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  defaultValue={100}
+                  data-volume
+                  aria-label="Volume"
+                />
+              </div>
+            )}
+            <div class="feed-details">
+              <div class="feed-details-inner">
+                <div class="feed-actions">
+                  <a
+                    href={templePath}
+                    data-back
+                    class="feed-control"
+                    aria-label="Back to Temple of Sound"
+                    data-rmx-document
+                  >
+                    <FeedIcon name="back" />
+                    <span>Back</span>
+                  </a>
+                  <button
+                    type="button"
+                    class="feed-control"
+                    data-share
+                    aria-label={`Share ${post.title}`}
+                  >
+                    <FeedIcon name="share" />
+                    <span>Share</span>
+                  </button>
+                </div>
+                <div
+                  class="feed-caption"
+                  tabIndex={0}
+                  aria-label={`Description: ${post.title}`}
+                >
+                  <time dateTime={post.postedAt}>{post.dateLabel}</time>
+                  <h2 id={`feed-title-${post.id}`}>{post.title}</h2>
+                  <div class="feed-description">{post.children}</div>
+                  <input
+                    class="feed-share-url"
+                    aria-label="Share link"
+                    value={postPath(post.id)}
+                    readOnly
+                    hidden
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </article>
       ))}

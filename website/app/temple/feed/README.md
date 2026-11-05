@@ -8,14 +8,27 @@ Watch; the entry and share-image conversations own their corresponding views.
   browser history.
 - Watch is a horizontal band of share-image-like covers. `TempleRecordings`
   remains supported; `TemplePosts` adds video, audio and rich text.
-- The floating back control goes to `/temple-of-sound` unless the visitor had
+- The Back control goes to `/temple-of-sound` unless the visitor had
   entered previously, otherwise `/temple-of-sound/watch#{current-id}`. The feed
   uses `hasEnteredTemple()` from the entry implementation but never writes it
   (`hannesdiem.temple.entered`).
 - Video covers when its orientation matches the viewport; otherwise contains on
-  black. Tap surface toggles playback. During playback hide all controls and
-  metadata. Paused title/date/description are in a translucent bottom layer,
-  at most40% of the viewport, internally scrollable. Back top-left, share at side.
+  black. Tap surface toggles playback. Both orientations use one dimmed,
+  translucent bottom panel: video scrubber and mute, labeled Back/Share actions,
+  date, smaller title, description. The complete paused panel occupies at most
+  40% of the viewport; its description scrolls internally.
+- During video playback only the transport can appear, for ten seconds after
+  interaction or cursor movement. Neither entry nor cursorless scrolling reveals,
+  hides or restarts it. The same scrubber sits at the panel's top when paused and
+  at the video's padded bottom during playback. Seeking preserves the overlay
+  state and resumes only previously playing media. Keep it visible while adjusting.
+- Cursor devices have a volume slider, initially 100%, and remember adjustments.
+  Touch devices start at 100% without the slider. Mute/unmute carries across posts.
+  Device/system volume remains under the visitor's control.
+- Panel/transport fades take 180ms and respect reduced motion. Model intentional
+  pause separately from source loading and temporary seek pauses: the old code
+  displayed paused chrome between activation and autoplay. Keep caption geometry
+  stable during fades so focus/scroll-into-view cannot snap to a neighboring post.
 - Try audible autoplay, retain sound preference across posts; if blocked keep
   paused with a play control. Video loops; audio ends. Offscreen/hidden pauses.
 - Audio keeps its cover, play/pause control, real waveform and playback progress.

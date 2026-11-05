@@ -287,6 +287,32 @@ test('unknown post URLs are real 404 responses', async ({ page }) => {
   expect((await page.goto('/temple-of-sound/watch/%E0%A4%A'))!.status()).toBe(404)
 })
 
+test('an incoming loading video never flashes its paused overlay', async ({ page }) => {
+  let release!: () => void
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route(
+    'https://customer-fixture.cloudflarestream.com/11111111111111111111111111111111/manifest/video.m3u8',
+    async (route) => {
+      await gate
+      await route.fulfill({
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        contentType: 'application/vnd.apple.mpegurl',
+        body: await readFile(new URL('../../../tests/media/feed/video.m3u8', import.meta.url)),
+      })
+    },
+  )
+  try {
+    await arrive(page, 'latest')
+    await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+    await move(page, 'middle')
+    await expect(post(page, 'middle').locator('.feed-caption')).not.toBeVisible()
+  } finally {
+    release()
+  }
+})
+
 test('a native wheel gesture snaps to the next full-screen post', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await arrive(page, 'latest')
@@ -298,6 +324,39 @@ test('a native wheel gesture snaps to the next full-screen post', async ({ page 
     .toBeLessThan(1)
   await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
   await expect(page.locator('video')).toHaveCount(1)
+})
+
+test('returning to a previously paused post does not fade out stale controls', async ({ page }) => {
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 100 } })
+  await expect(item.locator('.feed-caption')).toBeVisible()
+  await move(page, 'latest')
+  await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+  let release!: () => void
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route(
+    'https://customer-fixture.cloudflarestream.com/11111111111111111111111111111111/manifest/video.m3u8',
+    async (route) => {
+      await gate
+      await route.fulfill({
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        contentType: 'application/vnd.apple.mpegurl',
+        body: await readFile(new URL('../../../tests/media/feed/video.m3u8', import.meta.url)),
+      })
+    },
+  )
+  try {
+    await move(page, 'middle')
+    expect(
+      await item.locator('.feed-details').evaluate((node) => getComputedStyle(node).opacity),
+    ).toBe('0')
+  } finally {
+    release()
+  }
 })
 
 test('a shared post retains its native player and rich description without JavaScript', async ({
@@ -321,4 +380,149 @@ test('a shared post retains its native player and rich description without JavaS
   } finally {
     await context.close()
   }
+})
+
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 1440, height: 900 },
+]) {
+  test(`paused controls share a bottom panel in ${viewport.width}px layout`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    await arrive(page, 'latest')
+    const item = post(page, 'latest')
+    await expect(item).toHaveAttribute('data-playing', '')
+    await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+    await expect(item.locator('[data-back]')).toBeVisible()
+    await expect(item.locator('.feed-actions .feed-control')).toHaveText(['Back', 'Share'])
+    const layout = await item.evaluate((node) => {
+      const panel = node.querySelector('.feed-panel')!.getBoundingClientRect()
+      const transport = node.querySelector('.feed-transport')!.getBoundingClientRect()
+      const actions = node.querySelector('.feed-actions')!.getBoundingClientRect()
+      const caption = node.querySelector('.feed-caption')!
+      return {
+        bottom: panel.bottom,
+        height: panel.height,
+        transport: transport.top,
+        actions: actions.top,
+        first: caption.firstElementChild?.tagName,
+        second: caption.children[1]?.tagName,
+        title: parseFloat(getComputedStyle(caption.querySelector('h2')!).fontSize),
+      }
+    })
+    expect(layout.bottom).toBe(viewport.height)
+    expect(layout.height).toBeLessThanOrEqual(viewport.height * 0.4 + 1)
+    expect(layout.transport).toBeLessThan(layout.actions)
+    expect(layout.first).toBe('TIME')
+    expect(layout.second).toBe('H2')
+    expect(layout.title).toBeLessThanOrEqual(26)
+  })
+}
+
+test('cursor movement reveals transport for ten seconds without pausing the video', async ({
+  page,
+}) => {
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await expect(item.locator('.feed-transport')).not.toBeVisible()
+  await page.clock.install()
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  await expect(item.locator('.feed-transport')).toBeVisible()
+  await expect(item).toHaveAttribute('data-playing', '')
+  await page.clock.fastForward(9_000)
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-transport-peek', '')
+  await item.locator('.feed-tap').hover({ position: { x: 120, y: 100 } })
+  await page.clock.fastForward(9_000)
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-transport-peek', '')
+  await page.clock.fastForward(1_100)
+  await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-transport-peek', '')
+  await expect(item.locator('.feed-transport')).not.toBeVisible()
+})
+
+test('scrubbing holds its position and returns to the previous playback state', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  const seek = item.locator('.feed-video-seek')
+  await expect(seek).toBeEnabled()
+  const playingBox = (await seek.boundingBox())!
+  await page.mouse.move(playingBox.x + playingBox.width * 0.2, playingBox.y + playingBox.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(playingBox.x + playingBox.width * 0.7, playingBox.y + playingBox.height / 2)
+  await expect(item.locator('.feed-caption')).not.toBeVisible()
+  expect((await seek.boundingBox())!.y).toBeCloseTo(playingBox.y)
+  expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.paused)).toBe(true)
+  await page.mouse.up()
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 100 } })
+  await expect(item.locator('.feed-caption')).toBeVisible()
+  await expect.poll(async () => (await seek.boundingBox())!.y).toBeLessThan(playingBox.y - 20)
+  await seek.fill('35')
+  await expect(item.locator('.feed-caption')).toBeVisible()
+  expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.paused)).toBe(true)
+})
+
+test('desktop volume defaults to full, remembers adjustments, and shares one mute control', async ({
+  page,
+}) => {
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBe(1)
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  await item.locator('[data-volume]').fill('37')
+  expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBeCloseTo(
+    0.37,
+  )
+  expect(
+    Number(await page.evaluate(() => localStorage.getItem('hannesdiem.temple.volume'))),
+  ).toBeCloseTo(0.37)
+  await item.locator('[data-sound]').click()
+  await expect(item.locator('[data-sound-label]')).toHaveText('Unmute')
+  expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.muted)).toBe(true)
+  await item.locator('[data-sound]').click()
+  await expect(item.locator('[data-sound-label]')).toHaveText('Mute')
+  await move(page, 'middle')
+  await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+  expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBeCloseTo(
+    0.37,
+  )
+  await page.reload()
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', 'fixture-middle')
+  expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBeCloseTo(
+    0.37,
+  )
+})
+
+test.describe('touch-only playback', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } })
+  test('scrolling leaves transport hidden and does not restart its interaction timer', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => localStorage.setItem('hannesdiem.temple.volume', '0.2'))
+    await arrive(page, 'latest')
+    await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+    expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBe(1)
+    await expect(post(page, 'latest').locator('[data-volume]')).not.toBeVisible()
+    await page
+      .locator('.temple-feed')
+      .dispatchEvent('pointermove', { pointerType: 'touch', clientX: 180, clientY: 200 })
+    await move(page, 'middle')
+    await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+    await expect(post(page, 'middle').locator('.feed-transport')).not.toBeVisible()
+    await page.touchscreen.tap(100, 150)
+    await expect(post(page, 'middle').locator('.feed-caption')).toBeVisible()
+    await page.clock.install()
+    await page.touchscreen.tap(100, 150)
+    await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+    await page.clock.fastForward(5_000)
+    await move(page, 'latest')
+    await expect(page.locator('.temple-feed')).toHaveAttribute('data-transport-peek', '')
+    await page.clock.fastForward(5_100)
+    await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-transport-peek', '')
+  })
 })
