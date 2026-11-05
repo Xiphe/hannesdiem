@@ -33,6 +33,7 @@ export class CircleFluid {
   drag: number
   clamps: number
   dots: CircleTarget[]
+  private circulation?: CircleTarget & { age: number; duration: number; strength: number }
 
   constructor(spacing = 4) {
     this.h = 10
@@ -80,29 +81,40 @@ export class CircleFluid {
       return { x: 180 + Math.cos(a) * 110, y: 180 + Math.sin(a) * 110, r: 13 }
     })
   }
-  /** A single, slight imbalance on release; pressure and viscosity do the rest. */
+  /** Local circulation makes one side drain while its opposite lingers. */
   release(random: () => number = Math.random) {
     const target = this.target
     if (!target) return
     this.target = null
+    const sign = random() < 0.5 ? -1 : 1
+    const amount = random()
+    const spin = sign * (target.r ? 3.2 + amount * 1.3 : 3 + amount * 3.5)
+    if (target.r)
+      this.circulation = { ...target, age: 0, duration: 0.7 + random() * 0.3, strength: spin * 24 }
     const dx = target.x - 180,
-      dy = target.y - 180,
-      distance = Math.hypot(dx, dy) || 1
-    const speed = (12 + random() * 14) * (random() < 0.5 ? -1 : 1)
-    let total = 0
+      dy = target.y - 180
+    const distance = Math.hypot(dx, dy) || 1
+    let totalX = 0,
+      totalY = 0
+    const support = target.r ? 40 * 40 : 48 * 48
     for (let i = 0; i < this.n; i++) {
       const x = this.x[i] - target.x,
         y = this.y[i] - target.y
-      this.targetDistances[i] = Math.exp(-(x * x + y * y) / (48 * 48))
-      total += this.targetDistances[i]
+      const weight = Math.exp(-(x * x + y * y) / support)
+      this.targetDistances[i] = weight
+      totalX += target.r ? -y * spin * weight : (-dy / distance) * spin * 4 * weight
+      totalY += target.r ? x * spin * weight : (dx / distance) * spin * 4 * weight
     }
-    const mean = total / this.n
     for (let i = 0; i < this.n; i++) {
-      // The collected end moves a little sideways; the body counterbalances
-      // it, adding no net linear momentum and never moving a particle by hand.
-      const impulse = (this.targetDistances[i] - mean) * speed
-      this.vx[i] += (-dy / distance) * impulse
-      this.vy[i] += (dx / distance) * impulse
+      const x = this.x[i] - target.x,
+        y = this.y[i] - target.y
+      const weight = this.targetDistances[i]
+      // Change velocity only. Counterbalance the impulse through the body so
+      // local angular momentum adds no net linear drift or prescribed pose.
+      this.vx[i] +=
+        (target.r ? -y * spin * weight : (-dy / distance) * spin * 4 * weight) - totalX / this.n
+      this.vy[i] +=
+        (target.r ? x * spin * weight : (dx / distance) * spin * 4 * weight) - totalY / this.n
     }
   }
   grid() {
@@ -129,6 +141,27 @@ export class CircleFluid {
     const { n, x, y, vx, vy, ox, oy, h } = this
     const damping = Math.exp(-dt * this.drag)
     const target = this.target
+    let circulation = this.circulation
+    if (target) circulation = this.circulation = undefined
+    if (circulation) {
+      circulation.age += dt
+      if (circulation.age >= circulation.duration) circulation = this.circulation = undefined
+    }
+    const spinAge = circulation ? circulation.age / circulation.duration : 1
+    const spinStrength = circulation
+      ? circulation.strength * (1 - spinAge * spinAge * (3 - 2 * spinAge))
+      : 0
+    let spinMeanX = 0,
+      spinMeanY = 0
+    if (circulation) {
+      for (let i = 0; i < n; i++) {
+        const dx = x[i] - circulation.x,
+          dy = y[i] - circulation.y
+        const weight = Math.exp(-(dx * dx + dy * dy) / (40 * 40))
+        spinMeanX -= (dy * spinStrength * weight) / n
+        spinMeanY += (dx * spinStrength * weight) / n
+      }
+    }
     let load = 0
     if (target)
       for (let i = 0; i < n; i++) {
@@ -178,6 +211,13 @@ export class CircleFluid {
           d
         ax += tx * pull
         ay += ty * pull
+      }
+      if (circulation) {
+        const dx = x[i] - circulation.x,
+          dy = y[i] - circulation.y
+        const weight = Math.exp(-(dx * dx + dy * dy) / (40 * 40))
+        ax += -dy * spinStrength * weight - spinMeanX
+        ay += dx * spinStrength * weight - spinMeanY
       }
       vx[i] = (vx[i] + ax * dt * this.forces) * damping
       vy[i] = (vy[i] + ay * dt * this.forces) * damping

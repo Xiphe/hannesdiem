@@ -237,6 +237,24 @@ Authenticated candidates and confirmed places retain their existing holds.
 The actual liquid method/settings remain selected; no publication requested.
 [Behavior and recovery](liquid-simulation-research.md).
 
+**Open one return arc before the other — 2026-11-06.** The artist finds both
+sides still returning too similarly. The prior sideways impulse changed paths
+but left visible rim-opening times almost simultaneous. Replace it for seats
+with a local angular impulse and a decaying circulation force lasting0.7–1s,
+so one flank initially flows toward the body while the other lingers. Sample
+variation once per release; counterbalance added linear impulse/force and cancel
+the residual flow on a new target. This changes particle dynamics, not SVG poses.
+A soft adhesion trial was withdrawn because it delayed the ring without opening
+its arcs at different times. Keep held donuts, selected settings, dialog
+colocation, reduced motion and lifecycle limits.
+
+Controlled surface probes change from0–0.1s separation before to0.6s in both
+new samples, with the earlier side reversed. Twelve numerical/topology and20
+browser cases pass across the final runs, alongside build/type/format checks;
+actual synthetic frame sequences were reviewed. The new release response remains
+a proposal for review on8787 (`sand tunnel 8787`), not artistic acceptance or
+publication. [Mechanism and evidence](liquid-simulation-research.md).
+
 **Colocate the panel; vary release slightly — 2026-11-05.** The artist rejects
 the below-whole-circle placement as too distant to recognize the click's result.
 Anchor the existing panel8px below the chosen seat's44px native hit area,

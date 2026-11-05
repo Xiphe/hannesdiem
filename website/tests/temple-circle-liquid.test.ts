@@ -181,3 +181,56 @@ test('release varies the physical return without teleporting, drifting or repeat
     assert.ok(Math.hypot(...fluid.metrics().centre.map((v) => v - 180)) < 2)
   }
 })
+
+test('the two visible seat arcs open at different times and the leading side varies', () => {
+  const held = new CircleFluid()
+  const seat = held.dots[2]
+  held.target = seat
+  advance(held, 600)
+  const dx = (seat.x - 180) / 110,
+    dy = (seat.y - 180) / 110
+  const phases = [0.2, 0.8].map((sample) => {
+    const fluid = new CircleFluid()
+    for (const field of ['x', 'y', 'vx', 'vy'] as const) fluid[field].set(held[field])
+    fluid.target = fluid.dots[2]
+    fluid.release(() => sample)
+    const surface = new DensitySurface()
+    const lastCovered = [0, 0]
+    for (let frame = 0; frame < 360; frame++) {
+      fluid.step()
+      if (frame % 12 !== 0) continue
+      surface.update(fluid)
+      for (let side = 0; side < 2; side++) {
+        const sign = side ? 1 : -1
+        const x = Math.round((seat.x - sign * dy * 19) / surface.cell)
+        const y = Math.round((seat.y + sign * dx * 19) / surface.cell)
+        if (surface.field[y * surface.size + x] > 1) lastCovered[side] = frame
+      }
+    }
+    assert.ok(
+      Math.abs(lastCovered[0] - lastCovered[1]) >= 36,
+      'visible arcs must open at least 0.3s apart',
+    )
+    return lastCovered[0] - lastCovered[1]
+  })
+  assert.ok(
+    phases[0] * phases[1] < 0,
+    'the earlier side changes rather than always choosing the same arc',
+  )
+})
+
+test('choosing a new seat cancels the transient release flow at the previous seat', () => {
+  const fluid = new CircleFluid()
+  fluid.target = fluid.dots[2]
+  advance(fluid, 480)
+  fluid.release(() => 0.2)
+  advance(fluid, 12)
+  const withoutReleaseFlow = new CircleFluid()
+  for (const field of ['x', 'y', 'vx', 'vy'] as const) withoutReleaseFlow[field].set(fluid[field])
+  fluid.target = fluid.dots[7]
+  withoutReleaseFlow.target = withoutReleaseFlow.dots[7]
+  fluid.step()
+  withoutReleaseFlow.step()
+  assert.deepEqual(fluid.x, withoutReleaseFlow.x)
+  assert.deepEqual(fluid.y, withoutReleaseFlow.y)
+})

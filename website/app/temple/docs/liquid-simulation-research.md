@@ -455,3 +455,35 @@ different physical paths after1s, finite/conserved particles and return to the
 centre after8s. All10 numerical/topology checks pass. The amount of asymmetry is
 a proposal for in-context review; the real-liquid method, donuts and selected
 parameters remain retained. Main preview on8787; no deployment requested.
+
+## Release must open the two arcs at different times — 2026-11-06
+
+The artist finds the return still too symmetric around both sides of a seat.
+The previous test only checked differing particle trajectories: its sideways
+impulse passed while the visible coating disappeared on both sides together.
+A density-surface probe at the two lateral rim points now measures the actual
+opening times. The previous version differs by0–0.1s in two controlled samples.
+
+A temporary heterogeneous-adhesion trial changed thickness and delayed the whole
+return without separating those visible opening times; withdraw that trial.
+The new proposal imparts local angular velocity at the released seat, then
+supports that circulation with a spatially local, smoothly decaying force for
+0.7–1s. The two flanks initially move in opposite directions relative to the
+central body. Random direction/strength/duration are sampled once per release,
+not per frame. Both the velocity impulse and subsequent force are counterbalanced
+over all particles to add no net linear impulse/force. A new target cancels the
+remaining circulation. Cursor release retains its prior lateral response.
+The renderer still reconstructs only actual density; no outline rotates or
+moves along a prescribed pose. Pressure, viscosity, contact, drag, particle
+count and held-seat collection settings stay unchanged.
+
+The same samples now open the visible arcs at0.4/1.0s and1.2/0.6s, respectively:
+0.6s apart, with the earlier side reversed. The existing180px/s guard remains;
+the higher sample adds373 particle/substep clamps to the held-state baseline
+in the three-second replay, while the lower adds none. Finite state, conserved
+particles and eventual return to the centre pass. Twelve numerical/topology
+cases pass across final targeted runs, including visible phase separation and
+cancellation on retarget;20 related browser cases, app build, TypeScript and
+formatting pass. Synthetic SVG frame sequences were visually inspected.
+This is the next release-flow proposal for in-context review on8787, not artistic
+acceptance or publication. Donuts, placement and selected settings remain retained.
