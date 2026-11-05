@@ -5,6 +5,7 @@ import { createPlayback } from './playback.ts'
 import { audioPeaks, drawWaveform } from './waveform.ts'
 import { dateLabel } from '../../date.tsx'
 import { mountFeedControls } from './controls.ts'
+import { mountFeedDrawer } from './drawer.ts'
 
 export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSignal) {
   const articles = [...root.querySelectorAll<HTMLElement>('.feed-post')]
@@ -15,10 +16,9 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     props.posts.findIndex((post) => post.id === props.selected),
   )
   let active: HTMLElement | undefined
-  let intent: 'autoplay' | 'playing' | 'paused' = 'autoplay'
+  let intent: 'autoplay' | 'playing' | 'paused' | 'ended' = 'autoplay'
   let ready = false
   let loading = 0
-  let resumeVisible = false
   let frame = 0
   const positions = new Map<string, number>()
   const peaks = new Map<string, readonly number[]>()
@@ -26,21 +26,68 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   const options = { signal }
   const post = () => props.posts[index]
   const controls = mountFeedControls(root, video, signal)
+  const drawer = mountFeedDrawer(root, signal, setDetails, controls.reveal)
   const measurePanel = (article: HTMLElement) => {
+    article.style.setProperty(
+      '--summary-height',
+      `${article.querySelector('.feed-summary')!.getBoundingClientRect().height}px`,
+    )
     const details = article.querySelector<HTMLElement>('.feed-details')!
     article.style.setProperty('--caption-height', `${details.getBoundingClientRect().height}px`)
   }
   const panelSize = new ResizeObserver((entries) => {
     for (const entry of entries) measurePanel(entry.target.closest<HTMLElement>('.feed-post')!)
   })
-  for (const article of articles) panelSize.observe(article.querySelector('.feed-details')!)
+  for (const article of articles) {
+    panelSize.observe(article.querySelector('.feed-details')!)
+    panelSize.observe(article.querySelector('.feed-summary')!)
+  }
   signal.addEventListener('abort', () => panelSize.disconnect(), { once: true })
   const reflectOverlay = () => {
-    active?.toggleAttribute('data-overlay', post().kind !== 'video' || intent === 'paused')
+    active?.toggleAttribute(
+      'data-overlay',
+      post().kind !== 'video' ||
+        intent === 'paused' ||
+        intent === 'ended' ||
+        active.hasAttribute('data-details'),
+    )
+  }
+  function setDetails(open: boolean) {
+    if (!active) return
+    active.toggleAttribute('data-details', open)
+    active.querySelector<HTMLElement>('.feed-details')!.inert = !open
+    const button = active.querySelector<HTMLButtonElement>('[data-details-toggle]')!
+    button.setAttribute('aria-expanded', String(open))
+    button.setAttribute('aria-label', open ? 'Hide description' : 'Show description')
+    reflectOverlay()
+  }
+  function pause() {
+    intent = 'paused'
+    video.pause()
+    setDetails(true)
+    reflect()
+  }
+  function nextVideo() {
+    return props.posts.findIndex((item, candidate) => candidate > index && item.kind === 'video')
+  }
+  function advance() {
+    const next = nextVideo()
+    if (next < 0) return
+    articles[next].scrollIntoView({ block: 'start', behavior: 'instant' })
+  }
+  function ended() {
+    if (post().kind !== 'video') return
+    intent = 'ended'
+    active!.dataset.ended = ''
+    active!.querySelector<HTMLElement>('.feed-ended')!.hidden = false
+    active!.querySelector<HTMLButtonElement>('[data-next]')!.hidden = nextVideo() < 0
+    setDetails(true)
+    reflect()
   }
   const blocked = () => {
     if (!active) return
     intent = 'paused'
+    setDetails(true)
     delete active.dataset.playing
     active.dataset.blocked = ''
     active.querySelector<HTMLButtonElement>('.feed-start')!.hidden = post().kind !== 'video'
@@ -69,10 +116,12 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     reflectOverlay()
   }
   async function play() {
-    if (!ready || signal.aborted || document.hidden || post().kind === 'text') return
+    if (!ready || signal.aborted || post().kind === 'text') return
     const current = loading
     intent = 'autoplay'
-    reflectOverlay()
+    delete active!.dataset.ended
+    active!.querySelector<HTMLElement>('.feed-ended')?.setAttribute('hidden', '')
+    setDetails(post().kind !== 'video')
     try {
       await video.play()
       if (signal.aborted || current !== loading) return
@@ -121,14 +170,17 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     const current = ++loading
     intent = 'autoplay'
     controls.cancelAdjustment()
+    drawer.cancel()
     ready = false
     video.pause()
     waveformTask?.abort()
     index = next
     active = articles[index]
     delete active.dataset.blocked
+    delete active.dataset.ended
+    active.querySelector<HTMLElement>('.feed-ended')?.setAttribute('hidden', '')
     active.querySelector<HTMLButtonElement>('.feed-start')?.setAttribute('hidden', '')
-    reflectOverlay()
+    setDetails(post().kind !== 'video')
     active.dataset.active = ''
     measurePanel(active)
     root.dataset.currentPost = post().id
@@ -165,7 +217,19 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       if (current === loading && !signal.aborted) blocked()
     }
   }
-  for (const event of ['playing', 'pause', 'ended']) video.addEventListener(event, reflect, options)
+  video.addEventListener('playing', reflect, options)
+  video.addEventListener(
+    'pause',
+    () => {
+      if (video.paused && intent === 'playing' && !controls.seeking && !video.ended) {
+        intent = 'paused'
+        setDetails(true)
+      }
+      reflect()
+    },
+    options,
+  )
+  video.addEventListener('ended', ended, options)
   video.addEventListener('error', mediaFailed, options)
   const updateProgress = () => {
     if (!active) return
@@ -192,13 +256,18 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       const target = event.target as Element
       if (target.closest('[data-toggle]')) {
         if (!video.paused) {
-          intent = 'paused'
-          video.pause()
-          reflectOverlay()
+          pause()
         } else {
           if (ready) void play()
           else void activate(index, true)
         }
+      } else if (target.closest('[data-details-toggle]')) {
+        setDetails(!active!.hasAttribute('data-details'))
+      } else if (target.closest('[data-replay]')) {
+        video.currentTime = 0
+        void play()
+      } else if (target.closest('[data-next]')) {
+        advance()
       } else if (target.closest('[data-share]')) {
         void share()
       }
@@ -222,6 +291,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     }
     const field = active!.querySelector<HTMLInputElement>('.feed-share-url')!
     field.value = url
+    setDetails(true)
     field.hidden = false
     field.focus()
     field.select()
@@ -246,16 +316,12 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
         event.preventDefault()
         if (video.paused) void play()
         else {
-          intent = 'paused'
-          video.pause()
-          reflectOverlay()
+          pause()
         }
       } else if (event.key === 'Escape') {
         event.preventDefault()
         if (!video.paused) {
-          intent = 'paused'
-          video.pause()
-          reflectOverlay()
+          pause()
         } else location.assign(active!.querySelector<HTMLAnchorElement>('[data-back]')!.href)
       }
     },
@@ -285,17 +351,62 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   document.addEventListener(
     'visibilitychange',
     () => {
-      if (document.hidden) {
-        resumeVisible = !video.paused
-        video.pause()
-        playback.preload(undefined)
-      } else if (resumeVisible) {
-        resumeVisible = false
-        void play()
-      }
+      if (document.hidden) playback.preload(undefined)
+      else if (!video.paused) playback.preload(nextMedia(1))
     },
     options,
   )
+  const session = navigator.mediaSession
+  const actions: MediaSessionAction[] = ['play', 'pause', 'seekto', 'nexttrack']
+  if (session) {
+    const handlers: Partial<Record<MediaSessionAction, MediaSessionActionHandler>> = {
+      play: () => {
+        void play()
+      },
+      pause,
+      seekto: ({ seekTime }) => {
+        if (seekTime !== undefined && Number.isFinite(video.duration))
+          video.currentTime = Math.max(0, Math.min(video.duration, seekTime))
+      },
+      nexttrack: advance,
+    }
+    for (const action of actions) {
+      try {
+        session.setActionHandler(action, handlers[action]!)
+      } catch {}
+    }
+    const updateSession = () => {
+      if (!active) return
+      session.playbackState = post().kind === 'text' ? 'none' : video.paused ? 'paused' : 'playing'
+      if (typeof MediaMetadata !== 'undefined')
+        session.metadata =
+          post().kind === 'text'
+            ? null
+            : new MediaMetadata({
+                title: post().title,
+                artist: 'Temple of Sound',
+                artwork: post().cover
+                  ? [{ src: new URL(post().cover!, location.origin).href }]
+                  : [],
+              })
+    }
+    video.addEventListener('playing', updateSession, options)
+    video.addEventListener('pause', updateSession, options)
+    video.addEventListener('emptied', updateSession, options)
+    signal.addEventListener(
+      'abort',
+      () => {
+        for (const action of actions) {
+          try {
+            session.setActionHandler(action, null)
+          } catch {}
+        }
+        session.metadata = null
+        session.playbackState = 'none'
+      },
+      { once: true },
+    )
+  }
   signal.addEventListener(
     'abort',
     () => {

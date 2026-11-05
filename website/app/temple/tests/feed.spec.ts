@@ -114,7 +114,7 @@ for (const width of [390, 1440]) {
     await expect(item).toHaveAttribute('data-playing', '')
     expect(
       await page.locator('.feed-player').evaluate((node) => (node as HTMLVideoElement).loop),
-    ).toBe(true)
+    ).toBe(false)
     expect(errors).toEqual([])
   })
 }
@@ -393,28 +393,35 @@ for (const viewport of [
     await expect(item).toHaveAttribute('data-playing', '')
     await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
     await expect(item.locator('[data-back]')).toBeVisible()
-    await expect(item.locator('.feed-actions .feed-control')).toHaveText(['Back', 'Share'])
     const layout = await item.evaluate((node) => {
       const panel = node.querySelector('.feed-panel')!.getBoundingClientRect()
+      const title = node.querySelector('.feed-summary h2')!
       const transport = node.querySelector('.feed-transport')!.getBoundingClientRect()
-      const actions = node.querySelector('.feed-actions')!.getBoundingClientRect()
       const caption = node.querySelector('.feed-caption')!
+      const back = node.querySelector('[data-back]')!.getBoundingClientRect()
+      const share = node.querySelector('[data-share]')!.getBoundingClientRect()
       return {
         bottom: panel.bottom,
         height: panel.height,
+        titleBottom: title.getBoundingClientRect().bottom,
         transport: transport.top,
-        actions: actions.top,
         first: caption.firstElementChild?.tagName,
-        second: caption.children[1]?.tagName,
-        title: parseFloat(getComputedStyle(caption.querySelector('h2')!).fontSize),
+        title: parseFloat(getComputedStyle(title).fontSize),
+        back: { x: back.x, y: back.y },
+        share: { right: share.right, y: share.y },
       }
     })
-    expect(layout.bottom).toBe(viewport.height)
+    expect(layout.bottom).toBeCloseTo(viewport.height, 0)
     expect(layout.height).toBeLessThanOrEqual(viewport.height * 0.4 + 1)
-    expect(layout.transport).toBeLessThan(layout.actions)
+    expect(layout.titleBottom).toBeLessThanOrEqual(layout.transport)
     expect(layout.first).toBe('TIME')
-    expect(layout.second).toBe('H2')
     expect(layout.title).toBeLessThanOrEqual(26)
+    expect(layout.back.x).toBeLessThan(24)
+    expect(layout.back.y).toBeLessThan(24)
+    expect(layout.share.right).toBeGreaterThan(viewport.width - 24)
+    expect(layout.share.y).toBeLessThan(24)
+    await expect(item.locator('[data-back]')).toHaveText('')
+    await expect(item.locator('[data-share]')).toHaveText('')
   })
 }
 
@@ -458,6 +465,9 @@ test('scrubbing holds its position and returns to the previous playback state', 
   expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.paused)).toBe(true)
   await page.mouse.up()
   await expect(item).toHaveAttribute('data-playing', '')
+  await seek.click({ position: { x: 20, y: 16 } })
+  await expect(item).toHaveAttribute('data-playing', '')
+  await expect(item.locator('.feed-caption')).not.toBeVisible()
   await item.locator('.feed-tap').click({ position: { x: 100, y: 100 } })
   await expect(item.locator('.feed-caption')).toBeVisible()
   await expect.poll(async () => (await seek.boundingBox())!.y).toBeLessThan(playingBox.y - 20)
@@ -473,7 +483,11 @@ test('desktop volume defaults to full, remembers adjustments, and shares one mut
   const item = post(page, 'latest')
   await expect(item).toHaveAttribute('data-playing', '')
   expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBe(1)
+  await expect(item.locator('[data-sound]')).toHaveText('')
   await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  await expect(item.locator('[data-volume]')).not.toBeVisible()
+  await item.locator('[data-sound]').hover()
+  await expect(item.locator('[data-volume]')).toBeVisible()
   await item.locator('[data-volume]').fill('37')
   expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBeCloseTo(
     0.37,
@@ -482,10 +496,10 @@ test('desktop volume defaults to full, remembers adjustments, and shares one mut
     Number(await page.evaluate(() => localStorage.getItem('hannesdiem.temple.volume'))),
   ).toBeCloseTo(0.37)
   await item.locator('[data-sound]').click()
-  await expect(item.locator('[data-sound-label]')).toHaveText('Unmute')
+  await expect(item.locator('[data-sound]')).toHaveAttribute('aria-label', 'Unmute sound')
   expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.muted)).toBe(true)
   await item.locator('[data-sound]').click()
-  await expect(item.locator('[data-sound-label]')).toHaveText('Mute')
+  await expect(item.locator('[data-sound]')).toHaveAttribute('aria-label', 'Mute sound')
   await move(page, 'middle')
   await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
   expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBeCloseTo(
@@ -525,4 +539,120 @@ test.describe('touch-only playback', () => {
     await page.clock.fastForward(5_100)
     await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-transport-peek', '')
   })
+})
+
+test('a scrub drag keeps the same cursor when leaving the track', async ({ page }) => {
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  const seek = item.locator('.feed-video-seek')
+  await expect(seek).toBeEnabled()
+  const box = (await seek.boundingBox())!
+  const y = box.y + box.height / 2
+  const x = box.x + box.width / 2
+  await page.mouse.move(x, y)
+  const cursor = await page.evaluate(
+    ({ x, y }) => getComputedStyle(document.elementFromPoint(x, y)!).cursor,
+    { x, y },
+  )
+  await page.mouse.down()
+  await page.mouse.move(3, y)
+  const outside = await page.evaluate(
+    (y) => getComputedStyle(document.elementFromPoint(3, y)!).cursor,
+    y,
+  )
+  await page.mouse.up()
+  expect(outside).toBe(cursor)
+})
+
+test('description opens from its chevron and drag without interrupting playback', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  const toggle = item.locator('[data-details-toggle]')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(item.locator('.feed-caption')).toBeVisible()
+  await expect(item).toHaveAttribute('data-playing', '')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(item.locator('.feed-caption')).not.toBeVisible()
+  const box = (await toggle.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2, box.y - 90, { steps: 8 })
+  await page.mouse.up()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(item.locator('.feed-caption')).toBeVisible()
+  await expect(item).toHaveAttribute('data-playing', '')
+  await expect(page).toHaveURL(path('latest'))
+})
+
+test('video completion offers replay and the next video, skipping other post types', async ({
+  page,
+}) => {
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await page.locator('video').evaluate((video: HTMLVideoElement) => {
+    video.currentTime = video.duration - 0.15
+  })
+  await expect(item.locator('[data-replay]')).toBeVisible()
+  await expect(item.locator('[data-next]')).toBeVisible()
+  await item.locator('[data-replay]').click()
+  await expect(item).toHaveAttribute('data-playing', '')
+  await expect(item.locator('[data-replay]')).not.toBeVisible()
+  expect(
+    await page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime),
+  ).toBeLessThan(3)
+  await page.locator('video').evaluate((video: HTMLVideoElement) => {
+    video.currentTime = video.duration - 0.15
+  })
+  await expect(item.locator('[data-next]')).toBeVisible()
+  await item.locator('[data-next]').click()
+  await expect(page).toHaveURL(path('oldest'))
+  await expect(post(page, 'oldest')).toHaveAttribute('data-playing', '')
+  await page.locator('video').evaluate((video: HTMLVideoElement) => {
+    video.currentTime = video.duration - 0.15
+  })
+  await expect(post(page, 'oldest').locator('[data-replay]')).toBeVisible()
+  await expect(post(page, 'oldest').locator('[data-next]')).not.toBeVisible()
+})
+
+test('background visibility does not pause media and system controls reflect the current post', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const handlers = new Map<string, MediaSessionActionHandler | null>()
+    Object.assign(window, { mediaHandlers: handlers })
+    navigator.mediaSession.setActionHandler = (action, handler) => {
+      handlers.set(action, handler)
+    }
+  })
+  await arrive(page, 'latest')
+  await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
+    false,
+  )
+  expect(await page.evaluate(() => navigator.mediaSession.metadata?.title)).toBe('Synthetic latest')
+  await page.evaluate(() => (window as any).mediaHandlers.get('pause')({ action: 'pause' }))
+  await expect(post(page, 'latest')).not.toHaveAttribute('data-playing', '')
+  await page.evaluate(() => (window as any).mediaHandlers.get('play')({ action: 'play' }))
+  await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await move(page, 'middle')
+  await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+  expect(await page.evaluate(() => navigator.mediaSession.metadata?.title)).toBe('Synthetic middle')
 })

@@ -85,7 +85,7 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
       video.pause()
       video.removeAttribute('src')
       video.load()
-      video.loop = post.kind === 'video'
+      video.loop = false
       video.preload = 'auto'
       video.poster = post.cover ?? ''
       await attach(video, post, false, () => signal.aborted || current !== revision)

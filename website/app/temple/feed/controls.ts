@@ -31,7 +31,6 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-sound]')) {
       button.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound')
       button.setAttribute('aria-pressed', String(!muted))
-      button.querySelector('[data-sound-label]')!.textContent = muted ? 'Unmute' : 'Mute'
       button.querySelector<HTMLElement>('[data-sound-on]')!.hidden = muted
       button.querySelector<HTMLElement>('[data-sound-off]')!.hidden = !muted
     }
@@ -43,7 +42,7 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
   const scheduleHide = () => {
     clearTimeout(timer)
     timer = setTimeout(() => {
-      if (adjusting || (keyboard && document.activeElement?.closest('.feed-transport'))) return
+      if (adjusting || (keyboard && document.activeElement?.closest('.feed-summary'))) return
       delete root.dataset.transportPeek
     }, controlsTimeout)
   }
@@ -106,6 +105,8 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
       const input = event.target as HTMLInputElement
       if (!input.matches('.feed-seek, [data-volume]')) return
       adjusting = input
+      root.dataset.rangeDragging = ''
+      input.setPointerCapture(event.pointerId)
       reveal()
       if (input.matches('.feed-seek')) {
         resumeAfterSeek = !video.paused
@@ -117,10 +118,11 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
   const finishAdjustment = () => {
     if (!adjusting) return
     adjusting = undefined
+    delete root.dataset.rangeDragging
     const resume = resumeAfterSeek
     resumeAfterSeek = false
     reveal()
-    if (resume && !signal.aborted && !document.hidden) void video.play().catch(() => {})
+    if (resume && !signal.aborted) void video.play().catch(() => {})
   }
   window.addEventListener('pointerup', finishAdjustment, options)
   window.addEventListener('pointercancel', finishAdjustment, options)
@@ -128,7 +130,7 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
     'keydown',
     (event) => {
       const target = event.target as HTMLElement
-      if (target.closest('.feed-transport') || target.matches('[data-toggle]')) {
+      if (target.closest('.feed-summary, .feed-corners') || target.matches('[data-toggle]')) {
         keyboard = true
         reveal()
       }
@@ -138,21 +140,33 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
   root.addEventListener(
     'focusin',
     (event) => {
-      if ((event.target as HTMLElement).closest('.feed-transport')) reveal()
+      if ((event.target as HTMLElement).closest('.feed-summary, .feed-corners')) reveal()
     },
     options,
   )
   root.addEventListener(
     'focusout',
     (event) => {
-      if ((event.target as HTMLElement).closest('.feed-transport')) scheduleHide()
+      if ((event.target as HTMLElement).closest('.feed-summary, .feed-corners')) scheduleHide()
     },
     options,
   )
-  signal.addEventListener('abort', () => clearTimeout(timer), { once: true })
+  signal.addEventListener(
+    'abort',
+    () => {
+      clearTimeout(timer)
+      delete root.dataset.rangeDragging
+    },
+    { once: true },
+  )
   return {
+    reveal,
+    get seeking() {
+      return !!adjusting?.matches('.feed-seek')
+    },
     isAdjusting: (input: HTMLInputElement) => input === adjusting,
     cancelAdjustment() {
+      delete root.dataset.rangeDragging
       adjusting = undefined
       resumeAfterSeek = false
     },
