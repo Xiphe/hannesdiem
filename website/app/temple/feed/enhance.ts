@@ -129,8 +129,9 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   }
   const blocked = () => {
     if (!active) return
+    keepPaused = true
     intent = 'paused'
-    setDetails(keepPaused ? pausedDetails : true)
+    setDetails(pausedDetails)
     delete active.dataset.playing
     active.dataset.blocked = ''
     active.querySelector<HTMLButtonElement>('.feed-start')!.hidden = post().kind !== 'video'

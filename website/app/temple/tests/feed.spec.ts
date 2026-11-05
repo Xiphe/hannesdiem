@@ -633,8 +633,13 @@ test('paused browsing remembers a collapsed drawer until Play, then Pause opens 
       .evaluate((node) => getComputedStyle(node).getPropertyValue('--feed-drawer-open').trim()),
   ).toBe('0')
   await expect(incoming.locator('.feed-details')).toHaveCSS('visibility', 'hidden')
-  for (const id of ['latest', 'middle']) {
-    await move(page, id)
+  for (const [id, direction] of [
+    ['latest', 1],
+    ['middle', -1],
+  ] as const) {
+    await page.mouse.move(100, 180)
+    await page.mouse.wheel(0, direction * 650)
+    await expect(page).toHaveURL(path(id))
     await expect(post(page, id).locator('.feed-seek')).toBeEnabled()
     await expect(post(page, id)).not.toHaveAttribute('data-details', '')
     await expect(post(page, id)).not.toHaveAttribute('data-playing', '')
@@ -650,6 +655,60 @@ test('paused browsing remembers a collapsed drawer until Play, then Pause opens 
   await expect(incoming).not.toHaveAttribute('data-playing', '')
   await expect(incoming.locator('[data-details-toggle]')).toHaveAttribute('aria-expanded', 'true')
   await expect(incoming.locator('.feed-caption')).toBeVisible()
+})
+
+test('blocked autoplay carries a dragged-closed drawer and paused playback into the next video', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1504, height: 879 })
+  await page.addInitScript(() => {
+    const original = HTMLMediaElement.prototype.play
+    let first = true
+    HTMLMediaElement.prototype.play = function () {
+      if (first) {
+        first = false
+        return Promise.reject(
+          new DOMException('Synthetic initial autoplay block', 'NotAllowedError'),
+        )
+      }
+      return original.call(this)
+    }
+  })
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-blocked', '')
+  await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+  const handle = (await item.locator('[data-details-toggle]').boundingBox())!
+  const x = handle.x + handle.width / 2,
+    y = handle.y + handle.height / 2
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x, y + 100, { steps: 8 })
+  await page.mouse.up()
+  await expect(item).not.toHaveAttribute('data-details', '')
+  expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(true)
+  for (const [id, direction] of [
+    ['latest', 1],
+    ['middle', -1],
+  ] as const) {
+    const incoming = post(page, id)
+    expect
+      .soft(
+        await incoming
+          .locator('.feed-panel')
+          .evaluate((node) => getComputedStyle(node).getPropertyValue('--feed-drawer-open').trim()),
+      )
+      .toBe('0')
+    await page.mouse.move(100, 180)
+    await page.mouse.wheel(0, direction * 700)
+    await expect(page).toHaveURL(path(id))
+    await expect(incoming.locator('.feed-seek')).toBeEnabled()
+    await expect.soft(incoming).not.toHaveAttribute('data-details', '')
+    await expect.soft(incoming).not.toHaveAttribute('data-playing', '')
+    expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
+      true,
+    )
+  }
 })
 
 test('top controls stay fixed while posts scroll behind them', async ({ page }) => {
