@@ -448,6 +448,28 @@ for (const viewport of [
   })
 }
 
+test('top controls stay fixed while posts scroll behind them', async ({ page }) => {
+  await arrive(page, 'middle')
+  await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+  await post(page, 'middle')
+    .locator('.feed-tap')
+    .hover({ position: { x: 100, y: 100 } })
+  const top = (await post(page, 'middle').locator('[data-back]').boundingBox())!.y
+  await page.locator('.temple-feed').evaluate((root) => {
+    const samples: number[] = []
+    ;(window as any).feedCornerPositions = samples
+    root.addEventListener('scroll', () => {
+      const button = root.querySelector('.feed-post[data-active] [data-back]')!
+      samples.push(button.getBoundingClientRect().top)
+    })
+  })
+  await page.mouse.wheel(0, 900)
+  await expect(page).toHaveURL(path('latest'))
+  const samples = await page.evaluate(() => (window as any).feedCornerPositions as number[])
+  expect(samples.length).toBeGreaterThan(0)
+  expect(samples.every((position) => Math.abs(position - top) < 1)).toBe(true)
+})
+
 test('fullscreen sits left of Share and reflects toggle and browser exits', async ({ page }) => {
   await arrive(page, 'latest')
   test.skip(
@@ -479,6 +501,10 @@ test('fullscreen sits left of Share and reflects toggle and browser exits', asyn
   await page.evaluate(() => document.exitFullscreen())
   await expect(toggle).toHaveAttribute('aria-label', 'Enter fullscreen')
   await expect(toggle.locator('[data-fullscreen-enter]')).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(toggle).toBeHidden()
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await expect(toggle).not.toHaveAttribute('hidden', '')
   await expect(page).toHaveURL(path('latest'))
 })
 
@@ -617,6 +643,24 @@ test('desktop volume defaults to full, remembers adjustments, and shares one mut
 
 test.describe('touch-only playback', () => {
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } })
+  test('fullscreen stays hidden in portrait and landscape on touch devices', async ({ page }) => {
+    await page.addInitScript(() =>
+      Object.defineProperty(document, 'fullscreenEnabled', { value: true }),
+    )
+    await arrive(page, 'latest')
+    const item = post(page, 'latest')
+    for (const viewport of [
+      { width: 390, height: 844 },
+      { width: 844, height: 390 },
+    ]) {
+      await page.setViewportSize(viewport)
+      await expect(item.locator('[data-fullscreen]')).toBeHidden()
+      await expect(page.locator('.temple-feed')).not.toHaveAttribute(
+        'data-fullscreen-available',
+        '',
+      )
+    }
+  })
   test('scrolling leaves transport hidden and does not restart its interaction timer', async ({
     page,
   }) => {

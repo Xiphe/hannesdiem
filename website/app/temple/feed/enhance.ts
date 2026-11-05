@@ -26,11 +26,13 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   const options = { signal }
   const fullscreenAvailable =
     document.fullscreenEnabled && typeof root.requestFullscreen === 'function'
-  root.toggleAttribute('data-fullscreen-available', fullscreenAvailable)
+  const fullscreenDesktop = matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)')
   const reflectFullscreen = () => {
     const fullscreen = document.fullscreenElement === root
+    const available = fullscreenAvailable && fullscreenDesktop.matches
+    root.toggleAttribute('data-fullscreen-available', available)
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-fullscreen]')) {
-      button.hidden = !fullscreenAvailable
+      button.hidden = !available
       button.setAttribute('aria-label', fullscreen ? 'Exit fullscreen' : 'Enter fullscreen')
       button.setAttribute('aria-pressed', String(fullscreen))
       button.querySelector<HTMLElement>('[data-fullscreen-enter]')!.hidden = fullscreen
@@ -39,6 +41,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   }
   reflectFullscreen()
   document.addEventListener('fullscreenchange', reflectFullscreen, options)
+  fullscreenDesktop.addEventListener('change', reflectFullscreen, options)
   async function toggleFullscreen() {
     try {
       if (document.fullscreenElement === root) await document.exitFullscreen()

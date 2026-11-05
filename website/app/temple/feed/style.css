@@ -225,7 +225,7 @@
   gap: 16px;
 }
 .feed-corners {
-  position: absolute;
+  position: fixed;
   z-index: 5;
   inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto
     max(12px, env(safe-area-inset-left));
@@ -399,9 +399,6 @@
 .feed-text :is(ul, ol) {
   list-style: revert;
   padding-left: 1.5em;
-}
-.feed-post[data-kind='text'] .feed-corners {
-  position: fixed;
 }
 .feed-post[data-kind='text'] .feed-panel {
   position: fixed;

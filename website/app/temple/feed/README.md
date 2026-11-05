@@ -25,9 +25,12 @@ Watch; the entry and share-image conversations own their corresponding views.
   full height, anchored to the viewport bottom throughout animation and dragging.
   Collapsed, it covers only the controls and a 48px fade above them; it grows with the description drawer. The centered top title has
   its own dark fade. Back and Share remain icon-only corner controls; all appear
-  with the rest of the UI and gain a subtle darker shade on cursor hover.
+  with the rest of the UI and gain a subtle darker shade on cursor hover. The top
+  control row stays fixed to the viewport while posts scroll behind it.
   An icon-only fullscreen toggle sits immediately left of Share on browsers
-  supporting element fullscreen. It expands the whole viewer, preserving the
+  supporting element fullscreen, with a fine pointer, hover and at least 768px
+  viewport width. Hide it on mobile/touch devices and narrow layouts, updating
+  when the viewport changes. It expands the whole viewer, preserving the
   feed and its controls, and reflects browser-driven exits. The title remains
   centered between equally sized corner columns.
 - During video playback the summary and corner controls fade in over one second
