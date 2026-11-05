@@ -155,10 +155,9 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       icon.hidden = playing
     for (const icon of active.querySelectorAll<HTMLElement>('[data-pause-icon]'))
       icon.hidden = !playing
-    if (playing) {
-      delete active.dataset.blocked
-      active.querySelector<HTMLButtonElement>('.feed-start')!.hidden = true
-    }
+    const start = active.querySelector<HTMLButtonElement>('.feed-start')
+    if (start) start.hidden = post().kind !== 'video' || intent !== 'paused'
+    if (playing) delete active.dataset.blocked
     reflectOverlay()
   }
   async function play() {
@@ -240,11 +239,11 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     delete active.dataset.blocked
     delete active.dataset.ended
     active.querySelector<HTMLElement>('.feed-ended')?.setAttribute('hidden', '')
-    active.querySelector<HTMLButtonElement>('.feed-start')?.setAttribute('hidden', '')
     setDetails(post().kind !== 'video' || (keepPaused ? pausedDetails : incomingOpen), false)
     active.dataset.active = ''
     active.querySelector<HTMLElement>('.feed-panel-motion')!.inert = false
     measurePanel(active)
+    reflect()
     root.dataset.currentPost = post().id
     document.title = `${post().title} • Hannes Diem`
     const path = postPath(post().id)

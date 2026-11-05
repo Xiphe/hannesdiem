@@ -92,11 +92,13 @@ for (const width of [390, 1440]) {
     const errors = await arrive(page, 'latest')
     const item = post(page, 'latest')
     await expect(item).toHaveAttribute('data-playing', '')
+    await expect(item.locator('.feed-start')).not.toBeVisible()
     await expect(page.locator('[data-back]')).not.toBeVisible()
     await expect(page.locator('[data-share]')).not.toBeVisible()
     await expect(item.locator('.feed-caption')).not.toBeVisible()
     await item.locator('.feed-tap').click({ position: { x: 100, y: 180 } })
     await expect(item).not.toHaveAttribute('data-playing', '')
+    await expect(item.locator('.feed-start')).toBeVisible()
     await expect(page.locator('[data-back]')).toBeVisible()
     await expect(page.locator('[data-share]')).toBeVisible()
     await expect(item.locator('.feed-caption')).toBeVisible()
@@ -111,8 +113,9 @@ for (const width of [390, 1440]) {
     await page.mouse.wheel(0, 400)
     await expect.poll(() => caption.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
     await expect(page).toHaveURL(path('latest'))
-    await item.locator('.feed-tap').click({ position: { x: 100, y: 180 } })
+    await item.locator('.feed-start').click()
     await expect(item).toHaveAttribute('data-playing', '')
+    await expect(item.locator('.feed-start')).not.toBeVisible()
     expect(
       await page.locator('.feed-player').evaluate((node) => (node as HTMLVideoElement).loop),
     ).toBe(false)
@@ -784,6 +787,7 @@ test('paused browsing remembers a collapsed drawer until Play, then Pause opens 
     await expect(post(page, id).locator('.feed-seek')).toBeEnabled()
     await expect(post(page, id)).not.toHaveAttribute('data-details', '')
     await expect(post(page, id)).not.toHaveAttribute('data-playing', '')
+    await expect(post(page, id).locator('.feed-start')).toBeVisible()
     expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
       true,
     )
@@ -1479,6 +1483,7 @@ for (const blocked of [false, true]) {
     await expect(item).toHaveAttribute('data-playing', '')
     await page.keyboard.press('Space')
     await expect(item).not.toHaveAttribute('data-playing', '')
+    await expect(item.locator('.feed-start')).toBeVisible()
     await expect(item.locator('.feed-caption')).toBeVisible()
     await page.keyboard.down('Space')
     await expect(item).toHaveAttribute('data-playing', '')

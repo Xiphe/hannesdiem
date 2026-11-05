@@ -28,8 +28,9 @@ Watch; the entry and share-image conversations own their corresponding views.
   ([thumbnail API](https://developers.cloudflare.com/stream/viewing-videos/displaying-thumbnails/)).
   Selected covers remain on Watch thumbnails and audio posts. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
-  small, dim drag indicator above the scrubber. The indicator has no shape or
-  position animation; it stays fixed within the moving summary. A single open
+  small, dim drag indicator above the scrubber. Align the painted Play/Pause
+  glyph with the caption text while retaining its 44px hit area. The indicator has
+  no shape or position animation; it stays fixed within the moving summary. A single open
   percentage drives drawer travel and backdrop extent, including during dragging.
   Space toggles playback without a focus outline on the video surface. Escape
   activates the shared Back link directly, including from focused controls and
@@ -93,9 +94,11 @@ Watch; the entry and share-image conversations own their corresponding views.
 - UI transitions respect reduced motion. Model intentional pause
   separately from source loading and temporary seek pauses. Clear stale drawer
   state before reactivating a post so scrolling never flashes old metadata.
-- Try audible autoplay and retain the same media element across posts. If
-  blocked, show a play control. Videos stop at their end and offer “Play again”
-  and “Next Video” as borderless icon-and-label actions with opaque black hover
+- Try audible autoplay and retain the same media element across posts. Show
+  the center Play control on ordinary pauses and blocked autoplay, including
+  paused browsing with the drawer collapsed. Hide it while playing, during
+  temporary seek/loading pauses and on inactive posts. Videos stop at their end
+  and offer “Play again” and “Next Video” as borderless icon-and-label actions with opaque black hover
   backgrounds; the latter selects the next newer video in feed order,
   skipping audio/text, and is absent on the final video. Next Video scrolls smoothly
   to its destination; reduced motion jumps directly. Audio ends normally.

@@ -204,7 +204,7 @@
 .temple-feed[data-paused-details] .feed-post[data-kind='video']:not([data-active]) .feed-panel {
   --feed-drawer-open: 1;
 }
-.feed-post:not([data-active]) .feed-ended {
+.feed-post:not([data-active]) :is(.feed-ended, .feed-start) {
   display: none;
 }
 .feed-summary {
@@ -459,6 +459,15 @@
 }
 .feed-playback-toggle {
   flex: 0 0 44px;
+  justify-content: flex-start;
+  padding-inline: 0;
+}
+/* Remove the 22px glyph's viewBox inset while preserving its 44px hit area. */
+.feed-playback-toggle [data-play-icon] {
+  transform: translateX(-8.25px);
+}
+.feed-playback-toggle [data-pause-icon] {
+  transform: translateX(-5.5px);
 }
 .feed-volume-control {
   position: relative;
