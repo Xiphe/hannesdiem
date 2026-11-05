@@ -198,12 +198,9 @@ export default function Content({
         view={view}
         section={section}
         welcome={{
-          greeting: 'Welcome Human!',
-          paragraphs: [
-            'There are offerings for you when you choose to enter the space',
-            'Or continue scrolling to learn about the intention with this',
-          ],
-          scrollLabel: 'or explore more',
+          greeting: 'Welcome Soul!',
+          paragraphs: [],
+          scrollLabel: 'or read the manifesto',
         }}
         title={title}
         dates={dates}
