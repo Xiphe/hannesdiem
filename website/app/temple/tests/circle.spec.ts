@@ -241,9 +241,16 @@ test('a long contact name is preserved and must be shortened before claiming', a
   await expect(section.getByRole('dialog')).toHaveCount(0)
 })
 
-for (const width of [390, 1440]) {
-  test(`signup stays close to and clear of every selected seat at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 900 })
+for (const [width, height] of [
+  [390, 900],
+  [1440, 900],
+  [390, 480],
+  [1440, 480],
+]) {
+  test(`signup stays close to and clear of every selected seat at ${width}×${height}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
     await page.route('**/circle', (route) =>
       route.fulfill({
         json: {
@@ -258,8 +265,13 @@ for (const width of [390, 1440]) {
     const clearOfSeat = async (spot: string) => {
       const seat = (await circle.locator(`input[value="${spot}"]`).boundingBox())!
       const panel = (await page.getByRole('dialog').boundingBox())!
-      expect(panel.y - seat.y - seat.height).toBeGreaterThanOrEqual(7)
-      expect(panel.y - seat.y - seat.height).toBeLessThanOrEqual(9)
+      const horizontalGap = Math.max(panel.x - seat.x - seat.width, seat.x - panel.x - panel.width)
+      const verticalGap = Math.max(panel.y - seat.y - seat.height, seat.y - panel.y - panel.height)
+      expect(Math.max(horizontalGap, verticalGap)).toBeGreaterThanOrEqual(7)
+      if (seat.y >= 0 && seat.y + seat.height <= page.viewportSize()!.height)
+        expect(Math.max(horizontalGap, verticalGap)).toBeLessThanOrEqual(9)
+      expect(panel.y).toBeGreaterThanOrEqual(0)
+      expect(panel.y + panel.height).toBeLessThanOrEqual(page.viewportSize()!.height)
       expect(panel.x).toBeGreaterThanOrEqual(0)
       expect(panel.x + panel.width).toBeLessThanOrEqual(page.viewportSize()!.width)
     }
@@ -280,10 +292,62 @@ for (const width of [390, 1440]) {
     )
     await clearOfSeat(assigned)
     await page.getByRole('button', { name: 'Close signup' }).click()
-    // With the lower seat's panel open, choose an exposed upper seat. The
-    // existing panel must follow the new choice even if its size is unchanged.
+    // Retarget the open form with the keyboard, including seats behind it.
     await circle.getByRole('radio', { name: 'Spot 6', exact: true }).click()
-    await circle.getByRole('radio', { name: 'Spot 1', exact: true }).click()
+    await circle.getByRole('radio', { name: 'Spot 1', exact: true }).focus()
+    await circle.getByRole('radio', { name: 'Spot 1', exact: true }).press('Space')
     await clearOfSeat('1')
   })
 }
+
+test('signup flips on scroll and fits growing content below the header', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 760 })
+  await page.route('**/circle', (route) =>
+    route.fulfill({ json: { ready: true, csrfToken: 'fixture-csrf', places: [] } }),
+  )
+  await page.goto('/temple-circle')
+  // Synthetic space lets the same real seat reach either viewport edge.
+  await page.evaluate(() => {
+    const spacer = document.createElement('div')
+    spacer.style.height = '1000px'
+    document.body.appendChild(spacer)
+  })
+  const seat = page.locator(`${sectionId} input[type="radio"][value="6"]`)
+  await seat.click()
+  const dialog = page.getByRole('dialog')
+  const moveSeat = async (top: number) => {
+    await seat.evaluate((element, y) => scrollBy(0, element.getBoundingClientRect().top - y), top)
+  }
+  await moveSeat(660)
+  await expect
+    .poll(async () => {
+      const anchor = (await seat.boundingBox())!
+      const panel = (await dialog.boundingBox())!
+      return Math.abs(anchor.y - panel.y - panel.height - 8)
+    })
+    .toBeLessThan(1)
+  await moveSeat(160)
+  await expect
+    .poll(async () => {
+      const anchor = (await seat.boundingBox())!
+      const panel = (await dialog.boundingBox())!
+      return Math.abs(panel.y - anchor.y - anchor.height - 8)
+    })
+    .toBeLessThan(1)
+  await dialog.locator('.circle-fields').evaluate((form) => {
+    const explanation = document.createElement('p')
+    explanation.textContent = 'Synthetic additional explanation. '.repeat(40)
+    form.appendChild(explanation)
+  })
+  await expect
+    .poll(async () => {
+      const panel = (await dialog.boundingBox())!
+      return panel.y + panel.height
+    })
+    .toBeLessThanOrEqual(748)
+  expect(await dialog.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true)
+  await dialog.getByRole('button', { name: 'Request login email' }).scrollIntoViewIfNeeded()
+  await expect(dialog.getByRole('button', { name: 'Request login email' })).toBeInViewport()
+  await dialog.getByRole('button', { name: 'Close signup' }).click()
+  await expect(dialog).toHaveCount(0)
+})

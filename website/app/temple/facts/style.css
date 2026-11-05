@@ -767,6 +767,8 @@
   }
 }
 .circle-signup[data-floating] {
+  z-index: 5;
+  max-width: var(--circle-panel-max-width, none);
   position: absolute;
   top: var(--circle-panel-top, calc(100% + 16px));
   left: var(--circle-panel-left, 50%);
@@ -776,6 +778,9 @@
 .circle-signup[data-floating] > .temple-signup-expanded {
   left: 0;
   width: 100%;
+  max-height: var(--circle-panel-max-height, none);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .circle-signup .circle-fields {
   margin-top: 0;
