@@ -110,11 +110,6 @@
   background: #000;
   isolation: isolate;
 }
-.feed-post:not([data-kind='text']) {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
 .feed-stage,
 .feed-media-mount,
 .feed-cover,
@@ -168,11 +163,10 @@
   overflow: clip;
 }
 .feed-panel-motion {
-  position: sticky;
-  bottom: 0;
+  position: absolute;
+  inset: auto 0 0;
   width: 100%;
   height: var(--summary-height, 68px);
-  flex: 0 0 auto;
   z-index: 4;
   pointer-events: none;
 }

@@ -40,9 +40,10 @@ Watch; the entry and share-image conversations own their corresponding views.
   after interaction or cursor movement. After four inactive seconds they fade
   out over three seconds. Entry and cursorless scrolling do not restart that
   timer or reveal a hidden playing UI. A swipe that begins with visible UI keeps
-  the incoming bars visible at the bottom of the entering media, without waiting
-  for post activation or for the entire video to reach the viewport. Their normal playback fade resumes after scrolling settles. A deliberate pause, the drag indicator or an
-  upward drag on the summary opens the date/description drawer; a downward drag
+  the incoming bars fully rendered at their own video’s bottom edge, without
+  waiting for activation. They travel into view with that edge and never stick
+  to the screen while entering. Their normal playback fade resumes after
+  scrolling settles. A deliberate pause, the drag indicator or an upward drag on the summary opens the date/description drawer; a downward drag
   or clicking the indicator closes it. Opening the drawer does not interrupt playback. The
   complete expanded panel occupies at most 40% of the viewport; its description
   scrolls internally. Use 6px between the date and first description block,

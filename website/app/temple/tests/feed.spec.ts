@@ -493,7 +493,11 @@ test('paused swipe carries titles and panels, fades the outgoing panel, and reve
         .evaluate((node) => getComputedStyle(node).visibility),
     )
     .toBe('visible')
-  await expect(post(page, 'latest').locator('.feed-summary')).toBeInViewport()
+  const incoming = post(page, 'latest')
+  const bar = (await incoming.locator('.feed-summary').boundingBox())!
+  const video = (await incoming.boundingBox())!
+  expect(bar.y + bar.height).toBeCloseTo(video.y + video.height, 0)
+  await expect(incoming.locator('.feed-summary')).not.toBeInViewport()
   await expect(post(page, 'latest').locator('.feed-summary')).toHaveCSS('opacity', '1')
 })
 
