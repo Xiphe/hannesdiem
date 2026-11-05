@@ -1,7 +1,7 @@
 import { on, ref, type Handle } from 'remix/component'
 import type { FactProps } from '../types.ts'
 import { mountCircle } from './circle-enhance.ts'
-import { circleSurface } from './circle-shape.ts'
+import { circleRestSurface } from './circle-surface.ts'
 import { CirclePanel } from '../../circle/panel.tsx'
 import {
   circlePath,
@@ -164,6 +164,19 @@ export function FactCircle(handle: Handle<CircleProps>) {
           })}
         >
           {label && (
+            <svg
+              class="fact-circle-surface"
+              viewBox="40 40 280 280"
+              aria-hidden="true"
+              hidden={persistent && Boolean(state.own)}
+            >
+              <path
+                d={circleRestSurface}
+                fill-rule="evenodd"
+              />
+            </svg>
+          )}
+          {label && (
             <button
               class="fact-circle-invite"
               type="button"
@@ -171,14 +184,6 @@ export function FactCircle(handle: Handle<CircleProps>) {
               hidden={persistent && Boolean(state.own)}
               disabled={persistent && !state.ready}
             >
-              <svg
-                class="fact-circle-surface"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                <path d={circleSurface()} />
-              </svg>
               <span class="fact-circle-prompt">{full ? 'Join the waiting list' : inviteLabel}</span>
             </button>
           )}

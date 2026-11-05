@@ -195,6 +195,20 @@ values, solver agreement, reset preservation and finite selected-dot state.
 This is selection of the material/settings; page integration and publication
 have not been carried out. [Recovery and scope](liquid-simulation-research.md).
 
+**Selected liquid integrated in the local website — 2026-11-05.** The artist
+asks to integrate after selecting the material/settings. Replace the rejected
+pool/connector construction with the actual DDR particles and SVG density
+contours in the existing FactCircle island. Preserve61/682/63/245 and zero
+centre cover, supplied wording, native hit areas and membership flows. Map
+physical obstacles to the responsive native dots. Pause offscreen/hidden/claimed
+and after release settles; reduced motion uses a static circle. Disconnect
+observers and cancel frames on disposal. No new CMX content contract or hosting
+glue is needed. Eight numerical/topology and16 related browser cases pass across
+the final targeted runs, along with build, type and formatting checks. Review
+in context on8787 at `/temple-of-sound/share` (`sand tunnel 8787`). This integrates
+the selected material for local review; publication remains separate.
+[Implementation, performance evidence and limits](liquid-simulation-research.md).
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

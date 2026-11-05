@@ -310,8 +310,8 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 112px;
-  height: 112px;
+  width: 40%;
+  height: 40%;
   padding: 0;
   border: 0;
   background: none;
@@ -340,6 +340,9 @@
   overflow: visible;
   fill: light-dark(var(--temple-secondary-light), #282624);
   pointer-events: none;
+}
+.fact-circle-surface[hidden] {
+  display: none;
 }
 .fact-circle-invite:focus-visible {
   outline: 2px solid currentColor;

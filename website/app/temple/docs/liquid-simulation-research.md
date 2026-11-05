@@ -339,3 +339,49 @@ The live study is available on8796 at `?selected=1`. Browser checks confirm
 all five controls/outputs, matching solver values, reset and finite simulated
 state after dot selection. This records selection of the liquid treatment and
 settings; it does not assert full-page integration or publication.
+
+## Main website integration — 2026-11-05
+
+Following the artist's request to integrate, the selected numerical material is
+now hosted by the existing CMX-backed FactCircle on the practical page. The
+tracked implementation is `facts/circle-fluid.ts` (DDR particle solver),
+`facts/circle-surface.ts` (density-derived SVG contours) and
+`facts/circle-enhance.ts` (native input and island lifecycle). It replaces the
+rejected interpolated pools/connector code. The study on8796 remains available;
+the main local preview is on8787 at `/temple-of-sound/share`. No deployment.
+
+Retain the selected61/682/63/245 parameters and zero display-only centre disc.
+The SVG sits behind the native central button and radio labels, keeping stable
+hit areas. Its viewBox maps the study's coordinates into the existing responsive
+ring; actual native dot centres/radii provide collision obstacles on resize.
+The steady supplied label, membership callbacks, confirmation, name editing,
+move/release, waiting list and native radio semantics remain in their existing
+components. This adds no CMX contract, content index or custom hosting glue;
+CMX and the existing Remix island still host this presentation.
+
+Allocate numerical buffers only when visible with motion allowed. Advance fixed
+1/120s steps, limiting catch-up to six steps per display frame. Pause offscreen,
+in hidden tabs and after membership is claimed. On release, retain the actual
+material and stop residual motion when calm after at least2s, with an8s ceiling.
+Reduced motion uses the native static round fallback and selection feedback,
+without simulating a fake liquid pose. Abort disconnects both observers, cancels
+frames/ripples and restores that fallback. Selected spots can still hold the
+fluid while the signup panel is dismissed.
+
+Validation: app build and website TypeScript/format checks pass. Eight synthetic
+numerical/topology checks cover conserved transport, smooth retargeting, independent
+budgets, zero/outward release, holes, disconnected droplets and saddle cases.
+The16 related browser cases pass across the final targeted runs: responsive/light
+and dark layouts, no-JS content, native click/keyboard selection, confirmation,
+claim/rename/move/release, waiting, reduced motion, settled/offscreen/hidden-tab
+pause, resume and disposal. Tests now assert actual density transport rather
+than the rejected requirement for a prescribed filled rim/neck. One early run
+was interrupted by a concurrent dist rebuild (asset500 responses); rerunning
+with the existing preview server's frozen asset copy isolated that interference.
+
+A main-page headless spot-hold sample measured8.1ms median/9ms p95 liquid callback
+work over110 callbacks. Page frame intervals were around50ms median/66.8ms p95;
+with the liquid settled and paused they were also50ms/66.7ms. This is a shared,
+software-rendered preview with other page animation, not a native Mac/mobile
+performance guarantee. No surrounding rendering was changed to improve this
+measurement. The accepted material remains subject to in-context visual review.

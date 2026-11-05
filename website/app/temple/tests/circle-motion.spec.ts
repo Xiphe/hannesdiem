@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 for (const interaction of ['hover', 'click'] as const) {
-  test(`the liquid wraps a place with a concave connection after ${interaction}`, async ({
+  test(`real liquid responds to ${interaction} without moving native controls`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -26,69 +26,52 @@ for (const interaction of ['hover', 'click'] as const) {
     await circle.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }))
     const button = circle.locator('.fact-circle-invite')
     const box = await button.boundingBox()
-    const resting = await circle.locator('.fact-circle-surface path').getAttribute('d')
+    const path = circle.locator('.fact-circle-surface path')
+    const initial = await path.getAttribute('d')
     await circle.locator('input[value="3"]')[interaction]()
     if (interaction === 'click') await page.getByRole('button', { name: 'Close signup' }).click()
     await expect(circle).toHaveAttribute('data-target', '3')
-    const wrapped = () =>
-      circle.evaluate((root) => {
-        const path = root.querySelector<SVGPathElement>('.fact-circle-surface path')!
-        const inverse = path.getScreenCTM()!.inverse()
-        const dot = root
-          .querySelector('.fact-circle-place:has(input[value="3"]) .fact-circle-dot')!
-          .getBoundingClientRect()
-        const centre = root.querySelector('.fact-circle-invite')!.getBoundingClientRect()
-        const cx = centre.x + centre.width / 2,
-          cy = centre.y + centre.height / 2
-        const dx = dot.x + dot.width / 2 - cx,
-          dy = dot.y + dot.height / 2 - cy
-        const length = Math.hypot(dx, dy)
-        const inside = (x: number, y: number) =>
-          path.isPointInFill(new DOMPoint(x, y).matrixTransform(inverse))
-        const aroundDot = Array.from({ length: 12 }, (_, i) => {
-          const angle = (i * Math.PI) / 6
-          const radius = dot.width / 2 + 3
-          return inside(cx + dx + Math.cos(angle) * radius, cy + dy + Math.sin(angle) * radius)
-        }).every(Boolean)
-        const joined = Array.from({ length: 16 }, (_, i) =>
-          inside(cx + (dx * i) / 15, cy + (dy * i) / 15),
-        ).every(Boolean)
-        const waist = [1, -1].every(
-          (sign) =>
-            !inside(
-              cx + dx * 0.66 - ((sign * dy) / length) * 21,
-              cy + dy * 0.66 + ((sign * dx) / length) * 21,
-            ),
-        )
-        return { aroundDot, joined, waist }
-      })
-    await expect.poll(wrapped).toEqual({ aroundDot: true, joined: true, waist: true })
+    await expect.poll(() => path.getAttribute('d')).not.toBe(initial)
+    // The measured density travels toward the selected place. It is not a
+    // prescribed ring/neck pose: splitting and holes follow the particles.
+    await expect
+      .poll(() =>
+        path.evaluate((node: SVGPathElement) => {
+          const b = node.getBBox()
+          return b.x + b.width
+        }),
+      )
+      .toBeGreaterThan(260)
+    expect(await path.getAttribute('d')).not.toMatch(/NaN|Infinity/)
+    expect(await path.getAttribute('fill-rule')).toBe('evenodd')
     expect(await button.boundingBox()).toEqual(box)
-    expect(
-      await circle.locator('.fact-circle-surface').evaluate((el) => getComputedStyle(el).rotate),
-    ).toBe('none')
-    // Rapid input changes keep the rendered material moving; it settles around
-    // the selected place even when earlier pools are still draining.
     await circle.locator('input[value="7"]')[interaction]()
     if (interaction === 'click') await page.getByRole('button', { name: 'Close signup' }).click()
-    await page.waitForTimeout(100)
     await circle.locator('input[value="2"]')[interaction]()
     if (interaction === 'click') await page.getByRole('button', { name: 'Close signup' }).click()
     await expect(circle).toHaveAttribute('data-target', '2')
-    const path = circle.locator('.fact-circle-surface path')
     const before = await path.getAttribute('d')
     await expect.poll(() => path.getAttribute('d')).not.toBe(before)
     if (interaction === 'hover') {
       await page.mouse.move(0, 0)
       await expect(circle).not.toHaveAttribute('data-pointing')
-      await expect(path).toHaveAttribute('d', resting!)
-      await page.waitForTimeout(150)
-      expect(await path.getAttribute('d')).toBe(resting)
+      // Release keeps the actual material. It calms and stops spending frames.
+      await expect
+        .poll(
+          () =>
+            path.evaluate(async (node) => {
+              const before = node.getAttribute('d')
+              await new Promise((resolve) => setTimeout(resolve, 150))
+              return node.getAttribute('d') === before
+            }),
+          { timeout: 12_000 },
+        )
+        .toBe(true)
     }
   })
 }
 
-test('reduced motion follows the pointer between dots and stops after disposal', async ({
+test('reduced motion is static; visible liquid resumes and disposes with its island', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -98,21 +81,27 @@ test('reduced motion follows the pointer between dots and stops after disposal',
   const circle = page.locator('#fixture-share .fact-circle')
   await circle.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }))
   const path = circle.locator('.fact-circle-surface path')
-  const resting = await path.getAttribute('d')
-  const input = circle.locator('input[value="3"]')
-  await input.hover()
-  const dot = (await input.boundingBox())!
+  const rest = await path.getAttribute('d')
+  await circle.locator('input[value="3"]').hover()
   await expect(circle).toHaveAttribute('data-target', '3')
-  const before = await path.getAttribute('d')
-  await page.mouse.move(dot.x + dot.width / 2 - 10, dot.y + dot.height / 2 + 12)
-  await expect(circle).toHaveAttribute('data-target', '3')
-  expect(await path.getAttribute('d')).not.toBe(before)
-  const stationary = await path.getAttribute('d')
   await page.waitForTimeout(150)
-  expect(await path.getAttribute('d')).toBe(stationary)
+  expect(await path.getAttribute('d')).toBe(rest)
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await expect.poll(() => path.getAttribute('d')).not.toBe(stationary)
-  // Pause the active renderer offscreen, then resume its held pool.
+  await expect.poll(() => path.getAttribute('d')).not.toBe(rest)
+  // Exercise the document lifecycle without relying on whether a headless
+  // browser backgrounds another tab in this environment.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  const hidden = await path.getAttribute('d')
+  await page.waitForTimeout(150)
+  expect(await path.getAttribute('d')).toBe(hidden)
+  await page.evaluate(() => {
+    delete (document as any).hidden
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await expect.poll(() => path.getAttribute('d')).not.toBe(hidden)
   await circle.evaluate(
     (el) =>
       new Promise<void>((resolve) => {
@@ -141,12 +130,9 @@ test('reduced motion follows the pointer between dots and stops after disposal',
     .toBe(false)
   await expect
     .poll(() => page.evaluate(() => (window as any).retiredCirclePath.getAttribute('d')))
-    .toBe(resting)
-  const retired = await page.evaluate(() => (window as any).retiredCirclePath.getAttribute('d'))
+    .toBe(rest)
   await page.mouse.move(500, 500)
   await page.setViewportSize({ width: 500, height: 700 })
   await page.waitForTimeout(200)
-  expect(await page.evaluate(() => (window as any).retiredCirclePath.getAttribute('d'))).toBe(
-    retired,
-  )
+  expect(await page.evaluate(() => (window as any).retiredCirclePath.getAttribute('d'))).toBe(rest)
 })

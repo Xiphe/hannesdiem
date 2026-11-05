@@ -1,7 +1,7 @@
-import { circleSurface } from './circle-shape.ts'
-import { createCircleFluid } from './circle-fluid.ts'
+import { circleRestSurface, DensitySurface } from './circle-surface.ts'
+import { CircleFluid, type CircleTarget } from './circle-fluid.ts'
 
-/** Draw a pool around a free place, preserving native controls and the steady label. */
+/** Actual particle liquid behind native controls; bounded to the visible island. */
 export function mountCircle(
   root: HTMLFieldSetElement,
   signal: AbortSignal,
@@ -14,38 +14,87 @@ export function mountCircle(
   const invite = root.querySelector<HTMLButtonElement>('.fact-circle-invite')
   if (!invite || signal.aborted) return
   const places = [...root.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
-  const surface = invite.querySelector<SVGPathElement>('.fact-circle-surface path')!
-  const artwork = surface.ownerSVGElement!
-  const rest = circleSurface()
+  const surface = root.querySelector<SVGPathElement>('.fact-circle-surface path')!
+  const rest = circleRestSurface
   const shape = (path: string) => {
     surface.setAttribute('d', path)
   }
   let target: HTMLInputElement | undefined
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-  const fluid = createCircleFluid()
+  // Allocate the numerical study only when visible and motion is allowed.
+  let fluid: CircleFluid | undefined
+  let contour: DensitySurface | undefined
+  let wanted: CircleTarget | null = null
   let frame = 0
   let last = 0
-  let visible = true
+  let accumulator = 0
+  let idle = 0
+  let visible = false
+  const coordinates = (x: number, y: number) => {
+    const box = root.getBoundingClientRect()
+    return {
+      x: 40 + ((x - box.left) * 280) / box.width,
+      y: 40 + ((y - box.top) * 280) / box.height,
+    }
+  }
+  const syncDots = () => {
+    if (!fluid) return
+    const scale = 280 / root.getBoundingClientRect().width
+    fluid.dots = places.map((input) => {
+      const box = input.getBoundingClientRect()
+      const dot = input.parentElement!.querySelector<HTMLElement>('.fact-circle-dot')!
+      return {
+        ...coordinates(box.x + box.width / 2, box.y + box.height / 2),
+        r: (dot.offsetWidth * scale) / 2,
+      }
+    })
+  }
   const stop = () => {
     cancelAnimationFrame(frame)
     frame = 0
     last = 0
+    accumulator = 0
   }
   const draw = (now: number) => {
     frame = 0
-    if (signal.aborted || document.hidden || !visible) return
-    const dt = last ? Math.min((now - last) / 1000, 0.05) : 1 / 60
+    if (signal.aborted || document.hidden || !visible || membership?.owner()) return
+    if (reduced.matches) {
+      shape(rest)
+      return
+    }
+    if (!fluid) {
+      fluid = new CircleFluid()
+      contour = new DensitySurface()
+      syncDots()
+    }
+    fluid.target = wanted
+    accumulator += last ? Math.min((now - last) / 1000, 0.05) : 1 / 60
     last = now
-    shape(circleSurface(fluid.step(dt, reduced.matches)))
-    if (fluid.active && !reduced.matches) frame = requestAnimationFrame(draw)
-    else last = 0
+    let steps = 0
+    while (accumulator >= 1 / 120 && steps < 6) {
+      fluid.step()
+      accumulator -= 1 / 120
+      steps++
+    }
+    shape(contour!.update(fluid))
+    idle = wanted ? 0 : idle + steps / 120
+    // Preserve the actual released material rather than substituting a pose.
+    // Stop residual numerical motion once calm, with an eight-second ceiling.
+    if (wanted || (idle < 8 && (idle < 2 || fluid.metrics().energy > 1)))
+      frame = requestAnimationFrame(draw)
+    else stop()
   }
   const wake = () => {
-    if (signal.aborted || document.hidden || !visible) return
+    if (signal.aborted || document.hidden || !visible || membership?.owner()) return
     if (reduced.matches) {
       stop()
-      draw(performance.now())
+      shape(rest)
     } else if (!frame) frame = requestAnimationFrame(draw)
+  }
+  const pull = (next: CircleTarget | null) => {
+    wanted = next
+    idle = 0
+    wake()
   }
   const visibility = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
@@ -78,8 +127,8 @@ export function mountCircle(
     target = undefined
     delete root.dataset.pointing
     delete root.dataset.target
-    fluid.release()
-    wake()
+    pull(null)
+    if (membership?.owner()) stop()
     for (const input of places) delete input.parentElement!.dataset.aimed
   }
   const aim = (x: number, y: number) => {
@@ -100,29 +149,17 @@ export function mountCircle(
   const point = (input: HTMLInputElement, mouseX?: number, mouseY?: number) => {
     target = input
     const box = target.getBoundingClientRect()
-    const centre = invite.getBoundingClientRect()
-    const cx = centre.x + centre.width / 2,
-      cy = centre.y + centre.height / 2
-    const dx = box.x + box.width / 2 - cx
-    const dy = box.y + box.height / 2 - cy
-    const view = artwork.viewBox.baseVal
-    const scale = view.width / centre.width
-    let x = dx,
-      y = dy,
-      pull = 1
-    if (mouseX !== undefined && mouseY !== undefined) {
-      const mx = mouseX - cx,
-        my = mouseY - cy
-      const distance = Math.hypot(mx - dx, my - dy)
-      const magnet = 0.35 + 0.65 * Math.exp(-((distance / 45) ** 2))
-      x = mx + (dx - mx) * magnet
-      y = my + (dy - my) * magnet
-      // Continuous pull between places; the centre itself remains at rest.
-      pull = Math.min(1, Math.max(0, (Math.hypot(mx, my) - 12) / 28))
-    }
     const dot = input.parentElement!.querySelector<HTMLElement>('.fact-circle-dot')!
-    fluid.aim(Number(input.value), x * scale, y * scale, (dot.offsetWidth * 0.6 + 9) * scale, pull)
-    wake()
+    const centre = coordinates(box.x + box.width / 2, box.y + box.height / 2)
+    const radius = (dot.offsetWidth * 140) / root.getBoundingClientRect().width
+    let next: CircleTarget | null = { ...centre, r: radius }
+    if (mouseX !== undefined && mouseY !== undefined) {
+      const mouse = coordinates(mouseX, mouseY)
+      const distance = Math.hypot(mouse.x - centre.x, mouse.y - centre.y)
+      const outward = Math.hypot(mouse.x - 180, mouse.y - 180)
+      if (distance >= 27) next = outward > 38 && outward < 145 ? { ...mouse, r: 0 } : null
+    }
+    pull(next)
     root.dataset.pointing = ''
     root.dataset.target = target.value
     for (const input of places) {
@@ -273,12 +310,25 @@ export function mountCircle(
     },
     { signal },
   )
-  addEventListener('resize', reset, { signal })
+  const size = new ResizeObserver(() => {
+    syncDots()
+    reset()
+  })
+  size.observe(root)
+  root.addEventListener(
+    'focusin',
+    (event) => {
+      if (membership?.owner() || membership?.selected()) return
+      if (event.target instanceof HTMLInputElement && !event.target.disabled) point(event.target)
+    },
+    { signal },
+  )
   signal.addEventListener(
     'abort',
     () => {
       stop()
       visibility.disconnect()
+      size.disconnect()
       shape(rest)
       cancelRipples()
     },
