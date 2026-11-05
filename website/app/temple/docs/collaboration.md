@@ -110,6 +110,25 @@ continuous retargeting, tangent joins, a filled outer pool and concave connected
 neck, stable controls, reduced motion, visibility/disposal and reservation flows.
 Next review: whether the wrapping, neck and honey response feel right in context.
 
+**Actual simulation or omission — 2026-11-05.** The artist rejects the
+connected-outline construction at7eaded8 and requires real liquid simulation
+or no liquid effect. The method requirement is settled; visual acceptance is
+not. Stop refining independent circle/neck poses. Investigate material behavior
+with numerical pressure, cohesion and viscosity before further page integration.
+
+A primary-source investigation and an isolated661-particle DDR study now exist.
+The source derives the visible surface from particle positions and includes a
+raw-particle view; a connecting neck must emerge from actual material and may
+break. Native DOM text remains separate. Synthetic target switches measured
+3.2ms median/3.5ms p95 widget CPU with16.7ms frame intervals in local Chromium155
+on an Apple ARM Linux VM. A4× CPU slowdown raised p95 to22.3ms and dropped
+frames. These are isolated-study results, not native Mac or full-page evidence.
+The study runs on8796 (`sand tunnel 8796`); no website implementation or
+publication follows from those timings. [Method, sources, recovery and limits](liquid-simulation-research.md).
+Phase remains Expansion. Next move: judge the actual material response before
+choosing integration or omitting the effect. The rejected outline trial is not
+selected artwork.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
