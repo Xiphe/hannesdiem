@@ -674,8 +674,27 @@ test('video completion offers replay and the next video, skipping other post typ
     video.currentTime = video.duration - 0.15
   })
   await expect(item.locator('[data-next]')).toBeVisible()
+  const travel = await page.locator('.temple-feed').evaluate((root) => {
+    const samples: number[] = []
+    ;(window as any).nextVideoScroll = samples
+    root.addEventListener('scroll', () => samples.push(root.scrollTop))
+    return {
+      start: root.scrollTop,
+      target: document.querySelector<HTMLElement>('[data-post-id="fixture-middle"]')!.offsetTop,
+    }
+  })
   await item.locator('[data-next]').click()
   await expect(page).toHaveURL(path('middle'))
+  await expect
+    .poll(() => page.locator('.temple-feed').evaluate((node) => node.scrollTop))
+    .toBeCloseTo(travel.target, 0)
+  expect(
+    await page.evaluate(
+      ({ start, target }) =>
+        (window as any).nextVideoScroll.some((top: number) => top > start + 1 && top < target - 1),
+      travel,
+    ),
+  ).toBe(true)
   await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
   await page.locator('video').evaluate((video: HTMLVideoElement) => {
     video.currentTime = video.duration - 0.15

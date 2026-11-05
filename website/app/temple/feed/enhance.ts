@@ -71,7 +71,10 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   function advance() {
     const next = nextVideo()
     if (next < 0) return
-    articles[next].scrollIntoView({ block: 'start', behavior: 'instant' })
+    articles[next].scrollIntoView({
+      block: 'start',
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    })
   }
   function ended() {
     if (post().kind !== 'video') return

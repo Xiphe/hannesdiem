@@ -61,7 +61,8 @@ Watch; the entry and share-image conversations own their corresponding views.
   blocked, show a play control. Videos stop at their end and offer “Play again”
   and “Next Video” as borderless icon-and-label actions with opaque black hover
   backgrounds; the latter selects the next newer video in feed order,
-  skipping audio/text, and is absent on the final video. Audio ends normally.
+  skipping audio/text, and is absent on the final video. Next Video scrolls smoothly
+  to its destination; reduced motion jumps directly. Audio ends normally.
 - Switching tabs/apps no longer deliberately pauses media. Release speculative
   preload while hidden, and expose current metadata and play/pause/seek/next
   actions through Media Session where supported. Browser/OS background policies
