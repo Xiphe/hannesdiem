@@ -223,3 +223,42 @@ shear initial condition retained661 particles and conserved its centroid within
 viscosity0 (quadratic0.03 remained), and to247.091 at linear viscosity100.
 That is evidence of actual pairwise viscous dissipation, not an aesthetic verdict
 or calibrated honey validation. Artist review of the real motion is the next gate.
+
+## Accepted material response; SVG contour and centre floor
+
+The artist says “love it” to the actual liquid study, then requests sharper
+edges, ideally a vector version, and a centre that stays covered even when
+simulated material moves away. Acceptance retains the material direction;
+rendering and website integration remain under review.
+
+The same8796 study now uses `surface.js` to derive live SVG paths from the
+actual particle-density field. It samples241×241 vertices at1.5px spacing,
+retaining7px compact support and the previous isovalue1. Shared grid-edge
+intersections form closed marching-squares loops; bilinear saddle decisions
+preserve connectivity at this resolution. Short quadratic segments round grid
+corners using the measured contour as their control polygon. Even-odd filling
+retains holes. There is no bitmap or blur filter in the displayed liquid or its
+SVG snapshot. Sub-grid topology remains limited by the density resolution.
+
+The artist's suggested overlay is a separate, opaque SVG centre disc, default
+radius50px with a0–64px control. It does not alter the solver, add particles or
+force liquid into a central pose. Raw-particle mode hides the SVG, including that
+visual cover. **Save SVG** exports the centre disc and current liquid silhouette
+as standalone geometry; it excludes the DOM text and dot controls. The accepted
+solver source is unchanged, SHA256
+`a048ecb1f72a9baceedf2d03100aa077ce62335fec374b7998c32f7e7323a39a`.
+
+Synthetic verification (`node verify-surface.mjs` in the study directory) covers
+circular contour accuracy, annulus holes, separated and diagonal droplets,
+closed graph connectivity, both saddle orientations at high/low density and an
+empty field. Native SVG hit tests preserve the ring hole. Browser review checks
+text-range coverage by the centre disc, radius adjustment, actual particle-mode
+visibility, mobile overflow and a downloaded SVG containing no raster elements.
+
+A repeated360-frame target-switch trace on the same machine measured JS work
+median3.3ms/p953.4ms, physics median2.9ms/p953.0ms and density/contour/DOM update
+median0.4ms/p950.5ms. Display interval p95 remained16.7ms, with two physics steps
+per frame. Timings exclude deferred SVG paint/compositing. An earlier run on the
+shared machine had total p957.7ms and physics p956.6ms; performance varies with
+load. These observations do not establish native Mac or whole-page budgets.
+No additional production code, dependencies or CMX contracts are introduced.

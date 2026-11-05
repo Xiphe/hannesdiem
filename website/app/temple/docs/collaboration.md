@@ -129,6 +129,25 @@ Phase remains Expansion. Next move: judge the actual material response before
 choosing integration or omitting the effect. The rejected outline trial is not
 selected artwork.
 
+**SVG edges and a protected centre — 2026-11-05.** The artist says “love it”
+to the real liquid study and requests less blurry edges, ideally vector output,
+plus a minimum centre radius even when simulated liquid drains away. Preserve
+the accepted numerical material response. Replace the raster surface with live
+SVG isocontours reconstructed from the same particle density; retain holes and
+separated drops through closed marching-squares loops and short quadratic curves.
+Add the artist's proposed display-only centre disc at50px, adjustable0–64px.
+Raw-particle view hides the disc, making its distinction from physical mass clear.
+Save SVG exports the current liquid silhouette and centre disc as vector geometry.
+
+The solver is unchanged. Synthetic topology checks, native hole hit tests,
+text-range coverage, particle-view visibility, mobile bounds and actual SVG export
+pass. Latest repeated local trace measured3.3ms median/3.4ms p95 JS work and
+16.7ms p95 frame intervals; contour work alone was0.4ms median/0.5ms p95.
+Timings vary on the shared machine and exclude deferred SVG painting. The study
+and review address remain8796; no website integration or publication requested.
+Material direction is retained; crisp contour and centre treatment remain for
+review. [Source, measurements and limits](liquid-simulation-research.md).
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
