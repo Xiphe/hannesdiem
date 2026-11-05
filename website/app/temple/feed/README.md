@@ -19,7 +19,9 @@ Watch; the entry and share-image conversations own their corresponding views.
   small, dim drag indicator above the scrubber. The indicator has no shape or
   position animation; it stays fixed within the moving summary. A single open
   percentage drives drawer travel and backdrop extent, including during dragging.
-  Space toggles playback without a focus outline on the video surface. The
+  Space toggles playback without a focus outline on the video surface. Escape
+  activates the shared Back link directly, including from focused controls and
+  descriptions; it does not pause playback first. The
   drawer toggle and scrubber have no focus outline; other controls retain keyboard
   focus indicators.
   The bottom gradient fades evenly from transparent to 94% black across its

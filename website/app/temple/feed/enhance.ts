@@ -356,13 +356,16 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
         else {
           pause()
         }
-      } else if (event.key === 'Escape') {
-        if (document.fullscreenElement === root) return
-        event.preventDefault()
-        if (!video.paused) {
-          pause()
-        } else location.assign(root.querySelector<HTMLAnchorElement>('[data-back]')!.href)
       }
+    },
+    options,
+  )
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      root.querySelector<HTMLAnchorElement>('[data-back]')!.click()
     },
     options,
   )

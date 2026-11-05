@@ -251,6 +251,30 @@ test('feed return reads entry memory, never sets it, and identifies the current 
     .toBeLessThan(2)
 })
 
+for (const entered of [false, true]) {
+  test(`Escape follows Back ${entered ? 'from a paused control' : 'while playing with body focus'}`, async ({
+    page,
+  }) => {
+    if (entered)
+      await page.addInitScript(() => localStorage.setItem('hannesdiem.temple.entered', 'true'))
+    await arrive(page, 'middle')
+    const item = post(page, 'middle')
+    await expect(item).toHaveAttribute('data-playing', '')
+    if (entered) {
+      await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+      await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+      await item.locator('.feed-video-seek').focus()
+    } else
+      await page.evaluate(() => {
+        ;(document.activeElement as HTMLElement)?.blur()
+      })
+    const href = await page.locator('[data-back]').getAttribute('href')
+    await page.keyboard.press('Escape')
+    await expect(page).toHaveURL(href!)
+    await expect(page.locator('.temple-feed')).toHaveCount(0)
+  })
+}
+
 test('sharing copies the current deep link and swiping preloads only its neighbor', async ({
   page,
   context,
