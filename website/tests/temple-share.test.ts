@@ -121,12 +121,35 @@ test('invalid verse share metadata cannot enter a Publication', () => {
     {
       'synthetic opening': {
         title: 'Synthetic title',
+        lines: [{ text: 'Synthetic line', face: 'invalid' }],
+      },
+    },
+    {
+      'synthetic opening': {
+        title: 'Synthetic title',
         ogImage: { src: 'javascript:fixture', width: 1200, height: 630 },
       },
     },
   ]) {
     const fixtures = structuredClone(documents)
     fixtures['temple-of-sound'].content.metadata = { kind: 'temple', verseShares }
+    assert.throws(() => validatePublication(fixtures), /Invalid or duplicate content route/)
+  }
+})
+
+test('opener frame metadata validates its source image and calendar dates', () => {
+  for (const dates of [
+    { start: 'not-a-date', end: '2030-04-20' },
+    { start: '2030-02-30', end: '2030-04-20' },
+  ]) {
+    const fixtures = structuredClone(documents)
+    fixtures['temple-of-sound'].content.metadata = {
+      kind: 'temple',
+      openerShare: {
+        frame: { src: 'https://images.example.com/opener.png', width: 1200, height: 630 },
+        dates,
+      },
+    }
     assert.throws(() => validatePublication(fixtures), /Invalid or duplicate content route/)
   }
 })

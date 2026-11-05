@@ -2,7 +2,7 @@
 
 The artist selected a full-bleed image, a lower-left caption, orange
 `#F7A264` Temple name above the title, and opaque warm/cool Cloud ink.
-At 1200×630, the name is 40px and titles start at 90px. The artist then
+At 1200×630, the name is 40px and plain titles now grow up to 180px. The artist then
 requested an adaptive implementation and a text/background coverage overview.
 The decision trail is in `website/app/temple/docs/collaboration.md`.
 
@@ -11,7 +11,7 @@ The decision trail is in `website/app/temple/docs/collaboration.md`.
 `content/preparation/temple-share-image.ts` owns measurement and composition.
 Fit the full title between the 200px upper caption boundary and 55px bottom
 margin, with 64px left and 76px right insets. Keep the name at 40px and a
-16px gap. Titles shrink only when necessary, down to 48px. Long unbroken
+16px gap. Plain titles grow up to 180px and shrink when necessary, down to 48px. Long unbroken
 words wrap by character. Escape markup and retain punctuation. If the full title
 still cannot fit at 48px, trim its end and append literal `...`, measuring the
 dots within the same caption area. Prefer a complete final word and never split
@@ -19,8 +19,8 @@ a Unicode grapheme. Keep the original title and share metadata intact; only the
 card text is shortened. An authored `shareTitle` remains an optional alternative.
 
 Character count is not a capacity rule: glyph widths and word boundaries matter.
-The coverage examples include 15/43/72 characters at 90px, 133 at 69px and
-223 at 51px; the 287-character specimen trims with `...` at 48px.
+The current coverage examples include 15/43/72 characters at 180/125/93px,
+133 at 69px and 223 at 55px; the 287-character specimen trims with `...` at 48px.
 
 Shade with one straight gradient ending at 80% black. Its start is solved from
 both text height and sampled background brightness under each text role, using
@@ -60,16 +60,33 @@ content-only builds both receive the same files.
 
 The photographic card work is accepted at checkpoint `bc5fc04` (implementation
 through `ef04008`). For the text cards the artist selected the same caption
-layout over random fragment shapes like the page, withdrawing the intervening
-layout and excerpt studies. Use the five supplied poem phrases as headlines;
-do not add excerpts or invent descriptions.
+layout over random fragment shapes like the page. They subsequently supply the
+four practical card titles and two explicit opening lines for each poem card.
+Preserve those words, line breaks and emphasis; do not invent descriptions.
 
 `contracts/temple/fragments.ts` owns the page's existing seeded shape generator;
 the browser keeps its placement helpers. `temple-share-pattern.ts` composes a
 static dark crop with those shapes and soft joins. Seed it from each document
 or document/verse identity, so patterns differ while repeated publishing stays
-stable. Whole-Temple cards show their name once as the large title; section and
-poem cards retain the small orange wordmark above the large Cloud ink headline.
+stable. Section and poem cards retain the small orange wordmark above the
+large Cloud ink headline. The whole-Temple card now uses a captured opener frame
+and a date derived from the same authored start/end values as the page.
+
+Poem metadata reuses native `PoemLine` text/face fields in `verseShares.lines`.
+`temple-share-type.ts` fits each supplied line separately like the page: Unbounded
+copy, Cinzel emphasis, and a quieter spaced address distributed across the width.
+Long introductory copy can be smaller than the 48px plain-title lower bound so
+its explicit line stays intact. The complete block still fits the same caption
+area. All four native fonts and licenses now live under `contracts/assets/temple/`.
+
+`openerShare` contains an imported frame and calendar start/end values. Its image
+passes through the existing CMX image loader; `temple-opener-share.ts` adds the
+formatted date at publication time. Section metadata omits this parent-only
+configuration. The committed PNG is a manual capture of the real opener canvas,
+with one pointer-triggered character glitch. Recapture with a running authored
+preview using `node website/app/temple/debug/capture-share-opener.mjs [URL] [PATH]`.
+Only the captured asset is needed for content-only publication, not a browser or
+website implementation. Its date is never baked into the frame.
 
 Native CMX metadata declares `verseShares` on the complete poem page, mapping
 normalized `verse` query values to authored titles and optional custom images.

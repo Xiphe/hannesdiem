@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { measurePoemShareTitle, type ShareLine } from './temple-share-type.ts'
 
 export const templeCard = {
   width: 1200,
@@ -10,7 +11,7 @@ export const templeCard = {
   captionTop: 200,
   gap: 16,
   nameSize: 40,
-  maxTitleSize: 90,
+  maxTitleSize: 180,
   minTitleSize: 48,
   bottomOpacity: 0.8,
 } as const
@@ -44,7 +45,12 @@ async function measureTitle(text: string, size: number) {
   const mask = await textMask(text, size)
   const lineHeight = size * 1.12
   const lines = Math.max(1, Math.ceil((mask.info.height + size * 0.16) / lineHeight))
-  return { ...mask, lines, height: Math.max(mask.info.height, Math.ceil(lines * lineHeight)) }
+  return {
+    ...mask,
+    lines,
+    sizes: Array.from({ length: lines }, () => size),
+    height: Math.max(mask.info.height, Math.ceil(lines * lineHeight)),
+  }
 }
 
 function luminance(rgb: readonly number[]) {
@@ -77,6 +83,7 @@ export interface TempleCardLayout {
   titleTruncated: boolean
   titleSize: number
   titleLines: number
+  titleLineSizes: number[]
   captionTop: number
   titleTop: number
   titleHeight: number
@@ -86,6 +93,7 @@ export interface TempleCardLayout {
 /** Fit the full title first; trim only the card text when it exceeds the readable lower bound. */
 export async function renderTempleShareImage(input: {
   title: string
+  lines?: readonly ShareLine[]
   background?: Uint8Array
   backgroundColor?: string
   /** The whole-Temple card needs its name once, as the main title. */
@@ -100,14 +108,16 @@ export async function renderTempleShareImage(input: {
   const available = height - bottom - captionTop - nameHeight - nameGap
   let fitted: Awaited<ReturnType<typeof measureTitle>> | undefined
   let size = templeCard.maxTitleSize as number
-  let titleText = input.title
+  let titleText = input.lines?.map((line) => line.text).join('\n') ?? input.title
   let titleTruncated = false
-  // Search from the readable lower bound to the chosen 90px maximum.
+  // Fill the available caption area, respecting the readable lower bound.
   let low = templeCard.minTitleSize as number
   let high = size
   while (low <= high) {
     const candidate = Math.floor((low + high) / 2)
-    const mask = await measureTitle(input.title, candidate)
+    const mask = input.lines
+      ? await measurePoemShareTitle(input.lines, candidate, titleWidth)
+      : await measureTitle(input.title, candidate)
     if (mask.height <= available) {
       fitted = mask
       size = candidate
@@ -230,8 +240,9 @@ export async function renderTempleShareImage(input: {
   const layout: TempleCardLayout = {
     titleText,
     titleTruncated,
-    titleSize: size,
+    titleSize: Math.max(...fitted.sizes),
     titleLines: fitted.lines,
+    titleLineSizes: fitted.sizes,
     captionTop: nameTop,
     titleTop,
     titleHeight,

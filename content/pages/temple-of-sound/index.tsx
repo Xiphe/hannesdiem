@@ -7,6 +7,7 @@ import {
 } from '@hannesdiem/content-components'
 
 import forest from '../../media/IMG_6257.JPG'
+import openerShareFrame from '../../media/temple-share-opener.png'
 import room from '../../media/steinfurth-grand-piano.jpeg'
 import tos from '../../media/tos.jpg'
 import tos2 from '../../media/tos2.jpg'
@@ -17,15 +18,44 @@ import { watchActionContext, watchIntroduction, watchFragments } from './_watch.
 import { createCopy } from './_create.ts'
 import { recordings } from './_recordings.tsx'
 
+export const dates = { start: '2026-11-01', end: '2026-12-20' }
 export const metadata = {
   kind: 'temple',
   image: forest,
+  openerShare: { frame: openerShareFrame, dates },
   verseShares: {
-    'im in love': { title: 'im in love' },
-    'im in grief': { title: 'im in grief' },
-    'i resist': { title: 'I resist' },
-    'i stay': { title: 'I stay' },
-    'i devote': { title: 'I devote' },
+    'im in love': {
+      title: 'H U M A N I T Y ! I’m in love',
+      lines: [
+        { text: 'H U M A N I T Y !', face: 'spaced' },
+        { text: 'I’m in love', face: 'cinzel' },
+      ],
+    },
+    'im in grief': {
+      title: "Oh I'm in deep hurt and grief over mankind and earth.",
+      lines: [
+        { text: "Oh I'm in deep hurt and grief over" },
+        { text: 'mankind and earth.', face: 'cinzel' },
+      ],
+    },
+    'i resist': {
+      title: 'I will not let my love be dimmed.',
+      lines: [{ text: 'I will not let my' }, { text: 'love be dimmed.', face: 'cinzel' }],
+    },
+    'i stay': {
+      title: 'I have trusted and accepted waited patiently...',
+      lines: [
+        { text: 'I have trusted and accepted' },
+        { text: 'waited patiently...', face: 'cinzel' },
+      ],
+    },
+    'i devote': {
+      title: "I'm devoting these two months to you, to the tension and resonance",
+      lines: [
+        { text: "I'm devoting these two months to you, to the" },
+        { text: 'tension and resonance', face: 'cinzel' },
+      ],
+    },
   },
 } satisfies PageMetadata
 
@@ -176,7 +206,7 @@ export default function Content({
           scrollLabel: 'or explore more',
         }}
         title={title}
-        dates={{ start: '2026-11-01', end: '2026-12-20' }}
+        dates={dates}
         image={forest}
         lightSource={{ x: 53.24, y: 54.07 }}
         navigation={[

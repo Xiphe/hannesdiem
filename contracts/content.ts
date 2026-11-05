@@ -1,5 +1,5 @@
 import { isCmxDocument, type CmxDocument } from '@cmx-tools/contracts'
-import type { Identity, ImageSource, MediaImage } from '@hannesdiem/content-components'
+import type { Identity, ImageSource, MediaImage, PoemLine } from '@hannesdiem/content-components'
 import { notFoundEntry, pagePath } from './page-routing.ts'
 
 export interface ContentRoute {
@@ -11,7 +11,11 @@ export interface ContentRoute {
   image?: ImageSource
   ogImage?: MediaImage
   /** Share identities within a complete poem page; keys are normalized verse query values. */
-  verseShares?: Record<string, { title: string; ogImage?: MediaImage }>
+  verseShares?: Record<
+    string,
+    { title: string; lines?: readonly Pick<PoemLine, 'text' | 'face'>[]; ogImage?: MediaImage }
+  >
+  openerShare?: { frame: MediaImage; dates: { start: string; end: string } }
   theme?: string
   releaseDate?: string
   creationDate?: string
@@ -110,6 +114,30 @@ function image(value: unknown): value is MediaImage {
   )
 }
 
+function shareLines(value: unknown) {
+  return (
+    value === undefined ||
+    (Array.isArray(value) &&
+      value.length > 0 &&
+      value.every(
+        (line) =>
+          record(line) &&
+          typeof line.text === 'string' &&
+          line.text.trim().length > 0 &&
+          (line.face === undefined ||
+            ['copy', 'cinzel', 'germania', 'spaced'].includes(line.face as string)),
+      ))
+  )
+}
+function calendarDate(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number.isFinite(Date.parse(value)) &&
+    new Date(value).toISOString().startsWith(value)
+  )
+}
+
 export function readSite(document: CmxDocument | undefined): SiteMetadata {
   const site = document?.content.site
   if (
@@ -196,6 +224,12 @@ function validateRoutes({ routes, site, redirects }: PublicationIndex) {
           ? !Object.hasOwn(site.media, route.image)
           : !image(route.image))) ||
       (route.ogImage !== undefined && !image(route.ogImage)) ||
+      (route.openerShare !== undefined &&
+        (!record(route.openerShare) ||
+          !image(route.openerShare.frame) ||
+          !record(route.openerShare.dates) ||
+          !calendarDate(route.openerShare.dates.start) ||
+          !calendarDate(route.openerShare.dates.end))) ||
       (route.verseShares !== undefined &&
         (!record(route.verseShares) ||
           !Object.entries(route.verseShares).every(
@@ -205,6 +239,7 @@ function validateRoutes({ routes, site, redirects }: PublicationIndex) {
               record(value) &&
               typeof value.title === 'string' &&
               value.title.trim().length > 0 &&
+              shareLines(value.lines) &&
               (value.ogImage === undefined || image(value.ogImage)),
           )))
     )

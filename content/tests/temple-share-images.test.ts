@@ -8,11 +8,13 @@ import { CMX_DOCUMENT_SCHEMA, CMX_DOCUMENT_VERSION, type CmxDocument } from '@cm
 import { renderTempleShareImage, templeCard } from '../preparation/temple-share-image.ts'
 import { prepareTempleShareImages } from '../preparation/temple-share-images.ts'
 import { templeSharePattern } from '../preparation/temple-share-pattern.ts'
+import { renderTempleOpenerShareImage } from '../preparation/temple-opener-share.ts'
 
 test('short and long titles keep all glyphs inside a fixed caption area, shrinking only the title', async () => {
   const short = await renderTempleShareImage({ title: 'Synthetic title' })
   const long = await renderTempleShareImage({ title: 'Synthetic title '.repeat(12) })
-  assert.equal(short.layout.titleSize, 90)
+  assert.ok(short.layout.titleSize > 90)
+  assert.ok(short.layout.titleSize <= templeCard.maxTitleSize)
   assert.equal(short.layout.titleText, 'Synthetic title')
   assert.equal(short.layout.titleTruncated, false)
   assert.ok(long.layout.titleSize < short.layout.titleSize)
@@ -78,9 +80,45 @@ test('fragment share patterns are stable per identity and vary between identitie
     showWordmark: false,
   })
   assert.equal(card.layout.titleText, 'Synthetic identity')
-  assert.equal(card.layout.titleSize, 90)
+  assert.ok(card.layout.titleSize > 90)
   assert.equal(card.layout.captionTop, card.layout.titleTop)
   assert.equal((await sharp(card.bytes).metadata()).height, 630)
+})
+
+test('poem cards retain explicit lines and fit each native typeface independently', async () => {
+  const lines = [
+    { text: 'Synthetic opening line with more words than the emphasized line' },
+    { text: 'Synthetic emphasis', face: 'cinzel' as const },
+  ]
+  const card = await renderTempleShareImage({
+    title: lines.map((line) => line.text).join(' '),
+    lines,
+  })
+  assert.equal(card.layout.titleText, lines.map((line) => line.text).join('\n'))
+  assert.equal(card.layout.titleLines, 2)
+  assert.equal(card.layout.titleTruncated, false)
+  assert.ok(card.layout.titleLineSizes[1] > card.layout.titleLineSizes[0])
+  assert.ok(card.layout.captionTop >= templeCard.captionTop)
+  await renderTempleShareImage({
+    title: 'Synthetic typography',
+    lines: [
+      { text: 'S Y N T H E T I C', face: 'spaced' },
+      { text: 'Synthetic bold', face: 'germania' },
+    ],
+  })
+})
+
+test('opener cards compose a supplied frame with the authored calendar range', async () => {
+  const frame = await sharp({
+    create: { width: 1200, height: 630, channels: 3, background: '#302018' },
+  })
+    .png()
+    .toBuffer()
+  const card = await renderTempleOpenerShareImage(frame, { start: '2030-03-01', end: '2030-04-20' })
+  assert.equal(card.date, 'March & April 2030')
+  assert.equal((await sharp(card.bytes).metadata()).width, 1200)
+  const next = await renderTempleOpenerShareImage(frame, { start: '2031-03-01', end: '2031-04-20' })
+  assert.notDeepEqual(card.bytes, next.bytes)
 })
 
 function document(
@@ -228,7 +266,10 @@ test('Temple page and verse cards attach to existing metadata without fetching p
           kind: 'temple',
           image: { src: 'https://example.invalid/unrequested.jpg', width: 600, height: 900 },
           verseShares: {
-            'synthetic opening': { title: 'Synthetic opening' },
+            'synthetic opening': {
+              title: 'Synthetic opening',
+              lines: [{ text: 'Synthetic' }, { text: 'opening', face: 'cinzel' }],
+            },
             'synthetic ending': { title: 'Synthetic ending' },
           },
         },
@@ -264,4 +305,40 @@ test('Temple page and verse cards attach to existing metadata without fetching p
     const bytes = await readFile(join(directory, card.src.slice('/media/'.length)))
     assert.equal((await sharp(bytes).metadata()).width, 1200)
   }
+})
+
+test('publication uses the supplied opener frame and derived date for the main card', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'temple-opener-share-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  const frame = await sharp({
+    create: { width: 1200, height: 630, channels: 3, background: '#102030' },
+  })
+    .png()
+    .toBuffer()
+  const source = {
+    _site: fixtures()._site,
+    'synthetic-opener': document(
+      {
+        title: 'Synthetic opener',
+        default: 'Synthetic body',
+        metadata: {
+          kind: 'temple',
+          openerShare: {
+            frame: { src: 'https://example.invalid/opener.png', width: 1200, height: 630 },
+            dates: { start: '2030-03-01', end: '2030-04-20' },
+          },
+        },
+      },
+      [],
+    ),
+  }
+  const result = await prepareTempleShareImages(
+    source,
+    { base: '/media', directory },
+    async () => new Response(frame),
+  )
+  const metadata = result['synthetic-opener'].content.metadata as any
+  assert.equal(metadata.ogImage.alt, 'Synthetic opener — March & April 2030')
+  assert.equal(metadata.ogImage.width, 1200)
+  assert.equal(result['synthetic-opener'].content.default, 'Synthetic body')
 })

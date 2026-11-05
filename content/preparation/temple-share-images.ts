@@ -7,6 +7,8 @@ import { readSite, siteEntry } from '../../contracts/content.ts'
 import { storeMedia, type MediaStorage } from './media-storage.ts'
 import { renderTempleShareImage } from './temple-share-image.ts'
 import { templeSharePattern } from './temple-share-pattern.ts'
+import type { ShareLine } from './temple-share-type.ts'
+import { renderTempleOpenerShareImage } from './temple-opener-share.ts'
 
 /** Attach cards to the same CMX post props the viewer and overview already read. */
 export async function prepareTempleShareImages(
@@ -17,13 +19,23 @@ export async function prepareTempleShareImages(
   const media = readSite(documents[siteEntry]).media
   const cards = new Map<string, Promise<MediaImage>>()
   const sources = new Map<string, Promise<Uint8Array>>()
-  async function cardFor(title: string, src?: string, seed?: string, showWordmark = true) {
-    const key = JSON.stringify({ title, src, seed, showWordmark })
+  async function cardFor(
+    title: string,
+    options: {
+      src?: string
+      seed?: string
+      showWordmark?: boolean
+      lines?: readonly ShareLine[]
+    } = {},
+  ) {
+    const { src, seed, showWordmark = true, lines } = options
+    const key = JSON.stringify({ title, src, seed, showWordmark, lines })
     let card = cards.get(key)
     if (!card) {
       card = (async () => {
         const { bytes, width, height } = await renderTempleShareImage({
           title,
+          lines,
           background: src ? await source(src) : seed ? templeSharePattern(seed) : undefined,
           showWordmark,
         })
@@ -78,8 +90,8 @@ export async function prepareTempleShareImages(
     }
     return {
       ...post,
-      shareImage: post.shareImage ?? (await cardFor(title, src)),
-      previewImage: post.previewImage ?? (await cardFor(title, src, undefined, false)),
+      shareImage: post.shareImage ?? (await cardFor(title, { src })),
+      previewImage: post.previewImage ?? (await cardFor(title, { src, showWordmark: false })),
     }
   }
   const output: PublishedDocuments = {}
@@ -120,12 +132,29 @@ export async function prepareTempleShareImages(
                   ...value,
                   ogImage:
                     value.ogImage ??
-                    (await cardFor(value.title, undefined, `${key}?verse=${verse}`)),
+                    (await cardFor(value.title, {
+                      seed: `${key}?verse=${verse}`,
+                      lines: value.lines,
+                    })),
                 },
               ]),
             ),
           )
         : undefined
+      let ogImage = metadata.ogImage
+      if (!ogImage && metadata.openerShare) {
+        const { bytes, width, height, date } = await renderTempleOpenerShareImage(
+          await source(metadata.openerShare.frame.src),
+          metadata.openerShare.dates,
+        )
+        const digest = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
+        ogImage = {
+          src: await storeMedia(storage, `og/temple-${digest}.jpg`, bytes, 'image/jpeg'),
+          width,
+          height,
+          alt: `${title} — ${date}`,
+        }
+      }
       output[key] = {
         ...result.document,
         content: {
@@ -133,7 +162,7 @@ export async function prepareTempleShareImages(
           metadata: {
             ...metadata,
             ogImage:
-              metadata.ogImage ?? (await cardFor(title, undefined, key, !metadata.verseShares)),
+              ogImage ?? (await cardFor(title, { seed: key, showWordmark: !metadata.verseShares })),
             ...(verseShares ? { verseShares } : {}),
           },
         },

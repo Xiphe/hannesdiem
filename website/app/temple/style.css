@@ -110,7 +110,7 @@ html[data-layout='temple'] body {
 }
 @font-face {
   font-family: 'Germania';
-  src: url('./assets/germaniaone.ttf') format('truetype');
+  src: url('../../../contracts/assets/temple/germaniaone.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }
@@ -122,7 +122,7 @@ html[data-layout='temple'] body {
 }
 @font-face {
   font-family: 'Unbounded';
-  src: url('./assets/unbounded.ttf') format('truetype');
+  src: url('../../../contracts/assets/temple/unbounded.ttf') format('truetype');
   font-weight: 650;
   font-display: swap;
 }
@@ -171,7 +171,7 @@ html[data-layout='temple'] body {
 /* Only the four opener fonts; Unbounded's reading weights get an alias. */
 @font-face {
   font-family: UnboundedCopy;
-  src: url('./assets/unbounded.ttf') format('truetype');
+  src: url('../../../contracts/assets/temple/unbounded.ttf') format('truetype');
   font-weight: 200 900;
   font-display: swap;
 }

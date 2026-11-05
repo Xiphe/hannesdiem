@@ -286,6 +286,29 @@ The ten actual prepared cards are available in
 Phase: implementation for review within the selected direction. No deployment
 requested.
 
+**Larger typography, authored poem openings and opener card — 2026-11-05.**
+The artist requests larger text when space permits. Use180px as the concrete
+plain-title ceiling for review, keeping40px wordmark, the caption bounds,48px lower bound and `...`
+overflow handling. Use their practical card titles in navigation order: “Come
+visit us”, “Watch this space”, “Let's collaborate”, “Step into the circle”. These
+are share-card titles; the page's navigation and authored practical prose retain
+their existing wording.
+
+The artist replaces the five short poem card headlines with their supplied two
+opening lines, preserving explicit breaks and the marked emphasis. Reuse native
+PoemLine faces: quieter spaced Unbounded address, Unbounded copy and bold Cinzel
+emphasis, fitted separately by line like the on-screen poem. These supplied card
+lines supersede the earlier headline-only phrases without changing the five URL
+identities. Do not add other excerpts or descriptions.
+
+The poem's index card uses a slightly glitched frame from its actual opener,
+plus “November & December 2026”, derived from its authored calendar dates. Capture
+only the native opener canvas after a small pointer disturbance, commit the
+frame as a CMX-imported media asset, and add the date during publication. Keep the
+live opener unchanged. Shared font files and licenses move under contracts for
+both halves of the repository split. The ten-card gallery is refreshed for
+review. Local implementation only; no deployment requested.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to

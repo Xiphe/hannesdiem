@@ -36,8 +36,8 @@ for (const [index, card] of cards.entries()) {
   await copyFile(resolve('.generated', card.image.src.slice(1)), `${output}/${index}.jpg`)
   const label = await sharp({
     text: {
-      text: `<span foreground="#e1d9ce">${escape(card.title)}</span>`,
-      font: 'sans 20',
+      text: `<span foreground="#e1d9ce">${escape(card.path)}</span>`,
+      font: 'sans 16',
       rgba: true,
     },
   })
