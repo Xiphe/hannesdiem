@@ -1,5 +1,6 @@
 import { expect, test as base, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
+import sharp from 'sharp'
 
 const test = base.extend({
   launchOptions: async ({ browserName }, use) => {
@@ -210,6 +211,10 @@ test('text scrolls through its full length before snapping to the next piece', a
   const item = post(page, 'text')
   const height = (await item.boundingBox())!.height
   expect(height).toBeGreaterThan(844 * 3)
+  const header = (await item.locator('.feed-corners').boundingBox())!
+  expect((await item.locator('.feed-text > :first-child').boundingBox())!.y).toBeGreaterThan(
+    header.y + header.height,
+  )
   await item.locator('.feed-text').hover({ position: { x: 100, y: 100 } })
   await page.mouse.wheel(0, 600)
   await expect.poll(async () => (await item.boundingBox())!.y).toBeLessThan(-100)
@@ -396,7 +401,7 @@ for (const viewport of [
     await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
     const layout = await item.evaluate((node) => {
       const panel = node.querySelector('.feed-panel')!.getBoundingClientRect()
-      const title = node.querySelector('.feed-summary h2')!
+      const title = node.querySelector('.feed-title')!
       const transport = node.querySelector('.feed-transport')!.getBoundingClientRect()
       const caption = node.querySelector('.feed-caption')!
       const summary = node.querySelector('.feed-summary')!.getBoundingClientRect()
@@ -413,6 +418,8 @@ for (const viewport of [
         summaryBottom: summary.bottom,
         icon: { width: icon.width, height: icon.height },
         titleBottom: title.getBoundingClientRect().bottom,
+        titleTop: title.getBoundingClientRect().top,
+        titleCenter: title.getBoundingClientRect().x + title.getBoundingClientRect().width / 2,
         transport: transport.top,
         first: caption.firstElementChild?.tagName,
         title: parseFloat(getComputedStyle(title).fontSize),
@@ -427,6 +434,8 @@ for (const viewport of [
     expect(layout.chevronBottom).toBeLessThanOrEqual(layout.summaryBottom)
     expect(layout.icon.width).toBeGreaterThan(layout.icon.height * 2)
     expect(layout.titleBottom).toBeLessThanOrEqual(layout.transport)
+    expect(layout.titleTop).toBeLessThan(48)
+    expect(layout.titleCenter).toBeCloseTo(viewport.width / 2)
     expect(layout.first).toBe('TIME')
     expect(layout.title).toBeLessThanOrEqual(26)
     expect(layout.back.x).toBeLessThan(24)
@@ -783,4 +792,30 @@ test('stream order runs toward newer posts and surface Space does not outline th
   await page.keyboard.press('Space')
   await expect(item).not.toHaveAttribute('data-playing', '')
   await expect(item.locator('.feed-tap')).toHaveCSS('outline-style', 'none')
+})
+
+test('bottom dimming remains in place midway through the drawer closing', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await page.clock.install()
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+  await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+  await page.clock.fastForward(10_100)
+  await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-transport-peek', '')
+  await expect(item.locator('.feed-bottom-shade')).toHaveCSS('opacity', '1')
+  await item.evaluate((article) => {
+    article.querySelector<HTMLButtonElement>('[data-details-toggle]')!.click()
+    for (const animation of article.getAnimations({ subtree: true })) {
+      animation.pause()
+      animation.currentTime = 150
+    }
+  })
+  const pixel = await sharp(await page.screenshot())
+    .extract({ left: 2, top: 842, width: 1, height: 1 })
+    .removeAlpha()
+    .raw()
+    .toBuffer()
+  expect(Math.max(...pixel)).toBeLessThan(35)
 })

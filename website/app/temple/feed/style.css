@@ -167,7 +167,7 @@
 .feed-post[data-details] .feed-panel {
   transform: translateY(var(--drawer-offset, 0px));
 }
-.feed-post:not([data-active]) :is(.feed-panel, .feed-corners, .feed-ended) {
+.feed-post:not([data-active]) :is(.feed-panel, .feed-corners, .feed-ended, .feed-bottom-shade) {
   display: none;
 }
 .feed-summary {
@@ -183,20 +183,28 @@
     opacity 180ms ease,
     visibility 0s linear 180ms;
 }
-.feed-summary::before {
-  content: '';
-  position: absolute;
-  inset: -64px 0 0;
-  z-index: -1;
+.feed-bottom-shade {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 3;
+  height: calc(var(--summary-height, 68px) + var(--caption-height, 0px) + 64px);
   background: linear-gradient(transparent, rgb(0 0 0 / 78%) 42%, rgb(0 0 0 / 94%));
+  opacity: 0;
+  transition: opacity 180ms ease;
   pointer-events: none;
 }
-.feed-summary h2 {
+.feed-title {
+  flex: 1 1 auto;
+  align-self: center;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 0;
+  text-align: center;
+  text-wrap: balance;
   font:
     700 clamp(18px, 2vw, 26px)/1.2 CinzelDecorative,
     serif;
-  margin: 0 0 8px;
-  text-wrap: balance;
+  text-shadow: 0 1px 12px rgb(0 0 0 / 85%);
 }
 .feed-transport {
   height: 44px;
@@ -210,7 +218,9 @@
   inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto
     max(12px, env(safe-area-inset-left));
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -218,10 +228,25 @@
     opacity 180ms ease,
     visibility 0s linear 180ms;
 }
+.feed-corners::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * max(12px, env(safe-area-inset-top))) -12px -40px;
+  z-index: -1;
+  background: linear-gradient(rgb(0 0 0 / 55%), transparent);
+  pointer-events: none;
+}
+.feed-post[data-overlay] .feed-bottom-shade,
+.temple-feed[data-transport-peek] .feed-post[data-active] .feed-bottom-shade,
+.feed-post[data-active]:has(.feed-panel[data-animating], .feed-panel[data-dragging])
+  .feed-bottom-shade {
+  opacity: 1;
+}
 .feed-corners .feed-control {
   background: rgb(0 0 0 / 25%);
   border-radius: 50%;
   pointer-events: auto;
+  flex: 0 0 44px;
 }
 .feed-post[data-overlay] :is(.feed-summary, .feed-corners),
 .temple-feed[data-transport-peek] .feed-post[data-active] :is(.feed-summary, .feed-corners) {
@@ -263,7 +288,7 @@
 .feed-disclosure {
   position: absolute;
   left: 50%;
-  bottom: max(2px, calc(env(safe-area-inset-bottom) - 6px));
+  bottom: max(6px, calc(env(safe-area-inset-bottom) - 2px));
   transform: translateX(-50%);
   width: 72px;
   min-height: 20px;
@@ -289,7 +314,6 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  background: rgb(0 0 0 / 94%);
   transition:
     opacity 180ms ease,
     visibility 0s linear 180ms;
@@ -555,19 +579,9 @@
   height: 12px;
   cursor: pointer;
 }
-.feed-audio-title {
-  position: absolute;
-  top: 18%;
-  left: 24px;
-  right: 72px;
-  text-align: center;
-  font:
-    700 clamp(24px, 5vw, 60px)/1.2 CinzelDecorative,
-    serif;
-}
 .feed-post[data-kind='text'] {
   height: auto;
-  padding-top: max(24px, env(safe-area-inset-top));
+  padding-top: max(88px, calc(env(safe-area-inset-top) + 76px));
   padding-bottom: 40dvh;
 }
 .feed-text {
@@ -591,6 +605,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .feed-details,
+  .feed-bottom-shade,
   .feed-summary,
   .feed-corners,
   .feed-panel,

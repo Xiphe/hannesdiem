@@ -107,9 +107,6 @@ export function Feed(handle: Handle<FeedProps>) {
                   loading={post.id === handle.props.selected ? 'eager' : 'lazy'}
                 />
               )}
-              {post.kind === 'audio' && !post.cover && (
-                <h2 class="feed-audio-title">{post.title}</h2>
-              )}
               <div class="feed-media-mount" />
               <button
                 class="feed-tap"
@@ -166,6 +163,10 @@ export function Feed(handle: Handle<FeedProps>) {
               )}
             </div>
           )}
+          <div
+            class="feed-bottom-shade"
+            aria-hidden="true"
+          />
           <div class="feed-corners">
             <a
               href={templePath}
@@ -176,6 +177,12 @@ export function Feed(handle: Handle<FeedProps>) {
             >
               <FeedIcon name="back" />
             </a>
+            <h2
+              class="feed-title"
+              id={`feed-title-${post.id}`}
+            >
+              {post.title}
+            </h2>
             <button
               type="button"
               class="feed-control"
@@ -208,7 +215,6 @@ export function Feed(handle: Handle<FeedProps>) {
           )}
           <div class="feed-panel">
             <div class="feed-summary">
-              <h2 id={`feed-title-${post.id}`}>{post.title}</h2>
               {post.kind !== 'text' && (
                 <div class="feed-transport">
                   <button

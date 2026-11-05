@@ -13,13 +13,16 @@ Watch; the entry and share-image conversations own their corresponding views.
   uses `hasEnteredTemple()` from the entry implementation but never writes it
   (`hannesdiem.temple.entered`).
 - Video covers when its orientation matches the viewport; otherwise contains on
-  black. Tap surface toggles playback. Both orientations use a bottom summary:
-  smaller title, Play/Pause, scrubber with an icon-only speaker, then a wide, shallow down-chevron tucked into the existing bottom padding.
+  black. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
+  The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
+  wide, shallow down-chevron tucked into the existing bottom padding.
   Only the chevron’s center moves between directions; its ends stay fixed, with
-  dimmer ink and a 2px higher position. Space toggles playback without a focus
+  dimmer ink and a 6px higher position. Space toggles playback without a focus
   outline on the video surface. Controls retain keyboard focus indicators.
-  A black gradient fades upward behind the title and transport. Back and Share
-  are icon-only controls in the top corners and appear with the rest of the UI.
+  The bottom gradient is anchored independently of the moving drawer, covering
+  the bottom edge throughout animation and dragging. The centered top title has
+  its own dark fade. Back and Share remain icon-only corner controls; all appear
+  with the rest of the UI.
 - During video playback the summary and corner controls appear for ten seconds
   after interaction or cursor movement. Neither entry nor cursorless scrolling
   reveals, hides or restarts that timer. A deliberate pause, the chevron or an
