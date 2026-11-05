@@ -87,6 +87,15 @@ export function Opening(handle: Handle<OpeningProps>) {
         >
           <TopNavigation {...handle.props} />
           <div class="temple-practical-content">
+            <div class="temple-intention-return fact-action">
+              <a
+                href="/temple-of-sound"
+                data-rmx-document
+              >
+                Manifesto
+              </a>
+              <p>Read the intention and the charge of this space</p>
+            </div>
             {location && (
               <div class="temple-practical-section">
                 <Location {...location} />

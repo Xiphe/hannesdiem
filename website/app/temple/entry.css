@@ -93,6 +93,13 @@
 .temple-practical-content {
   padding-top: calc(var(--temple-nav-clearance, 88px) + 4rem);
 }
+.temple-intention-return.fact-action {
+  position: relative;
+  z-index: 3;
+  min-height: 40svh;
+  justify-content: center;
+  padding: 6svh 1.5rem max(12svh, calc(var(--temple-nav-clearance, 88px) + 2rem));
+}
 .temple-practical-section {
   display: flow-root;
   position: relative;

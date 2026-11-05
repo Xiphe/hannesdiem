@@ -1,5 +1,15 @@
 # Temple of Sound: client–artist collaboration
 
+**Return to the intention above Visit — 2026-11-05.** The artist requests a
+button at the top of the practical page, revealed by scrolling farther upward
+than the first section. Place a native poem link in document flow above Visit;
+normal section arrivals still land at their existing destinations. Reuse the
+existing action treatment and preserve the supplied explanation exactly:
+“Read the intention and the charge of this space”. The artist asks whether
+“Manifest” fits the poem; use the agent's English recommendation “Manifesto”
+as the button label. Link directly to the poem opener with native document
+navigation. Local review only.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

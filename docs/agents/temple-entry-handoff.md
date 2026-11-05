@@ -53,6 +53,9 @@ immediately. Wordmark links to the poem root. Progress/scrubbing follows practic
 content only. Inspire/Be Held/Wish remain visible; activating them shows
 “coming soon”. Header links have section paths as their native destinations;
 enhancement can scroll between existing sections without reloading the document.
+Above Visit, a native “Manifesto” link returns to the poem with the artist's
+explanation below it. It is above the normal arrival position, revealed by
+scrolling upward beyond the first section, rather than another header item.
 Reuse the poem's three-depth fragment ground across Visit through Share, retaining
 viewport-bounded rendering and motion fallbacks. Practical reading boundaries
 contain the complete fitted contours; only the interleaved poem bounds them to
