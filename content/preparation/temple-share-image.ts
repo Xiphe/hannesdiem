@@ -9,7 +9,7 @@ export const templeCard = {
   right: 76,
   bottom: 55,
   captionTop: 200,
-  gap: 16,
+  gap: 44,
   nameSize: 40,
   maxTitleSize: 180,
   minTitleSize: 48,
@@ -98,8 +98,6 @@ export async function renderTempleShareImage(input: {
   backgroundColor?: string
   /** The whole-Temple card needs its name once, as the main title. */
   showWordmark?: boolean
-  /** Scale the visible gap between the name and title glyphs. */
-  wordmarkGapScale?: number
 }) {
   if (!input.title.trim()) throw new Error('Temple share cards require a nonempty title')
   const { width, height, left, bottom, captionTop, gap, nameSize, bottomOpacity } = templeCard
@@ -109,6 +107,11 @@ export async function renderTempleShareImage(input: {
   const nameHeight = showWordmark ? Math.max(Math.ceil(nameSize * 1.15), name.info.height) : 0
   const nameGap = showWordmark ? gap : 0
   const available = poem ? height - 2 * 140 : height - bottom - captionTop - nameHeight - nameGap
+  // Caption spacing follows visible glyphs; retain room for the full title line box too.
+  const fits = (mask: Awaited<ReturnType<typeof measureTitle>>) =>
+    poem
+      ? mask.height <= available
+      : mask.info.height <= available && mask.height <= height - bottom - captionTop
   let fitted: Awaited<ReturnType<typeof measureTitle>> | undefined
   let size = templeCard.maxTitleSize as number
   let titleText = input.lines?.map((line) => line.text).join('\n') ?? input.title
@@ -121,7 +124,7 @@ export async function renderTempleShareImage(input: {
     const mask = input.lines
       ? await measurePoemShareTitle(input.lines, candidate, titleWidth)
       : await measureTitle(input.title, candidate)
-    if (mask.height <= available) {
+    if (fits(mask)) {
       fitted = mask
       size = candidate
       low = candidate + 1
@@ -142,7 +145,7 @@ export async function renderTempleShareImage(input: {
       const candidate = Math.floor((low + high) / 2)
       const prefix = graphemes.slice(0, candidate).join('').trimEnd()
       const mask = await measureTitle(`${prefix}...`, size)
-      if (mask.height <= available) {
+      if (fits(mask)) {
         kept = candidate
         low = candidate + 1
       } else high = candidate - 1
@@ -156,10 +159,11 @@ export async function renderTempleShareImage(input: {
   }
   const titleHeight = fitted.height
   const titleTop = poem ? Math.round((height - titleHeight) / 2) : height - bottom - titleHeight
-  const visibleGap = (titleHeight - fitted.info.height + nameGap) * (input.wordmarkGapScale ?? 1)
   const nameTop = poem
     ? 48
-    : Math.round(titleTop + titleHeight - fitted.info.height - visibleGap - nameHeight)
+    : showWordmark
+      ? titleTop + titleHeight - fitted.info.height - nameGap - nameHeight
+      : titleTop
   const nameLeft = poem ? Math.round((width - name.info.width) / 2) : left
   const titleLeft = poem ? Math.round((width - titleWidth) / 2) : left
   const background = await (

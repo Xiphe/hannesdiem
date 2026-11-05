@@ -378,6 +378,14 @@ use70% of the original visible gap, up from the previous50%, without moving
 their main titles. These measurements are concrete refinements for local review.
 No deployment requested.
 
+**Shared caption spacing accepted — 2026-11-05.** The artist selects the
+Watch card's visible name/title spacing and requests it across all cards with
+that typography layout, including photographs. Establish its44px visible gap
+at1200×630 as the shared renderer default, independent of font leading, title
+size and line count. Remove per-section spacing overrides. Fit the complete
+caption within its existing bounds. Centered manifesto cards and the captured
+opener retain their separate compositions. Local implementation only.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to

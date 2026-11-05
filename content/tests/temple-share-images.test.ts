@@ -112,15 +112,36 @@ test('poem cards retain explicit lines and fit each native typeface independentl
   })
 })
 
-test('a half-size visible wordmark gap renders without shifting the main title', async () => {
-  const standard = await renderTempleShareImage({ title: 'Synthetic compact heading' })
-  const compact = await renderTempleShareImage({
-    title: 'Synthetic compact heading',
-    wordmarkGapScale: 0.5,
+test('caption cards keep the same visible glyph gap across title sizes and image backgrounds', async () => {
+  const background = await sharp({
+    create: { width: 720, height: 960, channels: 3, background: '#18202a' },
   })
-  assert.equal(compact.layout.titleTop, standard.layout.titleTop)
-  assert.equal(compact.layout.titleSize, standard.layout.titleSize)
-  assert.ok(compact.layout.captionTop > standard.layout.captionTop)
+    .png()
+    .toBuffer()
+  const sizes = new Set<number>()
+  for (const title of ['Synthetic title', 'Synthetic recording title with more words '.repeat(3)]) {
+    for (const image of [undefined, background]) {
+      const card = await renderTempleShareImage({ title, background: image })
+      sizes.add(card.layout.titleSize)
+      const { data, info } = await sharp(card.bytes)
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true })
+      const rows = Array.from({ length: info.height }, (_, y) => {
+        for (let x = 0; x < info.width; x++) {
+          const pixel = (y * info.width + x) * info.channels
+          if (data[pixel] > 110 && data[pixel + 1] > 90) return true
+        }
+        return false
+      })
+      const firstInk = rows.indexOf(true)
+      const afterWordmark = rows.indexOf(false, firstInk)
+      const titleInk = rows.indexOf(true, afterWordmark)
+      assert.ok(firstInk >= templeCard.captionTop)
+      assert.ok(Math.abs(titleInk - afterWordmark - 44) <= 1)
+    }
+  }
+  assert.equal(sizes.size, 2)
 })
 
 test('opener cards compose a supplied frame with the authored calendar range', async () => {

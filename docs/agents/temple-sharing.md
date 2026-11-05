@@ -11,7 +11,11 @@ The decision trail is in `website/app/temple/docs/collaboration.md`.
 `content/preparation/temple-share-image.ts` owns measurement and composition.
 Fit the full title between the 200px upper caption boundary and 55px bottom
 margin, with 64px left and 76px right insets. Keep the name at 40px and a
-16px gap. Plain titles grow up to 180px and shrink when necessary, down to 48px. Long unbroken
+44px visible gap between the wordmark and title glyphs, matching the accepted
+Watch card. Apply it to every lower-left caption card, including photographs,
+pattern backgrounds and pictureless posts, independently of title size or line
+count. Fit both the visible stack and the title's line box within the caption
+area. Plain titles grow up to 180px and shrink when necessary, down to 48px. Long unbroken
 words wrap by character. Escape markup and retain punctuation. If the full title
 still cannot fit at 48px, trim its end and append literal `...`, measuring the
 dots within the same caption area. Prefer a complete final word and never split
@@ -19,8 +23,8 @@ a Unicode grapheme. Keep the original title and share metadata intact; only the
 card text is shortened. An authored `shareTitle` remains an optional alternative.
 
 Character count is not a capacity rule: glyph widths and word boundaries matter.
-The current coverage examples include 15/43/72 characters at 180/125/93px,
-133 at 69px and 223 at 55px; the 287-character specimen trims with `...` at 48px.
+The current coverage examples include 15/43/72 characters at 180/125/95px,
+133 at 66px and 223 at 52px; the 287-character specimen trims with `...` at 48px.
 
 Shade with one straight gradient ending at 80% black. Its start is solved from
 both text height and sampled background brightness under each text role, using
@@ -69,8 +73,8 @@ the browser keeps its placement helpers. `temple-share-pattern.ts` composes a
 static dark crop with those shapes and soft joins. Seed it from each document
 or document/verse identity, so patterns differ while repeated publishing stays
 stable. Section and poem cards retain the small orange wordmark above the
-large Cloud ink headline, with 70% of the former visible name/title gap on practical
-cards. Poem cards center the name at the top and center each phrase line in the
+large Cloud ink headline, with the shared44px visible gap on practical cards.
+Poem cards center the name at the top and center each phrase line in the
 whole card, independently of the name. The whole-Temple card uses a captured opener frame
 and a date derived from the same authored start/end values as the page.
 
