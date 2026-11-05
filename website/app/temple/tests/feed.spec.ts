@@ -422,6 +422,9 @@ for (const viewport of [
         titleCenter: title.getBoundingClientRect().x + title.getBoundingClientRect().width / 2,
         transport: transport.top,
         first: caption.firstElementChild?.tagName,
+        descriptionGap: getComputedStyle(
+          caption.querySelector('.feed-description')!.firstElementChild!,
+        ).marginTop,
         title: parseFloat(getComputedStyle(title).fontSize),
         back: { x: back.x, y: back.y },
         share: { right: share.right, y: share.y },
@@ -437,6 +440,7 @@ for (const viewport of [
     expect(layout.titleTop).toBeLessThan(48)
     expect(layout.titleCenter).toBeCloseTo(viewport.width / 2)
     expect(layout.first).toBe('TIME')
+    expect(layout.descriptionGap).toBe('6px')
     expect(layout.title).toBeLessThanOrEqual(26)
     expect(layout.back.x).toBeLessThan(24)
     expect(layout.back.y).toBeLessThan(24)
@@ -628,6 +632,10 @@ test('description opens from its chevron and drag without interrupting playback'
   await expect(item.locator('.feed-caption')).toBeVisible()
   await expect(item).toHaveAttribute('data-playing', '')
   await expect(page).toHaveURL(path('latest'))
+  await toggle.focus()
+  await page.keyboard.press('Space')
+  await expect(toggle).toHaveCSS('outline-style', 'none')
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
 })
 
 test('video completion offers replay and the next video, skipping other post types', async ({
@@ -818,4 +826,74 @@ test('bottom dimming remains in place midway through the drawer closing', async 
     .raw()
     .toBuffer()
   expect(Math.max(...pixel)).toBeLessThan(35)
+})
+
+test('an upward scrubber gesture pulls the drawer without seeking or pausing', async ({
+  page,
+  context,
+  browserName,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 150 } })
+  const seek = item.locator('.feed-video-seek')
+  await expect(seek).toBeEnabled()
+  const box = (await seek.boundingBox())!
+  const before = await page
+    .locator('video')
+    .evaluate((video: HTMLVideoElement) => video.currentTime)
+  const x = box.x + box.width * 0.85,
+    y = box.y + box.height / 2
+  const touch = browserName === 'chromium' ? await context.newCDPSession(page) : undefined
+  if (touch) {
+    await touch.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 })
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+  } else {
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+  }
+  expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
+    false,
+  )
+  if (touch) {
+    for (let step = 1; step <= 8; step++)
+      await touch.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: x + step / 4, y: y - step * 10 }],
+      })
+  } else await page.mouse.move(x + 2, y - 80, { steps: 8 })
+  await expect(item.locator('.feed-panel')).toHaveAttribute('data-dragging', '')
+  await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-range-dragging')
+  if (touch) {
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  } else await page.mouse.up()
+  await expect(item.locator('[data-details-toggle]')).toHaveAttribute('aria-expanded', 'true')
+  await expect(item).toHaveAttribute('data-playing', '')
+  expect(
+    await page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime),
+  ).toBeLessThan(before + 2)
+  await expect(page).toHaveURL(path('latest'))
+  if (touch) {
+    await item
+      .locator('[data-details-toggle]')
+      .evaluate((button: HTMLButtonElement) => button.click())
+    await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+    const next = (await seek.boundingBox())!
+    const start = { x: next.x + next.width * 0.2, y: next.y + next.height / 2 }
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [start] })
+    for (let step = 1; step <= 5; step++)
+      await touch.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: start.x + next.width * step * 0.1, y: start.y }],
+      })
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await expect(item).toHaveAttribute('data-playing', '')
+    await expect(item.locator('.feed-caption')).not.toBeVisible()
+    expect(
+      await page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime),
+    ).toBeGreaterThan(6)
+    await touch.detach()
+  }
 })

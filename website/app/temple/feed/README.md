@@ -18,7 +18,7 @@ Watch; the entry and share-image conversations own their corresponding views.
   wide, shallow down-chevron tucked into the existing bottom padding.
   Only the chevron’s center moves between directions; its ends stay fixed, with
   dimmer ink and a 6px higher position. Space toggles playback without a focus
-  outline on the video surface. Controls retain keyboard focus indicators.
+  outline on the video surface. The chevron has no focus outline; the other controls retain keyboard focus indicators.
   The bottom gradient is anchored independently of the moving drawer, covering
   the bottom edge throughout animation and dragging. The centered top title has
   its own dark fade. Back and Share remain icon-only corner controls; all appear
@@ -29,8 +29,12 @@ Watch; the entry and share-image conversations own their corresponding views.
   upward drag on the summary opens the date/description drawer; a downward drag
   or chevron closes it. Opening the drawer does not interrupt playback. The
   complete expanded panel occupies at most 40% of the viewport; its description
-  scrolls internally. The summary owns dragging; native seeking and scrolling
-  inside the description retain their own gestures.
+  scrolls internally. Use 6px between the date and first description block,
+  retaining 12px between subsequent blocks. The summary owns dragging; horizontal seeking and scrolling
+  inside the description retain their own gestures. An upward gesture starting
+  on the scrubber hands off to the drawer without seeking or pausing; horizontal
+  gestures seek. Wait for the initial direction before committing a pointer seek,
+  while clicks and keyboard range input keep their usual playback behavior.
 - Seeking preserves the previous playback/drawer state and resumes only
   previously playing media. Pointer capture and a consistent resize cursor on
   the track, thumb and surrounding area prevent cursor changes during a drag.

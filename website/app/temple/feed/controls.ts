@@ -2,7 +2,12 @@ const volumeKey = 'hannesdiem.temple.volume'
 const controlsTimeout = 10_000
 
 /** Interaction visibility is shared across posts; scrolling never resets it. */
-export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, signal: AbortSignal) {
+export function mountFeedControls(
+  root: HTMLElement,
+  video: HTMLVideoElement,
+  signal: AbortSignal,
+  pullDrawer: (input: HTMLInputElement, event: PointerEvent, startY: number) => void,
+) {
   const cursor = matchMedia('(hover: hover) and (pointer: fine)')
   let preferred = 1
   try {
@@ -13,6 +18,9 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
   let lastAudible = preferred || 1
   let timer: ReturnType<typeof setTimeout> | undefined
   let adjusting: HTMLInputElement | undefined
+  let seekGesture:
+    | { input: HTMLInputElement; id: number; x: number; y: number; mode: 'pending' | 'seek' }
+    | undefined
   let resumeAfterSeek = false
   let keyboard = false
   let pointer: { x: number; y: number } | undefined
@@ -98,25 +106,85 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
     },
     options,
   )
+  // Range touch defaults can seek even when pointerdown was cancelled.
+  root.addEventListener(
+    'touchstart',
+    (event) => {
+      if ((event.target as Element).matches('.feed-video-seek')) event.preventDefault()
+    },
+    { passive: false, signal },
+  )
   root.addEventListener(
     'pointerdown',
     (event) => {
       keyboard = false
       const input = event.target as HTMLInputElement
-      if (!input.matches('.feed-seek, [data-volume]')) return
+      if (!input.matches('.feed-seek, [data-volume]') || input.disabled || event.button !== 0)
+        return
       adjusting = input
       root.dataset.rangeDragging = input.matches('[data-volume]') ? 'vertical' : 'horizontal'
       input.setPointerCapture(event.pointerId)
       reveal()
       if (input.matches('.feed-seek')) {
         resumeAfterSeek = !video.paused
-        video.pause()
+        if (input.matches('.feed-video-seek')) {
+          event.preventDefault()
+          input.focus({ preventScroll: true })
+          seekGesture = {
+            input,
+            id: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+            mode: 'pending',
+          }
+        } else video.pause()
       }
     },
     options,
   )
-  const finishAdjustment = () => {
+  const seekAt = (input: HTMLInputElement, x: number) => {
+    const box = input.getBoundingClientRect()
+    const value = Math.max(
+      0,
+      Math.min(100, ((x - box.left - 6) / Math.max(1, box.width - 12)) * 100),
+    )
+    input.value = String(value)
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+  root.addEventListener(
+    'pointermove',
+    (event) => {
+      const gesture = seekGesture
+      if (!gesture || gesture.id !== event.pointerId) return
+      const dx = event.clientX - gesture.x,
+        dy = event.clientY - gesture.y
+      if (gesture.mode === 'pending') {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 6) return
+        if (dy < -6 && -dy > Math.abs(dx)) {
+          seekGesture = undefined
+          adjusting = undefined
+          resumeAfterSeek = false
+          delete root.dataset.rangeDragging
+          pullDrawer(gesture.input, event, gesture.y)
+          return
+        }
+        gesture.mode = 'seek'
+        video.pause()
+      }
+      event.preventDefault()
+      seekAt(gesture.input, event.clientX)
+    },
+    options,
+  )
+  const clearGesture = () => {
+    if (seekGesture?.input.hasPointerCapture(seekGesture.id))
+      seekGesture.input.releasePointerCapture(seekGesture.id)
+    seekGesture = undefined
+  }
+  const finishAdjustment = (x?: number) => {
     if (!adjusting) return
+    if (seekGesture && x !== undefined) seekAt(seekGesture.input, x)
+    clearGesture()
     adjusting = undefined
     delete root.dataset.rangeDragging
     const resume = resumeAfterSeek
@@ -124,8 +192,8 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
     reveal()
     if (resume && !signal.aborted) void video.play().catch(() => {})
   }
-  window.addEventListener('pointerup', finishAdjustment, options)
-  window.addEventListener('pointercancel', finishAdjustment, options)
+  window.addEventListener('pointerup', (event) => finishAdjustment(event.clientX), options)
+  window.addEventListener('pointercancel', () => finishAdjustment(), options)
   root.addEventListener(
     'keydown',
     (event) => {
@@ -155,6 +223,7 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
     'abort',
     () => {
       clearTimeout(timer)
+      clearGesture()
       delete root.dataset.rangeDragging
     },
     { once: true },
@@ -166,6 +235,7 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
     },
     isAdjusting: (input: HTMLInputElement) => input === adjusting,
     cancelAdjustment() {
+      clearGesture()
       delete root.dataset.rangeDragging
       adjusting = undefined
       resumeAfterSeek = false

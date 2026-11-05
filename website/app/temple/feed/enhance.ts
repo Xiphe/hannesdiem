@@ -25,7 +25,9 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   let waveformTask: AbortController | undefined
   const options = { signal }
   const post = () => props.posts[index]
-  const controls = mountFeedControls(root, video, signal)
+  const controls = mountFeedControls(root, video, signal, (input, event, startY) => {
+    drawer.startFromScrubber(input, event, startY)
+  })
   const drawer = mountFeedDrawer(root, signal, setDetails, controls.reveal)
   const measurePanel = (article: HTMLElement) => {
     article.style.setProperty(

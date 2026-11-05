@@ -1,4 +1,4 @@
-/** Drag only the bottom summary; description scrolling and seeking stay native. */
+/** The summary and upward scrubber gestures pull the drawer; description scroll stays native. */
 export function mountFeedDrawer(
   root: HTMLElement,
   signal: AbortSignal,
@@ -33,23 +33,26 @@ export function mountFeedDrawer(
     delete drag.panel.dataset.dragging
     drag = undefined
   }
+  const begin = (summary: HTMLElement, id: number, y: number) => {
+    const article = summary.closest<HTMLElement>('.feed-post')!
+    suppressClick = false
+    drag = {
+      id,
+      y,
+      delta: 0,
+      open: article.hasAttribute('data-details'),
+      height: article.querySelector('.feed-details')!.getBoundingClientRect().height,
+      summary,
+      panel: summary.closest<HTMLElement>('.feed-panel')!,
+    }
+  }
   root.addEventListener(
     'pointerdown',
     (event) => {
       const target = event.target as Element
       const summary = target.closest<HTMLElement>('.feed-summary')
       if (!summary || event.button !== 0 || target.closest('input, .feed-volume-control')) return
-      const article = summary.closest<HTMLElement>('.feed-post')!
-      suppressClick = false
-      drag = {
-        id: event.pointerId,
-        y: event.clientY,
-        delta: 0,
-        open: article.hasAttribute('data-details'),
-        height: article.querySelector('.feed-details')!.getBoundingClientRect().height,
-        summary,
-        panel: summary.closest<HTMLElement>('.feed-panel')!,
-      }
+      begin(summary, event.pointerId, event.clientY)
     },
     { signal },
   )
@@ -104,6 +107,10 @@ export function mountFeedDrawer(
   signal.addEventListener('abort', cancel, { once: true })
   return {
     cancel,
+    startFromScrubber(input: HTMLInputElement, event: PointerEvent, startY: number) {
+      const summary = input.closest<HTMLElement>('.feed-summary')
+      if (summary) begin(summary, event.pointerId, startY)
+    },
     setExpanded(article: HTMLElement, open: boolean, animate = true) {
       const panel = article.querySelector<HTMLElement>('.feed-panel')!
       const changed = article.hasAttribute('data-details') !== open

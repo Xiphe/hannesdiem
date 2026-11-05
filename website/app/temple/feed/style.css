@@ -295,6 +295,9 @@
   height: 20px;
   padding: 4px 18px;
 }
+.feed-disclosure:focus-visible {
+  outline: none;
+}
 .feed-disclosure svg {
   width: 36px;
   height: 12px;
@@ -345,6 +348,9 @@
 }
 .feed-description > * {
   margin-block: 12px 0;
+}
+.feed-description > :first-child {
+  margin-top: 6px;
 }
 .feed-description a,
 .feed-text a {
