@@ -320,7 +320,7 @@
   height: 3px;
   border-radius: 2px;
   background: currentColor;
-  opacity: 0.44;
+  opacity: 0.2;
 }
 .feed-details {
   max-height: var(--details-height);
