@@ -79,6 +79,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       active.hasAttribute('data-details')
     active.toggleAttribute('data-overlay', visible)
     root.toggleAttribute('data-overlay', visible)
+    root.toggleAttribute('data-paused', post().kind === 'video' && video.paused && visible)
   }
   function setDetails(open: boolean, animate = true) {
     if (!active) return
@@ -148,11 +149,11 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     intent = 'autoplay'
     delete active!.dataset.ended
     active!.querySelector<HTMLElement>('.feed-ended')?.setAttribute('hidden', '')
-    setDetails(post().kind !== 'video')
     try {
       await video.play()
       if (signal.aborted || current !== loading) return
       intent = 'playing'
+      setDetails(post().kind !== 'video')
       reflect()
     } catch {
       if (!signal.aborted && current === loading) blocked()
@@ -189,6 +190,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   async function activate(next: number, initial = false) {
     if (!initial && next === index) return
     const direction = next < index ? -1 : 1
+    const incomingOpen = !initial && root.hasAttribute('data-paused')
     if (active) {
       if (post().kind !== 'text') positions.set(post().id, video.currentTime)
       drawer.setExpanded(active, false, false)
@@ -210,7 +212,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     delete active.dataset.ended
     active.querySelector<HTMLElement>('.feed-ended')?.setAttribute('hidden', '')
     active.querySelector<HTMLButtonElement>('.feed-start')?.setAttribute('hidden', '')
-    setDetails(post().kind !== 'video', false)
+    setDetails(post().kind !== 'video' || incomingOpen, false)
     active.dataset.active = ''
     active.querySelector<HTMLElement>('.feed-panel-motion')!.inert = false
     measurePanel(active)

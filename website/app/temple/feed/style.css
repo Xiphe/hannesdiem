@@ -196,7 +196,8 @@
   pointer-events: none;
   transform: translateY(calc((1 - var(--feed-drawer-open)) * var(--caption-height, 0px)));
 }
-.feed-post[data-details] .feed-panel {
+.feed-post[data-details] .feed-panel,
+.temple-feed[data-paused] .feed-post[data-kind='video']:not([data-active]) .feed-panel {
   --feed-drawer-open: 1;
 }
 .feed-post:not([data-active]) .feed-ended {
@@ -407,6 +408,7 @@
     visibility 0s linear 180ms;
 }
 .feed-post[data-details] .feed-details,
+.temple-feed[data-paused] .feed-post[data-kind='video']:not([data-active]) .feed-details,
 .feed-panel[data-dragging] .feed-details {
   opacity: 1;
   visibility: visible;

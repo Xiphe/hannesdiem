@@ -494,11 +494,17 @@ test('paused swipe carries titles and panels, fades the outgoing panel, and reve
     )
     .toBe('visible')
   const incoming = post(page, 'latest')
-  const bar = (await incoming.locator('.feed-summary').boundingBox())!
+  const bar = (await incoming.locator('.feed-panel').boundingBox())!
   const video = (await incoming.boundingBox())!
   expect(bar.y + bar.height).toBeCloseTo(video.y + video.height, 0)
   await expect(incoming.locator('.feed-summary')).not.toBeInViewport()
   await expect(post(page, 'latest').locator('.feed-summary')).toHaveCSS('opacity', '1')
+  await expect(incoming.locator('.feed-details')).toHaveCSS('visibility', 'visible')
+  expect(
+    await incoming
+      .locator('.feed-panel')
+      .evaluate((node) => getComputedStyle(node).getPropertyValue('--feed-drawer-open').trim()),
+  ).toBe('1')
 })
 
 test('a paused swipe keeps its drawer stable until playback hands off at scroll end', async ({
@@ -531,7 +537,9 @@ test('a paused swipe keeps its drawer stable until playback hands off at scroll 
                 drawerOpen: outgoing.hasAttribute('data-details'),
                 incomingVisible:
                   getComputedStyle(incoming.querySelector('.feed-summary')!).visibility ===
-                  'visible',
+                    'visible' &&
+                  getComputedStyle(incoming.querySelector('.feed-details')!).visibility ===
+                    'visible',
               })
             if (progress >= 0.99) resolve(samples)
             else requestAnimationFrame(record)
