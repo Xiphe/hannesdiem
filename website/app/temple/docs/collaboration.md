@@ -37,6 +37,23 @@ pull toward available places, rounded tip and reduced-motion behavior. The
 actual SVG viewBox supplies pointer coordinates so the circular surface stays
 aligned at responsive sizes. Local review only.
 
+**Explore a circle-native pull — 2026-11-05.** The artist accepts the circular
+invitation, then requests a pointing effect that feels more natural around it.
+Phase: Expansion for the pointing motion; retain the accepted circle, wording,
+steady label and reservation behavior. The first local study stretches a broad
+part of the circumference toward a free place, with a rounded nose and a smooth
+join back into the circle. Apply the same shape in every direction, preserving
+the existing gap before each place. Keep fixed angular correspondence between
+poses so switching targets cannot collapse the circular body. Ease arrival and
+return over260ms with native path transitions; retain reduced motion.
+
+This replaces the earlier axis-specific tip corrections inherited from the
+rectangular button. Validate the actual SVG curves for a circular resting body,
+clearance, rotational consistency and stable body during opposite-target
+interpolation. Next review: whether the broader stretch and softer settling feel
+natural in the surrounding circle. This is a study for local review, not artistic
+acceptance or a deployment request.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

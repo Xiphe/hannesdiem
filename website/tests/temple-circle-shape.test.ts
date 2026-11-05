@@ -66,52 +66,68 @@ test('the pointing invitation has no backward folds along its boundary', () => {
   }
 })
 
-test('a sideways pull does not raise an extra shoulder above the circle', () => {
-  // The target tip is within the body's vertical range, so this pose should
-  // turn toward it without creating an unrelated bump above the top edge.
-  const numbers = circleSurface(-104.7, -34)
+/** Sample the actual SVG cubics, including their interpolated flanks. */
+function outlinePoints(dx: number, dy: number) {
+  const numbers = circleSurface(dx, dy)
     .match(/-?\d+(?:\.\d+)?/g)!
     .map(Number)
-  let startY = numbers[1]
+  let start = numbers.slice(0, 2)
+  const points = [start]
   for (let i = 2; i < numbers.length; i += 6) {
-    const control1Y = numbers[i + 1]
-    const control2Y = numbers[i + 3]
-    const endY = numbers[i + 5]
-    for (let step = 0; step <= 40; step++) {
-      const t = step / 40
-      const y =
-        (1 - t) ** 3 * startY +
-        3 * (1 - t) ** 2 * t * control1Y +
-        3 * (1 - t) * t ** 2 * control2Y +
-        t ** 3 * endY
-      assert.ok(y >= -0.05, `unwanted shoulder at y=${y}`)
+    const end = numbers.slice(i + 4, i + 6)
+    for (let step = 1; step <= 20; step++) {
+      const t = step / 20
+      points.push(
+        [0, 1].map(
+          (axis) =>
+            (1 - t) ** 3 * start[axis] +
+            3 * (1 - t) ** 2 * t * numbers[i + axis] +
+            3 * (1 - t) * t ** 2 * numbers[i + 2 + axis] +
+            t ** 3 * end[axis],
+        ),
+      )
     }
-    startY = endY
+    start = end
+  }
+  return points.slice(0, -1)
+}
+
+test('the soft nose keeps the same target clearance in every direction', () => {
+  for (let angle = 0; angle < 360; angle += 10) {
+    const radians = (angle * Math.PI) / 180
+    const ux = Math.cos(radians),
+      uy = Math.sin(radians)
+    const points = outlinePoints(110 * ux, 110 * uy)
+    const reach = Math.max(...points.map(([x, y]) => (x - 50) * ux + (y - 50) * uy))
+    assert.ok(Math.abs(110 - reach - 24) < 0.1, `clearance at ${angle} degrees`)
+    assert.ok(points.every(([x, y]) => Math.hypot(x - 50, y - 50) >= 49.9))
   }
 })
 
-test('the upper flank of a sideways tip does not curl back below the tip', () => {
-  const numbers = circleSurface(-104.7, -34)
-    .match(/-?\d+(?:\.\d+)?/g)!
-    .map(Number)
-  const vertices = [numbers.slice(0, 2)]
-  for (let i = 2; i < numbers.length; i += 6) vertices.push(numbers.slice(i + 4, i + 6))
-  const tip = vertices.reduce(
-    (nearest, point, index) => (point[0] < vertices[nearest][0] ? index : nearest),
-    0,
-  )
-  let startY = vertices[tip][1]
-  for (let i = 2 + tip * 6; i < numbers.length; i += 6) {
-    for (let step = 0; step <= 40; step++) {
-      const t = step / 40
-      const y =
-        (1 - t) ** 3 * startY +
-        3 * (1 - t) ** 2 * t * numbers[i + 1] +
-        3 * (1 - t) * t ** 2 * numbers[i + 3] +
-        t ** 3 * numbers[i + 5]
-      assert.ok(y <= vertices[tip][1] + 0.05, `tip curls backwards to y=${y}`)
-      assert.ok(y <= startY + 0.05, `rounded flank reverses at y=${y}`)
+test('the circular pull rotates uniformly without changing at diagonal targets', () => {
+  const reference = outlinePoints(110, 0)
+  for (let step = 1; step < 64; step += 7) {
+    const angle = (step * Math.PI) / 32
+    const rotated = outlinePoints(110 * Math.cos(angle), 110 * Math.sin(angle))
+    for (const [index, [x, y]] of reference.entries()) {
+      const expected = [
+        50 + (x - 50) * Math.cos(angle) - (y - 50) * Math.sin(angle),
+        50 + (x - 50) * Math.sin(angle) + (y - 50) * Math.cos(angle),
+      ]
+      const actual = rotated[(index + step * 20) % rotated.length]
+      assert.ok(Math.hypot(actual[0] - expected[0], actual[1] - expected[1]) < 0.04)
     }
-    startY = numbers[i + 5]
+  }
+})
+
+test('switching between opposite places keeps the circular body intact', () => {
+  const before = outlinePoints(110, 0)
+  const after = outlinePoints(-110, 0)
+  for (const t of [0.25, 0.5, 0.75]) {
+    for (const [index, [x, y]] of before.entries()) {
+      const next = after[index]
+      const point = [x + (next[0] - x) * t, y + (next[1] - y) * t]
+      assert.ok(Math.hypot(point[0] - 50, point[1] - 50) >= 49.9)
+    }
   }
 })
