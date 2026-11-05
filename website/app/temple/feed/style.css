@@ -177,7 +177,7 @@
   .feed-panel-motion {
     animation: feed-panel-exit linear both;
     animation-timeline: --feed-post;
-    animation-range: exit 0% exit calc(60% - 64px);
+    animation-range: exit 0% exit 80%;
   }
 }
 @keyframes feed-panel-exit {

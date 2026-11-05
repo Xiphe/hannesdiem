@@ -509,7 +509,7 @@ test('paused swipe carries titles and panels, fades the outgoing panel, and reve
       opacity *= Number(getComputedStyle(element).opacity)
     return opacity
   })
-  expect.soft(opacity).toBeLessThan(0.9)
+  expect.soft(opacity).toBeCloseTo(1 - 150 / (844 * 0.8), 2)
   expect
     .soft(
       await post(page, 'latest')
