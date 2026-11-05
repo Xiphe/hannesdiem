@@ -14,7 +14,7 @@ Watch; the entry and share-image conversations own their corresponding views.
   (`hannesdiem.temple.entered`).
 - Video covers when its orientation matches the viewport; otherwise contains on
   black. Tap surface toggles playback. Both orientations use a bottom summary:
-  smaller title, scrubber with an icon-only speaker, then a small down-chevron.
+  smaller title, scrubber with an icon-only speaker, then a wide, shallow down-chevron tucked into the existing bottom padding.
   A black gradient fades upward behind the title and transport. Back and Share
   are icon-only controls in the top corners and appear with the rest of the UI.
 - During video playback the summary and corner controls appear for ten seconds
@@ -28,10 +28,14 @@ Watch; the entry and share-image conversations own their corresponding views.
 - Seeking preserves the previous playback/drawer state and resumes only
   previously playing media. Pointer capture and a consistent resize cursor on
   the track, thumb and surrounding area prevent cursor changes during a drag.
-  Keep controls visible while adjusting. Move the drawer directly with its
-  gesture, and use opacity fades rather than an animated layout: moving the
-  scrubber during focus/scroll-into-view can snap the feed to a neighboring post.
-- Cursor devices reveal a volume slider when hovering/focusing the speaker;
+  Keep controls visible while adjusting. Pause, play, chevron, completion and
+  share fallback animate drawer changes over 220ms. The panel is anchored to the
+  viewport so focus/scroll-into-view during animation cannot snap the post list.
+  Dragging takes over from its current visual position and follows the pointer
+  directly, with no animation on release. New post activation resets immediately
+  to avoid stale metadata flashing; reduced motion skips panel animations.
+- Cursor devices reveal a vertical volume slider in one connected pill above
+  the speaker when hovering/focusing it;
   clicking the speaker mutes/unmutes. Volume starts at 100% and remembers
   adjustments. Touch devices start at 100% without the slider. Mute/unmute
   carries across posts. Device/system volume remains under the visitor's control.

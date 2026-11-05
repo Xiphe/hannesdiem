@@ -17,7 +17,7 @@ export function FeedIcon(
 ) {
   return () => (
     <svg
-      viewBox="0 0 24 24"
+      viewBox={handle.props.name === 'down' ? '0 0 36 12' : '0 0 24 24'}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
@@ -43,7 +43,7 @@ export function FeedIcon(
           strokeWidth="4"
         />
       ) : handle.props.name === 'down' ? (
-        <path d="m6 9 6 6 6-6" />
+        <path d="m3 3 15 6 15-6" />
       ) : handle.props.name === 'muted' ? (
         <path d="m11 4-6 5H2v6h3l6 5Zm5 5 6 6m0-6-6 6" />
       ) : (

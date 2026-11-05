@@ -393,16 +393,25 @@ for (const viewport of [
     await expect(item).toHaveAttribute('data-playing', '')
     await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
     await expect(item.locator('[data-back]')).toBeVisible()
+    await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
     const layout = await item.evaluate((node) => {
       const panel = node.querySelector('.feed-panel')!.getBoundingClientRect()
       const title = node.querySelector('.feed-summary h2')!
       const transport = node.querySelector('.feed-transport')!.getBoundingClientRect()
       const caption = node.querySelector('.feed-caption')!
+      const summary = node.querySelector('.feed-summary')!.getBoundingClientRect()
+      const chevron = node.querySelector('.feed-disclosure')!.getBoundingClientRect()
+      const icon = node.querySelector('.feed-disclosure svg')!.getBoundingClientRect()
       const back = node.querySelector('[data-back]')!.getBoundingClientRect()
       const share = node.querySelector('[data-share]')!.getBoundingClientRect()
       return {
         bottom: panel.bottom,
         height: panel.height,
+        paddingBelowTransport: summary.bottom - transport.bottom,
+        chevronBelowTrack: chevron.top - (transport.top + transport.height / 2),
+        chevronBottom: chevron.bottom,
+        summaryBottom: summary.bottom,
+        icon: { width: icon.width, height: icon.height },
         titleBottom: title.getBoundingClientRect().bottom,
         transport: transport.top,
         first: caption.firstElementChild?.tagName,
@@ -413,6 +422,10 @@ for (const viewport of [
     })
     expect(layout.bottom).toBeCloseTo(viewport.height, 0)
     expect(layout.height).toBeLessThanOrEqual(viewport.height * 0.4 + 1)
+    expect(layout.paddingBelowTransport).toBe(8)
+    expect(layout.chevronBelowTrack).toBeGreaterThanOrEqual(0)
+    expect(layout.chevronBottom).toBeLessThanOrEqual(layout.summaryBottom)
+    expect(layout.icon.width).toBeGreaterThan(layout.icon.height * 2)
     expect(layout.titleBottom).toBeLessThanOrEqual(layout.transport)
     expect(layout.first).toBe('TIME')
     expect(layout.title).toBeLessThanOrEqual(26)
@@ -488,6 +501,21 @@ test('desktop volume defaults to full, remembers adjustments, and shares one mut
   await expect(item.locator('[data-volume]')).not.toBeVisible()
   await item.locator('[data-sound]').hover()
   await expect(item.locator('[data-volume]')).toBeVisible()
+  const volume = item.locator('[data-volume]')
+  const volumeBox = (await volume.boundingBox())!
+  const soundBox = (await item.locator('[data-sound]').boundingBox())!
+  const popoverBox = (await item.locator('.feed-volume-popover').boundingBox())!
+  expect(volumeBox.height).toBeGreaterThan(volumeBox.width * 2)
+  expect(volumeBox.x + volumeBox.width / 2).toBeCloseTo(soundBox.x + soundBox.width / 2)
+  expect(popoverBox.y + popoverBox.height).toBeCloseTo(soundBox.y)
+  await volume.click({ position: { x: volumeBox.width / 2, y: volumeBox.height * 0.15 } })
+  expect(
+    await page.locator('video').evaluate((video: HTMLVideoElement) => video.volume),
+  ).toBeGreaterThan(0.7)
+  await volume.click({ position: { x: volumeBox.width / 2, y: volumeBox.height * 0.85 } })
+  expect(
+    await page.locator('video').evaluate((video: HTMLVideoElement) => video.volume),
+  ).toBeLessThan(0.3)
   await item.locator('[data-volume]').fill('37')
   expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.volume)).toBeCloseTo(
     0.37,
@@ -655,4 +683,62 @@ test('background visibility does not pause media and system controls reflect the
   await move(page, 'middle')
   await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
   expect(await page.evaluate(() => navigator.mediaSession.metadata?.title)).toBe('Synthetic middle')
+})
+
+test('description state changes animate while dragging follows the pointer directly', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  const panel = item.locator('.feed-panel')
+  const movement = await item.evaluate((article) => {
+    article.querySelector<HTMLButtonElement>('.feed-tap')!.click()
+    const panel = article.querySelector<HTMLElement>('.feed-panel')!
+    const animation = panel.getAnimations()[0]
+    if (!animation) return undefined
+    animation.pause()
+    animation.currentTime = 110
+    const middle = new DOMMatrixReadOnly(getComputedStyle(panel).transform).m42
+    const frames = (animation.effect as KeyframeEffect).getKeyframes()
+    const start = new DOMMatrixReadOnly(frames[0].transform as string).m42
+    const end = new DOMMatrixReadOnly(frames.at(-1)!.transform as string).m42
+    animation.finish()
+    return { start, middle, end }
+  })
+  expect(movement).toBeDefined()
+  expect(movement!.middle).toBeGreaterThan(movement!.end)
+  expect(movement!.middle).toBeLessThan(movement!.start)
+  await expect(panel).not.toHaveAttribute('data-animating', '')
+  const closing = await item.evaluate((article) => {
+    article.querySelector<HTMLButtonElement>('[data-details-toggle]')!.click()
+    const animation = article.querySelector('.feed-panel')!.getAnimations()[0]
+    if (!animation) return false
+    animation.finish()
+    return true
+  })
+  expect(closing).toBe(true)
+  await expect(panel).not.toHaveAttribute('data-animating', '')
+  const toggle = item.locator('[data-details-toggle]')
+  const box = (await toggle.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2, box.y - 70, { steps: 6 })
+  await expect(panel).toHaveAttribute('data-dragging', '')
+  expect(await panel.evaluate((node) => node.getAnimations().length)).toBe(0)
+  await page.mouse.up()
+  expect(await panel.evaluate((node) => node.getAnimations().length)).toBe(0)
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(page).toHaveURL(path('latest'))
+})
+
+test('reduced motion opens the description without a panel animation', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 100 } })
+  await expect(item.locator('.feed-caption')).toBeVisible()
+  expect(await item.locator('.feed-panel').evaluate((node) => node.getAnimations().length)).toBe(0)
 })

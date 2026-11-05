@@ -52,13 +52,9 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
         active.hasAttribute('data-details'),
     )
   }
-  function setDetails(open: boolean) {
+  function setDetails(open: boolean, animate = true) {
     if (!active) return
-    active.toggleAttribute('data-details', open)
-    active.querySelector<HTMLElement>('.feed-details')!.inert = !open
-    const button = active.querySelector<HTMLButtonElement>('[data-details-toggle]')!
-    button.setAttribute('aria-expanded', String(open))
-    button.setAttribute('aria-label', open ? 'Hide description' : 'Show description')
+    drawer.setExpanded(active, open, animate)
     reflectOverlay()
   }
   function pause() {
@@ -180,7 +176,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     delete active.dataset.ended
     active.querySelector<HTMLElement>('.feed-ended')?.setAttribute('hidden', '')
     active.querySelector<HTMLButtonElement>('.feed-start')?.setAttribute('hidden', '')
-    setDetails(post().kind !== 'video')
+    setDetails(post().kind !== 'video', false)
     active.dataset.active = ''
     measurePanel(active)
     root.dataset.currentPost = post().id

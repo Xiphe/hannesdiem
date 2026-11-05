@@ -105,7 +105,7 @@ export function mountFeedControls(root: HTMLElement, video: HTMLVideoElement, si
       const input = event.target as HTMLInputElement
       if (!input.matches('.feed-seek, [data-volume]')) return
       adjusting = input
-      root.dataset.rangeDragging = ''
+      root.dataset.rangeDragging = input.matches('[data-volume]') ? 'vertical' : 'horizontal'
       input.setPointerCapture(event.pointerId)
       reveal()
       if (input.matches('.feed-seek')) {

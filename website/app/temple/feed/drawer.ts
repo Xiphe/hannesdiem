@@ -2,7 +2,7 @@
 export function mountFeedDrawer(
   root: HTMLElement,
   signal: AbortSignal,
-  expanded: (open: boolean) => void,
+  expanded: (open: boolean, animate?: boolean) => void,
   interact: () => void,
 ) {
   let drag:
@@ -12,10 +12,19 @@ export function mountFeedDrawer(
         delta: number
         open: boolean
         height: number
+        offset?: number
         summary: HTMLElement
         panel: HTMLElement
       }
     | undefined
+  let motion: Animation | undefined
+  let movingPanel: HTMLElement | undefined
+  const stopMotion = () => {
+    motion?.cancel()
+    motion = undefined
+    movingPanel?.removeAttribute('data-animating')
+    movingPanel = undefined
+  }
   let suppressClick = false
   const reset = () => {
     if (!drag) return
@@ -50,10 +59,17 @@ export function mountFeedDrawer(
       if (!drag || event.pointerId !== drag.id) return
       drag.delta = event.clientY - drag.y
       if (!suppressClick && Math.abs(drag.delta) < 6) return
+      if (!suppressClick) {
+        drag.offset = new DOMMatrixReadOnly(getComputedStyle(drag.panel).transform).m42
+        stopMotion()
+      }
       suppressClick = true
       drag.summary.setPointerCapture(event.pointerId)
       drag.panel.dataset.dragging = ''
-      const offset = Math.max(0, Math.min(drag.height, (drag.open ? 0 : drag.height) + drag.delta))
+      const offset = Math.max(
+        0,
+        Math.min(drag.height, (drag.offset ?? (drag.open ? 0 : drag.height)) + drag.delta),
+      )
       drag.panel.style.setProperty('--drawer-offset', `${offset}px`)
       interact()
       event.preventDefault()
@@ -65,7 +81,7 @@ export function mountFeedDrawer(
     () => {
       if (!drag) return
       const open = Math.abs(drag.delta) > 24 ? drag.delta < 0 : drag.open
-      if (suppressClick) expanded(open)
+      if (suppressClick) expanded(open, false)
       reset()
     },
     { signal },
@@ -81,6 +97,42 @@ export function mountFeedDrawer(
     },
     { capture: true, signal },
   )
-  signal.addEventListener('abort', reset, { once: true })
-  return { cancel: reset }
+  const cancel = () => {
+    reset()
+    stopMotion()
+  }
+  signal.addEventListener('abort', cancel, { once: true })
+  return {
+    cancel,
+    setExpanded(article: HTMLElement, open: boolean, animate = true) {
+      const panel = article.querySelector<HTMLElement>('.feed-panel')!
+      const changed = article.hasAttribute('data-details') !== open
+      const from = animate && changed ? getComputedStyle(panel).transform : undefined
+      if (changed || !animate) stopMotion()
+      article.toggleAttribute('data-details', open)
+      article.querySelector<HTMLElement>('.feed-details')!.inert = !open
+      const button = article.querySelector<HTMLButtonElement>('[data-details-toggle]')!
+      button.setAttribute('aria-expanded', String(open))
+      button.setAttribute('aria-label', open ? 'Hide description' : 'Show description')
+      if (!changed || !animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      const to = getComputedStyle(panel).transform
+      if (from === to) return
+      movingPanel = panel
+      panel.dataset.animating = ''
+      const current = panel.animate([{ transform: from! }, { transform: to }], {
+        duration: 220,
+        easing: 'cubic-bezier(.2,.7,.2,1)',
+      })
+      motion = current
+      void current.finished.then(
+        () => {
+          if (motion !== current) return
+          panel.removeAttribute('data-animating')
+          motion = undefined
+          movingPanel = undefined
+        },
+        () => {},
+      )
+    },
+  }
 }
