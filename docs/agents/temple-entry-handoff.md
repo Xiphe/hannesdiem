@@ -57,6 +57,9 @@ Above Visit, a native “Back to the Manifesto” link with a back arrow returns
 the poem with the artist's explanation below it. Compact spacing puts it just
 above the normal arrival position, revealed by scrolling upward beyond the first
 section, rather than another header item.
+The return area's explanation is dimmed. Navigation progress starts at the
+native Visit arrival and mobile scrubbing stays within the practical sections;
+the return area is reached through ordinary upward scrolling.
 Reuse the poem's three-depth fragment ground across Visit through Share, retaining
 viewport-bounded rendering and motion fallbacks. Practical reading boundaries
 contain the complete fitted contours; only the interleaved poem bounds them to

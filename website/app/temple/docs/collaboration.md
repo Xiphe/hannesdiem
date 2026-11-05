@@ -15,6 +15,11 @@ existing back-arrow icon, and asks for less space before its reveal and above
 it. Remove the tall minimum-height area and large bottom gap, and reduce the
 top inset. Keep the supplied explanation and normal Visit arrival unchanged.
 
+The artist then excludes this return area from the main navigation's progress
+and asks to dim its explanatory line. Hold desktop progress at zero through
+the return area, starting at the native Visit arrival, and keep mobile scrubbing
+within the practical sections. Native upward scrolling still reveals the link.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

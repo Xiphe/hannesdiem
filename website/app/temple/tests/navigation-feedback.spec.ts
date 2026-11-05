@@ -247,3 +247,35 @@ test('desktop practical progress flows through the decorative gaps without jumps
   })
   expect(jumps).toEqual([])
 })
+
+for (const nativeTimeline of [true, false]) {
+  test(`practical progress starts at Visit, excluding the manifesto return (${nativeTimeline ? 'native' : 'fallback'})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    if (!nativeTimeline)
+      await page.addInitScript(() => {
+        Object.defineProperty(window, 'ScrollTimeline', { value: undefined })
+      })
+    await page.goto('/temple-of-sound/visit')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const arrival = await page
+      .locator('#facts')
+      .evaluate(
+        (node) =>
+          scrollY +
+          node.getBoundingClientRect().top -
+          parseFloat(getComputedStyle(node).scrollMarginTop),
+      )
+    expect(arrival).toBeGreaterThan(100)
+    const fill = page.locator('.temple-nav-progress span')
+    const progress = () =>
+      fill.evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).a)
+    for (const top of [0, arrival / 2, arrival]) {
+      await page.evaluate((top) => scrollTo({ top, behavior: 'instant' }), top)
+      await expect.poll(progress).toBeCloseTo(0, 5)
+    }
+    await page.evaluate((top) => scrollTo({ top: top + 200, behavior: 'instant' }), arrival)
+    await expect.poll(progress).toBeGreaterThan(0)
+  })
+}

@@ -118,7 +118,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
     progress!.style.left = scrubber.active ? '0px' : `${navLeft - headerBounds.left + left}px`
     progress!.style.width = scrubber.active ? '100%' : `${width}px`
     progress!.style.bottom = scrubber.active ? '0px' : `${headerBounds.bottom - navBounds.bottom}px`
-    const known: { node: HTMLAnchorElement; target: HTMLElement }[] = []
+    const known: { node: HTMLAnchorElement; target: HTMLElement; anchor: HTMLElement }[] = []
     for (const node of stops) {
       const hash = node.getAttribute('href')
       const id = node.dataset.navTarget ?? (hash?.startsWith('#') ? hash.slice(1) : undefined)
@@ -128,6 +128,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       known.push({
         node,
         target: target.closest<HTMLElement>('.temple-practical-section') ?? target,
+        anchor: target,
       })
     }
     const allScenes = known.map(({ node, target }) => {
@@ -156,11 +157,26 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
     observed = nextObserved
     const range = Math.max(0, root.scrollHeight - root.clientHeight)
     const clamp = (n: number) => Math.max(0, Math.min(range, n))
+    const inside = host.dataset.templeView === 'inside'
+    const first = known[0]?.anchor
+    // The return to the poem sits before Visit and belongs to no practical
+    // section. Hold progress at its start until the normal first arrival.
+    const contentStart =
+      inside && first
+        ? Math.ceil(
+            clamp(
+              scrollY +
+                first.getBoundingClientRect().top -
+                (parseFloat(getComputedStyle(first).scrollMarginTop) || 0),
+            ),
+          )
+        : 0
+    const contentPosition = (position: number) => Math.max(contentStart, clamp(position))
     const firstCentre = x(stops[0]) + stops[0].getBoundingClientRect().width / 2
-    const mobilePoints = [{ at: 0, value: firstCentre }]
+    const mobilePoints = [{ at: contentStart, value: firstCentre }]
     for (const { node, top, bottom } of allScenes) {
       mobilePoints.push({
-        at: clamp((top + bottom - innerHeight) / 2),
+        at: contentPosition((top + bottom - innerHeight) / 2),
         value: x(node) + node.getBoundingClientRect().width / 2,
       })
     }
@@ -170,7 +186,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       at: range,
       value: x(lastStop) + lastStop.getBoundingClientRect().width / 2,
     })
-    scrubber.layout(mobilePoints, stage ? clamp(navigationScrollStart(stage)) : 0)
+    scrubber.layout(mobilePoints, stage ? clamp(navigationScrollStart(stage)) : contentStart)
     // Desktop keeps its original progress boundary at the first unfinished fact.
     const boundary = stops.findIndex((node) => !known.some((scene) => scene.node === node))
     const scenes = allScenes.filter(({ node }) => boundary < 0 || stops.indexOf(node) < boundary)
@@ -184,15 +200,14 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       const nextWord = stops[index + 1]
       const from = verse ? x(previousWord) + previousWord.getBoundingClientRect().width : x(node)
       const to = verse ? x(nextWord) : x(node) + node.getBoundingClientRect().width
-      const inside = host.dataset.templeView === 'inside'
       // Decorative gaps belong half to each neighboring practical section.
       const leading =
         inside && previousWord ? (x(previousWord) + previousWord.offsetWidth + x(node)) / 2 : from
       const trailing = inside && nextWord ? (x(node) + node.offsetWidth + x(nextWord)) / 2 : to
-      const start = clamp(scenes[i].top - innerHeight)
+      const start = contentPosition(scenes[i].top - innerHeight)
       const end = Math.max(
         start,
-        clamp(
+        contentPosition(
           i + 1 < scenes.length
             ? scenes[i + 1].top - innerHeight
             : scenes[i].bottom - header!.offsetHeight,
