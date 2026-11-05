@@ -1178,6 +1178,41 @@ test('reduced motion opens the description without a panel animation', async ({ 
   expect(await item.locator('.feed-panel').evaluate((node) => node.getAnimations().length)).toBe(0)
 })
 
+for (const paused of [false, true]) {
+  test(`leaving a video clears its progress and returning starts at the beginning${paused ? ' while paused' : ''}`, async ({
+    page,
+  }) => {
+    await arrive(page, 'middle')
+    const item = post(page, 'middle')
+    await expect(item).toHaveAttribute('data-playing', '')
+    await item.locator('.feed-tap').hover({ position: { x: 100, y: 150 } })
+    await expect(item.locator('.feed-video-seek')).toBeEnabled()
+    await item.locator('.feed-video-seek').fill('60')
+    await expect
+      .poll(() => page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime))
+      .toBeGreaterThan(6)
+    if (paused) await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+    await move(page, 'latest')
+    await expect(post(page, 'latest').locator('.feed-video-seek')).toBeEnabled()
+    expect.soft(await item.locator('.feed-video-seek').inputValue()).toBe('0')
+    await move(page, 'middle')
+    await expect(item.locator('.feed-video-seek')).toBeEnabled()
+    await expect
+      .poll(() =>
+        page
+          .locator('video')
+          .evaluate((video: HTMLVideoElement) => video.readyState >= 2 && !video.seeking),
+      )
+      .toBe(true)
+    expect(
+      await page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime),
+    ).toBeLessThan(2)
+    expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
+      paused,
+    )
+  })
+}
+
 for (const blocked of [false, true]) {
   test(`Space controls playback on entry with body focus${blocked ? ' after blocked autoplay' : ''}`, async ({
     page,

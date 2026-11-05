@@ -22,7 +22,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   let pausedDetails = true
   let ready = false
   let loading = 0
-  const positions = new Map<string, number>()
+  const audioPositions = new Map<string, number>()
   const peaks = new Map<string, readonly number[]>()
   let waveformTask: AbortController | undefined
   const options = { signal }
@@ -211,7 +211,13 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     const direction = next < index ? -1 : 1
     const incomingOpen = !initial && root.hasAttribute('data-paused-details')
     if (active) {
-      if (post().kind !== 'text') positions.set(post().id, video.currentTime)
+      if (post().kind === 'audio') audioPositions.set(post().id, video.currentTime)
+      else if (post().kind === 'video') {
+        const seek = active.querySelector<HTMLInputElement>('.feed-video-seek')!
+        seek.value = '0'
+        seek.style.setProperty('--progress', '0%')
+        seek.disabled = true
+      }
       drawer.setExpanded(active, false, false)
       active.querySelector<HTMLElement>('.feed-panel-motion')!.inert = true
       delete active.dataset.overlay
@@ -256,7 +262,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       const attached = await playback.load(post())
       if (!attached || signal.aborted || current !== loading) return
       ready = true
-      const position = positions.get(post().id) ?? 0
+      const position = audioPositions.get(post().id) ?? 0
       if (position > 0) {
         const restore = () => {
           if (current === loading && Number.isFinite(video.duration))
