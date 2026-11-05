@@ -92,13 +92,13 @@ for (const width of [390, 1440]) {
     const errors = await arrive(page, 'latest')
     const item = post(page, 'latest')
     await expect(item).toHaveAttribute('data-playing', '')
-    await expect(item.locator('[data-back]')).not.toBeVisible()
-    await expect(item.locator('[data-share]')).not.toBeVisible()
+    await expect(page.locator('[data-back]')).not.toBeVisible()
+    await expect(page.locator('[data-share]')).not.toBeVisible()
     await expect(item.locator('.feed-caption')).not.toBeVisible()
     await item.locator('.feed-tap').click({ position: { x: 100, y: 180 } })
     await expect(item).not.toHaveAttribute('data-playing', '')
-    await expect(item.locator('[data-back]')).toBeVisible()
-    await expect(item.locator('[data-share]')).toBeVisible()
+    await expect(page.locator('[data-back]')).toBeVisible()
+    await expect(page.locator('[data-share]')).toBeVisible()
     await expect(item.locator('.feed-caption')).toBeVisible()
     const caption = item.locator('.feed-caption')
     const geometry = await caption.evaluate((node) => ({
@@ -183,7 +183,7 @@ test('audio has a real waveform, visible controls, seeking, and no loop', async 
   const item = post(page, 'audio')
   await expect(item.locator('.feed-waveform rect')).toHaveCount(72)
   await expect(item.locator('.feed-audio-toggle')).toBeVisible()
-  await expect(item.locator('[data-share]')).toBeVisible()
+  await expect(page.locator('[data-share]')).toBeVisible()
   await expect
     .poll(() =>
       page.locator('.feed-player').evaluate((node) => (node as HTMLVideoElement).currentTime),
@@ -211,7 +211,7 @@ test('text scrolls through its full length before snapping to the next piece', a
   const item = post(page, 'text')
   const height = (await item.boundingBox())!.height
   expect(height).toBeGreaterThan(844 * 3)
-  const header = (await item.locator('.feed-corners').boundingBox())!
+  const header = (await page.locator('.feed-corners').boundingBox())!
   expect((await item.locator('.feed-text > :first-child').boundingBox())!.y).toBeGreaterThan(
     header.y + header.height,
   )
@@ -219,7 +219,7 @@ test('text scrolls through its full length before snapping to the next piece', a
   await page.mouse.wheel(0, 600)
   await expect.poll(async () => (await item.boundingBox())!.y).toBeLessThan(-100)
   await expect(page).toHaveURL(path('text'))
-  await expect(item.locator('[data-back]')).toBeVisible()
+  await expect(page.locator('[data-back]')).toBeVisible()
   await move(page, 'oldest')
   await expect(post(page, 'oldest')).toHaveAttribute('data-playing', '')
 })
@@ -228,21 +228,18 @@ test('feed return reads entry memory, never sets it, and identifies the current 
   page,
 }) => {
   await arrive(page, 'text')
-  await expect(post(page, 'text').locator('[data-back]')).toHaveAttribute(
-    'href',
-    '/temple-of-sound',
-  )
+  await expect(page.locator('[data-back]')).toHaveAttribute('href', '/temple-of-sound')
   expect(await page.evaluate(() => localStorage.getItem('hannesdiem.temple.entered'))).toBeNull()
   await page.evaluate(() => localStorage.setItem('hannesdiem.temple.entered', 'true'))
   await move(page, 'oldest')
   await post(page, 'oldest')
     .locator('.feed-tap')
     .click({ position: { x: 100, y: 100 } })
-  await expect(post(page, 'oldest').locator('[data-back]')).toHaveAttribute(
+  await expect(page.locator('[data-back]')).toHaveAttribute(
     'href',
     '/temple-of-sound/watch#fixture-oldest',
   )
-  await post(page, 'oldest').locator('[data-back]').click()
+  await page.locator('[data-back]').click()
   await expect(page).toHaveURL('/temple-of-sound/watch#fixture-oldest')
   const cover = page.locator('#fixture-oldest')
   await expect(cover).toBeInViewport()
@@ -279,7 +276,7 @@ test('sharing copies the current deep link and swiping preloads only its neighbo
   await post(page, 'middle')
     .locator('.feed-tap')
     .click({ position: { x: 100, y: 100 } })
-  await post(page, 'middle').locator('[data-share]').click()
+  await page.locator('[data-share]').click()
   await expect
     .poll(() => page.evaluate(() => (window as any).copiedFeedURL))
     .toContain(path('middle'))
@@ -397,7 +394,7 @@ for (const viewport of [
     const item = post(page, 'latest')
     await expect(item).toHaveAttribute('data-playing', '')
     await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
-    await expect(item.locator('[data-back]')).toBeVisible()
+    await expect(page.locator('[data-back]')).toBeVisible()
     await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
     const layout = await item.evaluate((node) => {
       const panel = node.querySelector('.feed-panel')!.getBoundingClientRect()
@@ -406,8 +403,8 @@ for (const viewport of [
       const caption = node.querySelector('.feed-caption')!
       const summary = node.querySelector('.feed-summary')!.getBoundingClientRect()
       const indicator = node.querySelector('.feed-drag-indicator')!.getBoundingClientRect()
-      const back = node.querySelector('[data-back]')!.getBoundingClientRect()
-      const share = node.querySelector('[data-share]')!.getBoundingClientRect()
+      const back = document.querySelector('[data-back]')!.getBoundingClientRect()
+      const share = document.querySelector('[data-share]')!.getBoundingClientRect()
       return {
         bottom: panel.bottom,
         height: panel.height,
@@ -443,10 +440,116 @@ for (const viewport of [
     expect(layout.back.y).toBeLessThan(24)
     expect(layout.share.right).toBeGreaterThan(viewport.width - 24)
     expect(layout.share.y).toBeLessThan(24)
-    await expect(item.locator('[data-back]')).toHaveText('')
-    await expect(item.locator('[data-share]')).toHaveText('')
+    await expect(page.locator('[data-back]')).toHaveText('')
+    await expect(page.locator('[data-share]')).toHaveText('')
   })
 }
+
+test('paused swipe carries titles and panels, fades the outgoing panel, and reveals the incoming bar', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+  await expect(item.locator('.feed-summary')).toHaveCSS('opacity', '1')
+  await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+  const before = {
+    title: (await item.locator('.feed-title').boundingBox())!.y,
+    panel: (await item.locator('.feed-panel').boundingBox())!.y,
+  }
+  await item.evaluate((article) => {
+    const root = article.closest<HTMLElement>('.temple-feed')!
+    root.style.scrollSnapType = 'none'
+    root.scrollTo({ top: (article as HTMLElement).offsetTop + 150, behavior: 'instant' })
+  })
+  await expect
+    .poll(() => item.evaluate((article) => article.getBoundingClientRect().top))
+    .toBeCloseTo(-150, 0)
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  )
+  expect
+    .soft((await item.locator('.feed-title').boundingBox())!.y)
+    .toBeCloseTo(before.title - 150, 0)
+  expect
+    .soft((await item.locator('.feed-panel').boundingBox())!.y)
+    .toBeCloseTo(before.panel - 150, 0)
+  const opacity = await item.locator('.feed-summary').evaluate((node) => {
+    let opacity = 1
+    for (let element: Element | null = node; element; element = element.parentElement)
+      opacity *= Number(getComputedStyle(element).opacity)
+    return opacity
+  })
+  expect.soft(opacity).toBeLessThan(0.9)
+  expect
+    .soft(
+      await post(page, 'latest')
+        .locator('.feed-summary')
+        .evaluate((node) => getComputedStyle(node).visibility),
+    )
+    .toBe('visible')
+  await expect(post(page, 'latest').locator('.feed-summary')).toBeInViewport()
+  await expect(post(page, 'latest').locator('.feed-summary')).toHaveCSS('opacity', '1')
+})
+
+test('a paused swipe keeps its drawer stable until playback hands off at scroll end', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+  await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+  const samples = await page.locator('.temple-feed').evaluate(
+    (root) =>
+      new Promise<{ current: string | undefined; drawerOpen: boolean; incomingVisible: boolean }[]>(
+        (resolve) => {
+          const outgoing = root.querySelector<HTMLElement>('[data-post-id="fixture-middle"]')!
+          const incoming = root.querySelector<HTMLElement>('[data-post-id="fixture-latest"]')!
+          const samples: {
+            current: string | undefined
+            drawerOpen: boolean
+            incomingVisible: boolean
+          }[] = []
+          const start = root.scrollTop,
+            target = incoming.offsetTop
+          const record = () => {
+            const progress = (root.scrollTop - start) / (target - start)
+            if (progress > 0.55 && progress < 0.9)
+              samples.push({
+                current: (root as HTMLElement).dataset.currentPost,
+                drawerOpen: outgoing.hasAttribute('data-details'),
+                incomingVisible:
+                  getComputedStyle(incoming.querySelector('.feed-summary')!).visibility ===
+                  'visible',
+              })
+            if (progress >= 0.99) resolve(samples)
+            else requestAnimationFrame(record)
+          }
+          root.scrollTo({ top: target, behavior: 'smooth' })
+          requestAnimationFrame(record)
+        },
+      ),
+  )
+  expect(samples.length).toBeGreaterThan(0)
+  expect(
+    samples.every(
+      (sample) =>
+        sample.current === 'fixture-middle' && sample.drawerOpen && sample.incomingVisible,
+    ),
+  ).toBe(true)
+  await expect(page).toHaveURL(path('latest'))
+  await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+  await expect(item).not.toHaveAttribute('data-details', '')
+  await expect(page.locator('[data-back]')).toHaveCount(1)
+  await expect(page.locator('[data-share]')).toHaveAttribute('aria-label', 'Share Synthetic latest')
+})
 
 test('top controls stay fixed while posts scroll behind them', async ({ page }) => {
   await arrive(page, 'middle')
@@ -454,12 +557,12 @@ test('top controls stay fixed while posts scroll behind them', async ({ page }) 
   await post(page, 'middle')
     .locator('.feed-tap')
     .hover({ position: { x: 100, y: 100 } })
-  const top = (await post(page, 'middle').locator('[data-back]').boundingBox())!.y
+  const top = (await page.locator('[data-back]').boundingBox())!.y
   await page.locator('.temple-feed').evaluate((root) => {
     const samples: number[] = []
     ;(window as any).feedCornerPositions = samples
     root.addEventListener('scroll', () => {
-      const button = root.querySelector('.feed-post[data-active] [data-back]')!
+      const button = root.querySelector('[data-back]')!
       samples.push(button.getBoundingClientRect().top)
     })
   })
@@ -479,10 +582,10 @@ test('fullscreen sits left of Share and reflects toggle and browser exits', asyn
   const item = post(page, 'latest')
   await expect(item).toHaveAttribute('data-playing', '')
   await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
-  const toggle = item.locator('[data-fullscreen]')
+  const toggle = page.locator('[data-fullscreen]')
   await expect(toggle).toHaveAttribute('aria-label', 'Enter fullscreen')
   const button = (await toggle.boundingBox())!
-  const share = (await item.locator('[data-share]').boundingBox())!
+  const share = (await page.locator('[data-share]').boundingBox())!
   expect(button.x + button.width).toBeLessThan(share.x)
   expect(button.y).toBeCloseTo(share.y)
   await toggle.click()
@@ -515,8 +618,8 @@ test('browsers without element fullscreen keep the control hidden', async ({ pag
   await arrive(page, 'latest')
   const item = post(page, 'latest')
   await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
-  await expect(item.locator('[data-fullscreen]')).not.toBeVisible()
-  await expect(item.locator('[data-share]')).toBeVisible()
+  await expect(page.locator('[data-fullscreen]')).not.toBeVisible()
+  await expect(page.locator('[data-share]')).toBeVisible()
   await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-fullscreen-available', '')
 })
 
@@ -654,7 +757,7 @@ test.describe('touch-only playback', () => {
       { width: 844, height: 390 },
     ]) {
       await page.setViewportSize(viewport)
-      await expect(item.locator('[data-fullscreen]')).toBeHidden()
+      await expect(page.locator('[data-fullscreen]')).toBeHidden()
       await expect(page.locator('.temple-feed')).not.toHaveAttribute(
         'data-fullscreen-available',
         '',
@@ -936,6 +1039,9 @@ test('stream order runs toward newer posts and surface Space does not outline th
   await button.click()
   await expect(item).not.toHaveAttribute('data-playing', '')
   await expect(button).toHaveAttribute('aria-label', 'Play Synthetic middle')
+  // Wait for the moving target before Playwright's scroll-into-view click.
+  await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+  await expect(page).toHaveURL(path('middle'))
   await button.click()
   await expect(item).toHaveAttribute('data-playing', '')
   await page.locator('.temple-feed').focus()
@@ -957,7 +1063,7 @@ test('bottom dimming remains in place midway through the drawer closing', async 
   await expect(item).toHaveAttribute('data-playing', '')
   const collapsed = await item.locator('.feed-bottom-shade').boundingBox()
   expect(collapsed!.height).toBeLessThan(844 * 0.2)
-  expect(collapsed!.y + collapsed!.height).toBeCloseTo(844, 1)
+  expect(collapsed!.y + collapsed!.height).toBeCloseTo(844, 0)
   await page.clock.install()
   await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
   await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
@@ -967,12 +1073,13 @@ test('bottom dimming remains in place midway through the drawer closing', async 
   await item.evaluate((article) => {
     article.querySelector<HTMLButtonElement>('[data-details-toggle]')!.click()
     for (const animation of article.getAnimations({ subtree: true })) {
+      if (animation.timeline !== document.timeline) continue
       animation.pause()
       animation.currentTime = 150
     }
   })
   const midway = (await item.locator('.feed-bottom-shade').boundingBox())!
-  expect(midway.y + midway.height).toBeCloseTo(844, 1)
+  expect(midway.y + midway.height).toBeCloseTo(844, 0)
   const pixel = await sharp(await page.screenshot())
     .extract({ left: 2, top: 842, width: 1, height: 1 })
     .removeAlpha()

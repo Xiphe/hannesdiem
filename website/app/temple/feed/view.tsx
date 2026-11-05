@@ -185,50 +185,13 @@ export function Feed(handle: Handle<FeedProps>) {
               )}
             </div>
           )}
-          <div class="feed-corners">
-            <a
-              href={templePath}
-              data-back
-              class="feed-control"
-              aria-label="Back to Temple of Sound"
-              data-rmx-document
-            >
-              <FeedIcon name="back" />
-            </a>
+          <div class="feed-heading">
             <h2
               class="feed-title"
               id={`feed-title-${post.id}`}
             >
               {post.title}
             </h2>
-            <div class="feed-corner-actions">
-              <button
-                type="button"
-                class="feed-control"
-                data-fullscreen
-                aria-label="Enter fullscreen"
-                aria-pressed="false"
-                hidden
-              >
-                <span data-fullscreen-enter>
-                  <FeedIcon name="fullscreen" />
-                </span>
-                <span
-                  data-fullscreen-exit
-                  hidden
-                >
-                  <FeedIcon name="exit-fullscreen" />
-                </span>
-              </button>
-              <button
-                type="button"
-                class="feed-control"
-                data-share
-                aria-label={`Share ${post.title}`}
-              >
-                <FeedIcon name="share" />
-              </button>
-            </div>
           </div>
           {post.kind === 'video' && (
             <div
@@ -253,112 +216,157 @@ export function Feed(handle: Handle<FeedProps>) {
               </button>
             </div>
           )}
-          <div class="feed-panel">
-            <div
-              class="feed-bottom-shade"
-              aria-hidden="true"
-            />
-            <div class="feed-summary">
-              {post.kind !== 'text' && (
-                <div class="feed-transport">
-                  <button
-                    type="button"
-                    class="feed-control feed-playback-toggle"
-                    data-toggle
-                    aria-label={`Play ${post.title}`}
-                  >
-                    <span data-play-icon>
-                      <FeedIcon name="play" />
-                    </span>
-                    <span
-                      data-pause-icon
-                      hidden
-                    >
-                      <FeedIcon name="pause" />
-                    </span>
-                  </button>
-                  {post.kind === 'video' && (
-                    <input
-                      class="feed-seek feed-video-seek"
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={0.1}
-                      defaultValue={0}
-                      disabled
-                      aria-label={`Playback position: ${post.title}`}
-                    />
-                  )}
-                  <div class="feed-volume-control">
+          <div
+            class="feed-panel-motion"
+            inert={post.id !== handle.props.selected}
+          >
+            <div class="feed-panel">
+              <div
+                class="feed-bottom-shade"
+                aria-hidden="true"
+              />
+              <div class="feed-summary">
+                {post.kind !== 'text' && (
+                  <div class="feed-transport">
                     <button
                       type="button"
-                      data-sound
-                      class="feed-control feed-sound"
-                      aria-label="Mute sound"
+                      class="feed-control feed-playback-toggle"
+                      data-toggle
+                      aria-label={`Play ${post.title}`}
                     >
-                      <span data-sound-on>
-                        <FeedIcon name="sound" />
+                      <span data-play-icon>
+                        <FeedIcon name="play" />
                       </span>
                       <span
-                        data-sound-off
+                        data-pause-icon
                         hidden
                       >
-                        <FeedIcon name="muted" />
+                        <FeedIcon name="pause" />
                       </span>
                     </button>
-                    <div class="feed-volume-popover">
+                    {post.kind === 'video' && (
                       <input
-                        class="feed-volume"
+                        class="feed-seek feed-video-seek"
                         type="range"
                         min={0}
                         max={100}
-                        step={1}
-                        defaultValue={100}
-                        data-volume
-                        aria-label="Volume"
+                        step={0.1}
+                        defaultValue={0}
+                        disabled
+                        aria-label={`Playback position: ${post.title}`}
                       />
+                    )}
+                    <div class="feed-volume-control">
+                      <button
+                        type="button"
+                        data-sound
+                        class="feed-control feed-sound"
+                        aria-label="Mute sound"
+                      >
+                        <span data-sound-on>
+                          <FeedIcon name="sound" />
+                        </span>
+                        <span
+                          data-sound-off
+                          hidden
+                        >
+                          <FeedIcon name="muted" />
+                        </span>
+                      </button>
+                      <div class="feed-volume-popover">
+                        <input
+                          class="feed-volume"
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={1}
+                          defaultValue={100}
+                          data-volume
+                          aria-label="Volume"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-              <button
-                type="button"
-                class="feed-control feed-disclosure"
-                data-details-toggle
-                aria-expanded="false"
-                aria-controls={`feed-details-${post.id}`}
-                aria-label="Show description"
-              >
-                <span
-                  class="feed-drag-indicator"
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-            <div
-              class="feed-details"
-              id={`feed-details-${post.id}`}
-              inert
-            >
+                )}
+                <button
+                  type="button"
+                  class="feed-control feed-disclosure"
+                  data-details-toggle
+                  aria-expanded="false"
+                  aria-controls={`feed-details-${post.id}`}
+                  aria-label="Show description"
+                >
+                  <span
+                    class="feed-drag-indicator"
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
               <div
-                class="feed-caption"
-                tabIndex={0}
-                aria-label={`Description: ${post.title}`}
+                class="feed-details"
+                id={`feed-details-${post.id}`}
+                inert
               >
-                <time dateTime={post.postedAt}>{post.dateLabel}</time>
-                <div class="feed-description">{post.children}</div>
-                <input
-                  class="feed-share-url"
-                  aria-label="Share link"
-                  value={postPath(post.id)}
-                  readOnly
-                  hidden
-                />
+                <div
+                  class="feed-caption"
+                  tabIndex={0}
+                  aria-label={`Description: ${post.title}`}
+                >
+                  <time dateTime={post.postedAt}>{post.dateLabel}</time>
+                  <div class="feed-description">{post.children}</div>
+                  <input
+                    class="feed-share-url"
+                    aria-label="Share link"
+                    value={postPath(post.id)}
+                    readOnly
+                    hidden
+                  />
+                </div>
               </div>
             </div>
           </div>
         </article>
       ))}
+      <div class="feed-corners">
+        <a
+          href={templePath}
+          data-back
+          class="feed-control"
+          aria-label="Back to Temple of Sound"
+          data-rmx-document
+        >
+          <FeedIcon name="back" />
+        </a>
+
+        <div class="feed-corner-actions">
+          <button
+            type="button"
+            class="feed-control"
+            data-fullscreen
+            aria-label="Enter fullscreen"
+            aria-pressed="false"
+            hidden
+          >
+            <span data-fullscreen-enter>
+              <FeedIcon name="fullscreen" />
+            </span>
+            <span
+              data-fullscreen-exit
+              hidden
+            >
+              <FeedIcon name="exit-fullscreen" />
+            </span>
+          </button>
+          <button
+            type="button"
+            class="feed-control"
+            data-share
+            aria-label={`Share ${handle.props.posts.find((post) => post.id === handle.props.selected)!.title}`}
+          >
+            <FeedIcon name="share" />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

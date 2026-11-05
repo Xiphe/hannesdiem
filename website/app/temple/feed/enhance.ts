@@ -19,7 +19,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   let intent: 'autoplay' | 'playing' | 'paused' | 'ended' = 'autoplay'
   let ready = false
   let loading = 0
-  let frame = 0
   const positions = new Map<string, number>()
   const peaks = new Map<string, readonly number[]>()
   let waveformTask: AbortController | undefined
@@ -72,13 +71,14 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   }
   signal.addEventListener('abort', () => panelSize.disconnect(), { once: true })
   const reflectOverlay = () => {
-    active?.toggleAttribute(
-      'data-overlay',
+    if (!active) return
+    const visible =
       post().kind !== 'video' ||
-        intent === 'paused' ||
-        intent === 'ended' ||
-        active.hasAttribute('data-details'),
-    )
+      intent === 'paused' ||
+      intent === 'ended' ||
+      active.hasAttribute('data-details')
+    active.toggleAttribute('data-overlay', visible)
+    root.toggleAttribute('data-overlay', visible)
   }
   function setDetails(open: boolean, animate = true) {
     if (!active) return
@@ -191,6 +191,9 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     const direction = next < index ? -1 : 1
     if (active) {
       if (post().kind !== 'text') positions.set(post().id, video.currentTime)
+      drawer.setExpanded(active, false, false)
+      active.querySelector<HTMLElement>('.feed-panel-motion')!.inert = true
+      delete active.dataset.overlay
       delete active.dataset.active
       delete active.dataset.playing
     }
@@ -209,12 +212,16 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     active.querySelector<HTMLButtonElement>('.feed-start')?.setAttribute('hidden', '')
     setDetails(post().kind !== 'video', false)
     active.dataset.active = ''
+    active.querySelector<HTMLElement>('.feed-panel-motion')!.inert = false
     measurePanel(active)
     root.dataset.currentPost = post().id
     document.title = `${post().title} • Hannes Diem`
     const path = postPath(post().id)
     if (location.pathname !== path) history.replaceState(history.state, '', path)
     updateBack()
+    root
+      .querySelector<HTMLButtonElement>('[data-share]')!
+      .setAttribute('aria-label', `Share ${post().title}`)
     playback.preload(undefined)
     if (post().kind === 'text') {
       playback.clear()
@@ -352,13 +359,12 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
         event.preventDefault()
         if (!video.paused) {
           pause()
-        } else location.assign(active!.querySelector<HTMLAnchorElement>('[data-back]')!.href)
+        } else location.assign(root.querySelector<HTMLAnchorElement>('[data-back]')!.href)
       }
     },
     options,
   )
   const selectAtViewport = () => {
-    frame = 0
     const middle = root.getBoundingClientRect().top + root.clientHeight / 2
     const next = articles.findIndex((article) => {
       const box = article.getBoundingClientRect()
@@ -369,9 +375,23 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   root.addEventListener(
     'scroll',
     () => {
-      if (!frame) frame = requestAnimationFrame(selectAtViewport)
+      if (root.hasAttribute('data-scrolling')) return
+      root.dataset.scrolling = ''
+      root.toggleAttribute(
+        'data-scroll-ui',
+        root.hasAttribute('data-overlay') || root.hasAttribute('data-transport-peek'),
+      )
     },
     { passive: true, signal },
+  )
+  root.addEventListener(
+    'scrollend',
+    () => {
+      selectAtViewport()
+      delete root.dataset.scrolling
+      delete root.dataset.scrollUi
+    },
+    options,
   )
   const resize = new ResizeObserver(() => {
     if (post().kind !== 'text')
@@ -440,7 +460,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   signal.addEventListener(
     'abort',
     () => {
-      cancelAnimationFrame(frame)
       resize.disconnect()
       waveformTask?.abort()
     },

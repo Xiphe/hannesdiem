@@ -110,6 +110,11 @@
   background: #000;
   isolation: isolate;
 }
+.feed-post:not([data-kind='text']) {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
 .feed-stage,
 .feed-media-mount,
 .feed-cover,
@@ -162,19 +167,45 @@
 .feed-post[data-kind='video'] {
   overflow: clip;
 }
+.feed-panel-motion {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  height: var(--summary-height, 68px);
+  flex: 0 0 auto;
+  z-index: 4;
+  pointer-events: none;
+}
+@supports (animation-timeline: view()) {
+  .feed-post {
+    view-timeline: --feed-post block;
+  }
+  .feed-panel-motion {
+    animation: feed-panel-exit linear both;
+    animation-timeline: --feed-post;
+    animation-range: exit 0% exit calc(60% - 64px);
+  }
+}
+@keyframes feed-panel-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
 .feed-panel {
   --feed-drawer-open: 0;
   --details-height: max(0px, calc(40dvh - var(--summary-height, 130px)));
-  position: fixed;
+  position: absolute;
   inset: auto 0 0;
-  z-index: 4;
   pointer-events: none;
   transform: translateY(calc((1 - var(--feed-drawer-open)) * var(--caption-height, 0px)));
 }
 .feed-post[data-details] .feed-panel {
   --feed-drawer-open: 1;
 }
-.feed-post:not([data-active]) :is(.feed-panel, .feed-corners, .feed-ended, .feed-bottom-shade) {
+.feed-post:not([data-active]) .feed-ended {
   display: none;
 }
 .feed-summary {
@@ -206,6 +237,7 @@
   pointer-events: none;
 }
 .feed-title {
+  grid-column: 2;
   flex: 1 1 auto;
   align-self: center;
   min-width: 0;
@@ -224,7 +256,8 @@
   align-items: center;
   gap: 16px;
 }
-.feed-corners {
+.feed-corners,
+.feed-heading {
   position: fixed;
   z-index: 5;
   inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto
@@ -240,7 +273,11 @@
     opacity 3s ease,
     visibility 0s linear 3s;
 }
-.temple-feed[data-fullscreen-available] .feed-corners {
+.feed-heading {
+  position: absolute;
+  z-index: 4;
+}
+.temple-feed[data-fullscreen-available] :is(.feed-corners, .feed-heading) {
   grid-template-columns: 96px minmax(0, 1fr) 96px;
 }
 .feed-corners > [data-back] {
@@ -250,8 +287,9 @@
   display: flex;
   gap: 8px;
   justify-self: end;
+  grid-column: 3;
 }
-.feed-corners::before {
+.feed-heading::before {
   content: '';
   position: absolute;
   inset: calc(-1 * max(12px, env(safe-area-inset-top))) -12px -40px;
@@ -266,6 +304,14 @@
   opacity: 1;
   transition-duration: 1s;
 }
+.temple-feed[data-overlay]
+  .feed-post:not([data-active])
+  :is(.feed-summary, .feed-heading, .feed-bottom-shade),
+.temple-feed[data-scroll-ui] :is(.feed-summary, .feed-heading, .feed-bottom-shade, .feed-corners) {
+  opacity: 1;
+  visibility: visible;
+  transition: none;
+}
 .feed-corners .feed-control {
   background: rgb(0 0 0 / 25%);
   border-radius: 50%;
@@ -273,8 +319,10 @@
   flex: 0 0 44px;
   transition: background-color 180ms ease;
 }
-.feed-post[data-overlay] :is(.feed-summary, .feed-corners),
-.temple-feed[data-transport-peek] .feed-post[data-active] :is(.feed-summary, .feed-corners) {
+.feed-post[data-overlay] :is(.feed-summary, .feed-heading),
+.temple-feed[data-overlay] .feed-corners,
+.temple-feed[data-transport-peek] .feed-corners,
+.temple-feed[data-transport-peek] .feed-post[data-active] :is(.feed-summary, .feed-heading) {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -349,6 +397,11 @@
 .feed-panel[data-dragging] .feed-summary * {
   cursor: grabbing;
 }
+.feed-post:not([data-active]) .feed-details {
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+}
 .feed-details {
   max-height: var(--details-height);
   overflow: hidden;
@@ -400,8 +453,9 @@
   list-style: revert;
   padding-left: 1.5em;
 }
-.feed-post[data-kind='text'] .feed-panel {
+.feed-post[data-kind='text'] .feed-panel-motion {
   position: fixed;
+  inset: auto 0 0;
 }
 .feed-playback-toggle {
   flex: 0 0 44px;
@@ -547,7 +601,7 @@
   width: 3px;
   height: 100%;
 }
-.feed-transport .feed-seek:disabled {
+.feed-post[data-active] .feed-transport .feed-seek:disabled {
   opacity: 0.35;
   cursor: default;
 }
@@ -677,6 +731,7 @@
   .feed-bottom-shade,
   .feed-summary,
   .feed-corners,
+  .feed-heading,
   .feed-panel,
   .feed-volume-popover,
   .feed-volume-control::before,

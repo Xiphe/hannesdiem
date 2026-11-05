@@ -4,8 +4,9 @@ Approved after the feed interview, 2026-11-05. Implements only the content below
 Watch; the entry and share-image conversations own their corresponding views.
 
 - `/temple-of-sound/watch/{slug}` opens a specific post in a vertical feed. No
-  feed index. Oldest above newest, replace URL while swiping rather than pushing
-  browser history.
+  feed index. Oldest above newest. Select playback and replace the URL when the
+  native scroll settles, preserving browser history and avoiding source/drawer
+  changes halfway through a swipe.
 - Watch is a horizontal band of share-image-like covers. `TempleRecordings`
   remains supported; `TemplePosts` adds video, audio and rich text.
 - The Back control goes to `/temple-of-sound` unless the visitor had
@@ -22,11 +23,13 @@ Watch; the entry and share-image conversations own their corresponding views.
   drawer toggle and scrubber have no focus outline; other controls retain keyboard
   focus indicators.
   The bottom gradient fades evenly from transparent to 94% black across its
-  full height, anchored to the viewport bottom throughout animation and dragging.
+  full height, anchored to the post’s bottom throughout drawer animation and dragging.
   Collapsed, it covers only the controls and a 48px fade above them; it grows with the description drawer. The centered top title has
   its own dark fade. Back and Share remain icon-only corner controls; all appear
-  with the rest of the UI and gain a subtle darker shade on cursor hover. The top
-  control row stays fixed to the viewport while posts scroll behind it.
+  with the rest of the UI and gain a subtle darker shade on cursor hover. One shared set of corner buttons
+  stays fixed to the viewport. Each post’s title and bottom panel travel with its
+  media. A native view timeline fades the departing panel before it reaches the
+  top buttons; no timed opacity animation chases scroll movement.
   An icon-only fullscreen toggle sits immediately left of Share on browsers
   supporting element fullscreen, with a fine pointer, hover and at least 768px
   viewport width. Hide it on mobile/touch devices and narrow layouts, updating
@@ -35,8 +38,10 @@ Watch; the entry and share-image conversations own their corresponding views.
   centered between equally sized corner columns.
 - During video playback the summary and corner controls fade in over one second
   after interaction or cursor movement. After four inactive seconds they fade
-  out over three seconds. Neither entry nor cursorless scrolling
-  reveals, hides or restarts that timer. A deliberate pause, the drag indicator or an
+  out over three seconds. Entry and cursorless scrolling do not restart that
+  timer or reveal a hidden playing UI. A swipe that begins with visible UI keeps
+  the incoming bars visible at the bottom of the entering media, without waiting
+  for post activation or for the entire video to reach the viewport. Their normal playback fade resumes after scrolling settles. A deliberate pause, the drag indicator or an
   upward drag on the summary opens the date/description drawer; a downward drag
   or clicking the indicator closes it. Opening the drawer does not interrupt playback. The
   complete expanded panel occupies at most 40% of the viewport; its description
@@ -50,11 +55,12 @@ Watch; the entry and share-image conversations own their corresponding views.
   previously playing media. Pointer capture and a consistent resize cursor on
   the track, thumb and surrounding area prevent cursor changes during a drag.
   Keep controls visible while adjusting. Pause, play, drawer toggle, completion and
-  share fallback animate drawer changes over 220ms. The panel is anchored to the
-  viewport so focus/scroll-into-view during animation cannot snap the post list.
+  share fallback animate drawer changes over 220ms. Panels belong to their posts;
+  inactive panels are inert but remain laid out, ready to enter with their media.
   Dragging takes over from its current visual position and follows the pointer
-  directly, with no animation on release. New post activation resets immediately
-  to avoid stale metadata flashing; reduced motion skips panel animations.
+  directly, with no animation on release. Once a swipe settles, close the outgoing
+  drawer offscreen before handing over playback, so it stays stable during the
+  gesture and cannot flash stale metadata on return. Reduced motion skips drawer animations.
 - Cursor devices reveal a vertical volume slider in one connected pill above
   the speaker when hovering/focusing it, with a short expanding/fading transition
   on entrance and exit;
