@@ -14,12 +14,12 @@ export interface FeedProps {
 
 export function FeedIcon(
   handle: Handle<{
-    name: 'back' | 'share' | 'play' | 'pause' | 'sound' | 'muted' | 'down' | 'replay' | 'next'
+    name: 'back' | 'share' | 'play' | 'pause' | 'sound' | 'muted' | 'replay' | 'next'
   }>,
 ) {
   return () => (
     <svg
-      viewBox={handle.props.name === 'down' ? '0 0 36 12' : '0 0 24 24'}
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
@@ -54,11 +54,6 @@ export function FeedIcon(
         <path
           d="M8 5v14m8-14v14"
           strokeWidth="4"
-        />
-      ) : handle.props.name === 'down' ? (
-        <path
-          d="M3 6 18 10 33 6"
-          vectorEffect="non-scaling-stroke"
         />
       ) : handle.props.name === 'muted' ? (
         <path d="m11 4-6 5H2v6h3l6 5Zm5 5 6 6m0-6-6 6" />
@@ -300,7 +295,10 @@ export function Feed(handle: Handle<FeedProps>) {
                 aria-controls={`feed-details-${post.id}`}
                 aria-label="Show description"
               >
-                <FeedIcon name="down" />
+                <span
+                  class="feed-drag-indicator"
+                  aria-hidden="true"
+                />
               </button>
             </div>
             <div

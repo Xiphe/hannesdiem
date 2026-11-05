@@ -15,13 +15,12 @@ Watch; the entry and share-image conversations own their corresponding views.
 - Video covers when its orientation matches the viewport; otherwise contains on
   black. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
-  shallow chevron tucked into the existing bottom padding, pointing up when
-  collapsed and down when open.
-  Only the chevron’s center moves between directions; its ends stay fixed. The
-  narrower, dimmer icon moves down 10px as the drawer opens. A single open
-  percentage drives its position, shape, drawer travel and backdrop extent,
-  including during dragging. Space toggles playback without a focus
-  outline on the video surface. The chevron and scrubber have no focus outline; other controls retain keyboard focus indicators.
+  small, dim drag indicator above the scrubber. The indicator has no shape or
+  position animation; it stays fixed within the moving summary. A single open
+  percentage drives drawer travel and backdrop extent, including during dragging.
+  Space toggles playback without a focus outline on the video surface. The
+  drawer toggle and scrubber have no focus outline; other controls retain keyboard
+  focus indicators.
   The bottom gradient fades evenly from transparent to 94% black across its
   full height, anchored to the viewport bottom throughout animation and dragging.
   Collapsed, it covers only the controls and a 48px fade above them; it grows with the description drawer. The centered top title has
@@ -30,9 +29,9 @@ Watch; the entry and share-image conversations own their corresponding views.
 - During video playback the summary and corner controls fade in over one second
   after interaction or cursor movement. After four inactive seconds they fade
   out over three seconds. Neither entry nor cursorless scrolling
-  reveals, hides or restarts that timer. A deliberate pause, the chevron or an
+  reveals, hides or restarts that timer. A deliberate pause, the drag indicator or an
   upward drag on the summary opens the date/description drawer; a downward drag
-  or chevron closes it. Opening the drawer does not interrupt playback. The
+  or clicking the indicator closes it. Opening the drawer does not interrupt playback. The
   complete expanded panel occupies at most 40% of the viewport; its description
   scrolls internally. Use 6px between the date and first description block,
   retaining 12px between subsequent blocks. The summary owns dragging; horizontal seeking and scrolling
@@ -43,7 +42,7 @@ Watch; the entry and share-image conversations own their corresponding views.
 - Seeking preserves the previous playback/drawer state and resumes only
   previously playing media. Pointer capture and a consistent resize cursor on
   the track, thumb and surrounding area prevent cursor changes during a drag.
-  Keep controls visible while adjusting. Pause, play, chevron, completion and
+  Keep controls visible while adjusting. Pause, play, drawer toggle, completion and
   share fallback animate drawer changes over 220ms. The panel is anchored to the
   viewport so focus/scroll-into-view during animation cannot snap the post list.
   Dragging takes over from its current visual position and follows the pointer

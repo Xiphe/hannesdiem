@@ -304,25 +304,22 @@
 .feed-disclosure {
   position: absolute;
   left: 50%;
-  bottom: max(6px, calc(env(safe-area-inset-bottom) - 2px));
-  transform: translate(-50%, calc(10px * var(--feed-drawer-open)));
+  top: -2px;
+  transform: translateX(-50%);
   width: 72px;
   min-height: 20px;
   height: 20px;
-  padding: 4px 18px;
+  padding: 0;
 }
 .feed-disclosure:focus-visible {
   outline: none;
 }
-.feed-disclosure svg {
-  width: 30px;
-  height: 12px;
+.feed-drag-indicator {
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
   opacity: 0.55;
-}
-.feed-disclosure path {
-  transform-box: view-box;
-  transform-origin: 50% 50%;
-  transform: scaleY(calc(2 * var(--feed-drawer-open) - 1));
 }
 .feed-details {
   max-height: var(--details-height);
@@ -656,7 +653,6 @@
   .feed-summary,
   .feed-corners,
   .feed-panel,
-  .feed-disclosure path,
   .feed-volume-popover,
   .feed-volume-control::before,
   .feed-corners .feed-control,

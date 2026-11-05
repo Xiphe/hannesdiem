@@ -405,18 +405,14 @@ for (const viewport of [
       const transport = node.querySelector('.feed-transport')!.getBoundingClientRect()
       const caption = node.querySelector('.feed-caption')!
       const summary = node.querySelector('.feed-summary')!.getBoundingClientRect()
-      const chevron = node.querySelector('.feed-disclosure')!.getBoundingClientRect()
-      const icon = node.querySelector('.feed-disclosure svg')!.getBoundingClientRect()
+      const indicator = node.querySelector('.feed-drag-indicator')!.getBoundingClientRect()
       const back = node.querySelector('[data-back]')!.getBoundingClientRect()
       const share = node.querySelector('[data-share]')!.getBoundingClientRect()
       return {
         bottom: panel.bottom,
         height: panel.height,
         paddingBelowTransport: summary.bottom - transport.bottom,
-        chevronBelowTrack: chevron.top - (transport.top + transport.height / 2),
-        chevronBottom: chevron.bottom,
-        summaryBottom: summary.bottom,
-        icon: { width: icon.width, height: icon.height },
+        indicator: { bottom: indicator.bottom, width: indicator.width, height: indicator.height },
         titleBottom: title.getBoundingClientRect().bottom,
         titleTop: title.getBoundingClientRect().top,
         titleCenter: title.getBoundingClientRect().x + title.getBoundingClientRect().width / 2,
@@ -433,9 +429,9 @@ for (const viewport of [
     expect(layout.bottom).toBeCloseTo(viewport.height, 0)
     expect(layout.height).toBeLessThanOrEqual(viewport.height * 0.4 + 1)
     expect(layout.paddingBelowTransport).toBe(8)
-    expect(layout.chevronBelowTrack).toBeGreaterThanOrEqual(0)
-    expect(layout.chevronBottom).toBeLessThanOrEqual(layout.summaryBottom + 10)
-    expect(layout.icon.width).toBeGreaterThan(layout.icon.height * 2)
+    expect(layout.indicator.bottom).toBeLessThan(layout.transport)
+    expect(layout.indicator.width).toBeLessThanOrEqual(28)
+    expect(layout.indicator.height).toBeLessThanOrEqual(3)
     expect(layout.titleBottom).toBeLessThanOrEqual(layout.transport)
     expect(layout.titleTop).toBeLessThan(48)
     expect(layout.titleCenter).toBeCloseTo(viewport.width / 2)
@@ -626,7 +622,7 @@ test('a scrub drag keeps the same cursor when leaving the track', async ({ page 
   expect(outside).toBe(cursor)
 })
 
-test('description opens from its chevron and drag without interrupting playback', async ({
+test('description opens from its drag indicator and drag without interrupting playback', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -736,6 +732,11 @@ test('description state changes animate while dragging follows the pointer direc
   const item = post(page, 'latest')
   await expect(item).toHaveAttribute('data-playing', '')
   const panel = item.locator('.feed-panel')
+  const initialOffset = await item.evaluate(
+    (article) =>
+      article.querySelector('.feed-drag-indicator')!.getBoundingClientRect().top -
+      article.querySelector('.feed-summary')!.getBoundingClientRect().top,
+  )
   const movement = await item.evaluate((article) => {
     article.querySelector<HTMLButtonElement>('.feed-tap')!.click()
     const panel = article.querySelector<HTMLElement>('.feed-panel')!
@@ -746,20 +747,18 @@ test('description state changes animate while dragging follows the pointer direc
     const middle = new DOMMatrixReadOnly(getComputedStyle(panel).transform).m42
     const open = Number(getComputedStyle(panel).getPropertyValue('--feed-drawer-open'))
     const height = article.querySelector('.feed-details')!.getBoundingClientRect().height
-    const chevron = article.querySelector('.feed-disclosure')!
-    const chevronY = new DOMMatrixReadOnly(getComputedStyle(chevron).transform).m42
-    const chevronPhase = new DOMMatrixReadOnly(
-      getComputedStyle(chevron.querySelector('path')!).transform,
-    ).m22
+    const indicator = article.querySelector('.feed-drag-indicator')!
+    const indicatorOffset =
+      indicator.getBoundingClientRect().top -
+      article.querySelector('.feed-summary')!.getBoundingClientRect().top
     animation.finish()
-    return { middle, open, height, chevronY, chevronPhase }
+    return { middle, open, height, indicatorOffset }
   })
   expect(movement).toBeDefined()
   expect(movement!.open).toBeGreaterThan(0)
   expect(movement!.open).toBeLessThan(1)
   expect(movement!.middle).toBeCloseTo((1 - movement!.open) * movement!.height, 2)
-  expect(movement!.chevronY).toBeCloseTo(10 * movement!.open, 2)
-  expect(movement!.chevronPhase).toBeCloseTo(2 * movement!.open - 1, 2)
+  expect(movement!.indicatorOffset).toBeCloseTo(initialOffset, 2)
   await expect(panel).not.toHaveAttribute('data-animating', '')
   const closing = await item.evaluate((article) => {
     article.querySelector<HTMLButtonElement>('[data-details-toggle]')!.click()
@@ -779,17 +778,17 @@ test('description state changes animate while dragging follows the pointer direc
   expect(await panel.evaluate((node) => node.getAnimations().length)).toBe(0)
   const dragged = await panel.evaluate((node) => {
     const open = Number(getComputedStyle(node).getPropertyValue('--feed-drawer-open'))
-    const chevron = node.querySelector('.feed-disclosure')!
+    const indicator = node.querySelector('.feed-drag-indicator')!
     return {
       open,
-      y: new DOMMatrixReadOnly(getComputedStyle(chevron).transform).m42,
-      phase: new DOMMatrixReadOnly(getComputedStyle(chevron.querySelector('path')!).transform).m22,
+      indicatorOffset:
+        indicator.getBoundingClientRect().top -
+        node.querySelector('.feed-summary')!.getBoundingClientRect().top,
     }
   })
   expect(dragged.open).toBeGreaterThan(0)
   expect(dragged.open).toBeLessThan(1)
-  expect(dragged.y).toBeCloseTo(10 * dragged.open, 2)
-  expect(dragged.phase).toBeCloseTo(2 * dragged.open - 1, 2)
+  expect(dragged.indicatorOffset).toBeCloseTo(initialOffset, 2)
   await page.mouse.up()
   expect(await panel.evaluate((node) => node.getAnimations().length)).toBe(0)
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
