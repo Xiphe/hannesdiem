@@ -170,24 +170,6 @@
   z-index: 4;
   pointer-events: none;
 }
-@supports (animation-timeline: view()) {
-  .feed-post {
-    view-timeline: --feed-post block;
-  }
-  .feed-panel-motion {
-    animation: feed-panel-exit linear both;
-    animation-timeline: --feed-post;
-    animation-range: exit 0% exit 80%;
-  }
-}
-@keyframes feed-panel-exit {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
 .feed-panel {
   --feed-drawer-open: 0;
   --details-height: max(0px, calc(40dvh - var(--summary-height, 130px)));

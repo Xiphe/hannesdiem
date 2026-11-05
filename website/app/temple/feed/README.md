@@ -30,9 +30,8 @@ Watch; the entry and share-image conversations own their corresponding views.
   its own dark fade. Back and Share remain icon-only corner controls; all appear
   with the rest of the UI and gain a subtle darker shade on cursor hover. One shared set of corner buttons
   stays fixed to the viewport. Each post’s title and bottom panel travel with its
-  media. A native view timeline fades the departing panel over 80% of the
-  viewport height, reversing naturally when scrolling back. No timed opacity
-  animation chases scroll movement.
+  media at full opacity. Scrolling does not fade the departing or incoming
+  panels; they simply travel with their video edges.
   An icon-only fullscreen toggle sits immediately left of Share on browsers
   supporting element fullscreen, with a fine pointer, hover and at least 768px
   viewport width. Hide it on mobile/touch devices and narrow layouts, updating

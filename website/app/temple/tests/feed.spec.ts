@@ -469,7 +469,7 @@ for (const viewport of [
   })
 }
 
-test('paused swipe carries titles and panels, fades the outgoing panel, and reveals the incoming bar', async ({
+test('paused swipe carries titles and expanded panels at full opacity with their videos', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -509,7 +509,7 @@ test('paused swipe carries titles and panels, fades the outgoing panel, and reve
       opacity *= Number(getComputedStyle(element).opacity)
     return opacity
   })
-  expect.soft(opacity).toBeCloseTo(1 - 150 / (844 * 0.8), 2)
+  expect.soft(opacity).toBe(1)
   expect
     .soft(
       await post(page, 'latest')
