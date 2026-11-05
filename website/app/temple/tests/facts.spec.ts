@@ -130,8 +130,8 @@ for (const width of [390, 1440]) {
     const free = circle.locator('input[value="6"]')
     const surface = circle.locator('.fact-circle-surface path')
     const rest = await surface.evaluate((path: SVGPathElement) => ({
-      width: path.getBBox().width,
-      height: path.getBBox().height,
+      width: path.getBoundingClientRect().width,
+      height: path.getBoundingClientRect().height,
     }))
     expect(rest.width).toBeCloseTo(rest.height, 1)
     // A dot activates the effect directly, without visiting the centre first.
@@ -148,13 +148,21 @@ for (const width of [390, 1440]) {
     await expect(circle).toHaveAttribute('data-target', '6')
     await expect(circle.locator('.fact-circle-prompt')).toHaveCSS('opacity', '1')
     await expect
-      .poll(() => surface.evaluate((path: SVGPathElement) => path.getBBox().height))
+      .poll(() => surface.evaluate((path: SVGPathElement) => path.getBoundingClientRect().height))
       .toBeGreaterThan(rest.height + 6)
     const pulled = await surface.evaluate((path: SVGPathElement) => ({
-      width: path.getBBox().width,
-      height: path.getBBox().height,
+      width: path.getBoundingClientRect().width,
+      height: path.getBoundingClientRect().height,
     }))
     expect(pulled.width).toBeGreaterThanOrEqual(rest.width)
+    await expect
+      .poll(() =>
+        surface.evaluate(
+          (path: SVGPathElement) =>
+            path.getAnimations().length + path.ownerSVGElement!.getAnimations().length,
+        ),
+      )
+      .toBe(0)
     // The longer pull stops near the dot, while leaving a visible gap.
     await expect
       .poll(async () => {

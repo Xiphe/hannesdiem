@@ -14,6 +14,7 @@ export function mountCircle(
   if (!invite || signal.aborted) return
   const places = [...root.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
   const surface = invite.querySelector<SVGPathElement>('.fact-circle-surface path')!
+  const artwork = surface.ownerSVGElement!
   const rest = circleSurface()
   const shape = (path: string) => {
     surface.style.setProperty('d', `path("${path}")`)
@@ -21,6 +22,20 @@ export function mountCircle(
   }
   let target: HTMLInputElement | undefined
   let active = false
+  let heading: number | undefined
+  const signed = (angle: number) => ((((angle + 180) % 360) + 360) % 360) - 180
+  const orient = (angle: number) => {
+    if (heading !== undefined && Math.abs(signed(angle - heading)) < 0.001) return
+    const moving = root.hasAttribute('data-pointing') || surface.getAnimations().length > 0
+    // Read the displayed angle when interrupted, then take the shortest turn.
+    // Repeated events for the same dot must not restart the native easing.
+    const current = parseFloat(getComputedStyle(artwork).rotate) || 0
+    artwork.style.rotate = `${current + signed(angle - current)}deg`
+    heading = angle
+    // A resting circle has no direction. Orient it before extending its point;
+    // carry the existing point smoothly when a turn or retraction is underway.
+    if (!moving) for (const animation of artwork.getAnimations()) animation.finish()
+  }
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const ripples = new Set<Animation>()
   const cancelRipples = () => {
@@ -64,11 +79,14 @@ export function mountCircle(
     const centre = invite.getBoundingClientRect()
     const dx = box.x + box.width / 2 - (centre.x + centre.width / 2)
     const dy = box.y + box.height / 2 - (centre.y + centre.height / 2)
-    const view = surface.ownerSVGElement!.viewBox.baseVal
+    const view = artwork.viewBox.baseVal
     const localX = (dx * view.width) / centre.width
     const localY = (dy * view.height) / centre.height
     const scale = Math.hypot(localX, localY) / Math.hypot(dx, dy)
-    shape(circleSurface(localX, localY, 24 * scale))
+    orient((Math.atan2(localY, localX) * 180) / Math.PI)
+    // Morph only the reach of one aligned outline. Its heading belongs to the
+    // SVG's native rotation, avoiding overlapping old and new arms.
+    shape(circleSurface(Math.hypot(localX, localY), 0, 24 * scale))
     root.dataset.pointing = ''
     root.dataset.target = target.value
     for (const input of places) {

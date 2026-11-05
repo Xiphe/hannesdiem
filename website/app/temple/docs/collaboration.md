@@ -72,6 +72,17 @@ slower, more fluid motion, including when choosing another dot. Ease the shared
 native path transition over480ms with a gentle start and finish, applying to
 hover, selected-place changes and return to rest. Keep reduced motion immediate.
 
+The artist reports older arms lingering as new ones form. A synthetic switch
+reproduces two simultaneous points: native path interpolation blends separate
+directional outlines. Keep one aligned teardrop and animate its heading with
+native SVG rotation; morph only its reach. Retarget from the displayed angle
+along the shortest turn, preserving the480ms easing and steady label. Repeated
+events for the same dot do not restart the motion. Orient an idle circle before
+extending it, but carry a point already turning or retracting. Reduced motion
+still applies to both native transitions. This uses existing browser primitives
+without another animation clock. The regression samples the rendered outline
+during hover and selected-dot changes and verifies one point reaches its target.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
