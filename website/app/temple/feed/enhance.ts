@@ -363,13 +363,25 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     },
     options,
   )
-  root.addEventListener(
+  document.addEventListener(
     'keydown',
     (event) => {
       const target = event.target as HTMLElement
-      if (target.closest('.feed-caption') || target.matches('input, textarea, a, button')) return
+      if (!root.contains(target) && target !== document.body && target !== document.documentElement)
+        return
+      if (
+        event.defaultPrevented ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        target.isContentEditable ||
+        target.closest('.feed-caption, input, textarea, select, a, button')
+      )
+        return
       if (event.key === ' ' && post().kind !== 'text') {
         event.preventDefault()
+        if (event.repeat) return
+        controls.reveal()
         if (video.paused) resume()
         else {
           pause()

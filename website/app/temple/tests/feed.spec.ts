@@ -1178,6 +1178,48 @@ test('reduced motion opens the description without a panel animation', async ({ 
   expect(await item.locator('.feed-panel').evaluate((node) => node.getAnimations().length)).toBe(0)
 })
 
+for (const blocked of [false, true]) {
+  test(`Space controls playback on entry with body focus${blocked ? ' after blocked autoplay' : ''}`, async ({
+    page,
+  }) => {
+    if (blocked)
+      await page.addInitScript(() => {
+        const original = HTMLMediaElement.prototype.play
+        let first = true
+        HTMLMediaElement.prototype.play = function () {
+          if (first) {
+            first = false
+            return Promise.reject(
+              new DOMException('Synthetic initial autoplay block', 'NotAllowedError'),
+            )
+          }
+          return original.call(this)
+        }
+      })
+    await arrive(page, 'middle')
+    const item = post(page, 'middle')
+    expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true)
+    if (blocked) {
+      await expect(item).toHaveAttribute('data-blocked', '')
+      await page.keyboard.press('Space')
+    }
+    await expect(item).toHaveAttribute('data-playing', '')
+    await page.keyboard.press('Space')
+    await expect(item).not.toHaveAttribute('data-playing', '')
+    await expect(item.locator('.feed-caption')).toBeVisible()
+    await page.keyboard.down('Space')
+    await expect(item).toHaveAttribute('data-playing', '')
+    await page.keyboard.down('Space')
+    await page.keyboard.up('Space')
+    await expect(item).toHaveAttribute('data-playing', '')
+    expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true)
+    // Keep native input activation instead of turning Space into a second player toggle.
+    await item.locator('.feed-video-seek').focus()
+    await page.keyboard.press('Space')
+    await expect(item).toHaveAttribute('data-playing', '')
+  })
+}
+
 test('stream order runs toward newer posts and surface Space does not outline the screen', async ({
   page,
 }) => {
