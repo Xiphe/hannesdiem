@@ -71,6 +71,23 @@
     serif;
   text-wrap: balance;
 }
+.temple-post-preview-play {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #e1d9ce;
+  background: rgb(0 0 0 / 60%);
+  pointer-events: none;
+}
+.temple-post-preview-play svg {
+  width: 26px;
+  height: 26px;
+}
 .temple-post-preview:focus-visible {
   outline: 3px solid currentColor;
   outline-offset: -4px;

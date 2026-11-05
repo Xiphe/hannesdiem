@@ -9,6 +9,9 @@ Watch; the entry and share-image conversations own their corresponding views.
   changes halfway through a swipe.
 - Watch is a horizontal band of share-image-like covers. `TempleRecordings`
   remains supported; `TemplePosts` adds video, audio and rich text.
+  Playable covers show the viewer's Play icon in a shaded top-right circle,
+  clear of their title and focal point. It is decorative; the complete card
+  retains its native link into the feed. Text cards omit this indicator.
 - The Back control goes to `/temple-of-sound` unless the visitor had
   entered previously, otherwise `/temple-of-sound/watch#{current-id}`. The feed
   uses `hasEnteredTemple()` from the entry implementation but never writes it

@@ -3,6 +3,7 @@ import type { TemplePost, TemplePostsProps } from '@hannesdiem/content-component
 import { SiteContent } from '../ui-library/context.ts'
 import { getMedia } from '../media.ts'
 import { postPath, sortedPosts, thumbnail } from './feed/model.ts'
+import { FeedIcon } from './feed/icon.tsx'
 
 export function resolvePostCover(post: TemplePost, media: Parameters<typeof getMedia>[0]) {
   return post.cover ? getMedia(media, post.cover).src : thumbnail(post)
@@ -38,6 +39,14 @@ export function TemplePosts(handle: Handle<TemplePostsProps>) {
               />
             )}
             {!post.previewImage && <span class="temple-post-preview-title">{post.title}</span>}
+            {post.kind !== 'text' && (
+              <span
+                class="temple-post-preview-play"
+                aria-hidden="true"
+              >
+                <FeedIcon name="play" />
+              </span>
+            )}
           </a>
         )
       })}

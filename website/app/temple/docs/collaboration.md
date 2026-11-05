@@ -496,6 +496,13 @@ source/time metadata in the authored cover objects. Store originals in Git LFS.
 The tool can recover these choices without its temporary draft cache. This
 accepts the selected frames and focus, not a deployment request.
 
+**Play indicator on Watch thumbnails — 2026-11-05.** The artist requests a
+Play icon over Watch's thumbnails and explicitly defers deployment until the
+combined release. Reuse the viewer's existing Play glyph in a shaded44px circle
+at the top right, keeping titles and centered focal subjects clear. Show it on
+video/audio cards, omit it on text cards, and keep the entire thumbnail as one
+native link into the viewer. The icon adds no separate control or player.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to
