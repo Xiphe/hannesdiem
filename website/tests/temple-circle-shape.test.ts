@@ -92,7 +92,7 @@ function outlinePoints(dx: number, dy: number) {
   return points.slice(0, -1)
 }
 
-test('the soft nose keeps the same target clearance in every direction', () => {
+test('the rounded tip keeps the same target clearance in every direction', () => {
   for (let angle = 0; angle < 360; angle += 10) {
     const radians = (angle * Math.PI) / 180
     const ux = Math.cos(radians),
@@ -114,8 +114,25 @@ test('the circular pull rotates uniformly without changing at diagonal targets',
         50 + (x - 50) * Math.cos(angle) - (y - 50) * Math.sin(angle),
         50 + (x - 50) * Math.sin(angle) + (y - 50) * Math.cos(angle),
       ]
-      const actual = rotated[(index + step * 20) % rotated.length]
+      const actual = rotated[(index + step * (rotated.length / 64)) % rotated.length]
       assert.ok(Math.hypot(actual[0] - expected[0], actual[1] - expected[1]) < 0.04)
+    }
+  }
+})
+
+test('the whole outline stays convex without a waist behind the point', () => {
+  for (let angle = 0; angle < 360; angle += 15) {
+    const radians = (angle * Math.PI) / 180
+    const points = outlinePoints(110 * Math.cos(radians), 110 * Math.sin(radians)).filter(
+      (_, index) => index % 10 === 0,
+    )
+    for (const [index, current] of points.entries()) {
+      const before = points[(index + points.length - 1) % points.length]
+      const after = points[(index + 1) % points.length]
+      const a = [current[0] - before[0], current[1] - before[1]]
+      const b = [after[0] - current[0], after[1] - current[1]]
+      const turn = (a[0] * b[1] - a[1] * b[0]) / (Math.hypot(...a) * Math.hypot(...b))
+      assert.ok(turn >= -0.005, `inward waist at ${angle} degrees: ${turn}`)
     }
   }
 })

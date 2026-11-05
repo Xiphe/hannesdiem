@@ -58,6 +58,15 @@ The artist finds the first stretch too oval and asks for a clearer point.
 Narrow the deformation's shoulder from90° to36° on each side of its direction,
 keeping the small rounded nose, circular body, target gap and soft settling.
 
+The artist rejects the resulting nose and asks for the circle itself to become
+directional. Replace the local deformation with one convex teardrop: common
+tangent sides flow from the round back into a small rounded tip, without an
+inward waist. Keep the label steady, target gap and native settling. Sample the
+whole outline at fixed angles so target changes remain stable; construct joins
+through their tangent intersections to preserve convexity at the arc/side
+transitions. A synthetic contour check reproduces the old inward waist and
+covers the new whole silhouette in all directions. Local review continues.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
