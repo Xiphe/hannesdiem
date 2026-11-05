@@ -20,6 +20,11 @@ export function mountCircle(
     surface.setAttribute('d', path)
   }
   let target: HTMLInputElement | undefined
+  let chosen: HTMLInputElement | undefined
+  const heldSpot = () =>
+    membership?.owner() ??
+    membership?.selected() ??
+    (chosen?.checked ? Number(chosen.value) : undefined)
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   // Allocate the numerical study only when visible and motion is allowed.
   let fluid: CircleFluid | undefined
@@ -37,18 +42,6 @@ export function mountCircle(
       y: 40 + ((y - box.top) * 280) / box.height,
     }
   }
-  const syncDots = () => {
-    if (!fluid) return
-    const scale = 280 / root.getBoundingClientRect().width
-    fluid.dots = places.map((input) => {
-      const box = input.getBoundingClientRect()
-      const dot = input.parentElement!.querySelector<HTMLElement>('.fact-circle-dot')!
-      return {
-        ...coordinates(box.x + box.width / 2, box.y + box.height / 2),
-        r: (dot.offsetWidth * scale) / 2,
-      }
-    })
-  }
   const stop = () => {
     cancelAnimationFrame(frame)
     frame = 0
@@ -57,7 +50,7 @@ export function mountCircle(
   }
   const draw = (now: number) => {
     frame = 0
-    if (signal.aborted || document.hidden || !visible || membership?.owner()) return
+    if (signal.aborted || document.hidden || !visible) return
     if (reduced.matches) {
       shape(rest)
       return
@@ -65,7 +58,6 @@ export function mountCircle(
     if (!fluid) {
       fluid = new CircleFluid()
       contour = new DensitySurface()
-      syncDots()
     }
     fluid.target = wanted
     accumulator += last ? Math.min((now - last) / 1000, 0.05) : 1 / 60
@@ -85,7 +77,7 @@ export function mountCircle(
     else stop()
   }
   const wake = () => {
-    if (signal.aborted || document.hidden || !visible || membership?.owner()) return
+    if (signal.aborted || document.hidden || !visible) return
     if (reduced.matches) {
       stop()
       shape(rest)
@@ -116,8 +108,8 @@ export function mountCircle(
     ripples.clear()
   }
   const reset = () => {
-    const selected = membership?.selected()
-    if (selected && !membership?.owner() && !signal.aborted) {
+    const selected = heldSpot()
+    if (selected && !signal.aborted) {
       const input = places.find((p) => Number(p.value) === selected)
       if (input) {
         point(input)
@@ -128,7 +120,6 @@ export function mountCircle(
     delete root.dataset.pointing
     delete root.dataset.target
     pull(null)
-    if (membership?.owner()) stop()
     for (const input of places) delete input.parentElement!.dataset.aimed
   }
   const aim = (x: number, y: number) => {
@@ -171,7 +162,7 @@ export function mountCircle(
     'pointerenter',
     (event) => {
       if (event.pointerType === 'touch') return
-      if (membership?.owner() || membership?.selected()) return
+      if (heldSpot()) return
       aim(event.clientX, event.clientY)
     },
     { signal },
@@ -180,7 +171,7 @@ export function mountCircle(
     'pointermove',
     (event) => {
       if (event.pointerType === 'touch') return
-      if (membership?.owner() || membership?.selected()) return
+      if (heldSpot()) return
       const hoveredPlace = (event.target as Element)
         .closest('.fact-circle-place')
         ?.querySelector<HTMLInputElement>('input')
@@ -198,7 +189,7 @@ export function mountCircle(
   invite.addEventListener(
     'focus',
     () => {
-      if (membership?.owner() || membership?.selected()) return
+      if (heldSpot()) return
       if (root.matches(':hover')) return
       const box = invite.getBoundingClientRect()
       aim(box.x + box.width / 2, box.y)
@@ -225,7 +216,7 @@ export function mountCircle(
         aim(box.x + box.width / 2, box.y)
       }
       const claimed = target
-      if (claimed && !claimed.disabled && !claimed.checked) {
+      if (claimed && !claimed.disabled) {
         if (membership) {
           membership.choose(Number(claimed.value))
           return
@@ -278,6 +269,8 @@ export function mountCircle(
   root.addEventListener(
     'change',
     (event) => {
+      if (!membership && event.target instanceof HTMLInputElement && !event.target.disabled)
+        chosen = event.target
       reset()
       if (membership && event.target instanceof HTMLInputElement) {
         const spot = Number(event.target.value)
@@ -311,14 +304,13 @@ export function mountCircle(
     { signal },
   )
   const size = new ResizeObserver(() => {
-    syncDots()
     reset()
   })
   size.observe(root)
   root.addEventListener(
     'focusin',
     (event) => {
-      if (membership?.owner() || membership?.selected()) return
+      if (heldSpot()) return
       if (event.target instanceof HTMLInputElement && !event.target.disabled) point(event.target)
     },
     { signal },

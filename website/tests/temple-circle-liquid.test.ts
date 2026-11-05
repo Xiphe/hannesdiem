@@ -120,3 +120,23 @@ test('SVG resolves both saddle orientations without merging separated droplets',
     }
   assert.equal(new DensitySurface(5, 4).trace(), '')
 })
+
+test('a held seat fills with simulated material instead of excluding a circular hole', () => {
+  const fluid = new CircleFluid()
+  const seat = fluid.dots[2]
+  fluid.target = seat
+  advance(fluid, 960)
+  const surface = new DensitySurface()
+  surface.update(fluid)
+  for (const [dx, dy] of [
+    [0, 0],
+    [8, 0],
+    [-8, 0],
+    [0, 8],
+    [0, -8],
+  ]) {
+    const x = Math.round((seat.x + dx) / surface.cell)
+    const y = Math.round((seat.y + dy) / surface.cell)
+    assert.ok(surface.field[y * surface.size + x] > 1, 'actual density must fill the seat interior')
+  }
+})

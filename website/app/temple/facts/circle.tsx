@@ -19,6 +19,8 @@ export function FactCircle(handle: Handle<CircleProps>) {
   let expanded = false
   let selected = 1
   let hasSelection = false
+  // A visual choice exists before the visitor has authenticated.
+  let hasChosen = false
   let moving = false
   let feedback: CircleResult | undefined
   let refreshing = false
@@ -45,7 +47,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
       )
         throw new Error('Circle state unavailable')
       state = value
-      if (!hasSelection && value.selected) selected = value.selected
+      if (!hasChosen && !hasSelection && value.selected) selected = value.selected
       const url = new URL(location.href)
       const notice = url.searchParams.get('circle')
       if (notice) {
@@ -76,6 +78,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
     if (!state.ready) return
     moving = Boolean(state.own && state.own.spot !== spot)
     selected = spot
+    hasChosen = !state.own && availableCircleSpot(state, spot) === spot
     hasSelection = Boolean(state.email && !state.own && availableCircleSpot(state, spot))
     expanded = true
     feedback = undefined
@@ -93,6 +96,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
     if (value.type === 'success' && !value.confirmationPending) {
       expanded = Boolean(state.waiting)
       hasSelection = false
+      hasChosen = false
       moving = false
     }
     await handle.update()
@@ -119,7 +123,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
                 void choose(spot)
               },
               owner: () => state.own?.spot,
-              selected: () => (hasSelection ? selected : undefined),
+              selected: () => (hasChosen || hasSelection ? selected : undefined),
             }
           : undefined,
       )
@@ -168,7 +172,6 @@ export function FactCircle(handle: Handle<CircleProps>) {
               class="fact-circle-surface"
               viewBox="40 40 280 280"
               aria-hidden="true"
-              hidden={persistent && Boolean(state.own)}
             >
               <path
                 d={circleRestSurface}

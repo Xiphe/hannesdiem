@@ -136,3 +136,32 @@ test('reduced motion is static; visible liquid resumes and disposes with its isl
   await page.waitForTimeout(200)
   expect(await page.evaluate(() => (window as any).retiredCirclePath.getAttribute('d'))).toBe(rest)
 })
+
+for (const entry of ['seat', 'center'] as const) {
+  test(`a chosen seat keeps its fluid after signed-out ${entry} selection`, async ({ page }) => {
+    await page.route('**/circle', (route) =>
+      route.fulfill({
+        json: {
+          ready: true,
+          places: [],
+          csrfToken: 'fixture-csrf',
+        },
+      }),
+    )
+    await page.goto('/temple-circle')
+    const circle = page.locator('#fixture-reservation .fact-circle')
+    const invite = circle.locator('.fact-circle-invite')
+    await expect(invite).toBeEnabled()
+    if (entry === 'seat') await circle.locator('input[value="3"]').click()
+    else await invite.click()
+    const chosen = await page.locator('.circle-fields input[name="spot"]').inputValue()
+    await page.getByRole('button', { name: 'Close signup' }).click()
+    await page.mouse.move(0, 0)
+    await expect(circle).toHaveAttribute('data-target', chosen)
+    await circle.locator(`input[value="${chosen === '7' ? '2' : '7'}"]`).hover()
+    await expect(circle).toHaveAttribute('data-target', chosen)
+    const path = circle.locator('.fact-circle-surface path')
+    const before = await path.getAttribute('d')
+    await expect.poll(() => path.getAttribute('d')).not.toBe(before)
+  })
+}

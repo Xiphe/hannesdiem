@@ -385,3 +385,35 @@ with the liquid settled and paused they were also50ms/66.7ms. This is a shared,
 software-rendered preview with other page animation, not a native Mac/mobile
 performance guarantee. No surrounding rendering was changed to improve this
 measurement. The accepted material remains subject to in-context visual review.
+
+## Hold a chosen place and fill its interior — 2026-11-05
+
+The artist requests that clicking a place retain its liquid, including a place
+assigned through the central invitation, and asks to try fully filled seats.
+Keep the actual simulation and selected61/682/63/245 settings. This reopens the
+seat shape for review without withdrawing the accepted liquid method.
+
+The failing browser regressions reproduce a signed-out seat3 and a central
+assignment being retargeted to seat1 after closing signup/focus return. The
+visual hold previously depended on an authenticated candidate. Add a separate
+intentional-choice flag before login, preserve it through private-state refresh,
+and keep the existing authenticated form/confirmation state separate. The
+enhancer anchors to a confirmed place, otherwise that chosen candidate, or a
+user-chosen native radio in the non-persistent fixture. Pointer leave, focus
+return and hovering other places do not overwrite the hold. Clicking another
+place still changes the choice. Confirmed membership keeps its fluid visible;
+release removes the hold. Offscreen/hidden/reduced-motion/disposal behavior stays
+bounded as before; a visible held place continues its actual material motion.
+
+For the filled-seat experiment, remove seat collision exclusions and the radial
+annular preferred shell. Seats now attract through their interiors, retaining
+the local adhesion and collection feedback. There is no added display disc,
+painted pool or hole removal in the contour renderer. A numerical regression
+failed on the previous hollow centre and passes with actual reconstructed
+density above the surface threshold at the seat centre and four interior
+samples. The nine numerical/topology checks and18 related browser cases pass,
+along with the app build, TypeScript and formatting checks. Main-preview SVG
+hit testing also confirms liquid in the selected seat after leaving the circle.
+Review this filled-seat treatment on8787 at `/temple-of-sound/share`; the
+pre-integration8796 study and saved selected snapshot remain recoverable.
+No deployment requested.

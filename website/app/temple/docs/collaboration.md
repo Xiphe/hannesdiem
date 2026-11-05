@@ -209,6 +209,24 @@ in context on8787 at `/temple-of-sound/share` (`sand tunnel 8787`). This integra
 the selected material for local review; publication remains separate.
 [Implementation, performance evidence and limits](liquid-simulation-research.md).
 
+**Keep chosen liquid; try filled seats — 2026-11-05.** The artist requests
+that clicked places retain their fluid, including central-button assignment,
+and asks to try fully filled seats. A signed-out choice was discarded by the
+authenticated-only visual hold and focus could retarget it. Track that visual
+choice before login, preserve it across refresh, and retain liquid for confirmed
+places too. Native radio selection also holds; another explicit choice retargets
+it and membership release clears it. Preserve signup semantics and bounded
+visibility/reduced-motion/disposal behavior.
+
+Remove seat collision exclusions and the annular preferred shell so actual
+particles can fill the seat interior. Keep collection feedback, selected
+parameters and density-derived contours; no overlay fills the hole. Nine
+numerical/topology and18 browser cases pass, including regressions that first
+failed on the lost signed-out choices and empty seat. Review the filled-seat
+variation on8787 (`sand tunnel 8787`). The real-liquid method stays selected;
+this seat shape is an experiment for review, not publication.
+[Cause, changes and evidence](liquid-simulation-research.md).
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
