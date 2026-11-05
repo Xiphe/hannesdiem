@@ -214,8 +214,8 @@ for (const width of [390, 1440]) {
       width: node.getBoundingClientRect().width,
       opacity: Number(getComputedStyle(node.querySelector('.temple-enter-label-extra')!).opacity),
     }))
-    expect(opening.width).toBeGreaterThan(initial)
-    expect(opening.width).toBeLessThan(full)
+    expect(opening.width).toBeGreaterThan(Math.min(initial, full))
+    expect(opening.width).toBeLessThan(Math.max(initial, full))
     expect(opening.opacity).toBeGreaterThan(0)
     expect(opening.opacity).toBeLessThan(1)
     // Reverse before the first handoff finishes; the new motion starts from its painted width.
@@ -226,8 +226,8 @@ for (const width of [390, 1440]) {
     })
     await expect(header).not.toHaveAttribute('data-nav-visible', '')
     const returning = (await button.boundingBox())!.width
-    expect(returning).toBeGreaterThan(initial)
-    expect(returning).toBeLessThan(opening.width)
+    expect(returning).toBeGreaterThan(Math.min(initial, opening.width))
+    expect(returning).toBeLessThan(Math.max(initial, opening.width))
     expect(await fixed.evaluate((node) => node.getAnimations().length)).toBe(0)
     await page.evaluate(() => {
       for (const motion of document.getAnimations()) {

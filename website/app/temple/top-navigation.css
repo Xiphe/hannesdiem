@@ -383,7 +383,7 @@
   font-size: clamp(14px, 2.5vw, 18px);
 }
 .temple-entry-welcome .fact-action a {
-  padding-inline: 4rem;
+  padding-inline: 5rem;
 }
 .temple-enter-label-extra {
   display: inline-block;
