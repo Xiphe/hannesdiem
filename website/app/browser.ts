@@ -1,4 +1,5 @@
 import { run } from 'remix/component'
+import { mountFeedTransitions } from './temple/feed/transition.ts'
 
 const app = run({
   async loadModule(moduleUrl, exportName) {
@@ -12,3 +13,4 @@ const app = run({
 
 app.addEventListener('error', (event) => console.error(event.error))
 await app.ready()
+mountFeedTransitions()

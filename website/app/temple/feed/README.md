@@ -12,6 +12,18 @@ Watch; the entry and share-image conversations own their corresponding views.
   Playable covers show the viewer's Play icon in a prominent shaded circle
   centered over the thumbnail. It is decorative; the complete card
   retains its native link into the feed. Text cards omit this indicator.
+- Preview links expand into the viewer over 420ms; the viewer's Back control and
+  Escape shrink it to the current post's centered preview, including after
+  scrolling to another post. Use the browser View Transition API around Remix's
+  existing frame navigation. Wait for the destination's layout gate and a bounded
+  image decode before capturing it; no cover is added over scrolling videos.
+  Direct shared links retain their existing entry behavior. Reduced motion,
+  unsupported browsers, modified clicks and new tabs keep native document links.
+  Skip the animation if the destination does not become ready promptly.
+  CMX does not provide a shared-element navigation primitive; this is browser
+  presentation of its existing published link surface. Keep no-JavaScript viewer
+  CSS inside `@media (scripting: none)`: frame navigation can extract inline
+  styles from a `noscript` subtree into the active document.
 - The Back control goes to `/temple-of-sound` unless the visitor had
   entered previously, otherwise `/temple-of-sound/watch#{current-id}`. The feed
   uses `hasEnteredTemple()` from the entry implementation but never writes it

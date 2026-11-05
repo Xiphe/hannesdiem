@@ -368,6 +368,114 @@ test('text scrolls through its full length before snapping to the next piece', a
   await expect(post(page, 'oldest')).toHaveAttribute('data-playing', '')
 })
 
+for (const width of [390, 1440]) {
+  test(`Watch expands into the viewer and returns to the current preview at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.addInitScript(() => {
+      const original = document.startViewTransition.bind(document)
+      ;(window as any).feedTransitions = []
+      document.startViewTransition = (update) => {
+        const before = [...document.querySelectorAll<HTMLElement>('[style]')]
+          .find((node) => node.style.viewTransitionName === 'temple-content')!
+          .getBoundingClientRect()
+        const transition = original(update)
+        void transition.ready
+          .then(() => {
+            const after = [...document.querySelectorAll<HTMLElement>('[style]')]
+              .find((node) => node.style.viewTransitionName === 'temple-content')!
+              .getBoundingClientRect()
+            const animations = document
+              .getAnimations()
+              .filter((animation) =>
+                (animation.effect as KeyframeEffect)?.pseudoElement?.startsWith(
+                  '::view-transition',
+                ),
+              )
+            for (const animation of animations) {
+              animation.pause()
+              animation.currentTime = 210
+            }
+            const group = getComputedStyle(
+              document.documentElement,
+              '::view-transition-group(temple-content)',
+            )
+            ;(window as any).feedTransitions.push({
+              from: before.width,
+              to: after.width,
+              midway: parseFloat(group.width),
+            })
+            for (const animation of animations) animation.finish()
+          })
+          .catch((error) => {
+            ;(window as any).feedTransitions.push({ error: error.message })
+          })
+        return transition
+      }
+    })
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.goto('/temple-of-sound/watch#fixture-latest')
+    await expect(page.locator('html')).not.toHaveAttribute('data-temple-loading', '')
+    const card = page.locator('#fixture-latest')
+    await expect(card).toBeInViewport()
+    const cardWidth = (await card.boundingBox())!.width
+    await card.click()
+    await expect(page).toHaveURL(path('latest'))
+    await expect.poll(() => page.evaluate(() => (window as any).feedTransitions.length)).toBe(1)
+    const opening = await page.evaluate(() => (window as any).feedTransitions[0])
+    expect(opening.from).toBeCloseTo(cardWidth, 0)
+    expect(opening.to).toBe(width)
+    expect(opening.midway).toBeGreaterThan(cardWidth)
+    expect(opening.midway).toBeLessThan(width)
+    await expect(page.locator('.temple-feed')).toHaveCSS('view-transition-name', 'none')
+    await move(page, 'middle')
+    await post(page, 'middle')
+      .locator('.feed-tap')
+      .click({ position: { x: 100, y: 150 } })
+    await page.locator('[data-back]').click()
+    await expect(page).toHaveURL('/temple-of-sound/watch#fixture-middle')
+    await expect.poll(() => page.evaluate(() => (window as any).feedTransitions.length)).toBe(2)
+    const closing = await page.evaluate(() => (window as any).feedTransitions[1])
+    expect(closing.from).toBe(width)
+    expect(closing.to).toBeCloseTo(cardWidth, 0)
+    expect(closing.midway).toBeGreaterThan(cardWidth)
+    expect(closing.midway).toBeLessThan(width)
+    await expect(page.locator('#fixture-middle')).toBeInViewport()
+    await expect(page.locator('#fixture-middle')).toHaveCSS('view-transition-name', 'none')
+    expect(errors).toEqual([])
+  })
+}
+
+for (const fallback of ['reduced motion', 'unsupported browser'] as const) {
+  test(`Watch links remain usable with ${fallback}`, async ({ page }) => {
+    if (fallback === 'reduced motion') await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.addInitScript((fallback) => {
+      if (fallback === 'unsupported browser')
+        Object.defineProperty(document, 'startViewTransition', { value: undefined })
+      else
+        document.startViewTransition = () => {
+          throw new Error('Reduced motion must not start a transition')
+        }
+    }, fallback)
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.goto('/temple-of-sound/watch#fixture-latest')
+    await expect(page.locator('html')).not.toHaveAttribute('data-temple-loading', '')
+    await page.locator('#fixture-latest').click()
+    await expect(page).toHaveURL(path('latest'))
+    await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+    await post(page, 'latest')
+      .locator('.feed-tap')
+      .click({ position: { x: 100, y: 150 } })
+    await page.locator('[data-back]').click()
+    await expect(page).toHaveURL('/temple-of-sound/watch#fixture-latest')
+    await expect(page.locator('#fixture-latest')).toBeInViewport()
+    expect(errors).toEqual([])
+  })
+}
+
 test('feed return reads entry memory, never sets it, and identifies the current post', async ({
   page,
 }) => {

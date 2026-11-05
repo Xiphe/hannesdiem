@@ -35,7 +35,7 @@ export async function renderFeed(page: ContentPage, id: string) {
             }))}
           />
           <noscript>
-            <style>{'.temple-feed { display: none; }'}</style>
+            <style>{'@media (scripting: none) { .temple-feed { display: none; } }'}</style>
             <article class="feed-fallback">
               <a
                 href={templePath}

@@ -4,6 +4,19 @@
   initial-value: 0;
 }
 
+::view-transition-group(temple-content) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.22, 0.7, 0.15, 1);
+  overflow: clip;
+}
+::view-transition-old(temple-content),
+::view-transition-new(temple-content) {
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: normal;
+  animation-duration: 250ms;
+}
+
 .temple-post-previews {
   --preview-width: min(82vw, 380px);
   --preview-room: max(0px, calc((100vw - var(--preview-width)) / 2));
