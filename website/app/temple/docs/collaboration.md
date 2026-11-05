@@ -433,6 +433,22 @@ Use existing image focal metadata for both generated card variants, centering
 the crop on the point within source bounds. Playback keeps the full video.
 Local review only; no publication requested.
 
+**Cover review feedback and retry — 2026-11-05.** After saving all three
+choices, the artist reports excessive rebuffering, requests smaller search
+video and previous/next frame controls before previous/next second controls.
+Both must use the latest manual scrub position. Cache the smallest Stream
+rendition as a local silent MP4 with native byte-range seeking; keep final
+frames at full resolution. Step using the source frame rate and subsecond
+timestamps. The old second handler read the saved cover time, causing a jump
+to1s after a manual scrub to20.5s; its replacement yields21.5s.
+
+The artist also corrects focal placement: put the marked subject in the open
+area above the title, rather than the full card's center. Derive that target
+from the actual fitted caption in each card variant, within source bounds.
+Preserve all three prior choices and original frames, back up their draft and
+reopen them for review under the new composition version. The artist will
+remark true focal points and save again. No cover choices applied or published.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to

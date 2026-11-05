@@ -1,4 +1,4 @@
-import Hls from '/hls.mjs'
+import { stepFrame } from '/transport.js'
 
 const $ = (id) => document.getElementById(id)
 const player = $('video')
@@ -6,14 +6,13 @@ const select = $('recording')
 const state = new Map()
 let videos = []
 let current
-let hls
 let timer
 let requestId = 0
 let displayed
 let saving = false
 document.querySelectorAll('button, input').forEach((element) => (element.disabled = true))
 const timeLabel = (seconds) =>
-  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
+  `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(3).padStart(6, '0')}`
 const signature = (choice) =>
   JSON.stringify({
     id: current.id,
@@ -69,7 +68,7 @@ function dirty() {
   progress()
   buttons()
   clearTimeout(timer)
-  timer = setTimeout(preview, 200)
+  timer = setTimeout(preview, 400)
 }
 async function preview() {
   const id = ++requestId
@@ -95,7 +94,7 @@ async function preview() {
     displayed = key
     $('status').textContent = choice().saved
       ? 'Saved locally. You can still adjust this cover.'
-      : `Frame ${timeLabel(values.time)}. Check the crop and title, then save your choice.`
+      : `Frame ${timeLabel(values.time)}. Mark the actual subject, check the crop, then save your choice.`
     document.querySelector('.results').setAttribute('aria-busy', 'false')
     buttons()
   } catch (cause) {
@@ -107,7 +106,8 @@ async function preview() {
 }
 function seek(time) {
   const value = Math.max(0, Math.min(current.duration - 0.001, time))
-  choice().time = Math.round(value * 1000) / 1000
+  player.pause()
+  choice().time = Math.round(value * 1000000) / 1000000
   $('time').value = choice().time
   try {
     player.currentTime = value
@@ -126,30 +126,14 @@ function open(id) {
   $('time').value = choice().time
   $('time').max = current.duration - 0.001
   $('playhead').textContent = ''
-  hls?.destroy()
   player.pause()
   player.removeAttribute('src')
   player.load()
-  const source = `https://customer-${current.customerCode}.cloudflarestream.com/${current.videoId}/manifest/video.m3u8`
   player.poster = `/api/frame?id=${encodeURIComponent(id)}&time=${choice().time}`
-  if (player.canPlayType('application/vnd.apple.mpegurl')) player.src = source
-  else if (Hls.isSupported()) {
-    hls = new Hls({ maxBufferLength: 12, maxMaxBufferLength: 24 })
-    hls.loadSource(source)
-    hls.attachMedia(player)
-    hls.on(Hls.Events.ERROR, (_, data) => {
-      if (data.fatal)
-        error(
-          'Video playback is unavailable. You can still select a cover using the seconds field.',
-        )
-    })
-  } else
-    error(
-      'This browser cannot play the video. You can still select a cover using the seconds field.',
-    )
   player.onloadedmetadata = () => {
     if (choice().time) player.currentTime = choice().time
   }
+  player.src = `/api/search-video?id=${encodeURIComponent(id)}&video=${current.videoId}`
   marker()
   buttons()
   preview()
@@ -169,8 +153,15 @@ $('time').addEventListener('change', () => {
   if ($('time').value !== '' && Number.isFinite($('time').valueAsNumber))
     seek($('time').valueAsNumber)
 })
-$('back').addEventListener('click', () => seek(choice().time - 1))
-$('forward').addEventListener('click', () => seek(choice().time + 1))
+const position = () => (player.readyState >= 1 ? player.currentTime : choice().time)
+$('back-frame').addEventListener('click', () =>
+  seek(stepFrame(position(), -1, current.frameRate, current.duration)),
+)
+$('forward-frame').addEventListener('click', () =>
+  seek(stepFrame(position(), 1, current.frameRate, current.duration)),
+)
+$('back').addEventListener('click', () => seek(position() - 1))
+$('forward').addEventListener('click', () => seek(position() + 1))
 for (const [id, field] of [
   ['focal-x', 'focalX'],
   ['focal-y', 'focalY'],
@@ -234,7 +225,7 @@ try {
       time: video.choice?.time ?? 0,
       focalX: video.choice?.focalX ?? video.cover?.focalX ?? 50,
       focalY: video.choice?.focalY ?? video.cover?.focalY ?? 50,
-      saved: Boolean(video.choice),
+      saved: video.choice?.compositionVersion === video.compositionVersion,
     })
     const option = document.createElement('option')
     option.value = video.id
@@ -242,6 +233,9 @@ try {
     select.append(option)
   }
   progress()
+  $('restored').hidden = !videos.some(
+    (video) => video.choice && video.choice.compositionVersion !== video.compositionVersion,
+  )
   document.querySelectorAll('button, input').forEach((element) => (element.disabled = false))
   select.disabled = false
   open(videos[0].id)

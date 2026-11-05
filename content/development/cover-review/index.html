@@ -32,6 +32,13 @@
         ></span>
       </nav>
       <h2 id="title"></h2>
+      <p
+        id="restored"
+        hidden
+      >
+        Previous choices restored. Recheck the focal point and save each cover again with the
+        updated crop.
+      </p>
       <div class="sources">
         <section aria-labelledby="frame-heading">
           <h3 id="frame-heading">Choose the frame</h3>
@@ -39,9 +46,10 @@
             id="video"
             controls
             playsinline
-            preload="metadata"
+            preload="auto"
             crossorigin="anonymous"
           ></video>
+          <p class="search-note">Small, silent search copy. Cards use the full-resolution frame.</p>
           <div class="controls">
             <button
               id="use-frame"
@@ -58,9 +66,25 @@
                 id="time"
                 type="number"
                 min="0"
-                step="0.1"
+                step="any"
                 value="0"
             /></label>
+          </div>
+          <div class="controls">
+            <button
+              id="back-frame"
+              type="button"
+              aria-label="Previous frame"
+            >
+              Previous frame
+            </button>
+            <button
+              id="forward-frame"
+              type="button"
+              aria-label="Next frame"
+            >
+              Next frame
+            </button>
             <button
               id="back"
               type="button"
@@ -80,6 +104,7 @@
         <section aria-labelledby="focus-heading">
           <h3 id="focus-heading">Mark the focal point</h3>
           <p>Click the face, instrument or detail to keep in the crop.</p>
+          <p>The crop places this point in the open space above the title.</p>
           <div class="focus-area">
             <div id="focus-frame">
               <img

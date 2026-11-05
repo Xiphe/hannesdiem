@@ -11,7 +11,8 @@ import {
   type PublishedDocuments,
 } from '../../contracts/content.ts'
 import { renderTempleShareImage } from '../preparation/temple-share-image.ts'
-import { coverReviewStore } from './cover-review-store.ts'
+import { coverReviewStore, coverCompositionVersion } from './cover-review-store.ts'
+import { searchRendition, searchVideoCache, serveSearchVideo } from './cover-review-video.ts'
 
 // Local authoring aid. Read native CMX inputs; choices stay drafts until applied to content.
 const output = resolve('.generated/temple-cover-review')
@@ -97,19 +98,16 @@ async function frame(video: Video, time: number) {
   }
   return result
 }
-const durations = new Map<string, Promise<number>>()
-function duration(video: Video) {
-  let result = durations.get(video.videoId)
+const metadata = new Map<string, Promise<{ duration: number; frameRate: number; source: string }>>()
+function videoInfo(video: Video) {
+  let result = metadata.get(video.videoId)
   if (!result) {
     result = (async () => {
       const url = `${base(video)}/manifest/video.m3u8`
       const master = await fetch(url, { signal: AbortSignal.timeout(15000) })
       if (!master.ok) throw new Error('Video unavailable')
-      const variant = (await master.text())
-        .split('\n')
-        .find((line) => line.trim() && !line.startsWith('#'))
-      if (!variant) throw new Error('Video has no playable stream')
-      const response = await fetch(new URL(variant.trim(), url), {
+      const variant = searchRendition(await master.text(), url)
+      const response = await fetch(variant.url, {
         signal: AbortSignal.timeout(15000),
       })
       if (!response.ok) throw new Error('Video duration unavailable')
@@ -118,12 +116,16 @@ function duration(video: Video) {
         0,
       )
       if (!(length > 0)) throw new Error('Video duration unavailable')
-      return length
+      return { duration: length, frameRate: variant.frameRate, source: variant.url }
     })()
-    durations.set(video.videoId, result)
-    result.catch(() => durations.delete(video.videoId))
+    metadata.set(video.videoId, result)
+    result.catch(() => metadata.delete(video.videoId))
   }
   return result
+}
+const cachedVideo = searchVideoCache(`${output}/search`)
+async function searchVideo(video: Video) {
+  return cachedVideo(video.videoId, (await videoInfo(video)).source)
 }
 async function input(body: Record<string, unknown>) {
   const video = videos.get(String(body.id))
@@ -133,7 +135,7 @@ async function input(body: Record<string, unknown>) {
     typeof time !== 'number' ||
     !Number.isFinite(time) ||
     time < 0 ||
-    time >= (await duration(video))
+    time >= (await videoInfo(video)).duration
   )
     throw new Error('Choose a time within this video')
   for (const value of [focalX, focalY])
@@ -141,7 +143,7 @@ async function input(body: Record<string, unknown>) {
       throw new Error('Focus must be between 0 and 100%')
   return {
     video,
-    time: Math.round(time * 1000) / 1000,
+    time: Math.round(time * 1000000) / 1000000,
     focalX: focalX as number,
     focalY: focalY as number,
   }
@@ -150,7 +152,7 @@ const staticFiles: Record<string, [string, string]> = {
   '/': [`${assets}index.html`, 'text/html; charset=utf-8'],
   '/app.js': [`${assets}app.js`, 'text/javascript; charset=utf-8'],
   '/style.css': [`${assets}style.css`, 'text/css; charset=utf-8'],
-  '/hls.mjs': [resolve('node_modules/hls.js/dist/hls.mjs'), 'text/javascript; charset=utf-8'],
+  '/transport.js': [`${assets}transport.js`, 'text/javascript; charset=utf-8'],
 }
 const server = createServer(async (request, response) => {
   const send = (status: number, value: unknown) => {
@@ -169,12 +171,18 @@ const server = createServer(async (request, response) => {
         await Promise.all(
           [...videos.values()].map(async (video) => ({
             ...video,
-            duration: await duration(video),
+            duration: (await videoInfo(video)).duration,
+            frameRate: (await videoInfo(video)).frameRate,
+            compositionVersion: coverCompositionVersion,
             choice:
               choices.get(video.id)?.videoId === video.videoId ? choices.get(video.id) : undefined,
           })),
         ),
       )
+    } else if (['GET', 'HEAD'].includes(request.method!) && url.pathname === '/api/search-video') {
+      const video = videos.get(url.searchParams.get('id') ?? '')
+      if (!video) throw new Error('Unknown video')
+      await serveSearchVideo(request, response, await searchVideo(video))
     } else if (request.method === 'GET' && url.pathname === '/api/frame') {
       const { video, time } = await input({
         id: url.searchParams.get('id'),
@@ -222,7 +230,13 @@ const server = createServer(async (request, response) => {
         send(200, {
           choice: await choices.save(
             video.id,
-            { time, focalX, focalY, videoId: video.videoId },
+            {
+              time,
+              focalX,
+              focalY,
+              videoId: video.videoId,
+              compositionVersion: coverCompositionVersion,
+            },
             background,
           ),
         })
@@ -239,3 +253,8 @@ const port = Number(process.env.COVER_REVIEW_PORT ?? 8794)
 server.listen(port, '0.0.0.0', () =>
   console.log(`Cover review: http://localhost:${port}\nDrafts: ${draftsPath}`),
 )
+for (const video of videos.values())
+  searchVideo(video).then(
+    (path) => console.log(`Search video ready: ${video.id} (${path})`),
+    (error) => console.error(`Search video failed: ${video.id}: ${error.message}`),
+  )

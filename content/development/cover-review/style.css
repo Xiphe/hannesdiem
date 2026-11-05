@@ -123,6 +123,13 @@ video {
   font-size: 14px;
   margin-bottom: 10px;
 }
+.search-note,
+#restored {
+  color: #b9b2a9;
+}
+#restored {
+  margin-bottom: 16px;
+}
 .focus-area {
   display: flex;
   justify-content: center;

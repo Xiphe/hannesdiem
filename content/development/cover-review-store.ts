@@ -7,7 +7,10 @@ export type CoverChoice = {
   focalY: number
   videoId: string
   frame: string
+  compositionVersion?: number
 }
+
+export const coverCompositionVersion = 2
 
 /** Local review drafts only; publication still consumes authored CMX cover imports. */
 export async function coverReviewStore(directory: string) {

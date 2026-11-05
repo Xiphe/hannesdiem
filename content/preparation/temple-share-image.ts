@@ -88,6 +88,7 @@ export interface TempleCardLayout {
   captionTop: number
   titleTop: number
   titleHeight: number
+  focalTarget?: { x: number; y: number }
   gradient: { startY: number; topOpacity: number; bottomOpacity: number }
 }
 
@@ -169,9 +170,26 @@ export async function renderTempleShareImage(input: {
       : titleTop
   const nameLeft = poem ? Math.round((width - name.info.width) / 2) : left
   const titleLeft = poem ? Math.round((width - titleWidth) / 2) : left
+  const focalTarget =
+    input.focalX !== undefined || input.focalY !== undefined
+      ? {
+          x: width / 2,
+          y:
+            (showWordmark
+              ? nameTop + nameHeight - name.info.height
+              : titleTop + titleHeight - fitted.info.height) / 2,
+        }
+      : undefined
   const background = await (
     input.background
-      ? await cropTempleCover(input.background, width, height, input.focalX, input.focalY)
+      ? await cropTempleCover(
+          input.background,
+          width,
+          height,
+          input.focalX,
+          input.focalY,
+          focalTarget?.y,
+        )
       : sharp({
           create: { width, height, channels: 3, background: input.backgroundColor ?? '#000000' },
         })
@@ -265,6 +283,7 @@ export async function renderTempleShareImage(input: {
     captionTop: nameTop,
     titleTop,
     titleHeight,
+    ...(focalTarget ? { focalTarget } : {}),
     gradient: {
       startY,
       topOpacity: startY < 0 ? (bottomOpacity * -startY) / (height - startY) : 0,

@@ -16,12 +16,17 @@ test('cover choices and original frame bytes survive reload and concurrent saves
     store.save('synthetic-first', selection, firstBytes),
     store.save('synthetic-other', { ...selection, time: 14 }, nextBytes),
   ])
-  const latest = await store.save('synthetic-first', { ...selection, time: 16 }, nextBytes)
+  const latest = await store.save(
+    'synthetic-first',
+    { ...selection, time: 16, compositionVersion: 2 },
+    nextBytes,
+  )
   assert.notEqual(first.frame, latest.frame)
   assert.deepEqual(await readFile(join(directory, first.frame)), firstBytes)
   assert.deepEqual(await readFile(join(directory, latest.frame)), nextBytes)
   const restored = await coverReviewStore(directory)
   assert.deepEqual(restored.get('synthetic-first'), latest)
+  assert.equal(restored.get('synthetic-first')?.compositionVersion, 2)
   assert.deepEqual(restored.get('synthetic-other'), other)
   assert.equal(restored.get('absent'), undefined)
   await assert.rejects(store.save('../outside', selection, firstBytes), /identity/)

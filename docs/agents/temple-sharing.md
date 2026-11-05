@@ -67,18 +67,32 @@ port8794 (`sand tunnel 18794:8794`). Open `http://localhost:18794`.
 The tool collects recording identities from the existing Publication with CMX's
 node reducer, including nested slots. It has no separate recording catalogue.
 
+Scene search uses a cached240px-wide silent MP4, remuxed from the smallest Stream
+rendition with the machine's `ffmpeg`. The tool prepares all three on startup;
+native byte-range responses support quick seeking without repeated HLS segment
+loads. Final frame extraction remains full resolution. Frame stepping uses the
+rendition's frame rate and retains subsecond precision.
+
 For each recording, scrub the native video and choose **Use current frame**,
-or enter its time in seconds. Click the subject in the uncropped frame to mark
+use **Previous/Next frame** or **−1s/+1s**, or enter its time in seconds.
+Both step sizes begin at the latest player position, including a manual scrub;
+they pause the player and update the cover. Click the subject in the uncropped frame to mark
 the focal point; percentage inputs provide the same keyboard-accessible control.
 Review the actual renderer's Share card, messaging-size copy and unbranded Watch
 preview, then **Save cover choice**. Frame extraction preserves the complete
 source image. Crop coordinates refer to its visible orientation after rotation;
-the crop centers on the chosen point and stops at image edges.
+the crop places the chosen point in the center of the actual open area above
+the caption, stopping at image edges. Share and Watch fit their own captions,
+so the destination follows each composition. Mark the actual subject rather
+than an offset point to compensate for text.
 
 Choices and immutable source frames stay under `.generated/temple-cover-review/`.
 Saving is local draft persistence, not publication. The draft records the Stream
 video identity, timestamp, focal coordinates and selected frame filename, and is
-ignored after a recording's source video changes. After the artist selects all
+ignored after a recording's source video changes. A composition version keeps
+earlier choices available while requiring review and saving again after this
+focal-placement change. The original three choices are also backed up locally
+as `selections-before-refinement.json`. After the artist selects all
 covers, apply those source frames through native CMX image imports, with focal
 coordinates in existing image metadata and source/timestamp provenance retained
 with the authored cover. Rebuild the normal Publication to generate final cards.
@@ -90,6 +104,13 @@ cover downloads remain deduplicated. Omitted coordinates keep the previous
 central crop. Explicit share/preview overrides retain their precedence. The
 playing video remains unchanged. The review tool requires only public playback
 identifiers and is separate from the shared website preview on8787.
+
+`node content/development/debug/cover-controls.mjs` runs a synthetic browser
+comparison of the original and corrected handlers. After scrubbing to20.5s,
+the old +1s handler incorrectly chooses1s; the new handler chooses21.5s.
+It also checks adjacent frame stepping from that manually selected playhead.
+This manual diagnostic needs the installed Playwright browser; content unit
+tests cover crop targets, frame math and HTTP ranges without a browser or ffmpeg.
 
 ## Temple, section and poem cards
 
