@@ -1,5 +1,14 @@
 # Temple cursor investigation — 2026-11-05
 
+## Resolved: Ableton video overlay
+
+The artist identified an Ableton video overlay as the cause and reports that the
+cursor now works correctly. No website fix is needed. Close this investigation;
+the observations and candidate browser issues below are historical evidence,
+not remaining work or an attribution to Chromium/macOS.
+
+## Original report
+
 The artist reports cursor flicker in Chrome and Helium on their Mac, both over
 ordinary Temple navigation and the feed scrubber. The supplied recording shows a
 speaker-shaped glyph over highlighted navigation, and an arrow over the still
@@ -64,16 +73,15 @@ incorrect state. Do not add further Temple cursor overrides to address it.
 The artist uses direct port 8787 forwarding, with no 18787 alias. Review URL:
 `http://localhost:8787/__preview/cursor`; tunnel command: `sand tunnel 8787`.
 
-## Next discriminator
+## Final comparison and resolution
 
-Compare that same page in Safari on the affected Mac. If Safari remains stable,
-investigate Chromium-specific cursor state and browser profiles/extensions next.
-If Safari also flickers, investigate system cursor state or cursor utilities.
-That comparison has been requested and is pending.
+The artist reported different odd cursor behavior in Safari and considered a
+reboot, then identified the Ableton video overlay. No further comparison or
+browser workaround is required.
 
 [Chromium issue 40925746](https://issues.chromium.org/issues/40925746) documents
 macOS cursor failures after Accessibility pointer-size changes, with low-level
 cursor caching suspected and a 2026 reproduction noted. This is related evidence,
-not an identification of the artist's defect. Apple documents the size, colour
+not the identified cause here. Apple documents the size, colour
 and shake-to-locate settings in its
 [pointer settings guide](https://support.apple.com/guide/mac-help/make-the-pointer-easier-to-see-mchlp2920/mac).

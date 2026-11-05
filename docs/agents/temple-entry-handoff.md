@@ -88,6 +88,10 @@ the same 39 browser checks before the welcome-spacing refinement.
 
 ## Shared cursor investigation — 2026-11-05
 
+**Resolved:** the artist identified an Ableton video overlay as the cause and
+reports the cursor now works. No website fix or further cursor investigation is
+needed. The following observations record the investigation history.
+
 The artist still sees cursor changes in Chrome and Helium on macOS while moving
 across the wordmark, main nav and other screen areas; also reported on feed
 scrubbers. Entry owns this broader investigation. The feed chat previously
@@ -109,8 +113,8 @@ carry the shared findings.
 
 The artist confirms the same flicker on the static native-control page, without
 Temple scripts, media or artwork. Stop treating it as a Temple hit-area defect;
-the next comparison is Safari versus the affected Chrome/Helium browsers. This
-does not yet identify an OS or browser root cause.
+the subsequent Safari comparison also showed odd behavior. The artist then
+identified the Ableton overlay, resolving the investigation.
 
 The artist tunnels port 8787 directly, with no alias. Use
 `http://localhost:8787/temple-of-sound` and `sand tunnel 8787` in review handoffs.
