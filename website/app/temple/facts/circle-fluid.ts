@@ -25,6 +25,8 @@ export class CircleFluid {
   target: CircleTarget | null
   dotCapacity: number
   cursorCapacity: number
+  releaseAsymmetry: number
+  seatAdhesion: number
   targetDistances: Float64Array
   targetLoad: number
   targetGain: number
@@ -33,6 +35,8 @@ export class CircleFluid {
   drag: number
   clamps: number
   dots: CircleTarget[]
+  private wetSeat?: CircleTarget
+  private wetParticles?: Float64Array
   private circulation?: CircleTarget & { age: number; duration: number; strength: number }
 
   constructor(spacing = 4) {
@@ -69,6 +73,8 @@ export class CircleFluid {
     this.target = null
     this.dotCapacity = 63
     this.cursorCapacity = 245
+    this.releaseAsymmetry = 1
+    this.seatAdhesion = 0
     this.targetDistances = new Float64Array(this.n)
     this.targetLoad = 0
     this.targetGain = 1
@@ -86,9 +92,18 @@ export class CircleFluid {
     const target = this.target
     if (!target) return
     this.target = null
+    this.wetSeat = target.r ? { ...target } : undefined
+    if (target.r) {
+      this.wetParticles ??= new Float64Array(this.n)
+      for (let i = 0; i < this.n; i++) {
+        const distance = Math.hypot(this.x[i] - target.x, this.y[i] - target.y)
+        this.wetParticles[i] = Math.min(1, Math.max(0, (target.r + 10 - distance) / 6))
+      }
+    }
     const sign = random() < 0.5 ? -1 : 1
     const amount = random()
     const spin = sign * (target.r ? 3.2 + amount * 1.3 : 3 + amount * 3.5)
+    const impulse = target.r ? spin * this.releaseAsymmetry : spin
     if (target.r)
       this.circulation = { ...target, age: 0, duration: 0.7 + random() * 0.3, strength: spin * 24 }
     const dx = target.x - 180,
@@ -102,8 +117,8 @@ export class CircleFluid {
         y = this.y[i] - target.y
       const weight = Math.exp(-(x * x + y * y) / support)
       this.targetDistances[i] = weight
-      totalX += target.r ? -y * spin * weight : (-dy / distance) * spin * 4 * weight
-      totalY += target.r ? x * spin * weight : (dx / distance) * spin * 4 * weight
+      totalX += target.r ? -y * impulse * weight : (-dy / distance) * impulse * 4 * weight
+      totalY += target.r ? x * impulse * weight : (dx / distance) * impulse * 4 * weight
     }
     for (let i = 0; i < this.n; i++) {
       const x = this.x[i] - target.x,
@@ -112,9 +127,10 @@ export class CircleFluid {
       // Change velocity only. Counterbalance the impulse through the body so
       // local angular momentum adds no net linear drift or prescribed pose.
       this.vx[i] +=
-        (target.r ? -y * spin * weight : (-dy / distance) * spin * 4 * weight) - totalX / this.n
+        (target.r ? -y * impulse * weight : (-dy / distance) * impulse * 4 * weight) -
+        totalX / this.n
       this.vy[i] +=
-        (target.r ? x * spin * weight : (dx / distance) * spin * 4 * weight) - totalY / this.n
+        (target.r ? x * impulse * weight : (dx / distance) * impulse * 4 * weight) - totalY / this.n
     }
   }
   grid() {
@@ -142,14 +158,17 @@ export class CircleFluid {
     const damping = Math.exp(-dt * this.drag)
     const target = this.target
     let circulation = this.circulation
-    if (target) circulation = this.circulation = undefined
+    if (target) {
+      circulation = this.circulation = undefined
+      this.wetSeat = undefined
+    }
     if (circulation) {
       circulation.age += dt
       if (circulation.age >= circulation.duration) circulation = this.circulation = undefined
     }
     const spinAge = circulation ? circulation.age / circulation.duration : 1
     const spinStrength = circulation
-      ? circulation.strength * (1 - spinAge * spinAge * (3 - 2 * spinAge))
+      ? circulation.strength * this.releaseAsymmetry * (1 - spinAge * spinAge * (3 - 2 * spinAge))
       : 0
     let spinMeanX = 0,
       spinMeanY = 0
@@ -162,6 +181,24 @@ export class CircleFluid {
         spinMeanY += (dx * spinStrength * weight) / n
       }
     }
+    const wetSeat = this.seatAdhesion > 0 ? this.wetSeat : undefined
+    let bridgeLoad = 0
+    if (wetSeat) {
+      const toCentre = Math.hypot(180 - wetSeat.x, 180 - wetSeat.y) || 1
+      const nx = (180 - wetSeat.x) / toCentre,
+        ny = (180 - wetSeat.y) / toCentre
+      for (let i = 0; i < n; i++) {
+        const dx = x[i] - wetSeat.x,
+          dy = y[i] - wetSeat.y
+        const above = dx * nx + dy * ny - wetSeat.r - 8
+        const distance = Math.hypot(dx, dy)
+        bridgeLoad +=
+          Math.min(1, Math.max(0, above / 6)) *
+          Math.min(1, Math.max(0, (wetSeat.r + 40 - distance) / 8))
+      }
+    }
+    const wetting = Math.min(1, bridgeLoad / 12)
+    const adhesion = this.seatAdhesion * wetting * wetting * (3 - 2 * wetting)
     let load = 0
     if (target)
       for (let i = 0; i < n; i++) {
@@ -211,6 +248,21 @@ export class CircleFluid {
           d
         ax += tx * pull
         ay += ty * pull
+      }
+      if (wetSeat && adhesion) {
+        const tx = wetSeat.x - x[i],
+          ty = wetSeat.y - y[i]
+        const distance = Math.hypot(tx, ty) || 1
+        const near = Math.min(1, Math.max(0, (wetSeat.r + 12 - distance) / 10))
+        if (near === 0) this.wetParticles![i] = 0
+        const contact = near * near * (3 - 2 * near) * this.wetParticles![i]
+        // Wet only material already at the surface; do not recruit distant
+        // particles. Let grip weaken as the actual incoming bridge empties.
+        const pull =
+          (this.attraction * 4 * adhesion * contact * (distance - wetSeat.r - 2)) / distance
+        const friction = 40 * adhesion * contact
+        ax += tx * pull - vx[i] * friction
+        ay += ty * pull - vy[i] * friction
       }
       if (circulation) {
         const dx = x[i] - circulation.x,

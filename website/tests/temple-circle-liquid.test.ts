@@ -234,3 +234,87 @@ test('choosing a new seat cancels the transient release flow at the previous sea
   assert.deepEqual(fluid.x, withoutReleaseFlow.x)
   assert.deepEqual(fluid.y, withoutReleaseFlow.y)
 })
+
+test('seat release asymmetry scales its impulse and can stop extra circulation live', () => {
+  const held = new CircleFluid()
+  held.target = held.dots[2]
+  advance(held, 480)
+  const copy = () => {
+    const fluid = new CircleFluid()
+    for (const field of ['x', 'y', 'vx', 'vy'] as const) fluid[field].set(held[field])
+    return fluid
+  }
+  const zero = copy()
+  zero.releaseAsymmetry = 0
+  zero.target = zero.dots[2]
+  zero.release(() => 0.2)
+  const plain = copy()
+  advance(zero, 60)
+  advance(plain, 60)
+  assert.deepEqual(zero.x, plain.x)
+  assert.deepEqual(zero.y, plain.y)
+
+  const normal = copy(),
+    stronger = copy()
+  assert.equal(normal.releaseAsymmetry, 1)
+  stronger.releaseAsymmetry = 2
+  for (const fluid of [normal, stronger]) {
+    fluid.target = fluid.dots[2]
+    fluid.release(() => 0.2)
+  }
+  for (const axis of ['vx', 'vy'] as const)
+    for (let i = 0; i < held.n; i++)
+      assert.ok(
+        Math.abs(stronger[axis][i] - held[axis][i] - 2 * (normal[axis][i] - held[axis][i])) < 1e-10,
+      )
+  advance(normal, 12)
+  const withoutFlow = new CircleFluid()
+  for (const field of ['x', 'y', 'vx', 'vy'] as const) withoutFlow[field].set(normal[field])
+  normal.releaseAsymmetry = 0
+  normal.step()
+  withoutFlow.step()
+  assert.deepEqual(normal.x, withoutFlow.x)
+  assert.deepEqual(normal.y, withoutFlow.y)
+
+  // This control belongs to the two seat arcs; free-cursor release stays intact.
+  const cursors = [0, 2].map((amount) => {
+    const fluid = copy()
+    fluid.releaseAsymmetry = amount
+    fluid.target = { x: 260, y: 180, r: 0 }
+    fluid.release(() => 0.2)
+    advance(fluid, 12)
+    return fluid
+  })
+  assert.deepEqual(cursors[0].x, cursors[1].x)
+  assert.deepEqual(cursors[0].y, cursors[1].y)
+})
+
+test('seat wetting holds the existing outer coating and releases when grip is removed', () => {
+  const held = new CircleFluid()
+  held.target = held.dots[5]
+  advance(held, 600)
+  const variants = [0, 1].map((grip) => {
+    const fluid = new CircleFluid()
+    for (const field of ['x', 'y', 'vx', 'vy'] as const) fluid[field].set(held[field])
+    fluid.seatAdhesion = grip
+    fluid.target = fluid.dots[5]
+    fluid.release(() => 0.2)
+    advance(fluid, 120)
+    const surface = new DensitySurface()
+    surface.update(fluid)
+    const seat = fluid.dots[5]
+    const outer =
+      surface.field[
+        Math.round((seat.y + 16) / surface.cell) * surface.size + Math.round(seat.x / surface.cell)
+      ]
+    return { fluid, outer }
+  })
+  assert.ok(variants[0].outer < 1, 'without wetting the outside has already detached')
+  assert.ok(variants[1].outer > 1, 'wetting keeps actual liquid touching the outer seat rim')
+  const wet = variants[1].fluid
+  wet.seatAdhesion = 0
+  advance(wet, 960)
+  assert.equal(wet.n, held.n)
+  assert.ok(Math.hypot(...wet.metrics().centre.map((value) => value - 180)) < 2)
+  assert.ok([...wet.x, ...wet.y].every(Number.isFinite))
+})

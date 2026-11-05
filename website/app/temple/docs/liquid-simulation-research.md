@@ -513,3 +513,37 @@ checks for hold/release, live values, reset, persistence, settings export and
 mobile finite state pass. This restores the current behavior for artistic
 review on8796 (`sand tunnel 8796`); it does not select new settings, change the
 main website, or authorize publication.
+
+## Tune release asymmetry and seat wetting — 2026-11-06
+
+The artist requests an asymmetry controller, then clarifies that the outer
+coating should not lift off while liquid is still flowing down the seat. Add
+independent Release asymmetry and Seat adhesion sliders to the8796 experiment.
+Both run0–200%; asymmetry100% preserves the existing release impulse and
+circulation, and0% disables that extra motion without changing cursor release.
+Its ongoing force responds live. Both controls survive reset/reload and are
+included in the settings JSON. Give the new controls explicit accessible labels.
+
+Keep a single generated solver shared with the website. Add a releaseAsymmetry
+multiplier (default1) and opt-in seatAdhesion (website default0, study default1).
+For wetting, capture only the particles already close to the seat when it is
+released. Apply local surface attraction and contact friction to that existing
+material; discard a particle's wet attachment once it leaves the contact area.
+Scale grip by the real incoming bridge load. Choosing a new target cancels the
+old seat field. No contour is pinned, drawn or filled.
+
+An initial all-nearby-particles field held too much material and was withdrawn.
+A timed weakening trial still let the outside detach before the upper flow;
+withdraw that too. The current captured-material experiment keeps the outer
+density sample covered after1s where the no-grip version is already empty.
+Strong grip can retain a wet coating/bridge; lower Seat adhesion or choose a
+new target to release it. This is a material proposal for review, not settled
+acceptance of its remaining coating or integration of grip into website defaults.
+
+Fourteen synthetic numerical/topology cases pass, including zero-effect
+equivalence, impulse scaling, live circulation disable, unchanged cursor
+release, retained outer contact, conserved finite material and return after
+removing grip. Browser checks cover both named sliders, real parameter updates,
+reset, reload persistence, wet particles, release, export and mobile layout.
+TypeScript and the application build pass. Preview remains8796 through
+`sand tunnel 8796`; no publication requested.
