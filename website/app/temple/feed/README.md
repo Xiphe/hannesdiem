@@ -96,8 +96,11 @@ Watch; the entry and share-image conversations own their corresponding views.
   state before reactivating a post so scrolling never flashes old metadata.
 - Try audible autoplay and retain the same media element across posts. Show
   the center Play control on ordinary pauses and blocked autoplay, including
-  paused browsing with the drawer collapsed. Hide it while playing, during
-  temporary seek/loading pauses and on inactive posts. Videos stop at their end
+  paused browsing with the drawer collapsed. Incoming and outgoing paused posts
+  carry their center Play control with their media throughout scrolling, before
+  activation. Inactive center controls remain inert. Explicit Play hides them
+  across posts. Hide the active control during temporary seek/loading pauses.
+  Videos stop at their end
   and offer “Play again” and “Next Video” as borderless icon-and-label actions with opaque black hover
   backgrounds; the latter selects the next newer video in feed order,
   skipping audio/text, and is absent on the final video. Next Video scrolls smoothly

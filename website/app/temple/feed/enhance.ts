@@ -86,6 +86,13 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     root.toggleAttribute('data-overlay', visible)
     const paused = post().kind === 'video' && video.paused && visible
     root.toggleAttribute('data-paused-details', keepPaused ? pausedDetails : paused)
+    for (const article of articles) {
+      const start = article.querySelector<HTMLButtonElement>('.feed-start')
+      if (!start) continue
+      const showPlay = article === active ? intent === 'paused' : keepPaused
+      start.hidden = article.dataset.kind !== 'video' || !showPlay
+      start.inert = article !== active
+    }
   }
   function setDetails(open: boolean, animate = true) {
     if (!active) return
@@ -136,7 +143,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     setDetails(pausedDetails)
     delete active.dataset.playing
     active.dataset.blocked = ''
-    active.querySelector<HTMLButtonElement>('.feed-start')!.hidden = post().kind !== 'video'
     reflectOverlay()
   }
   const mediaFailed = () => {
@@ -155,8 +161,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       icon.hidden = playing
     for (const icon of active.querySelectorAll<HTMLElement>('[data-pause-icon]'))
       icon.hidden = !playing
-    const start = active.querySelector<HTMLButtonElement>('.feed-start')
-    if (start) start.hidden = post().kind !== 'video' || intent !== 'paused'
     if (playing) delete active.dataset.blocked
     reflectOverlay()
   }

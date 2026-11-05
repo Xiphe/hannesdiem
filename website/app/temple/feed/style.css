@@ -204,7 +204,7 @@
 .temple-feed[data-paused-details] .feed-post[data-kind='video']:not([data-active]) .feed-panel {
   --feed-drawer-open: 1;
 }
-.feed-post:not([data-active]) :is(.feed-ended, .feed-start) {
+.feed-post:not([data-active]) .feed-ended {
   display: none;
 }
 .feed-summary {

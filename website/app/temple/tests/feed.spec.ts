@@ -690,42 +690,53 @@ test('a paused swipe keeps its drawer open and remains paused after scroll end',
   await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
   const samples = await page.locator('.temple-feed').evaluate(
     (root) =>
-      new Promise<{ current: string | undefined; drawerOpen: boolean; incomingVisible: boolean }[]>(
-        (resolve) => {
-          const outgoing = root.querySelector<HTMLElement>('[data-post-id="fixture-middle"]')!
-          const incoming = root.querySelector<HTMLElement>('[data-post-id="fixture-latest"]')!
-          const samples: {
-            current: string | undefined
-            drawerOpen: boolean
-            incomingVisible: boolean
-          }[] = []
-          const start = root.scrollTop,
-            target = incoming.offsetTop
-          const record = () => {
-            const progress = (root.scrollTop - start) / (target - start)
-            if (progress > 0.55 && progress < 0.9)
-              samples.push({
-                current: (root as HTMLElement).dataset.currentPost,
-                drawerOpen: outgoing.hasAttribute('data-details'),
-                incomingVisible:
-                  getComputedStyle(incoming.querySelector('.feed-summary')!).visibility ===
-                    'visible' &&
-                  getComputedStyle(incoming.querySelector('.feed-details')!).visibility ===
-                    'visible',
-              })
-            if (progress >= 0.99) resolve(samples)
-            else requestAnimationFrame(record)
-          }
-          root.scrollTo({ top: target, behavior: 'smooth' })
-          requestAnimationFrame(record)
-        },
-      ),
+      new Promise<
+        {
+          current: string | undefined
+          drawerOpen: boolean
+          incomingVisible: boolean
+          incomingPlay: boolean
+        }[]
+      >((resolve) => {
+        const outgoing = root.querySelector<HTMLElement>('[data-post-id="fixture-middle"]')!
+        const incoming = root.querySelector<HTMLElement>('[data-post-id="fixture-latest"]')!
+        const samples: {
+          current: string | undefined
+          drawerOpen: boolean
+          incomingVisible: boolean
+          incomingPlay: boolean
+        }[] = []
+        const start = root.scrollTop,
+          target = incoming.offsetTop
+        const record = () => {
+          const progress = (root.scrollTop - start) / (target - start)
+          if (progress > 0.55 && progress < 0.9)
+            samples.push({
+              current: (root as HTMLElement).dataset.currentPost,
+              drawerOpen: outgoing.hasAttribute('data-details'),
+              incomingPlay:
+                incoming.querySelector<HTMLElement>('.feed-start')!.getBoundingClientRect().height >
+                0,
+              incomingVisible:
+                getComputedStyle(incoming.querySelector('.feed-summary')!).visibility ===
+                  'visible' &&
+                getComputedStyle(incoming.querySelector('.feed-details')!).visibility === 'visible',
+            })
+          if (progress >= 0.99) resolve(samples)
+          else requestAnimationFrame(record)
+        }
+        root.scrollTo({ top: target, behavior: 'smooth' })
+        requestAnimationFrame(record)
+      }),
   )
   expect(samples.length).toBeGreaterThan(0)
   expect(
     samples.every(
       (sample) =>
-        sample.current === 'fixture-middle' && sample.drawerOpen && sample.incomingVisible,
+        sample.current === 'fixture-middle' &&
+        sample.drawerOpen &&
+        sample.incomingVisible &&
+        sample.incomingPlay,
     ),
   ).toBe(true)
   await expect(page).toHaveURL(path('latest'))
@@ -771,6 +782,7 @@ test('paused browsing remembers a collapsed drawer until Play, then Pause opens 
   await expect(item).not.toHaveAttribute('data-details', '')
   await expect(item).not.toHaveAttribute('data-playing', '')
   const incoming = post(page, 'latest')
+  await expect(incoming.locator('.feed-start')).toBeVisible()
   expect(
     await incoming
       .locator('.feed-panel')
@@ -794,6 +806,7 @@ test('paused browsing remembers a collapsed drawer until Play, then Pause opens 
   }
   await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
   await expect(item).toHaveAttribute('data-playing', '')
+  await expect(incoming.locator('.feed-start')).not.toBeVisible()
   await move(page, 'latest')
   await expect(incoming).toHaveAttribute('data-playing', '')
   await incoming.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
