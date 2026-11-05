@@ -54,6 +54,170 @@ chooses poem/practical rendering through optional component props. Existing
 Publications without those props keep their previous rendering, supporting a
 website-first rollout. Local review only; no deployment requested.
 
+**Rich sharing contract — 2026-11-05.** The artist confirms dedicated share
+previews for the whole Temple, its practical sections, five poem destinations
+and each content post. Content links use `/temple-of-sound/watch/{slug}`; the
+viewing presentation belongs to the entry/feed work. Poem links use the base
+address with a `verse` query value, normalized to lowercase and encoded with
+spaces: `im in love`, `im in grief`, `i resist`, `i stay`, `i devote`, in authored
+poem order. These are fixed identities, independent of future wording edits.
+The final chorus has no separate new share destination; its existing deep link
+must still reach the chorus. Practical share paths are `/temple-of-sound/visit`,
+`/temple-of-sound/watch`, `/temple-of-sound/create`, `/temple-of-sound/share`.
+Render the complete appropriate experience at its selected destination rather
+than a standalone piece page. Preserve all current deep links when restructuring,
+including newsletter/circle return-state queries. Fragments require browser-side
+compatibility; their old messaging previews remain the general Temple preview.
+Server-render selected OG metadata and retain the selected verse identity in
+canonical and `og:url`, excluding transient notice parameters.
+
+Messaging is the primary use case. Use a fixed dark treatment drawn from the
+accepted imagery, type and colours. Recording cards use their poster and authored
+title; audio/text posts get an automatic typography-led fallback with an optional
+custom image. Publishing future content should produce usable preview metadata
+and images automatically. Put the content Share action beside its date below the
+content. The five URL phrases are **not** approved card titles: raise missing
+titles/descriptions with the artist; do not select excerpts or invent copy.
+Detailed card composition and poem wording remain for exploration and review.
+
+Sharing exploration starts with three recording-image studies in
+`.generated/temple-share-study/`, separate from the shared page preview. They
+compare a full portrait beside the title, accepted forest material in the type,
+and a full-bleed photographic crop, using the same authored recording title.
+The four-second frame is an exploratory choice; it replaces no published poster.
+Phase: Expansion; no image composition or publication approved.
+
+**Recording card direction selected — 2026-11-05.** The artist selects study C
+for recording cards with a picture and explicitly asks to explore its nuances.
+Preserve its full-bleed photograph, overlaid authored title and Temple name.
+Acceptance covers this direction only, not the final crop, type hierarchy,
+darkening or publication. Leave pictureless content and poem cards open. The
+artist confirms exploring the overall Temple and recording cards first; missing
+poem titles and descriptions will be chosen together later.
+
+The next study compares Original C, More photograph, Caption cluster and
+Centered using the same four-second frame and authored recording title. A
+messaging-size copy accompanies each. Local controls expose title/Temple-name
+size, lower darkening, vertical crop, alignment and Temple-name placement.
+The editable study is
+`/home/agent/.codex/visualizations/2026/11/05/01a1ab72-6377-72d2-b7fb-537a14ef85d8/recording-card-nuances.html`;
+full-size images and a standalone review preview are in
+`.generated/temple-share-study/`. Phase: Expansion within the selected C
+direction. Next move: review hierarchy, image presence and reading at messaging
+size; refine from the artist's feedback.
+
+**Caption hierarchy and text colour exploration — 2026-11-05.** The artist
+chooses the third nuance study, Caption cluster, and places “Temple of Sound”
+above the recording title. Preserve that shared lower-left group, the full-bleed
+frame and the selected study's type sizes, crop and darkening while exploring
+colour. The new study compares Pale ink, Warm name/cool title, Cloud ink, Pearl
+light and Warm emphasis. These respectively investigate a neutral reference,
+different solid colours for the two text roles, softly mixed warm/cool glyph
+colour, directional light across the glyphs, and emphasis on an existing title
+word. The highlighted word is an experiment, not a new authored emphasis rule.
+Each has a messaging-size preview and editable colour controls. Source:
+`/home/agent/.codex/visualizations/2026/11/05/01a1ab72-6377-72d2-b7fb-537a14ef85d8/recording-card-colors.html`.
+Full-size studies use `.generated/temple-share-study/color-*.png`. Phase:
+Expansion for text colour; the requested hierarchy is the current shared ground.
+No palette or production card generation selected yet.
+
+**Cloud ink with orange wordmark — 2026-11-05.** The artist chooses Cloud ink
+and supplies `#F7A264` for “Temple of Sound”, then asks to increase both text
+sizes a little. Preserve the Temple name above the title, full-bleed frame,
+warm/cool title material and existing darkening. The next review uses 28px for
+the Temple name (previously25px) and76px for the title (previously68px) on the
+1200×630 card, approximately12% larger. These sizes are the agent's concrete
+starting point for “a bit”, not a separately approved final measurement. The
+updated study exposes both sizes for adjustment and retains its messaging-size
+copy. Source:
+`/home/agent/.codex/visualizations/2026/11/05/01a1ab72-6377-72d2-b7fb-537a14ef85d8/recording-cloud-ink.html`.
+Full-size review image: `.generated/temple-share-study/cloud-ink-larger.png`.
+Cloud ink and the orange wordmark are selected within this recording-card study;
+the size refinement remains for review. No publication requested.
+
+**40/90 sizes and light-background check — 2026-11-05.** The artist explicitly
+sets the Temple name to40px and the title to90px at1200×630, superseding the
+agent's28/76 starting point. Keep Cloud ink and the `#F7A264` Temple name. The
+artist then asks to check that layout against a light image/background. A review
+compares the existing bright grand-piano room photograph, a near-white ground
+and the recording reference. All retain the same wording, hierarchy,40/90 sizes
+and90% lower darkening. The room photo is a background stress test, not an
+assignment to that recording. Source:
+`/home/agent/.codex/visualizations/2026/11/05/01a1ab72-6377-72d2-b7fb-537a14ef85d8/recording-light-background.html`.
+Full-size results are `.generated/temple-share-study/cloud-light-room.png`,
+`cloud-near-white.png` and `cloud-recording-40-90.png`. The near-white case makes
+the orange name less distinct; no contrast adjustment has been selected. Next
+move: review the existing treatment on these light sources. No publication.
+
+**Higher, softer darkening and long-title test — 2026-11-05.** The artist asks
+for slightly less intense darkening, extending farther upward to cover the
+Temple name too. They clarify “3 col title” means a longer title that naturally
+takes three lines. Keep40/90 and the selected Cloud ink/orange treatment. The
+new study uses the already-authored recording description, “What inner and outer
+permission do you need to get creative?”, solely as long-title test text; the
+recording's authored title remains its source of truth.
+
+The proposed lower opacity is80% (previously90%). Measure the complete caption
+group, including the Temple name, to size the gradient; begin its soft upper
+edge144px above the group at1200px card width. The fade reaches80% of that
+opacity a quarter of the way down, then90% at65% of its height, avoiding the
+old faint field behind a high wordmark. Recompute for wrapping/resizing and
+hidden/visible previews. Both shadow reach and strength remain adjustable.
+The existing question naturally wraps to three lines on the light room photo,
+near-white ground and recording reference. Source:
+`/home/agent/.codex/visualizations/2026/11/05/01a1ab72-6377-72d2-b7fb-537a14ef85d8/recording-long-title.html`.
+Full-size studies: `.generated/temple-share-study/long-title-*.png`. These
+gradient measurements are review proposals; no publication requested.
+
+**Linear fade across the entire image — 2026-11-05.** The artist requires a
+linear gradient and explicitly permits darkening the full image. Replace the
+caption-sized, intermediate-stop fade with one uniform top-to-bottom ramp over
+the entire card. The next review starts at50% black at the top and80% at the
+bottom, with only those two stops; both endpoints are editable. These values
+are a concrete review proposal. Preserve the selected40/90 sizes, orange Temple
+name, Cloud ink and three-line test question. Remove the caption measurement and
+shadow-reach mechanism. Review the same light room, near-white and recording
+backgrounds in
+`/home/agent/.codex/visualizations/2026/11/05/01a1ab72-6377-72d2-b7fb-537a14ef85d8/recording-linear-gradient.html`.
+Full-size images: `.generated/temple-share-study/linear-*.png`. No publication.
+
+**Adaptive content cards implemented — 2026-11-05.** The artist accepts the
+linear direction, confirms that shorter titles need less vertical shading and
+longer titles should shrink to fit, then requests implementation and an overview
+of text capacity and background variety. Use the selected40px orange name and
+90px maximum Cloud ink title, shrinking the title only, down to48px. The fixed
+caption area starts at200px and ends55px above the bottom of the1200×630 card.
+Preserve all words; overflow beyond the lower size bound requires an authored
+`shareTitle`, with no automatic truncation or invented replacement.
+
+Solve the start of a single straight gradient from text height and background
+brightness, ending at80% black. Short titles over dark pictures leave more of
+the image untouched; a very bright picture may still need full-image shading
+with a short title. This is the implemented practical qualification to the
+earlier shorter-title rule. The coverage gallery uses synthetic title lengths
+and black, near-white, saturated and busy backgrounds, plus two actual photos
+for manual review. Its223-character specimen fits at51px; the287-character
+specimen needs a shorter share title. Character count alone is not a limit.
+
+CMX's reducer attaches generated `shareImage` values to existing post props
+within the same Publication, including nested slots, with immutable media URLs.
+Watch previews and per-post OG metadata consume these cards; media playback
+continues to use its own poster. Video uses an authored cover or Stream default
+thumbnail; pictureless audio/text uses black. Existing custom share images are
+preserved. Shared font bytes and their licenses now live under `contracts/` so
+the content-only publisher and website-only build use the same fonts. Section
+helpers call the existing content function directly, resolving their preexisting
+Remix JSX type errors during verification. See
+`docs/agents/temple-sharing.md` for the implementation boundary, checks and gallery
+command. Local implementation and review only; no deployment requested.
+
+CMX implementation finding: the installed node reducer can collect recording and
+poem inputs from the rendered Publication, including declared nested slots.
+Assets loaders operate before evaluated document metadata exists. Generating,
+caching and publishing assets derived from that evaluated data remains a CMX gap;
+the existing temporary share-image adapter is documented in ADR 0007. Do not
+silently expand it into a second content/route index.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to

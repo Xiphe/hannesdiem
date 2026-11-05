@@ -201,7 +201,13 @@ export function createApp(content: ContentLoader) {
             >
               <Page
                 {...feed}
-                route={{ ...page.route!, path, title: feed.title }}
+                route={{
+                  ...page.route!,
+                  path,
+                  title: feed.title,
+                  ogTitle: feed.shareTitle,
+                  ogImage: feed.shareImage,
+                }}
                 path={path}
                 plain
                 feed

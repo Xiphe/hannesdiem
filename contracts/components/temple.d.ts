@@ -85,6 +85,10 @@ export interface PoemFact {
 }
 export interface TempleVideoProps extends StreamVideoProps {
   id: string
+  /** Optional authored replacement when the full title cannot fit a share card. */
+  shareTitle?: string
+  /** Generated during publication, or an imported custom card. */
+  shareImage?: import('./index.d.ts').MediaImage
   /** ISO posting timestamp with timezone; display is localized by the website. */
   postedAt?: string
   /** Optional cover; defaults to the Stream thumbnail. */
@@ -98,6 +102,8 @@ export interface TempleRecordingsProps {
 interface TemplePostBase {
   id: string
   title: string
+  shareTitle?: string
+  shareImage?: import('./index.d.ts').MediaImage
   postedAt: string
   cover?: ImageSource
   /** Rich description displayed in the paused viewer's bottom layer. */

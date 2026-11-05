@@ -104,7 +104,7 @@ html[data-layout='temple'] body {
 }
 @font-face {
   font-family: 'Bricolage';
-  src: url('./assets/bricolage.ttf') format('truetype');
+  src: url('../../../contracts/assets/temple/bricolage.ttf') format('truetype');
   font-weight: 200 800;
   font-display: swap;
 }
@@ -116,7 +116,7 @@ html[data-layout='temple'] body {
 }
 @font-face {
   font-family: 'CinzelDecorative';
-  src: url('./assets/cinzeldecorative-bold.ttf') format('truetype');
+  src: url('../../../contracts/assets/temple/cinzeldecorative-bold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }

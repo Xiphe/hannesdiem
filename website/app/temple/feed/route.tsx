@@ -82,5 +82,11 @@ export async function renderFeed(page: ContentPage, id: string) {
       },
     },
   }).default
-  return { title: selected.title, body }
+  return {
+    title: selected.title,
+    body,
+    shareImage: selected.shareImage as
+      import('../../../../contracts/content.ts').MediaImage | undefined,
+    shareTitle: typeof selected.shareTitle === 'string' ? selected.shareTitle : selected.title,
+  }
 }

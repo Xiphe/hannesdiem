@@ -41,7 +41,7 @@ if (import.meta.main) {
 
   await mkdir('.generated', { recursive: true })
   await rm('.generated/publication.json', { force: true })
-  const documents = await buildPublication({
+  let documents = await buildPublication({
     ...config,
     cwd: process.cwd(),
     entries,
@@ -59,6 +59,8 @@ if (import.meta.main) {
       content.metadata = { ...(content.metadata as object), ogImage: image }
     }
   }
+  const { prepareTempleShareImages } = await import('./temple-share-images.ts')
+  documents = await prepareTempleShareImages(documents, config.assets.loaders.image.options.storage)
   validatePublication(documents)
   await writeFile('.generated/publication.json', JSON.stringify(documents) + '\n')
   console.log(`Prepared ${Object.keys(documents).length} CMX documents for publication.`)

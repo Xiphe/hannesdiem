@@ -19,24 +19,25 @@ export function TemplePosts(handle: Handle<TemplePostsProps>) {
       tabIndex={0}
     >
       {sortedPosts(handle.props.posts).map((post) => {
-        const cover = resolvePostCover(post, site.media)
+        const cover = post.shareImage?.src ?? resolvePostCover(post, site.media)
         return (
           <a
             id={post.id}
             class="temple-post-preview"
             href={postPath(post.id)}
             data-rmx-document
+            aria-label={post.title}
           >
             {cover && (
               <img
                 src={cover}
                 alt=""
                 loading="lazy"
-                width={1052}
-                height={550}
+                width={post.shareImage?.width ?? 1052}
+                height={post.shareImage?.height ?? 550}
               />
             )}
-            <span class="temple-post-preview-title">{post.title}</span>
+            {!post.shareImage && <span class="temple-post-preview-title">{post.title}</span>}
           </a>
         )
       })}
