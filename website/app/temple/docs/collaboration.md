@@ -237,6 +237,16 @@ Authenticated candidates and confirmed places retain their existing holds.
 The actual liquid method/settings remain selected; no publication requested.
 [Behavior and recovery](liquid-simulation-research.md).
 
+**Keep the selected seat clear of signup — 2026-11-05.** The artist reports
+that the login piece covers a selected seat and asks for placement that always
+avoids it. Anchor the existing floating signup16px below the complete circle,
+replacing its centre-relative offset. This native CSS placement clears every
+seat and its hit area without target-dependent positioning or new CMX glue.
+Synthetic regressions reproduce overlap before the change, then check all ten
+seats and central assignment at390px and1440px, including horizontal bounds.
+All20 related browser cases, app build and formatting checks pass. Local review
+on8787 (`sand tunnel 8787`); no publication requested.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

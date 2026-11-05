@@ -768,7 +768,8 @@
 }
 .circle-signup[data-floating] {
   position: absolute;
-  top: calc(50% + 44px);
+  /* Keep the complete ring clear, including the lower seats and their hit areas. */
+  top: calc(100% + 16px);
   left: 0;
   width: 100%;
 }

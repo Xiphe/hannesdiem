@@ -240,3 +240,35 @@ test('a long contact name is preserved and must be shortened before claiming', a
   await section.getByLabel('Name or Alias').press('Escape')
   await expect(section.getByRole('dialog')).toHaveCount(0)
 })
+
+for (const width of [390, 1440]) {
+  test(`signup stays clear of every selected seat at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.route('**/circle', (route) =>
+      route.fulfill({
+        json: {
+          ready: true,
+          csrfToken: 'fixture-csrf',
+          places: [],
+        },
+      }),
+    )
+    await page.goto('/temple-circle')
+    const circle = page.locator(`${sectionId} .fact-circle`)
+    const clearOfSeat = async (spot: string) => {
+      const seat = (await circle.locator(`input[value="${spot}"]`).boundingBox())!
+      const panel = (await page.getByRole('dialog').boundingBox())!
+      expect(panel.y - seat.y - seat.height).toBeGreaterThanOrEqual(12)
+      expect(panel.x).toBeGreaterThanOrEqual(0)
+      expect(panel.x + panel.width).toBeLessThanOrEqual(width)
+    }
+    for (let spot = 1; spot <= 10; spot++) {
+      await circle.getByRole('radio', { name: `Spot ${spot}`, exact: true }).click()
+      await clearOfSeat(String(spot))
+      await page.getByRole('button', { name: 'Close signup' }).click()
+    }
+    await circle.locator('.fact-circle-invite').click()
+    const assigned = await page.locator('.circle-fields input[name="spot"]').inputValue()
+    await clearOfSeat(assigned)
+  })
+}
