@@ -417,6 +417,7 @@ for (const viewport of [
         titleTop: title.getBoundingClientRect().top,
         titleCenter: title.getBoundingClientRect().x + title.getBoundingClientRect().width / 2,
         transport: transport.top,
+        scrubberTop: node.querySelector('.feed-video-seek')!.getBoundingClientRect().top,
         first: caption.firstElementChild?.tagName,
         descriptionGap: getComputedStyle(
           caption.querySelector('.feed-description')!.firstElementChild!,
@@ -429,7 +430,7 @@ for (const viewport of [
     expect(layout.bottom).toBeCloseTo(viewport.height, 0)
     expect(layout.height).toBeLessThanOrEqual(viewport.height * 0.4 + 1)
     expect(layout.paddingBelowTransport).toBe(8)
-    expect(layout.indicator.bottom).toBeLessThan(layout.transport)
+    expect(layout.indicator.bottom).toBeLessThan(layout.scrubberTop)
     expect(layout.indicator.width).toBeLessThanOrEqual(28)
     expect(layout.indicator.height).toBeLessThanOrEqual(3)
     expect(layout.titleBottom).toBeLessThanOrEqual(layout.transport)

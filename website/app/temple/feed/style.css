@@ -304,7 +304,7 @@
 .feed-disclosure {
   position: absolute;
   left: 50%;
-  top: -2px;
+  top: 8px;
   transform: translateX(-50%);
   width: 72px;
   min-height: 20px;
