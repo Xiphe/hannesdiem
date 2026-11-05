@@ -43,7 +43,10 @@ export function FeedIcon(
           strokeWidth="4"
         />
       ) : handle.props.name === 'down' ? (
-        <path d="m3 3 15 6 15-6" />
+        <path
+          d="M3 6 18 10 33 6"
+          vectorEffect="non-scaling-stroke"
+        />
       ) : handle.props.name === 'muted' ? (
         <path d="m11 4-6 5H2v6h3l6 5Zm5 5 6 6m0-6-6 6" />
       ) : (
@@ -208,6 +211,22 @@ export function Feed(handle: Handle<FeedProps>) {
               <h2 id={`feed-title-${post.id}`}>{post.title}</h2>
               {post.kind !== 'text' && (
                 <div class="feed-transport">
+                  <button
+                    type="button"
+                    class="feed-control feed-playback-toggle"
+                    data-toggle
+                    aria-label={`Play ${post.title}`}
+                  >
+                    <span data-play-icon>
+                      <FeedIcon name="play" />
+                    </span>
+                    <span
+                      data-pause-icon
+                      hidden
+                    >
+                      <FeedIcon name="pause" />
+                    </span>
+                  </button>
                   {post.kind === 'video' && (
                     <input
                       class="feed-seek feed-video-seek"

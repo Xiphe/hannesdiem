@@ -22,7 +22,7 @@ export async function renderFeed(page: ContentPage, id: string) {
   function FeedPosts(handle: Handle<TemplePostsProps>) {
     const site = handle.context.get(SiteContent)
     return () => {
-      const posts = sortedPosts(handle.props.posts)
+      const posts = sortedPosts(handle.props.posts).toReversed()
       const selected = posts.find((post) => post.id === id)!
       return (
         <>

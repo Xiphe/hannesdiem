@@ -101,10 +101,10 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     active.toggleAttribute('data-playing', playing)
     for (const button of active.querySelectorAll<HTMLButtonElement>('[data-toggle]'))
       button.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} ${post().title}`)
-    const playIcon = active.querySelector<HTMLElement>('[data-play-icon]')
-    const pauseIcon = active.querySelector<HTMLElement>('[data-pause-icon]')
-    if (playIcon) playIcon.hidden = playing
-    if (pauseIcon) pauseIcon.hidden = !playing
+    for (const icon of active.querySelectorAll<HTMLElement>('[data-play-icon]'))
+      icon.hidden = playing
+    for (const icon of active.querySelectorAll<HTMLElement>('[data-pause-icon]'))
+      icon.hidden = !playing
     if (playing) {
       delete active.dataset.blocked
       active.querySelector<HTMLButtonElement>('.feed-start')!.hidden = true

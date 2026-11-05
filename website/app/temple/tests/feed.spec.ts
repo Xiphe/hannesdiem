@@ -269,15 +269,15 @@ test('sharing copies the current deep link and swiping preloads only its neighbo
       },
     })
   })
-  await arrive(page, 'latest')
-  await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
-  await post(page, 'latest')
+  await arrive(page, 'middle')
+  await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+  await post(page, 'middle')
     .locator('.feed-tap')
     .click({ position: { x: 100, y: 100 } })
-  await post(page, 'latest').locator('[data-share]').click()
+  await post(page, 'middle').locator('[data-share]').click()
   await expect
     .poll(() => page.evaluate(() => (window as any).copiedFeedURL))
-    .toContain(path('latest'))
+    .toContain(path('middle'))
   expect(ids.size).toBe(2)
   expect(await page.locator('iframe').count()).toBe(0)
 })
@@ -315,14 +315,14 @@ test('an incoming loading video never flashes its paused overlay', async ({ page
 
 test('a native wheel gesture snaps to the next full-screen post', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await arrive(page, 'latest')
+  await arrive(page, 'middle')
   await page.locator('.temple-feed').hover({ position: { x: 160, y: 180 } })
   await page.mouse.wheel(0, 650)
-  await expect(page).toHaveURL(path('middle'))
+  await expect(page).toHaveURL(path('latest'))
   await expect
-    .poll(async () => Math.abs((await post(page, 'middle').boundingBox())!.y))
+    .poll(async () => Math.abs((await post(page, 'latest').boundingBox())!.y))
     .toBeLessThan(1)
-  await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+  await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
   await expect(page.locator('video')).toHaveCount(1)
 })
 
@@ -624,8 +624,8 @@ test('description opens from its chevron and drag without interrupting playback'
 test('video completion offers replay and the next video, skipping other post types', async ({
   page,
 }) => {
-  await arrive(page, 'middle')
-  const item = post(page, 'middle')
+  await arrive(page, 'oldest')
+  const item = post(page, 'oldest')
   await expect(item).toHaveAttribute('data-playing', '')
   await page.locator('video').evaluate((video: HTMLVideoElement) => {
     video.currentTime = video.duration - 0.15
@@ -643,13 +643,20 @@ test('video completion offers replay and the next video, skipping other post typ
   })
   await expect(item.locator('[data-next]')).toBeVisible()
   await item.locator('[data-next]').click()
-  await expect(page).toHaveURL(path('oldest'))
-  await expect(post(page, 'oldest')).toHaveAttribute('data-playing', '')
+  await expect(page).toHaveURL(path('middle'))
+  await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
   await page.locator('video').evaluate((video: HTMLVideoElement) => {
     video.currentTime = video.duration - 0.15
   })
-  await expect(post(page, 'oldest').locator('[data-replay]')).toBeVisible()
-  await expect(post(page, 'oldest').locator('[data-next]')).not.toBeVisible()
+  await expect(post(page, 'middle').locator('[data-replay]')).toBeVisible()
+  await post(page, 'middle').locator('[data-next]').click()
+  await expect(page).toHaveURL(path('latest'))
+  await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+  await page.locator('video').evaluate((video: HTMLVideoElement) => {
+    video.currentTime = video.duration - 0.15
+  })
+  await expect(post(page, 'latest').locator('[data-replay]')).toBeVisible()
+  await expect(post(page, 'latest').locator('[data-next]')).not.toBeVisible()
 })
 
 test('background visibility does not pause media and system controls reflect the current post', async ({
@@ -741,4 +748,39 @@ test('reduced motion opens the description without a panel animation', async ({ 
   await item.locator('.feed-tap').click({ position: { x: 100, y: 100 } })
   await expect(item.locator('.feed-caption')).toBeVisible()
   expect(await item.locator('.feed-panel').evaluate((node) => node.getAnimations().length)).toBe(0)
+})
+
+test('stream order runs toward newer posts and surface Space does not outline the screen', async ({
+  page,
+}) => {
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-playing', '')
+  expect(
+    await page
+      .locator('.feed-post')
+      .evaluateAll((posts) => posts.map((post) => (post as HTMLElement).dataset.postId)),
+  ).toEqual(['fixture-oldest', 'fixture-text', 'fixture-audio', 'fixture-middle', 'fixture-latest'])
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  const button = item.locator('.feed-playback-toggle')
+  await expect(button).toHaveAttribute('aria-label', 'Pause Synthetic middle')
+  const playBox = (await button.boundingBox())!
+  expect(playBox.x + playBox.width).toBeLessThan(
+    (await item.locator('.feed-video-seek').boundingBox())!.x,
+  )
+  await button.click()
+  await expect(item).not.toHaveAttribute('data-playing', '')
+  await expect(button).toHaveAttribute('aria-label', 'Play Synthetic middle')
+  await button.click()
+  await expect(item).toHaveAttribute('data-playing', '')
+  await page.locator('.temple-feed').focus()
+  await page.keyboard.press('Space')
+  await expect(item).not.toHaveAttribute('data-playing', '')
+  await expect(page.locator('.temple-feed')).toHaveCSS('outline-style', 'none')
+  await page.keyboard.press('Space')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').focus()
+  await page.keyboard.press('Space')
+  await expect(item).not.toHaveAttribute('data-playing', '')
+  await expect(item.locator('.feed-tap')).toHaveCSS('outline-style', 'none')
 })

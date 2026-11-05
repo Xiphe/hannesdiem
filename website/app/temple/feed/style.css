@@ -93,8 +93,7 @@
   font-family: Bricolage, sans-serif;
 }
 .temple-feed:focus-visible {
-  outline: 2px solid #e1d9ce;
-  outline-offset: -2px;
+  outline: none;
 }
 .feed-post {
   position: relative;
@@ -152,8 +151,7 @@
   touch-action: pan-y;
 }
 .feed-tap:focus-visible {
-  outline: 2px solid #e1d9ce;
-  outline-offset: -6px;
+  outline: none;
 }
 .feed-post[data-kind='video'] {
   overflow: clip;
@@ -265,7 +263,7 @@
 .feed-disclosure {
   position: absolute;
   left: 50%;
-  bottom: max(0px, calc(env(safe-area-inset-bottom) - 8px));
+  bottom: max(2px, calc(env(safe-area-inset-bottom) - 6px));
   transform: translateX(-50%);
   width: 72px;
   min-height: 20px;
@@ -275,10 +273,15 @@
 .feed-disclosure svg {
   width: 36px;
   height: 12px;
+  opacity: 0.65;
+}
+.feed-disclosure path {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
   transition: transform 180ms ease;
 }
-.feed-post[data-details] .feed-disclosure svg {
-  transform: rotate(180deg);
+.feed-post[data-details] .feed-disclosure path {
+  transform: scaleY(-1);
 }
 .feed-details {
   max-height: var(--details-height);
@@ -334,6 +337,9 @@
 }
 .feed-post[data-kind='text'] .feed-panel {
   position: fixed;
+}
+.feed-playback-toggle {
+  flex: 0 0 44px;
 }
 .feed-volume-control {
   position: relative;
@@ -588,7 +594,7 @@
   .feed-summary,
   .feed-corners,
   .feed-panel,
-  .feed-disclosure svg,
+  .feed-disclosure path,
   .feed-volume-popover,
   .feed-volume-control::before {
     transition: none;

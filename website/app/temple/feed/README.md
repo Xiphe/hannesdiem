@@ -4,7 +4,7 @@ Approved after the feed interview, 2026-11-05. Implements only the content below
 Watch; the entry and share-image conversations own their corresponding views.
 
 - `/temple-of-sound/watch/{slug}` opens a specific post in a vertical feed. No
-  feed index. Newest above oldest, replace URL while swiping rather than pushing
+  feed index. Oldest above newest, replace URL while swiping rather than pushing
   browser history.
 - Watch is a horizontal band of share-image-like covers. `TempleRecordings`
   remains supported; `TemplePosts` adds video, audio and rich text.
@@ -14,7 +14,10 @@ Watch; the entry and share-image conversations own their corresponding views.
   (`hannesdiem.temple.entered`).
 - Video covers when its orientation matches the viewport; otherwise contains on
   black. Tap surface toggles playback. Both orientations use a bottom summary:
-  smaller title, scrubber with an icon-only speaker, then a wide, shallow down-chevron tucked into the existing bottom padding.
+  smaller title, Play/Pause, scrubber with an icon-only speaker, then a wide, shallow down-chevron tucked into the existing bottom padding.
+  Only the chevron’s center moves between directions; its ends stay fixed, with
+  dimmer ink and a 2px higher position. Space toggles playback without a focus
+  outline on the video surface. Controls retain keyboard focus indicators.
   A black gradient fades upward behind the title and transport. Back and Share
   are icon-only controls in the top corners and appear with the rest of the UI.
 - During video playback the summary and corner controls appear for ten seconds
@@ -44,7 +47,7 @@ Watch; the entry and share-image conversations own their corresponding views.
   state before reactivating a post so scrolling never flashes old metadata.
 - Try audible autoplay and retain the same media element across posts. If
   blocked, show a play control. Videos stop at their end and offer “Play again”
-  and “Next Video”; the latter selects the next older video in feed order,
+  and “Next Video”; the latter selects the next newer video in feed order,
   skipping audio/text, and is absent on the final video. Audio ends normally.
 - Switching tabs/apps no longer deliberately pauses media. Release speculative
   preload while hidden, and expose current metadata and play/pause/seek/next
