@@ -67,6 +67,41 @@ test('the header date belongs to the same poem link as the wordmark', async ({ p
   await expect.poll(() => page.evaluate(() => scrollY)).toBeLessThan(10)
 })
 
+for (const width of [390, 1440]) {
+  test(`navigation paint shares stable native pointer targets throughout at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-of-sound/visit')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    for (const selector of ['.temple-nav-items', '.temple-nav-brand', '.temple-nav-logo']) {
+      const failures = await page.locator(selector).evaluate((node) => {
+        const box = node.getBoundingClientRect()
+        const failures: { x: number; y: number; tag: string; cursor: string }[] = []
+        for (let x = box.left + 1; x < box.right; x += 4) {
+          for (const y of [box.top + 1, box.top + box.height / 2, box.bottom - 1]) {
+            const hit = document.elementFromPoint(x, y)!
+            const cursor = getComputedStyle(hit).cursor
+            if (
+              cursor !== 'pointer' ||
+              !(hit instanceof HTMLAnchorElement || hit instanceof HTMLButtonElement)
+            )
+              failures.push({ x, y, tag: hit.tagName, cursor })
+          }
+        }
+        return failures
+      })
+      expect(failures, selector).toEqual([])
+    }
+    const nav = page.locator('.temple-nav-items')
+    const box = (await nav.boundingBox())!
+    for (let x = box.x + 2; x < box.x + box.width; x += 16) {
+      await page.mouse.move(x, box.y + box.height / 2)
+      await expect(nav.locator('[data-nav-point]:hover')).toHaveCount(1)
+    }
+  })
+}
+
 test('the welcome button hands over to the centered header button at the top', async ({ page }) => {
   await page.goto('/temple-entry-poem')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
@@ -76,6 +111,8 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(header).not.toHaveAttribute('data-nav-visible', '')
   await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
   await expect(header).toHaveAttribute('data-nav-visible', '')
+  await expect(header).toHaveCSS('transition-property', 'opacity, visibility')
+  await expect(header).toHaveCSS('opacity', '1')
   await expect
     .poll(() => header.evaluate((node) => Math.round(node.getBoundingClientRect().top)))
     .toBe(0)
@@ -85,44 +122,64 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(button).toHaveText((await header.locator('.temple-nav-enter a').textContent()) ?? '')
 })
 
-test('the closing action fades in while the final phrase stays in place', async ({ page }) => {
-  await page.goto('/temple-entry-poem')
-  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-  const chorus = page.locator('.final-refrain .refrain-composition')
-  const stage = chorus.locator('.refrain-stage')
-  const action = chorus.locator('.temple-entry-closing')
-  const { start, runway } = await chorus.evaluate((node) => {
-    const rect = node.getBoundingClientRect()
-    const stage = node.querySelector<HTMLElement>('.refrain-stage')!
-    const height = document.querySelector<HTMLElement>('.temple-stage')!.offsetHeight
-    const runway = parseFloat(getComputedStyle(node).getPropertyValue('--refrain-entry-runway'))
-    return {
-      start: Math.ceil(
-        scrollY +
-          rect.top -
-          (height - stage.offsetHeight) / 2 +
-          rect.height -
-          stage.offsetHeight -
-          runway -
-          2,
-      ),
-      runway,
-    }
+for (const width of [390, 1440]) {
+  test(`the closing action fades into the remaining viewport space at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-entry-poem')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const chorus = page.locator('.final-refrain .refrain-composition')
+    const stage = chorus.locator('.refrain-stage')
+    const action = chorus.locator('.temple-entry-closing')
+    const { start, runway } = await chorus.evaluate((node) => {
+      const rect = node.getBoundingClientRect()
+      const stage = node.querySelector<HTMLElement>('.refrain-stage')!
+      const height = document.querySelector<HTMLElement>('.temple-stage')!.offsetHeight
+      const runway = parseFloat(getComputedStyle(node).getPropertyValue('--refrain-entry-runway'))
+      return {
+        start: Math.ceil(
+          scrollY +
+            rect.top -
+            (height - stage.offsetHeight) / 2 +
+            rect.height -
+            stage.offsetHeight -
+            runway -
+            2,
+        ),
+        runway,
+      }
+    })
+    await page.evaluate((y) => scrollTo(0, y), start + 2)
+    await expect(chorus).toHaveAttribute('data-active', '3')
+    const held = (await stage.boundingBox())!.y
+    await page.evaluate((y) => scrollTo(0, y), start + runway * 0.2)
+    await expect
+      .poll(() => action.evaluate((node) => Number(getComputedStyle(node).opacity)))
+      .toBeGreaterThan(0.1)
+    expect(await action.evaluate((node) => Number(getComputedStyle(node).opacity))).toBeLessThan(
+      0.9,
+    )
+    expect(Math.abs((await stage.boundingBox())!.y - held)).toBeLessThan(2)
+    await page.evaluate((y) => scrollTo(0, y), start + runway * 0.5)
+    await expect(action).toHaveCSS('opacity', '1')
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+    await expect(action).toHaveCSS('opacity', '1')
+    await expect(chorus).toHaveAttribute('data-active', '3')
+    expect(Math.abs((await stage.boundingBox())!.y - held)).toBeLessThan(2)
+    await expect(action.getByRole('link')).toHaveText('Enter')
+    const spacing = await stage.evaluate((node) => {
+      const bounds = node.getBoundingClientRect()
+      const tail = parseFloat(getComputedStyle(node).getPropertyValue('--refrain-tail-gap'))
+      const action = node.querySelector('.temple-entry-closing')!.getBoundingClientRect()
+      return {
+        above: action.top - (bounds.bottom - tail),
+        below: innerHeight - action.bottom,
+      }
+    })
+    expect(Math.abs(spacing.above - spacing.below)).toBeLessThan(2)
   })
-  await page.evaluate((y) => scrollTo(0, y), start + 2)
-  await expect(chorus).toHaveAttribute('data-active', '3')
-  const held = (await stage.boundingBox())!.y
-  await page.evaluate((y) => scrollTo(0, y), start + runway * 0.4)
-  await expect
-    .poll(() => action.evaluate((node) => Number(getComputedStyle(node).opacity)))
-    .toBeGreaterThan(0.1)
-  expect(await action.evaluate((node) => Number(getComputedStyle(node).opacity))).toBeLessThan(0.9)
-  expect(Math.abs((await stage.boundingBox())!.y - held)).toBeLessThan(2)
-  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
-  await expect(action).toHaveCSS('opacity', '1')
-  await expect(chorus).toHaveAttribute('data-active', '3')
-  expect(Math.abs((await stage.boundingBox())!.y - held)).toBeLessThan(2)
-})
+}
 
 test('desktop practical progress flows through the decorative gaps without jumps', async ({
   page,

@@ -271,7 +271,7 @@ export async function mountArtwork(
       const travel = stickyTop - section.top
       const position = Math.max(0, Math.min(1, travel / hold))
       if (entry) {
-        const reveal = Math.max(0, Math.min(1, (travel - hold) / (entryRunway * 0.8)))
+        const reveal = Math.max(0, Math.min(1, (travel - hold) / (entryRunway * 0.4)))
         const opacity = reduced.matches ? Number(reveal > 0) : reveal
         entry.style.opacity = String(opacity)
         entry.toggleAttribute('data-entry-visible', opacity > 0)

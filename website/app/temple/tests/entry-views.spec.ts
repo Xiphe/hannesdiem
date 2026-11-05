@@ -32,7 +32,7 @@ test('the intention is a continuous poem with entry invitations and a minimal he
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
   await page
     .locator('.temple-entry-closing')
-    .getByRole('link', { name: 'Enter the Temple', exact: true })
+    .getByRole('link', { name: 'Enter', exact: true })
     .click()
   await expect(page).toHaveURL(/\/temple-of-sound\/visit$/)
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-temple-view', 'inside')

@@ -309,7 +309,7 @@ export function Opening(handle: Handle<OpeningProps>) {
                   href="/temple-of-sound/visit"
                   data-rmx-document
                 >
-                  Enter the Temple
+                  Enter
                 </a>
               </div>
             )}

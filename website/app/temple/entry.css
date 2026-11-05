@@ -57,9 +57,10 @@
 }
 .final-refrain .refrain-composition[data-ready] .temple-entry-closing {
   position: absolute;
-  top: calc(100% - var(--refrain-tail-gap, 0px) + 32px);
+  /* Center the action in the viewport space below the last phrase's ink. */
+  top: calc(25svh + 75% - var(--refrain-tail-gap, 0px) / 2);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: max-content;
   max-width: calc(100vw - 48px);
   padding: 0;

@@ -42,6 +42,7 @@
   transition-delay: 0s;
 }
 .temple-nav-brand {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -50,12 +51,21 @@
   margin-left: -10px;
   text-decoration: none;
   cursor: pointer;
+  user-select: none;
 }
 .temple-nav-brand:is(:hover, :focus-visible) {
   background: color-mix(in srgb, currentColor 7%, transparent);
 }
 .temple-nav-brand * {
-  cursor: inherit;
+  pointer-events: none;
+  cursor: pointer;
+}
+.temple-nav-brand::before,
+.temple-nav-logo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
 }
 .temple-date,
 .temple-nav-date {
@@ -209,6 +219,7 @@
   }
 }
 .temple-nav-logo {
+  position: relative;
   justify-self: end;
   display: grid;
   place-items: center;
@@ -370,7 +381,20 @@
   font-size: clamp(14px, 2.5vw, 18px);
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-mounted] {
-  transition: none;
+  opacity: 0;
+  transform: none;
+  transition:
+    opacity 300ms ease-out,
+    visibility 0s 300ms;
+}
+.temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-visible] {
+  opacity: 1;
+  transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-mounted] {
+    transition: none;
+  }
 }
 .temple-artwork[data-temple-view='inside'] .temple-top-navigation {
   position: fixed;
@@ -399,8 +423,15 @@
   cursor: pointer;
   user-select: none;
 }
-.temple-artwork[data-temple-view='inside'] .temple-nav-items * {
-  cursor: inherit;
+.temple-artwork[data-temple-view='inside'] .temple-nav-items *,
+.temple-artwork[data-temple-view='inside'] .temple-nav-items *::before,
+.temple-artwork[data-temple-view='inside'] .temple-nav-items *::after {
+  cursor: pointer;
+}
+/* Paint and text belong to their native action's single, stable hit surface. */
+.temple-nav-items a[data-nav-point] > *,
+.temple-nav-logo > * {
+  pointer-events: none;
 }
 .temple-nav-items [data-nav-point] {
   position: relative;
@@ -410,6 +441,12 @@
   content: '';
   position: absolute;
   inset: 0 calc(-1 * var(--nav-hit-gap));
+}
+@media (max-width: 1050px) {
+  .temple-nav-items a[data-nav-point]::before,
+  .temple-nav-items [data-nav-point] .piece-tooltip-trigger::before {
+    top: calc(-1 * (44px - 1.4em) / 2);
+  }
 }
 .temple-nav-items [data-nav-point]:first-child::before {
   left: calc(-1 * max(var(--nav-hit-gap), var(--nav-leading, 0px)));

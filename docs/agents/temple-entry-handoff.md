@@ -37,9 +37,12 @@ There is no inside index or feed index.
 
 ## Rendering
 
-Poem: opener, welcome placeholder (artist will author copy) with Enter, continuous
-poem, closing “Enter the Temple”. Header appears on opener exit and contains only
-“enter the temple of sound” centered plus the site-menu logo; no wordmark/date.
+Poem: opener, artist-supplied welcome with “Enter the Temple of Sound”, continuous
+poem and closing “Enter”. Header fades in when the welcome action reaches its
+centered header position. It contains only “Enter the Temple of Sound” centered
+plus the site-menu logo; no wordmark/date. The closing action fades in beneath
+the held final phrase, centered in the space between its ink and the viewport
+bottom. The artist defers button artwork to a separate exploration.
 
 Inside: no opener or poem. Existing practical content order and full header appear
 immediately. Wordmark links to the poem root. Progress/scrubbing follows practical
@@ -48,6 +51,17 @@ content only. Inspire/Be Held/Wish remain visible; activating them shows
 enhancement can scroll between existing sections without reloading the document.
 
 Validate with synthetic fixtures and keep website checks independent of content/.
+
+The practical nav and wordmark/date ghost link use continuous pointer hit areas;
+text and decorative canvases cannot intercept their actions. Mobile hit areas
+include the nav's upper spacing. Decorative pieces remain inert and surrounding
+native actions divide their gaps.
+
+Use `npm run dev:preview` for local review with simulated Circle/signup/login.
+The previous simulator survived only in `.generated/`; plain Wrangler instead
+returned503 without runtime credentials. The tracked simulator uses in-memory
+provider state and `/__preview/email`, needs no secrets and sends no email.
+See `content/development/README.md` for restart and asset snapshot behavior.
 
 ## Integration status
 
