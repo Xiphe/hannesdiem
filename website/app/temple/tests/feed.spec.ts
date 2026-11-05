@@ -222,6 +222,118 @@ test('scrolling videos show their opening frame while audio and Watch keep selec
   )
 })
 
+for (const paused of [false, true]) {
+  test(`the video handoff after a smooth snap never cuts or flashes black${paused ? ' while paused' : ''}`, async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'Rendered-frame capture requires Chromium screencast events',
+    )
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.route('**/thumbnails/thumbnail.jpg?**', (route) =>
+      route.fulfill({
+        contentType: 'image/svg+xml',
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="320"><rect width="180" height="320" fill="#ed145a"/></svg>',
+      }),
+    )
+    await arrive(page, 'middle')
+    await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+    await post(page, 'middle')
+      .locator('.feed-tap')
+      .hover({ position: { x: 100, y: 150 } })
+    await post(page, 'middle').locator('.feed-video-seek').fill('60')
+    await expect
+      .poll(() =>
+        page
+          .locator('video')
+          .evaluate((video: HTMLVideoElement) => video.currentTime > 6 && !video.seeking),
+      )
+      .toBe(true)
+    if (paused)
+      await post(page, 'middle')
+        .locator('.feed-tap')
+        .click({ position: { x: 100, y: 150 } })
+    await move(page, 'latest')
+    await expect(post(page, 'latest').locator('.feed-video-seek')).toBeEnabled()
+    await expect(post(page, 'middle').locator('.feed-snapshot')).toHaveCount(0)
+    await post(page, 'middle')
+      .locator('.feed-stage > img')
+      .evaluate((image: HTMLImageElement) => image.decode())
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    await page.route(
+      'https://customer-fixture.cloudflarestream.com/11111111111111111111111111111111/manifest/video.m3u8',
+      async (route) => {
+        await gate
+        await route.fallback()
+      },
+    )
+    const cdp = await context.newCDPSession(page)
+    const frames: { time: number; rgb: number[] }[] = []
+    const tasks: Promise<void>[] = []
+    cdp.on('Page.screencastFrame', (event) => {
+      tasks.push(
+        (async () => {
+          const pixels = await sharp(Buffer.from(event.data, 'base64'))
+            .extract({ left: 195, top: 400, width: 1, height: 1 })
+            .removeAlpha()
+            .raw()
+            .toBuffer()
+          frames.push({ time: event.metadata.timestamp ?? 0, rgb: [...pixels] })
+          await cdp.send('Page.screencastFrameAck', { sessionId: event.sessionId })
+        })(),
+      )
+    })
+    await page.locator('.temple-feed').evaluate((root) => {
+      root.addEventListener(
+        'scrollend',
+        () => {
+          ;(window as any).snapSettledAt = Date.now() / 1000
+        },
+        { once: true },
+      )
+    })
+    try {
+      await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1 })
+      await post(page, 'middle').evaluate((node) =>
+        node.scrollIntoView({ block: 'start', behavior: 'smooth' }),
+      )
+      await expect(page).toHaveURL(path('middle'))
+      await page.waitForTimeout(100)
+      await expect(page.locator('video')).toHaveCSS('visibility', 'hidden')
+      release()
+      await expect
+        .poll(() =>
+          page.locator('video').evaluate((video: HTMLVideoElement) => video.readyState >= 2),
+        )
+        .toBe(true)
+      await page.waitForTimeout(250)
+      await cdp.send('Page.stopScreencast')
+      await Promise.all(tasks)
+      const settled = await page.evaluate(() => (window as any).snapSettledAt as number)
+      const after = frames.filter((frame) => frame.time >= settled)
+      // Contrasting synthetic frames expose both hard cuts and a missing video texture.
+      expect(after.length).toBeGreaterThan(3)
+      expect(after.some((frame) => frame.rgb[0] > 105 && frame.rgb[0] < 220)).toBe(true)
+      expect(after.at(-1)!.rgb[0]).toBeLessThan(105)
+      expect(after.at(-1)!.rgb[2]).toBeGreaterThan(150)
+      expect(
+        after
+          .filter((frame) => frame.rgb[0] > 90 && frame.rgb[0] < 230)
+          .every((frame) => frame.rgb[1] >= 20 && frame.rgb[2] >= 90),
+      ).toBe(true)
+    } finally {
+      release()
+      await cdp.detach()
+    }
+  })
+}
+
 test('orientation changes cover matching video and contain opposite video', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await arrive(page, 'latest')
@@ -392,6 +504,7 @@ test('an incoming loading video never flashes its paused overlay', async ({ page
     await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
     await move(page, 'middle')
     await expect(post(page, 'middle').locator('.feed-caption')).not.toBeVisible()
+    await expect(page.locator('video')).toHaveCSS('visibility', 'hidden')
   } finally {
     release()
   }
@@ -1234,6 +1347,7 @@ test('reduced motion opens the description without a panel animation', async ({ 
   await item.locator('.feed-tap').click({ position: { x: 100, y: 100 } })
   await expect(item.locator('.feed-caption')).toBeVisible()
   expect(await item.locator('.feed-panel').evaluate((node) => node.getAnimations().length)).toBe(0)
+  expect(await page.locator('video').evaluate((node) => node.getAnimations().length)).toBe(0)
 })
 
 for (const paused of [false, true]) {
