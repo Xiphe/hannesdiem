@@ -37,3 +37,8 @@ export function thumbnail(post: TemplePost) {
     ? `${streamBase(post)}/thumbnails/thumbnail.jpg?width=1052&height=550&fit=clip`
     : undefined
 }
+
+/** The viewer starts videos at zero; authored covers belong to Watch. */
+export function firstVideoFrame(post: { customerCode: string; videoId: string }) {
+  return `${streamBase(post)}/thumbnails/thumbnail.jpg?time=0s&width=1920&height=1920&fit=clip`
+}

@@ -1,6 +1,6 @@
 import type Hls from 'hls.js'
 import type { FeedPost } from './view.tsx'
-import { mediaSource } from './model.ts'
+import { firstVideoFrame, mediaSource } from './model.ts'
 
 /** Keep the actual video element, including its browser sound permission. */
 export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, failed: () => void) {
@@ -87,7 +87,7 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
       video.load()
       video.loop = false
       video.preload = 'auto'
-      video.poster = post.cover ?? ''
+      video.poster = post.kind === 'video' ? firstVideoFrame(post) : ''
       await attach(video, post, false, () => signal.aborted || current !== revision)
       return !signal.aborted && current === revision
     },

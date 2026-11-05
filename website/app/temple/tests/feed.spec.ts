@@ -164,6 +164,64 @@ test('blocked audible autoplay has a tap fallback and preserves the player acros
   await expect(page).toHaveTitle('Synthetic middle • Hannes Diem')
 })
 
+test('scrolling videos show their opening frame while audio and Watch keep selected covers', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.route('**/fixture-media/cover.svg', (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="320"><rect width="180" height="320" fill="#ed145a"/></svg>',
+    }),
+  )
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-playing', '')
+  const images = await page
+    .locator('.feed-post[data-kind="video"] .feed-stage > img')
+    .evaluateAll((nodes) => nodes.map((node) => (node as HTMLImageElement).src))
+  expect(images).toHaveLength(3)
+  for (const src of images) {
+    const url = new URL(src)
+    expect(url.hostname).toBe('customer-fixture.cloudflarestream.com')
+    expect(url.pathname).toMatch(/\/thumbnails\/thumbnail\.jpg$/)
+    expect(url.searchParams.get('time')).toBe('0s')
+    expect(url.searchParams.get('fit')).toBe('clip')
+  }
+  expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.poster)).toBe(
+    await item.locator('.feed-stage > img').getAttribute('src'),
+  )
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+  await item.evaluate((article) => {
+    const root = article.closest<HTMLElement>('.temple-feed')!
+    root.style.scrollSnapType = 'none'
+    root.scrollTo({
+      top: (article as HTMLElement).offsetTop + root.clientHeight * 0.45,
+      behavior: 'instant',
+    })
+  })
+  const incoming = post(page, 'latest')
+  await expect(incoming.locator('.feed-stage > img')).toBeInViewport()
+  await incoming.locator('.feed-stage > img').evaluate((image: HTMLImageElement) => image.decode())
+  const box = (await incoming.boundingBox())!
+  const pixel = await sharp(await page.screenshot())
+    .extract({ left: 195, top: Math.ceil(box.y + 180), width: 1, height: 1 })
+    .removeAlpha()
+    .raw()
+    .toBuffer()
+  for (const [index, value] of [88, 116, 168].entries())
+    expect(Math.abs(pixel[index] - value)).toBeLessThan(3)
+  await expect(post(page, 'audio').locator('.feed-stage > img')).toHaveAttribute(
+    'src',
+    '/fixture-media/cover.svg',
+  )
+  await page.goto('/temple-of-sound/watch')
+  await expect(page.locator('#fixture-middle img')).toHaveAttribute(
+    'src',
+    '/fixture-media/cover.svg',
+  )
+})
+
 test('orientation changes cover matching video and contain opposite video', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await arrive(page, 'latest')

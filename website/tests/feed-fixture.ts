@@ -19,6 +19,7 @@ const posts: Record<string, unknown>[] = [
     id: 'fixture-audio',
     kind: 'audio',
     title: 'Synthetic audio',
+    cover: { src: '/fixture-media/cover.svg', width: 640, height: 640 },
     postedAt: '2025-04-08T18:00:00Z',
     src: '/fixture-media/audio.wav',
     children: { type: 'element', tag: 'p', children: ['A synthetic audio description.'] },

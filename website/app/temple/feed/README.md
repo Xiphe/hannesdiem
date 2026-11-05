@@ -17,7 +17,11 @@ Watch; the entry and share-image conversations own their corresponding views.
   uses `hasEnteredTemple()` from the entry implementation but never writes it
   (`hannesdiem.temple.entered`).
 - Video covers when its orientation matches the viewport; otherwise contains on
-  black. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
+  black. Scrolling and loading show the video's unadorned first frame, never its
+  selected cover. Use Stream's explicit `time=0s` thumbnail with `fit=clip` to
+  preserve the source aspect ratio, for both inactive posts and the native poster
+  ([thumbnail API](https://developers.cloudflare.com/stream/viewing-videos/displaying-thumbnails/)).
+  Selected covers remain on Watch thumbnails and audio posts. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
   small, dim drag indicator above the scrubber. The indicator has no shape or
   position animation; it stays fixed within the moving summary. A single open
