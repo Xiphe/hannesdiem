@@ -97,6 +97,7 @@ export function mountCircle(
     } else if (!frame) frame = requestAnimationFrame(draw)
   }
   const pull = (next: CircleTarget | null) => {
+    if (wanted && !next && !reduced.matches) fluid?.release()
     wanted = next
     idle = 0
     wake()

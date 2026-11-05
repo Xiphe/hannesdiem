@@ -768,15 +768,14 @@
 }
 .circle-signup[data-floating] {
   position: absolute;
-  /* Keep the complete ring clear, including the lower seats and their hit areas. */
-  top: calc(100% + 16px);
-  left: 0;
-  width: 100%;
-}
-.circle-signup[data-floating] > .temple-signup-expanded {
-  left: 50%;
+  top: var(--circle-panel-top, calc(100% + 16px));
+  left: var(--circle-panel-left, 50%);
   transform: translateX(-50%);
   width: min(90vw, 480px);
+}
+.circle-signup[data-floating] > .temple-signup-expanded {
+  left: 0;
+  width: 100%;
 }
 .circle-signup .circle-fields {
   margin-top: 0;

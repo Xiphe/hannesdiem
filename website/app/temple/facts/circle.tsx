@@ -1,6 +1,7 @@
 import { on, ref, type Handle } from 'remix/component'
 import type { FactProps } from '../types.ts'
 import { mountCircle } from './circle-enhance.ts'
+import { mountCirclePanelPosition } from './circle-panel-position.ts'
 import { circleRestSurface } from './circle-surface.ts'
 import { CirclePanel } from '../../circle/panel.tsx'
 import {
@@ -128,6 +129,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
           : undefined,
       )
     if (!persistent) return
+    if (root) mountCirclePanelPosition(root, signal, () => selected)
     void refresh()
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible' && root) {

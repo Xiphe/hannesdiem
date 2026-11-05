@@ -242,7 +242,7 @@ test('a long contact name is preserved and must be shortened before claiming', a
 })
 
 for (const width of [390, 1440]) {
-  test(`signup stays clear of every selected seat at ${width}px`, async ({ page }) => {
+  test(`signup stays close to and clear of every selected seat at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.route('**/circle', (route) =>
       route.fulfill({
@@ -258,9 +258,10 @@ for (const width of [390, 1440]) {
     const clearOfSeat = async (spot: string) => {
       const seat = (await circle.locator(`input[value="${spot}"]`).boundingBox())!
       const panel = (await page.getByRole('dialog').boundingBox())!
-      expect(panel.y - seat.y - seat.height).toBeGreaterThanOrEqual(12)
+      expect(panel.y - seat.y - seat.height).toBeGreaterThanOrEqual(7)
+      expect(panel.y - seat.y - seat.height).toBeLessThanOrEqual(9)
       expect(panel.x).toBeGreaterThanOrEqual(0)
-      expect(panel.x + panel.width).toBeLessThanOrEqual(width)
+      expect(panel.x + panel.width).toBeLessThanOrEqual(page.viewportSize()!.width)
     }
     for (let spot = 1; spot <= 10; spot++) {
       await circle.getByRole('radio', { name: `Spot ${spot}`, exact: true }).click()
@@ -270,5 +271,19 @@ for (const width of [390, 1440]) {
     await circle.locator('.fact-circle-invite').click()
     const assigned = await page.locator('.circle-fields input[name="spot"]').inputValue()
     await clearOfSeat(assigned)
+    await page.setViewportSize({ width: width === 390 ? 1440 : 390, height: 900 })
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    )
+    await clearOfSeat(assigned)
+    await page.getByRole('button', { name: 'Close signup' }).click()
+    // With the lower seat's panel open, choose an exposed upper seat. The
+    // existing panel must follow the new choice even if its size is unchanged.
+    await circle.getByRole('radio', { name: 'Spot 6', exact: true }).click()
+    await circle.getByRole('radio', { name: 'Spot 1', exact: true }).click()
+    await clearOfSeat('1')
   })
 }

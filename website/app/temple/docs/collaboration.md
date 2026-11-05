@@ -237,6 +237,28 @@ Authenticated candidates and confirmed places retain their existing holds.
 The actual liquid method/settings remain selected; no publication requested.
 [Behavior and recovery](liquid-simulation-research.md).
 
+**Colocate the panel; vary release slightly — 2026-11-05.** The artist rejects
+the below-whole-circle placement as too distant to recognize the click's result.
+Anchor the existing panel8px below the chosen seat's44px native hit area,
+centred on it and clamped12px inside the viewport. Use the existing piece
+tooltip's browser-geometry approach for this local presentation; CMX continues
+to host the same content and island, without a new contract or hosting adapter.
+Selection events, responsive sizing and viewport resize update placement;
+observers/listeners dispose with the island. Tests cover all ten seats, central
+assignment, mobile/desktop bounds and resizing while open. Supersede the
+whole-circle offset except as a pre-positioning fallback.
+
+The artist also requests slight imbalance/variance when a place is released.
+Try one small, randomly signed transverse velocity impulse weighted toward the
+collected end and counterbalanced through the body, preserving net momentum.
+The numerical simulation supplies the return; no outline rotation, replacement
+pose or ongoing random jitter. Fixed-sample tests verify different paths without
+teleportation, mass loss or lasting centre drift. All10 numerical/topology and20
+related browser cases pass, as do build, type and formatting checks. The impulse
+strength remains for artistic review on8787 (`sand tunnel 8787`); donuts and
+the selected material/settings stay retained. No publication requested.
+[Release mechanism and evidence](liquid-simulation-research.md).
+
 **Keep the selected seat clear of signup — 2026-11-05.** The artist reports
 that the login piece covers a selected seat and asks for placement that always
 avoids it. Anchor the existing floating signup16px below the complete circle,

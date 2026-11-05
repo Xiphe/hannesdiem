@@ -80,6 +80,31 @@ export class CircleFluid {
       return { x: 180 + Math.cos(a) * 110, y: 180 + Math.sin(a) * 110, r: 13 }
     })
   }
+  /** A single, slight imbalance on release; pressure and viscosity do the rest. */
+  release(random: () => number = Math.random) {
+    const target = this.target
+    if (!target) return
+    this.target = null
+    const dx = target.x - 180,
+      dy = target.y - 180,
+      distance = Math.hypot(dx, dy) || 1
+    const speed = (12 + random() * 14) * (random() < 0.5 ? -1 : 1)
+    let total = 0
+    for (let i = 0; i < this.n; i++) {
+      const x = this.x[i] - target.x,
+        y = this.y[i] - target.y
+      this.targetDistances[i] = Math.exp(-(x * x + y * y) / (48 * 48))
+      total += this.targetDistances[i]
+    }
+    const mean = total / this.n
+    for (let i = 0; i < this.n; i++) {
+      // The collected end moves a little sideways; the body counterbalances
+      // it, adding no net linear momentum and never moving a particle by hand.
+      const impulse = (this.targetDistances[i] - mean) * speed
+      this.vx[i] += (-dy / distance) * impulse
+      this.vy[i] += (dx / distance) * impulse
+    }
+  }
   grid() {
     this.head.fill(-1)
     for (let i = 0; i < this.n; i++) {

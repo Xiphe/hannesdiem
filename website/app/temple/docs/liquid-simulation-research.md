@@ -436,3 +436,22 @@ close/Escape cancellation, focus return and refresh without restoring the cancel
 hold. The numerical seat test now verifies an actual hollow interior and liquid
 around the physical obstacle. The filled-seat experiment is withdrawn; its
 source remains recoverable at59d5734. Local review stays on8787; no deployment.
+
+## A small physical imbalance on release — 2026-11-05
+
+The artist requests slight variance because releasing a seat always returns in
+the same way. Try one small transverse velocity impulse when an active target
+is released. Choose its sign and magnitude once per release (12–26 world units/s)
+and weight it toward the collected end. Subtract the mean weight from every
+particle's impulse so total linear momentum is unchanged. Do not move particles,
+rotate the rendered outline, change target poses or add per-frame random noise.
+Pressure, viscosity, contact and the central field evolve the resulting return.
+Repeated release of an already released target adds nothing. Reduced motion
+skips the impulse; the existing offscreen/hidden/settled/disposal limits remain.
+
+The numerical test starts two variants from identical held particles and fixed
+random samples. It verifies unchanged positions at release, conserved momentum,
+different physical paths after1s, finite/conserved particles and return to the
+centre after8s. All10 numerical/topology checks pass. The amount of asymmetry is
+a proposal for in-context review; the real-liquid method, donuts and selected
+parameters remain retained. Main preview on8787; no deployment requested.

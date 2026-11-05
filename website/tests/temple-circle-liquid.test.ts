@@ -139,3 +139,45 @@ test('a held seat keeps a hollow interior surrounded by simulated liquid', () =>
   }
   assert.ok(nearby > 10, 'simulated material still gathers around the seat')
 })
+
+test('release varies the physical return without teleporting, drifting or repeated kicks', () => {
+  const held = new CircleFluid()
+  held.target = held.dots[2]
+  advance(held, 600)
+  const momentum = (fluid: CircleFluid) => [
+    fluid.vx.reduce((sum, value) => sum + value, 0),
+    fluid.vy.reduce((sum, value) => sum + value, 0),
+  ]
+  const variants = [0.2, 0.8].map((sample) => {
+    const fluid = new CircleFluid()
+    fluid.x.set(held.x)
+    fluid.y.set(held.y)
+    fluid.vx.set(held.vx)
+    fluid.vy.set(held.vy)
+    fluid.target = fluid.dots[2]
+    const before = momentum(fluid)
+    fluid.release(() => sample)
+    assert.equal(fluid.target, null)
+    assert.deepEqual(fluid.x, held.x)
+    assert.deepEqual(fluid.y, held.y)
+    momentum(fluid).forEach((value, axis) => assert.ok(Math.abs(value - before[axis]) < 1e-8))
+    const velocity = fluid.vx.slice()
+    fluid.release(() => {
+      throw new Error('a released target cannot receive another kick')
+    })
+    assert.deepEqual(fluid.vx, velocity)
+    advance(fluid, 120)
+    return fluid
+  })
+  const difference = Math.max(
+    ...variants[0].x.map((x, i) =>
+      Math.hypot(x - variants[1].x[i], variants[0].y[i] - variants[1].y[i]),
+    ),
+  )
+  assert.ok(difference > 0.5, 'different impulses produce different physical return paths')
+  for (const fluid of variants) {
+    advance(fluid, 840)
+    assert.equal(fluid.n, held.n)
+    assert.ok(Math.hypot(...fluid.metrics().centre.map((v) => v - 180)) < 2)
+  }
+})
