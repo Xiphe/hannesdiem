@@ -40,6 +40,13 @@ async function textMask(text: string, size: number, name = false) {
     .toBuffer({ resolveWithObject: true })
 }
 
+async function measureTitle(text: string, size: number) {
+  const mask = await textMask(text, size)
+  const lineHeight = size * 1.12
+  const lines = Math.max(1, Math.ceil((mask.info.height + size * 0.16) / lineHeight))
+  return { ...mask, lines, height: Math.max(mask.info.height, Math.ceil(lines * lineHeight)) }
+}
+
 function luminance(rgb: readonly number[]) {
   const linear = rgb.map((value) => {
     const c = value / 255
@@ -66,6 +73,8 @@ function requiredOpacity(background: number[], foreground: number, contrast: num
 }
 
 export interface TempleCardLayout {
+  titleText: string
+  titleTruncated: boolean
   titleSize: number
   titleLines: number
   captionTop: number
@@ -74,7 +83,7 @@ export interface TempleCardLayout {
   gradient: { startY: number; topOpacity: number; bottomOpacity: number }
 }
 
-/** A complete card or an actionable error; no clipping, ellipsis or prose rewriting. */
+/** Fit the full title first; trim only the card text when it exceeds the readable lower bound. */
 export async function renderTempleShareImage(input: {
   title: string
   background?: Uint8Array
@@ -85,31 +94,50 @@ export async function renderTempleShareImage(input: {
   const name = await textMask('Temple of Sound', nameSize, true)
   const nameHeight = Math.max(Math.ceil(nameSize * 1.15), name.info.height)
   const available = height - bottom - captionTop - nameHeight - gap
-  let fitted: Awaited<ReturnType<typeof textMask>> | undefined
+  let fitted: Awaited<ReturnType<typeof measureTitle>> | undefined
   let size = templeCard.maxTitleSize as number
-  let lines = 0
-  let titleHeight = 0
+  let titleText = input.title
+  let titleTruncated = false
   // Search from the readable lower bound to the chosen 90px maximum.
   let low = templeCard.minTitleSize as number
   let high = size
   while (low <= high) {
     const candidate = Math.floor((low + high) / 2)
-    const mask = await textMask(input.title, candidate)
-    const lineHeight = candidate * 1.12
-    const count = Math.max(1, Math.ceil((mask.info.height + candidate * 0.16) / lineHeight))
-    const boxHeight = Math.max(mask.info.height, Math.ceil(count * lineHeight))
-    if (boxHeight <= available) {
+    const mask = await measureTitle(input.title, candidate)
+    if (mask.height <= available) {
       fitted = mask
       size = candidate
-      lines = count
-      titleHeight = boxHeight
       low = candidate + 1
     } else high = candidate - 1
   }
-  if (!fitted)
-    throw new Error(
-      `Temple share title does not fit at ${templeCard.minTitleSize}px; supply a shorter shareTitle`,
+  if (!fitted) {
+    size = templeCard.minTitleSize
+    titleTruncated = true
+    // Measure with the dots included, and never split a Unicode grapheme.
+    const graphemes = Array.from(
+      new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(input.title),
+      ({ segment }) => segment,
     )
+    low = 0
+    high = graphemes.length - 1
+    let kept = 0
+    while (low <= high) {
+      const candidate = Math.floor((low + high) / 2)
+      const prefix = graphemes.slice(0, candidate).join('').trimEnd()
+      const mask = await measureTitle(`${prefix}...`, size)
+      if (mask.height <= available) {
+        kept = candidate
+        low = candidate + 1
+      } else high = candidate - 1
+    }
+    const prefix = graphemes.slice(0, kept).join('')
+    // Prefer a complete final word; unbroken titles can end at a character.
+    const atWordBoundary = /\s$/u.test(prefix) || /^\s/u.test(graphemes[kept] ?? '')
+    const completeWords = atWordBoundary ? prefix : prefix.replace(/\s+\S*$/u, '')
+    titleText = `${completeWords.trimEnd() || prefix.trimEnd()}...`
+    fitted = await measureTitle(titleText, size)
+  }
+  const titleHeight = fitted.height
   const titleTop = height - bottom - titleHeight
   const nameTop = titleTop - gap - nameHeight
   const background = await (
@@ -192,8 +220,10 @@ export async function renderTempleShareImage(input: {
     .jpeg({ quality: 90, mozjpeg: true })
     .toBuffer()
   const layout: TempleCardLayout = {
+    titleText,
+    titleTruncated,
     titleSize: size,
-    titleLines: lines,
+    titleLines: fitted.lines,
     captionTop: nameTop,
     titleTop,
     titleHeight,

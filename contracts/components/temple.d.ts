@@ -85,7 +85,7 @@ export interface PoemFact {
 }
 export interface TempleVideoProps extends StreamVideoProps {
   id: string
-  /** Optional authored replacement when the full title cannot fit a share card. */
+  /** Optional authored title used for share cards and metadata. */
   shareTitle?: string
   /** Generated during publication, or an imported custom card. */
   shareImage?: import('./index.d.ts').MediaImage

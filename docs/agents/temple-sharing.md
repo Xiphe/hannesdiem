@@ -12,13 +12,15 @@ The decision trail is in `website/app/temple/docs/collaboration.md`.
 Fit the full title between the 200px upper caption boundary and 55px bottom
 margin, with 64px left and 76px right insets. Keep the name at 40px and a
 16px gap. Titles shrink only when necessary, down to 48px. Long unbroken
-words wrap by character. Escape markup, retain punctuation and preserve the
-complete supplied text; never add an ellipsis or invent replacement wording.
-If it still cannot fit, stop preparation and request an authored `shareTitle`.
+words wrap by character. Escape markup and retain punctuation. If the full title
+still cannot fit at 48px, trim its end and append literal `...`, measuring the
+dots within the same caption area. Prefer a complete final word and never split
+a Unicode grapheme. Keep the original title and share metadata intact; only the
+card text is shortened. An authored `shareTitle` remains an optional alternative.
 
 Character count is not a capacity rule: glyph widths and word boundaries matter.
 The coverage examples include 15/43/72 characters at 90px, 133 at 69px and
-223 at 51px; the 287-character specimen exceeds the readable lower bound.
+223 at 51px; the 287-character specimen trims with `...` at 48px.
 
 Shade with one straight gradient ending at 80% black. Its start is solved from
 both text height and sampled background brightness under each text role, using

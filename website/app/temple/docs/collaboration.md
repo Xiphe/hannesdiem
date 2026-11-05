@@ -218,6 +218,15 @@ caching and publishing assets derived from that evaluated data remains a CMX gap
 the existing temporary share-image adapter is documented in ADR 0007. Do not
 silently expand it into a second content/route index.
 
+**Trim overflowing share titles — 2026-11-05.** After reviewing the capacity
+gallery, the artist explicitly requests `...` at the end of titles that cannot
+fit. This supersedes the earlier stop-and-request-shareTitle rule. First shrink
+the full title to the existing 48px minimum; then trim only the card text,
+prefer a complete final word and append three literal dots within the same
+caption area. Preserve Unicode graphemes and keep the full page title and share
+metadata. An authored `shareTitle` remains optional. Regenerate all gallery
+examples, including the formerly failing 287-character case. Local review only.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to
