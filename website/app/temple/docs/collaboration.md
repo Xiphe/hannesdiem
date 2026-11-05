@@ -54,6 +54,10 @@ interpolation. Next review: whether the broader stretch and softer settling feel
 natural in the surrounding circle. This is a study for local review, not artistic
 acceptance or a deployment request.
 
+The artist finds the first stretch too oval and asks for a clearer point.
+Narrow the deformation's shoulder from90° to36° on each side of its direction,
+keeping the small rounded nose, circular body, target gap and soft settling.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

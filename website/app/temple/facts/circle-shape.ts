@@ -1,10 +1,10 @@
-/** A circular body with a broad, smooth stretch toward an available place. */
+/** A circular body with a smooth, localized point toward an available place. */
 export function circleSurface(dx = 0, dy = 0, clearance = 24) {
   const radius = 50
   const length = Math.hypot(dx, dy)
   const direction = Math.atan2(dy, dx)
   const extension = Math.max(0, length - radius - clearance)
-  const shoulder = Math.PI / 2
+  const shoulder = Math.PI / 5
   const segments = 64
   const step = (Math.PI * 2) / segments
   const samples = Array.from({ length: segments }, (_, index) => {
