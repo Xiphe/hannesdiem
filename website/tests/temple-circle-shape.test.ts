@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { createCircleFluid } from '../app/temple/facts/circle-fluid.ts'
 import { circleSurface } from '../app/temple/facts/circle-shape.ts'
 
 test('the invitation rests on a circular perimeter', () => {
@@ -24,127 +25,90 @@ test('the invitation rests on a circular perimeter', () => {
   }
 })
 
-test('the pointing invitation has no backward folds along its boundary', () => {
-  const poses = [
-    [0, 0],
-    [-104.7, -34],
-  ]
-  for (let angle = 0; angle < 360; angle += 10) {
-    const radians = (angle * Math.PI) / 180
-    poses.push([Math.cos(radians) * 110, Math.sin(radians) * 110])
-  }
-  for (const [dx, dy] of poses) {
-    const numbers = circleSurface(dx, dy)
-      .match(/-?\d+(?:\.\d+)?/g)!
-      .map(Number)
-    let start = numbers.slice(0, 2)
-    for (let i = 2; i < numbers.length; i += 6) {
-      const control1 = numbers.slice(i, i + 2)
-      const control2 = numbers.slice(i + 2, i + 4)
-      const end = numbers.slice(i + 4, i + 6)
-      const chord = [end[0] - start[0], end[1] - start[1]]
-      const length = Math.hypot(...chord)
-      // Adjacent boundary samples should not acquire a backward-facing hook
-      // between them. Sample the actual cubic used by the SVG renderer.
-      for (let step = 0; step <= 40; step++) {
-        const t = step / 40
-        const tangent = [0, 1].map(
-          (axis) =>
-            3 *
-            ((1 - t) ** 2 * (control1[axis] - start[axis]) +
-              2 * (1 - t) * t * (control2[axis] - control1[axis]) +
-              t ** 2 * (end[axis] - control2[axis])),
-        )
-        const forward = (tangent[0] * chord[0] + tangent[1] * chord[1]) / length
-        assert.ok(
-          forward >= -0.05,
-          `backward fold at direction ${dx},${dy}, segment ${(i - 2) / 6}: ${forward}`,
-        )
-      }
-      start = end
-    }
-  }
-})
-
-/** Sample the actual SVG cubics, including their interpolated flanks. */
-function outlinePoints(dx: number, dy: number) {
-  const numbers = circleSurface(dx, dy)
-    .match(/-?\d+(?:\.\d+)?/g)!
-    .map(Number)
-  let start = numbers.slice(0, 2)
-  const points = [start]
-  for (let i = 2; i < numbers.length; i += 6) {
-    const end = numbers.slice(i + 4, i + 6)
-    for (let step = 1; step <= 20; step++) {
-      const t = step / 20
-      points.push(
-        [0, 1].map(
-          (axis) =>
-            (1 - t) ** 3 * start[axis] +
-            3 * (1 - t) ** 2 * t * numbers[i + axis] +
-            3 * (1 - t) * t ** 2 * numbers[i + 2 + axis] +
-            t ** 3 * end[axis],
-        ),
-      )
-    }
-    start = end
-  }
-  return points.slice(0, -1)
-}
-
-test('the rounded tip keeps the same target clearance in every direction', () => {
-  for (let angle = 0; angle < 360; angle += 10) {
-    const radians = (angle * Math.PI) / 180
-    const ux = Math.cos(radians),
-      uy = Math.sin(radians)
-    const points = outlinePoints(110 * ux, 110 * uy)
-    const reach = Math.max(...points.map(([x, y]) => (x - 50) * ux + (y - 50) * uy))
-    assert.ok(Math.abs(110 - reach - 24) < 0.1, `clearance at ${angle} degrees`)
-    assert.ok(points.every(([x, y]) => Math.hypot(x - 50, y - 50) >= 49.9))
-  }
-})
-
-test('the circular pull rotates uniformly without changing at diagonal targets', () => {
-  const reference = outlinePoints(110, 0)
-  for (let step = 1; step < 64; step += 7) {
-    const angle = (step * Math.PI) / 32
-    const rotated = outlinePoints(110 * Math.cos(angle), 110 * Math.sin(angle))
-    for (const [index, [x, y]] of reference.entries()) {
-      const expected = [
-        50 + (x - 50) * Math.cos(angle) - (y - 50) * Math.sin(angle),
-        50 + (x - 50) * Math.sin(angle) + (y - 50) * Math.cos(angle),
-      ]
-      const actual = rotated[(index + step * (rotated.length / 64)) % rotated.length]
-      assert.ok(Math.hypot(actual[0] - expected[0], actual[1] - expected[1]) < 0.04)
-    }
-  }
-})
-
-test('the whole outline stays convex without a waist behind the point', () => {
-  for (let angle = 0; angle < 360; angle += 15) {
-    const radians = (angle * Math.PI) / 180
-    const points = outlinePoints(110 * Math.cos(radians), 110 * Math.sin(radians)).filter(
-      (_, index) => index % 10 === 0,
+test('a released pool immediately drains while the next one grows independently', () => {
+  const fluid = createCircleFluid()
+  fluid.aim(1, 100, 0, 23)
+  const [held] = fluid.step(1, true)
+  fluid.aim(2, -100, 0, 23)
+  let previousOld = held.x
+  let previousNew = 0
+  for (let frame = 0; frame < 20; frame++) {
+    const [oldPool, newPool] = fluid.step(1 / 60)
+    assert.ok(oldPool.x < previousOld, 'old material must keep draining on every frame')
+    assert.ok(newPool.x < previousNew, 'new material must keep extending on every frame')
+    assert.ok(
+      Math.abs(oldPool.y) < 2 && Math.abs(newPool.y) < 2,
+      'pools flow through the body rather than orbiting it',
     )
-    for (const [index, current] of points.entries()) {
-      const before = points[(index + points.length - 1) % points.length]
-      const after = points[(index + 1) % points.length]
-      const a = [current[0] - before[0], current[1] - before[1]]
-      const b = [after[0] - current[0], after[1] - current[1]]
-      const turn = (a[0] * b[1] - a[1] * b[0]) / (Math.hypot(...a) * Math.hypot(...b))
-      assert.ok(turn >= -0.005, `inward waist at ${angle} degrees: ${turn}`)
-    }
+    previousOld = oldPool.x
+    previousNew = newPool.x
   }
 })
 
-test('switching between opposite places keeps the circular body intact', () => {
-  const before = outlinePoints(110, 0)
-  const after = outlinePoints(-110, 0)
-  for (const t of [0.25, 0.5, 0.75]) {
-    for (const [index, [x, y]] of before.entries()) {
-      const next = after[index]
-      const point = [x + (next[0] - x) * t, y + (next[1] - y) * t]
-      assert.ok(Math.hypot(point[0] - 50, point[1] - 50) >= 49.9)
+test('leaving gathers every pool completely back into the resting body', () => {
+  const fluid = createCircleFluid()
+  fluid.aim(1, 100, 0, 23)
+  fluid.step(0, true)
+  fluid.aim(2, 0, -100, 23)
+  fluid.step(0.2)
+  fluid.release()
+  let lastReach = Infinity
+  for (let frame = 0; frame < 180; frame++) {
+    const pools = fluid.step(1 / 60)
+    const reach = Math.max(0, ...pools.map((p) => Math.hypot(p.x, p.y) + p.radius))
+    assert.ok(reach < lastReach || reach === 0)
+    lastReach = reach
+  }
+  assert.equal(fluid.active, false)
+  assert.equal(circleSurface(fluid.step(0)), circleSurface())
+})
+
+test('reduced motion places and releases the pool immediately without ambient drift', () => {
+  const fluid = createCircleFluid()
+  fluid.aim(4, -80, 60, 22)
+  const held = fluid.step(0, true)
+  assert.deepEqual(held, [{ x: -80, y: 60, radius: 22, neck: 1 }])
+  assert.deepEqual(fluid.step(5, true), held)
+  fluid.release()
+  assert.deepEqual(fluid.step(0, true), [])
+  assert.equal(fluid.active, false)
+})
+
+test('continuous input retargets from the current pool instead of snapping it', () => {
+  const fluid = createCircleFluid()
+  fluid.aim(1, 100, 0, 23)
+  fluid.step(0, true)
+  fluid.aim(1, 85, 20, 23)
+  const [next] = fluid.step(1 / 60)
+  assert.ok(next.x > 85 && next.x < 102)
+  assert.ok(next.y > 0 && next.y < 20)
+  const [settled] = fluid.step(5)
+  assert.ok(Math.hypot(settled.x - 85, settled.y - 20) < 3)
+})
+
+test('the neck meets the outer pool tangentially in every direction', () => {
+  for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+    const x = Math.cos(angle) * 98,
+      y = Math.sin(angle) * 98
+    const bridge = circleSurface([{ x, y, radius: 23, neck: 1 }]).split('M')[3]
+    const segments = bridge.match(/[CLC][^CLCZ]+/g)!.map((segment) =>
+      segment
+        .slice(1)
+        .match(/-?\d+(?:\.\d+)?/g)!
+        .map(Number),
+    )
+    const top = segments[1]
+    const bottom = segments[2]
+    const departing = segments[3]
+    for (const [px, py, tx, ty] of [
+      [top[4], top[5], top[4] - top[2], top[5] - top[3]],
+      [bottom[0], bottom[1], departing[0] - bottom[0], departing[1] - bottom[1]],
+    ]) {
+      const rx = px - 50 - x,
+        ry = py - 50 - y
+      const cosine = (rx * tx + ry * ty) / (Math.hypot(rx, ry) * Math.hypot(tx, ty))
+      assert.ok(Math.abs(cosine) < 0.002, `a tangent join at ${angle}: ${cosine}`)
+      assert.ok(rx * ty - ry * tx > 0, 'the join follows the perimeter without a cusp')
     }
   }
 })

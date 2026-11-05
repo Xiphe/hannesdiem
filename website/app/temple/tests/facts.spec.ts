@@ -155,25 +155,19 @@ for (const width of [390, 1440]) {
       height: path.getBoundingClientRect().height,
     }))
     expect(pulled.width).toBeGreaterThanOrEqual(rest.width)
-    await expect
-      .poll(() =>
-        surface.evaluate(
-          (path: SVGPathElement) =>
-            path.getAnimations().length + path.ownerSVGElement!.getAnimations().length,
-        ),
-      )
-      .toBe(0)
-    // The longer pull stops near the dot, while leaving a visible gap.
+    // At a place, the liquid surrounds the dot and stays connected to the body.
+    await free.hover()
     await expect
       .poll(async () => {
         const dot = await free.locator('..').locator('.fact-circle-dot').boundingBox()
         const outline = await surface.boundingBox()
-        return dot!.y - outline!.y - outline!.height
+        return outline!.y + outline!.height - dot!.y - dot!.height
       })
-      .toBeLessThan(15)
+      .toBeGreaterThan(5)
     const dot = (await free.locator('..').locator('.fact-circle-dot').boundingBox())!
     const outline = (await surface.boundingBox())!
-    expect(dot.y - outline.y - outline.height).toBeGreaterThan(4)
+    expect(outline.y + outline.height - dot.y - dot.height).toBeLessThan(18)
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height - 4)
     await expect(free).not.toBeChecked()
     // Only the perimeter pulls outward; the body, label and hit area stay put.
     expect(await invite.boundingBox()).toEqual(box)

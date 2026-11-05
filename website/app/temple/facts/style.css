@@ -340,11 +340,6 @@
   overflow: visible;
   fill: light-dark(var(--temple-secondary-light), #282624);
   pointer-events: none;
-  transform-origin: 50% 50%;
-  transition: rotate 480ms cubic-bezier(0.35, 0, 0.2, 1);
-}
-.fact-circle-surface path {
-  transition: d 480ms cubic-bezier(0.35, 0, 0.2, 1);
 }
 .fact-circle-invite:focus-visible {
   outline: 2px solid currentColor;

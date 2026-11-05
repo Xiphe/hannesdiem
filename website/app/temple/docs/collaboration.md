@@ -83,6 +83,33 @@ still applies to both native transitions. This uses existing browser primitives
 without another animation clock. The regression samples the rendered outline
 during hover and selected-dot changes and verifies one point reaches its target.
 
+**Honey flow and a connected outer pool — 2026-11-05.** The artist rejects
+rotation as a clock hand. The interview establishes slow, viscous attraction,
+continuous mouse input (tentative), independently responding regions, ongoing
+retraction while another region grows, and holding the stretch under a stationary
+pointer. No fixed-volume constraint; keep the text steady. The artist then asks
+to try wrapping the targeted dot in a smaller pool with a concave connection to
+the centre. This authorizes an experiment, not acceptance of its final silhouette.
+
+Replace rotation and whole-outline interpolation with independently eased pools.
+They extend from and drain back through the central body, with a slower neck and
+slightly varied response times. Near a dot, attraction draws the outer pool around
+it; between dots the pointer influences its position. A held pool has a tiny slow
+drift. Preserve the dot, native hit areas, wording and reservation flow. Returning
+to rest gathers all pools; the selected reservation retains its existing target.
+
+Reuse the CMX-hosted component and existing Remix lifecycle. The installed CMX
+primitives supply content hosting, not liquid geometry or interaction physics;
+this is local presentation, with no new content contract or framework glue.
+The rejected native path/rotation transitions cannot provide the chosen response
+as configured. Use one bounded, on-demand local frame loop, paused offscreen and
+in hidden tabs, cancelled on disposal; reduced motion uses immediate static
+geometry. The resting fallback remains a native round button. Synthetic checks
+cover actively draining older material, independent growth, complete rest,
+continuous retargeting, tangent joins, a filled outer pool and concave connected
+neck, stable controls, reduced motion, visibility/disposal and reservation flows.
+Next review: whether the wrapping, neck and honey response feel right in context.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
