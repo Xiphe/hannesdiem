@@ -103,6 +103,23 @@ The artist supplied `permission-spaces.mov` and `kennt-ihr-das.MP4` on
 Stream uploads were ready at 1080 × 1920. Their authored entries join the
 existing technical recording in `_recordings.tsx`.
 
+### Permissions recording audio repair: 2026-11-05
+
+The artist reported left-only, quiet sound. The delivered audio measured
+−41.77 LUFS with the right channel 68.68 dB below the left. Duplicate the left
+channel to both sides and normalize to −16 LUFS with a −1.5 dBTP ceiling.
+The replacement Stream video is `dd0296e50e2491fef540cdd9ce9e5439`; delivered
+audio measures −15.93 LUFS, −1.42 dBTP and identical channel levels.
+
+An additional corrected track marked as default worked in HLS, but Stream's
+desktop DASH player continued selecting the original after the cache window.
+Use the replacement with corrected primary audio rather than depending on that
+track selection. Its source copies the existing 1080p video stream and preserves
+the 178.03-second duration. Retain the old video for recovery. Only the video ID
+changes in the published CMX document, preserving the page and recording link.
+Local audio backups and the corrected master are outside the repository in
+`/workspace/temple-of-sound-media/permissions-audio-repair/`.
+
 ## Validate the first recording
 
 The artist's local agent saved the Final Cut destination `Cloudflare Stream

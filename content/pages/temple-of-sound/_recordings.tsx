@@ -23,7 +23,7 @@ export const recordings = (
         title: 'Can we briefly talk about permissions?',
         postedAt: '2026-11-04T20:00:00+01:00',
         customerCode: 'ku6r49ei7df9hym2',
-        videoId: '9feaaca6d56218ffce32ad6aec5099fb',
+        videoId: 'dd0296e50e2491fef540cdd9ce9e5439',
         aspectRatio: 9 / 16,
         children: <p>What inner and outer permission do you need to get creative?</p>,
       },
