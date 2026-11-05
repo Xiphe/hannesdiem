@@ -69,21 +69,28 @@ the browser keeps its placement helpers. `temple-share-pattern.ts` composes a
 static dark crop with those shapes and soft joins. Seed it from each document
 or document/verse identity, so patterns differ while repeated publishing stays
 stable. Section and poem cards retain the small orange wordmark above the
-large Cloud ink headline. The whole-Temple card now uses a captured opener frame
+large Cloud ink headline, with half the former visible name/title gap on practical
+cards. Poem cards center the name at the top and center each phrase line in the
+remaining reading area. The whole-Temple card uses a captured opener frame
 and a date derived from the same authored start/end values as the page.
 
 Poem metadata reuses native `PoemLine` text/face fields in `verseShares.lines`.
 `temple-share-type.ts` fits each supplied line separately like the page: Unbounded
 copy, Cinzel emphasis, and a quieter spaced address distributed across the width.
 Long introductory copy can be smaller than the 48px plain-title lower bound so
-its explicit line stays intact. The complete block still fits the same caption
-area. All four native fonts and licenses now live under `contracts/assets/temple/`.
+its explicit line stays intact. The centered poem block fits between160px and
+the575px bottom boundary, below its independently positioned wordmark. All four native fonts and licenses now live under `contracts/assets/temple/`.
 
 `openerShare` contains an imported frame and calendar start/end values. Its image
 passes through the existing CMX image loader; `temple-opener-share.ts` adds the
 formatted date at publication time. Section metadata omits this parent-only
 configuration. The committed PNG is a manual capture of the real opener canvas,
-with one pointer-triggered character glitch. Recapture with a running authored
+with an early native font transition plus its foreground glimmers. The capture
+selects a frame with visible escaped particles and lifts that real foreground
+slightly for thumbnail viewing. The compositor shifts the artwork32px upward
+and puts the date below it at550px, using the dark top-bar date ink `#403d36`
+and8px tracking. These measurements implement the artist’s layout feedback for
+review. Recapture with a running authored
 preview using `node website/app/temple/debug/capture-share-opener.mjs [URL] [PATH]`.
 Only the captured asset is needed for content-only publication, not a browser or
 website implementation. Its date is never baked into the frame.

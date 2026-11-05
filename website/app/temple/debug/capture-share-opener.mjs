@@ -15,14 +15,41 @@ try {
   })
   await page.goto(url)
   await page.locator('.temple-opening[data-ready]').waitFor({ timeout: 20000 })
+  // Let actual forest particles escape through the type before capturing them.
+  await page.waitForTimeout(1500)
+  // Freeze an early scroll transition with another native face already entering.
+  await page.evaluate(() => window.scrollTo(0, 16))
   await page.mouse.move(850, 430)
-  await page.waitForTimeout(100)
-  const data = await page
-    .locator('.temple-stage > canvas')
-    .evaluate((canvas) => canvas.toDataURL('image/png'))
+  await page.waitForTimeout(200)
+  let best = { score: -1, data: '' }
+  for (let sample = 0; sample < 24; sample++) {
+    await page.waitForTimeout(150)
+    const candidate = await page.evaluate(() => {
+      const title = document.querySelector('.temple-stage > canvas')
+      const foreground = document.querySelector('.temple-escapes')
+      const frame = document.createElement('canvas')
+      frame.width = 1200
+      frame.height = 630
+      const ink = frame.getContext('2d')
+      ink.drawImage(title, 0, 0, frame.width, frame.height)
+      ink.globalCompositeOperation = 'screen'
+      // Lift the real foreground lights a little for a small messaging preview.
+      ink.drawImage(foreground, 0, 0, frame.width, frame.height)
+      ink.drawImage(foreground, 0, 0, frame.width, frame.height)
+      const light = foreground
+        .getContext('2d')
+        .getImageData(0, 0, foreground.width, foreground.height).data
+      const letters = title.getContext('2d').getImageData(0, 0, title.width, title.height).data
+      let score = 0
+      for (let pixel = 3; pixel < light.length; pixel += 4)
+        if (letters[pixel] < 20 && light[pixel] > 30) score += light[pixel]
+      return { score, data: frame.toDataURL('image/png') }
+    })
+    if (candidate.score > best.score) best = candidate
+  }
   await mkdir(dirname(output), { recursive: true })
-  await writeFile(output, Buffer.from(data.split(',')[1], 'base64'))
-  console.log(output)
+  await writeFile(output, Buffer.from(best.data.split(',')[1], 'base64'))
+  console.log(output, `(foreground selection score: ${best.score})`)
 } finally {
   await browser.close()
 }

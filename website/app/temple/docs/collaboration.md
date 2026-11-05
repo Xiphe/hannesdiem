@@ -324,6 +324,24 @@ live opener unchanged. Shared font files and licenses move under contracts for
 both halves of the repository split. The ten-card gallery is refreshed for
 review. Local implementation only; no deployment requested.
 
+**Main-card atmosphere and centered poem cards — 2026-11-05.** The artist
+asks for a main-card frame with other fonts already glitching in and glimmers
+outside the letters. Capture an early native scroll transition, including the
+actual foreground particle canvas. Select a moment with visible escaped lights;
+lift that captured foreground slightly for the small share format. Keep the live
+page unchanged. Shift the captured logo upward32px and place the date below it
+at550px with8px tracking and the dark top-bar date ink `#403d36`; the numerical
+measurements are concrete implementation choices for review.
+
+Poem cards put “Temple of Sound” centered at the top and center their phrase
+lines beneath it. Keep each native face and explicit line break. The artist
+adds the comma after “accepted,” and supplies the new first line “im devoting
+this to you and to the”; preserve its exact casing and spelling in share text.
+The practical cards keep the established lower-left layout but halve the actual
+visible name/title gap, including the title font’s leading, rather than only
+halving a spacing token. Other post-card spacing remains unchanged. Local
+implementation and review; no deployment requested.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to

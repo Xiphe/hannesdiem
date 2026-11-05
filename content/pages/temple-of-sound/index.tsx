@@ -43,16 +43,16 @@ export const metadata = {
       lines: [{ text: 'I will not let my' }, { text: 'love be dimmed.', face: 'cinzel' }],
     },
     'i stay': {
-      title: 'I have trusted and accepted waited patiently...',
+      title: 'I have trusted and accepted, waited patiently...',
       lines: [
-        { text: 'I have trusted and accepted' },
+        { text: 'I have trusted and accepted,' },
         { text: 'waited patiently...', face: 'cinzel' },
       ],
     },
     'i devote': {
-      title: "I'm devoting these two months to you, to the tension and resonance",
+      title: 'im devoting this to you and to the tension and resonance',
       lines: [
-        { text: "I'm devoting these two months to you, to the" },
+        { text: 'im devoting this to you and to the' },
         { text: 'tension and resonance', face: 'cinzel' },
       ],
     },

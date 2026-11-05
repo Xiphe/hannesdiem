@@ -98,14 +98,19 @@ export async function renderTempleShareImage(input: {
   backgroundColor?: string
   /** The whole-Temple card needs its name once, as the main title. */
   showWordmark?: boolean
+  /** Scale the visible gap between the name and title glyphs. */
+  wordmarkGapScale?: number
 }) {
   if (!input.title.trim()) throw new Error('Temple share cards require a nonempty title')
   const { width, height, left, bottom, captionTop, gap, nameSize, bottomOpacity } = templeCard
   const name = await textMask('Temple of Sound', nameSize, true)
   const showWordmark = input.showWordmark !== false
+  const poem = input.lines !== undefined
   const nameHeight = showWordmark ? Math.max(Math.ceil(nameSize * 1.15), name.info.height) : 0
   const nameGap = showWordmark ? gap : 0
-  const available = height - bottom - captionTop - nameHeight - nameGap
+  const available = poem
+    ? height - bottom - 160
+    : height - bottom - captionTop - nameHeight - nameGap
   let fitted: Awaited<ReturnType<typeof measureTitle>> | undefined
   let size = templeCard.maxTitleSize as number
   let titleText = input.lines?.map((line) => line.text).join('\n') ?? input.title
@@ -152,8 +157,15 @@ export async function renderTempleShareImage(input: {
     fitted = await measureTitle(titleText, size)
   }
   const titleHeight = fitted.height
-  const titleTop = height - bottom - titleHeight
-  const nameTop = titleTop - nameGap - nameHeight
+  const titleTop = poem
+    ? Math.round(160 + (available - titleHeight) / 2)
+    : height - bottom - titleHeight
+  const visibleGap = (titleHeight - fitted.info.height + nameGap) * (input.wordmarkGapScale ?? 1)
+  const nameTop = poem
+    ? 48
+    : Math.round(titleTop + titleHeight - fitted.info.height - visibleGap - nameHeight)
+  const nameLeft = poem ? Math.round((width - name.info.width) / 2) : left
+  const titleLeft = poem ? Math.round((width - titleWidth) / 2) : left
   const background = await (
     input.background
       ? sharp(input.background).rotate().resize(width, height, { fit: 'cover' })
@@ -176,6 +188,7 @@ export async function renderTempleShareImage(input: {
       top: nameTop,
       height: nameHeight,
       width: name.info.width,
+      left: nameLeft,
       light: luminance(rgb(nameColor)),
       contrast: 3,
     },
@@ -183,12 +196,13 @@ export async function renderTempleShareImage(input: {
       top: titleTop,
       height: titleHeight,
       width: fitted.info.width,
+      left: titleLeft,
       light: titleLuminance,
       contrast: 4.5,
     },
   ]) {
     for (let y = Math.floor(box.top); y < box.top + box.height; y += 8) {
-      for (let x = left; x < left + box.width; x += 8) {
+      for (let x = box.left; x < box.left + box.width; x += 8) {
         const offset = (Math.min(height - 1, y) * width + x) * 3
         const alpha = requiredOpacity(
           [...background.subarray(offset, offset + 3)],
@@ -212,18 +226,20 @@ export async function renderTempleShareImage(input: {
   const nameMask = await sharp({ create: { width, height, channels: 4, background: '#0000' } })
     .composite(
       showWordmark
-        ? [{ input: name.data, left, top: nameTop + nameHeight - name.info.height }]
+        ? [{ input: name.data, left: nameLeft, top: nameTop + nameHeight - name.info.height }]
         : [],
     )
     .png()
     .toBuffer()
   const titleMask = await sharp({ create: { width, height, channels: 4, background: '#0000' } })
-    .composite([{ input: fitted.data, left, top: titleTop + titleHeight - fitted.info.height }])
+    .composite([
+      { input: fitted.data, left: titleLeft, top: titleTop + titleHeight - fitted.info.height },
+    ])
     .png()
     .toBuffer()
   // Match the accepted opaque warm/cool text field, now in the final glyph mask.
   const cloud = svg(
-    `<defs><radialGradient id="warm"><stop stop-color="${warm}"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient><radialGradient id="cool"><stop stop-color="${cool}"/><stop offset="1" stop-color="${cool}" stop-opacity="0"/></radialGradient></defs><path d="M0 0h${width}v${height}H0z" fill="${ink}"/><ellipse cx="${left + fitted.info.width * 0.85}" cy="${titleTop + titleHeight * 0.8}" rx="${fitted.info.width * 0.8}" ry="${titleHeight * 0.95}" fill="url(#cool)"/><ellipse cx="${left + fitted.info.width * 0.1}" cy="${titleTop + titleHeight * 0.15}" rx="${fitted.info.width * 0.85}" ry="${titleHeight}" fill="url(#warm)"/>`,
+    `<defs><radialGradient id="warm"><stop stop-color="${warm}"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient><radialGradient id="cool"><stop stop-color="${cool}"/><stop offset="1" stop-color="${cool}" stop-opacity="0"/></radialGradient></defs><path d="M0 0h${width}v${height}H0z" fill="${ink}"/><ellipse cx="${titleLeft + fitted.info.width * 0.85}" cy="${titleTop + titleHeight * 0.8}" rx="${fitted.info.width * 0.8}" ry="${titleHeight * 0.95}" fill="url(#cool)"/><ellipse cx="${titleLeft + fitted.info.width * 0.1}" cy="${titleTop + titleHeight * 0.15}" rx="${fitted.info.width * 0.85}" ry="${titleHeight}" fill="url(#warm)"/>`,
   )
   const coloredTitle = await sharp(cloud)
     .composite([{ input: titleMask, blend: 'dest-in' }])

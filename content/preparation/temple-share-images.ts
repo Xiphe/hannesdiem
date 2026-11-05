@@ -26,10 +26,11 @@ export async function prepareTempleShareImages(
       seed?: string
       showWordmark?: boolean
       lines?: readonly ShareLine[]
+      wordmarkGapScale?: number
     } = {},
   ) {
-    const { src, seed, showWordmark = true, lines } = options
-    const key = JSON.stringify({ title, src, seed, showWordmark, lines })
+    const { src, seed, showWordmark = true, lines, wordmarkGapScale } = options
+    const key = JSON.stringify({ title, src, seed, showWordmark, lines, wordmarkGapScale })
     let card = cards.get(key)
     if (!card) {
       card = (async () => {
@@ -38,6 +39,7 @@ export async function prepareTempleShareImages(
           lines,
           background: src ? await source(src) : seed ? templeSharePattern(seed) : undefined,
           showWordmark,
+          wordmarkGapScale,
         })
         const digest = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
         const url = await storeMedia(storage, `og/temple-${digest}.jpg`, bytes, 'image/jpeg')
@@ -162,7 +164,12 @@ export async function prepareTempleShareImages(
           metadata: {
             ...metadata,
             ogImage:
-              ogImage ?? (await cardFor(title, { seed: key, showWordmark: !metadata.verseShares })),
+              ogImage ??
+              (await cardFor(title, {
+                seed: key,
+                showWordmark: !metadata.verseShares,
+                wordmarkGapScale: 0.5,
+              })),
             ...(verseShares ? { verseShares } : {}),
           },
         },

@@ -98,7 +98,8 @@ test('poem cards retain explicit lines and fit each native typeface independentl
   assert.equal(card.layout.titleLines, 2)
   assert.equal(card.layout.titleTruncated, false)
   assert.ok(card.layout.titleLineSizes[1] > card.layout.titleLineSizes[0])
-  assert.ok(card.layout.captionTop >= templeCard.captionTop)
+  assert.ok(card.layout.titleTop >= 160)
+  assert.ok(card.layout.titleTop + card.layout.titleHeight <= templeCard.height - templeCard.bottom)
   await renderTempleShareImage({
     title: 'Synthetic typography',
     lines: [
@@ -106,6 +107,17 @@ test('poem cards retain explicit lines and fit each native typeface independentl
       { text: 'Synthetic bold', face: 'germania' },
     ],
   })
+})
+
+test('a half-size visible wordmark gap renders without shifting the main title', async () => {
+  const standard = await renderTempleShareImage({ title: 'Synthetic compact heading' })
+  const compact = await renderTempleShareImage({
+    title: 'Synthetic compact heading',
+    wordmarkGapScale: 0.5,
+  })
+  assert.equal(compact.layout.titleTop, standard.layout.titleTop)
+  assert.equal(compact.layout.titleSize, standard.layout.titleSize)
+  assert.ok(compact.layout.captionTop > standard.layout.captionTop)
 })
 
 test('opener cards compose a supplied frame with the authored calendar range', async () => {

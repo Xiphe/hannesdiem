@@ -54,7 +54,7 @@ export async function measurePoemShareTitle(
     masks.reduce((height, mask) => height + mask.info.height, 0) + gap * (masks.length - 1)
   let top = 0
   const layers = masks.map((mask) => {
-    const layer = { input: mask.data, left: 0, top }
+    const layer = { input: mask.data, left: Math.round((width - mask.info.width) / 2), top }
     top += mask.info.height + gap
     return layer
   })
