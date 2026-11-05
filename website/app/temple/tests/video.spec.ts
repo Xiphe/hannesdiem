@@ -166,7 +166,7 @@ test('recordings and their rich-text descriptions work without site JavaScript',
 })
 
 for (const width of [390, 900, 1440]) {
-  test(`recordings scroll horizontally from the newest video at ${width}px`, async ({ page }) => {
+  test(`recordings snap to the center and align their tops at ${width}px`, async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     await page.setViewportSize({ width, height: 900 })
@@ -180,58 +180,64 @@ for (const width of [390, 900, 1440]) {
       'Synthetic oldest',
     ])
     await expect(feed.locator('strong')).toHaveText(['independent', 'independent', 'independent'])
-    expect(await feed.evaluate((node) => node.scrollLeft)).toBe(0)
     const geometry = await feed.evaluate((node) => ({
       height: node.clientHeight,
       contentHeight: node.scrollHeight,
       width: node.clientWidth,
-      contentWidth: node.scrollWidth,
-      latestRight: node.querySelector('.temple-video')!.getBoundingClientRect().right,
-      oldestLeft: node.querySelectorAll('.temple-video')[2].getBoundingClientRect().left,
-      cardWidth: node.querySelector('.temple-video')!.getBoundingClientRect().width,
-      left: node.getBoundingClientRect().left,
-      right: node.getBoundingClientRect().right,
-      visibleCards: [...node.querySelectorAll('.temple-video')].filter((card) => {
-        const bounds = card.getBoundingClientRect()
-        const feed = node.getBoundingClientRect()
-        return bounds.left >= feed.left - 1 && bounds.right <= feed.right + 1
-      }).length,
-      snap: getComputedStyle(node).scrollSnapType,
+      cards: [...node.querySelectorAll('.temple-video')].map((card) =>
+        card.getBoundingClientRect().toJSON(),
+      ),
+      players: [...node.querySelectorAll('.temple-video-player')].map(
+        (player) => player.getBoundingClientRect().top,
+      ),
       actionAfter: node.nextElementSibling?.classList.contains('fact-followup-action'),
     }))
-    expect(geometry.contentHeight).toBeLessThanOrEqual(geometry.height)
-    expect(geometry.contentWidth).toBeGreaterThanOrEqual(geometry.width)
-    expect(geometry.width).toBe(width)
     expect(geometry.height).toBe(900)
-    expect(geometry.visibleCards).toBe(width === 390 ? 1 : width === 900 ? 2 : 3)
-    expect(geometry.snap).toBe('x mandatory')
+    expect(geometry.width).toBe(width)
+    expect(geometry.contentHeight).toBeLessThanOrEqual(geometry.height)
     expect(geometry.actionAfter).toBe(true)
+    expect(Math.max(...geometry.players) - Math.min(...geometry.players)).toBeLessThan(1)
+    const fits = geometry.cards.reduce((sum, card) => sum + card.width, 0) <= width
+    const initialCenter = fits
+      ? (geometry.cards[0].right + geometry.cards[2].left) / 2
+      : geometry.cards[0].x + geometry.cards[0].width / 2
+    expect(Math.abs(initialCenter - width / 2)).toBeLessThan(1)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    const overflow = geometry.contentWidth - geometry.width
-    if (overflow > 0) {
-      expect(geometry.latestRight).toBeCloseTo(geometry.right, 0)
-      await feed.focus()
-      await page.keyboard.press('ArrowLeft')
+    const centered = async (entry: string) => {
       await expect
-        .poll(() => feed.evaluate((node) => node.scrollLeft))
-        .toBeLessThan(-Math.min(geometry.cardWidth, overflow) + 1)
+        .poll(async () => {
+          const box = (await feed
+            .getByRole('region', { name: `Synthetic ${entry}` })
+            .boundingBox())!
+          return Math.abs(box.x + box.width / 2 - width / 2)
+        })
+        .toBeLessThan(1)
+    }
+    await feed.focus()
+    if (fits) {
       await expect(
         feed.frameLocator('iframe').nth(1).getByRole('button', { name: 'Play fixture' }),
       ).toBeVisible()
       await feed.hover()
-      await page.mouse.wheel(-width, 0)
-      await expect.poll(() => feed.evaluate((node) => node.scrollLeft)).toBeLessThan(-overflow + 1)
+      await page.mouse.wheel(-geometry.cards[0].width * 0.7, 0)
     } else {
-      expect(geometry.oldestLeft - geometry.left).toBeGreaterThan(0)
-      expect(geometry.oldestLeft - geometry.left).toBeCloseTo(
-        geometry.right - geometry.latestRight,
-        0,
-      )
+      await page.keyboard.press('ArrowLeft')
     }
-    // A fresh visit starts at the newest entry again.
-    await page.reload()
-    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    expect(await feed.evaluate((node) => node.scrollLeft)).toBe(0)
+    await centered(fits ? 'oldest' : 'middle')
+    await expect(
+      feed
+        .frameLocator('iframe')
+        .nth(fits ? 2 : 1)
+        .getByRole('button', { name: 'Play fixture' }),
+    ).toBeVisible()
+    await feed.hover()
+    await page.mouse.wheel(-width, 0)
+    await centered('oldest')
+    await page.keyboard.press('ArrowRight')
+    await centered('middle')
+    await page.keyboard.press('ArrowRight')
+    await centered('latest')
+    await expect(page).toHaveURL('/temple-recordings')
     expect(errors).toEqual([])
   })
 

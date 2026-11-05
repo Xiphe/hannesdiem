@@ -13,6 +13,7 @@ import { mountNavigationPosition } from './top-navigation-position.ts'
 import { mountNavigationScroll } from './top-navigation-scroll.ts'
 import { mountNavigationProgress } from './top-navigation-progress.ts'
 import { mountRecordingTitles } from './video-title.ts'
+import { mountRecordingScroll } from './video-scroll.ts'
 import { LocalDate } from '../date.tsx'
 
 export function Opening(handle: Handle<OpeningProps>) {
@@ -21,6 +22,7 @@ export function Opening(handle: Handle<OpeningProps>) {
     if (!root || signal.aborted) return
     const host = root
     mountRecordingTitles(host, signal)
+    mountRecordingScroll(host, signal)
     mountNavigationPosition(host, signal)
     mountNavigationProgress(host, signal)
     mountNavigationScroll(host, signal)

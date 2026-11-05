@@ -11,8 +11,11 @@ videos whenever they fit: size each card to its height-fitted player and caption
 capped at the viewport width, so wider screens show neighboring recordings.
 When the complete collection fits, center it horizontally; overflowing collections
 still start at the newest recording on the right.
-While a recording permalink is active, reserve scroll room at both ends and
-center the selected recording, including the oldest and newest entries.
+The artist then asks to snap every recording to the horizontal center, including
+without a permalink, and to align the videos at their top edges. Keep end room
+available at all times so both edge recordings can center. When the collection
+fits, initially center the group; user scrolling activates individual center
+snapping. Permalinks always center their selected recording.
 This supersedes the one-card-per-viewport layout, interim edge peek and compact
 scroller. Keep the
 accepted player, title overlay, date and description treatment. Watch's `after`

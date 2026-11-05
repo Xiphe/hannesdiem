@@ -89,9 +89,13 @@ spare horizontal space; safe alignment keeps overflowing collections at the
 rightmost starting position. Older title permalinks still
 address their individual recordings. Keyboard, wheel and touch scrolling use
 browser behavior. Watch's signup remains after the complete collection.
-An active recording permalink reserves room at both ends of the collection so
-even edge recordings can center horizontally. Native scroll margins handle hash
-links; the existing post-layout arrival also requests inline centering.
+End room on both sides lets every recording snap to the horizontal center,
+including the edge recordings without a permalink. Videos align at their top
+edges, independently of caption length. `video-scroll.ts` initially centers a
+fitting group without forcing an individual snap; user scrolling activates
+native center snapping. Its resize observer and input listeners stop when the
+Opening island is disposed. Native scroll margins handle hash links; the
+existing post-layout arrival also requests inline centering.
 Printing stacks the collection vertically.
 
 The artist supplied `permission-spaces.mov` and `kennt-ihr-das.MP4` on
