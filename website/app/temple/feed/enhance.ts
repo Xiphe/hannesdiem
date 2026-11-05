@@ -24,6 +24,29 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   const peaks = new Map<string, readonly number[]>()
   let waveformTask: AbortController | undefined
   const options = { signal }
+  const fullscreenAvailable =
+    document.fullscreenEnabled && typeof root.requestFullscreen === 'function'
+  root.toggleAttribute('data-fullscreen-available', fullscreenAvailable)
+  const reflectFullscreen = () => {
+    const fullscreen = document.fullscreenElement === root
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-fullscreen]')) {
+      button.hidden = !fullscreenAvailable
+      button.setAttribute('aria-label', fullscreen ? 'Exit fullscreen' : 'Enter fullscreen')
+      button.setAttribute('aria-pressed', String(fullscreen))
+      button.querySelector<HTMLElement>('[data-fullscreen-enter]')!.hidden = fullscreen
+      button.querySelector<HTMLElement>('[data-fullscreen-exit]')!.hidden = !fullscreen
+    }
+  }
+  reflectFullscreen()
+  document.addEventListener('fullscreenchange', reflectFullscreen, options)
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement === root) await document.exitFullscreen()
+      else await root.requestFullscreen()
+    } catch {
+      reflectFullscreen()
+    }
+  }
   const post = () => props.posts[index]
   const controls = mountFeedControls(root, video, signal, (input, event, startY) => {
     drawer.startFromScrubber(input, event, startY)
@@ -269,6 +292,8 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
         void play()
       } else if (target.closest('[data-next]')) {
         advance()
+      } else if (target.closest('[data-fullscreen]')) {
+        void toggleFullscreen()
       } else if (target.closest('[data-share]')) {
         void share()
       }
@@ -320,6 +345,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
           pause()
         }
       } else if (event.key === 'Escape') {
+        if (document.fullscreenElement === root) return
         event.preventDefault()
         if (!video.paused) {
           pause()

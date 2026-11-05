@@ -14,7 +14,17 @@ export interface FeedProps {
 
 export function FeedIcon(
   handle: Handle<{
-    name: 'back' | 'share' | 'play' | 'pause' | 'sound' | 'muted' | 'replay' | 'next'
+    name:
+      | 'back'
+      | 'share'
+      | 'play'
+      | 'pause'
+      | 'sound'
+      | 'muted'
+      | 'replay'
+      | 'next'
+      | 'fullscreen'
+      | 'exit-fullscreen'
   }>,
 ) {
   return () => (
@@ -33,6 +43,10 @@ export function FeedIcon(
         <>
           <path d="M12 15V3m-4 4 4-4 4 4M5 12v8h14v-8" />
         </>
+      ) : handle.props.name === 'fullscreen' ? (
+        <path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5" />
+      ) : handle.props.name === 'exit-fullscreen' ? (
+        <path d="M3 8h5V3m8 0v5h5M8 21v-5H3m18 0h-5v5" />
       ) : handle.props.name === 'play' ? (
         <path
           d="m9 5 11 7-11 7Z"
@@ -187,14 +201,34 @@ export function Feed(handle: Handle<FeedProps>) {
             >
               {post.title}
             </h2>
-            <button
-              type="button"
-              class="feed-control"
-              data-share
-              aria-label={`Share ${post.title}`}
-            >
-              <FeedIcon name="share" />
-            </button>
+            <div class="feed-corner-actions">
+              <button
+                type="button"
+                class="feed-control"
+                data-fullscreen
+                aria-label="Enter fullscreen"
+                aria-pressed="false"
+                hidden
+              >
+                <span data-fullscreen-enter>
+                  <FeedIcon name="fullscreen" />
+                </span>
+                <span
+                  data-fullscreen-exit
+                  hidden
+                >
+                  <FeedIcon name="exit-fullscreen" />
+                </span>
+              </button>
+              <button
+                type="button"
+                class="feed-control"
+                data-share
+                aria-label={`Share ${post.title}`}
+              >
+                <FeedIcon name="share" />
+              </button>
+            </div>
           </div>
           {post.kind === 'video' && (
             <div

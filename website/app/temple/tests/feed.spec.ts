@@ -448,6 +448,52 @@ for (const viewport of [
   })
 }
 
+test('fullscreen sits left of Share and reflects toggle and browser exits', async ({ page }) => {
+  await arrive(page, 'latest')
+  test.skip(
+    !(await page.evaluate(() => document.fullscreenEnabled)),
+    'Element fullscreen is unavailable',
+  )
+  const item = post(page, 'latest')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  const toggle = item.locator('[data-fullscreen]')
+  await expect(toggle).toHaveAttribute('aria-label', 'Enter fullscreen')
+  const button = (await toggle.boundingBox())!
+  const share = (await item.locator('[data-share]').boundingBox())!
+  expect(button.x + button.width).toBeLessThan(share.x)
+  expect(button.y).toBeCloseTo(share.y)
+  await toggle.click()
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.className))
+    .toBe('temple-feed')
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await expect(toggle).toHaveAttribute('aria-label', 'Exit fullscreen')
+  await expect(toggle.locator('[data-fullscreen-exit]')).toBeVisible()
+  await expect(item).toHaveAttribute('data-playing', '')
+  await toggle.click()
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true)
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  await toggle.click()
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement !== null)).toBe(true)
+  await page.evaluate(() => document.exitFullscreen())
+  await expect(toggle).toHaveAttribute('aria-label', 'Enter fullscreen')
+  await expect(toggle.locator('[data-fullscreen-enter]')).toBeVisible()
+  await expect(page).toHaveURL(path('latest'))
+})
+
+test('browsers without element fullscreen keep the control hidden', async ({ page }) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(document, 'fullscreenEnabled', { value: false }),
+  )
+  await arrive(page, 'latest')
+  const item = post(page, 'latest')
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  await expect(item.locator('[data-fullscreen]')).not.toBeVisible()
+  await expect(item.locator('[data-share]')).toBeVisible()
+  await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-fullscreen-available', '')
+})
+
 test('cursor movement reveals UI in one second and fades it over three after four inactive seconds', async ({
   page,
 }) => {

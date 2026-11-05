@@ -229,9 +229,9 @@
   z-index: 5;
   inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto
     max(12px, env(safe-area-inset-left));
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: start;
   gap: 12px;
   opacity: 0;
   visibility: hidden;
@@ -239,6 +239,17 @@
   transition:
     opacity 3s ease,
     visibility 0s linear 3s;
+}
+.temple-feed[data-fullscreen-available] .feed-corners {
+  grid-template-columns: 96px minmax(0, 1fr) 96px;
+}
+.feed-corners > [data-back] {
+  justify-self: start;
+}
+.feed-corner-actions {
+  display: flex;
+  gap: 8px;
+  justify-self: end;
 }
 .feed-corners::before {
   content: '';
