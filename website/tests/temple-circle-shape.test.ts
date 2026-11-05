@@ -2,7 +2,29 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { circleSurface } from '../app/temple/facts/circle-shape.ts'
 
-test('button outline follows its boundary without little backward folds at corners', () => {
+test('the invitation rests on a circular perimeter', () => {
+  const numbers = circleSurface()
+    .match(/-?\d+(?:\.\d+)?/g)!
+    .map(Number)
+  let start = numbers.slice(0, 2)
+  for (let i = 2; i < numbers.length; i += 6) {
+    const end = numbers.slice(i + 4, i + 6)
+    for (let step = 0; step <= 20; step++) {
+      const t = step / 20
+      const point = [0, 1].map(
+        (axis) =>
+          (1 - t) ** 3 * start[axis] +
+          3 * (1 - t) ** 2 * t * numbers[i + axis] +
+          3 * (1 - t) * t ** 2 * numbers[i + 2 + axis] +
+          t ** 3 * end[axis],
+      )
+      assert.ok(Math.abs(Math.hypot(point[0] - 50, point[1] - 50) - 50) < 0.1)
+    }
+    start = end
+  }
+})
+
+test('the pointing invitation has no backward folds along its boundary', () => {
   const poses = [
     [0, 0],
     [-104.7, -34],
@@ -44,7 +66,7 @@ test('button outline follows its boundary without little backward folds at corne
   }
 })
 
-test('a sideways pull does not raise an extra shoulder above the flat button edge', () => {
+test('a sideways pull does not raise an extra shoulder above the circle', () => {
   // The target tip is within the body's vertical range, so this pose should
   // turn toward it without creating an unrelated bump above the top edge.
   const numbers = circleSurface(-104.7, -34)

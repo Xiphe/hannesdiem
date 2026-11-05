@@ -1,39 +1,18 @@
-/** A rounded button with a small, local pull in its perimeter. */
+/** A circular invitation with a small, local pull in its perimeter. */
 export function circleSurface(dx = 0, dy = 0, clearance = 24) {
-  const width = 122
-  const height = 64
-  const radius = 8
+  const width = 100
+  const height = 100
+  const radius = 50
   const length = Math.hypot(dx, dy)
   const ux = length ? dx / length : 0
   const uy = length ? dy / length : 0
-  let reach = length ? Math.min(width / 2 / Math.abs(ux), height / 2 / Math.abs(uy)) : 0
-  // Intersect the actual rounded corner, rather than the enclosing rectangle.
-  let inside = 0
-  let outside = reach
-  for (let i = 0; i < 20 && length; i++) {
-    const distance = (inside + outside) / 2
-    const x = Math.max(0, Math.abs(ux * distance) - (width / 2 - radius))
-    const y = Math.max(0, Math.abs(uy * distance) - (height / 2 - radius))
-    if (Math.hypot(x, y) <= radius) inside = distance
-    else outside = distance
-  }
-  if (length) reach = inside
+  const reach = length ? radius : 0
   const tipX = width / 2 + ux * reach
   const tipY = height / 2 + uy * reach
-  const points: [number, number][] = []
-  const edges = [
-    [radius, 0, width - radius, 0, width - radius, radius, -Math.PI / 2],
-    [width, radius, width, height - radius, width - radius, height - radius, 0],
-    [width - radius, height, radius, height, radius, height - radius, Math.PI / 2],
-    [0, height - radius, 0, radius, radius, radius, Math.PI],
-  ]
-  for (const [x1, y1, x2, y2, cx, cy, angle] of edges) {
-    for (let i = 0; i < 8; i++) points.push([x1 + ((x2 - x1) * i) / 8, y1 + ((y2 - y1) * i) / 8])
-    for (let i = 0; i < 8; i++) {
-      const a = angle + ((i / 8) * Math.PI) / 2
-      points.push([cx + Math.cos(a) * radius, cy + Math.sin(a) * radius])
-    }
-  }
+  const points: [number, number][] = Array.from({ length: 64 }, (_, i) => {
+    const angle = -Math.PI / 2 + (i * Math.PI) / 32
+    return [radius + Math.cos(angle) * radius, radius + Math.sin(angle) * radius]
+  })
   let apex = -1
   if (length) {
     apex = points.reduce(

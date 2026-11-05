@@ -27,6 +27,16 @@ fact-only stacking rule misses it. Raise that outer action while its floating
 panel is open; preserve the existing closed layout and header order. Synthetic
 phone/desktop overlap hit tests fail before and pass after the correction.
 
+**Take your place in the circle — 2026-11-05.** The artist requests a circular
+central invitation and wording that suggests the place already belongs to the
+visitor, who needs only to take it. Use “Take your place” for the invitation and
+its signup/confirmation action, replacing “Claim your spot”. Preserve the ten
+surrounding places, selection, ownership states and reservation flow. Give the
+central surface and hit area a round resting shape while retaining its local
+pull toward available places, rounded tip and reduced-motion behavior. The
+actual SVG viewBox supplies pointer coordinates so the circular surface stays
+aligned at responsive sizes. Local review only.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

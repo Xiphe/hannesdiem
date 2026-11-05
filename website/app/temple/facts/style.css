@@ -310,13 +310,14 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 122px;
-  height: 64px;
+  width: 112px;
+  height: 112px;
   padding: 0;
   border: 0;
   background: none;
   color: inherit;
   cursor: pointer;
+  border-radius: 50%;
 }
 .fact-circle-prompt {
   position: absolute;
@@ -346,7 +347,7 @@
 .fact-circle-invite:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 6px;
-  border-radius: 6px;
+  border-radius: 50%;
 }
 .fact-circle-place {
   position: absolute;
@@ -429,9 +430,6 @@
     flex-shrink: 0;
     margin-top: 0;
     align-self: center;
-  }
-  .fact-circle-invite {
-    width: 112px;
   }
 }
 

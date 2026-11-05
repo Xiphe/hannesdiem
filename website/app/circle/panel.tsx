@@ -170,7 +170,7 @@ export function CircleFields({
                   }
                 >
                   {pending && LoadingSpinner()}
-                  {full ? 'Join the waiting list' : 'Claim your spot'}
+                  {full ? 'Join the waiting list' : 'Take your place'}
                 </button>
               )}
               {state.own && (
@@ -249,7 +249,7 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
       >
         <PiecePanel
           id="temple-circle-signup"
-          label={handle.props.moving ? 'change seat?' : 'Claim your spot'}
+          label={handle.props.moving ? 'change seat?' : 'Take your place'}
           close={handle.props.close}
         >
           {CircleFields({

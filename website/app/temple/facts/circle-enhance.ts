@@ -64,8 +64,9 @@ export function mountCircle(
     const centre = invite.getBoundingClientRect()
     const dx = box.x + box.width / 2 - (centre.x + centre.width / 2)
     const dy = box.y + box.height / 2 - (centre.y + centre.height / 2)
-    const localX = (dx * 122) / centre.width
-    const localY = (dy * 64) / centre.height
+    const view = surface.ownerSVGElement!.viewBox.baseVal
+    const localX = (dx * view.width) / centre.width
+    const localY = (dy * view.height) / centre.height
     const scale = Math.hypot(localX, localY) / Math.hypot(dx, dy)
     shape(circleSurface(localX, localY, 24 * scale))
     root.dataset.pointing = ''

@@ -287,7 +287,7 @@ export default function Content({
             afterPair: 3,
             layout: 'share',
             images: [circlePhoto],
-            circle: { places: 10, label: 'Claim your spot', reservation: 'temple-circle' },
+            circle: { places: 10, label: 'Take your place', reservation: 'temple-circle' },
             heading: "A recurring gathering to co-regulate what's moving us",
             paragraphs: [
               'We hold an online circle every Thursday 19:00',

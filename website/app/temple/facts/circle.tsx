@@ -173,7 +173,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
             >
               <svg
                 class="fact-circle-surface"
-                viewBox="0 0 122 64"
+                viewBox="0 0 100 100"
                 preserveAspectRatio="none"
                 aria-hidden="true"
               >

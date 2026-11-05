@@ -133,16 +133,17 @@ for (const width of [390, 1440]) {
       width: path.getBBox().width,
       height: path.getBBox().height,
     }))
+    expect(rest.width).toBeCloseTo(rest.height, 1)
     // A dot activates the effect directly, without visiting the centre first.
     await free.hover()
     await expect(circle).toHaveAttribute('data-pointing', '')
     await expect(circle).toHaveAttribute('data-target', '6')
     await held.hover()
     await expect(circle).not.toHaveAttribute('data-pointing')
-    await invite.hover({ position: { x: 4, y: 4 } })
+    const box = (await invite.boundingBox())!
+    await invite.hover({ position: { x: box.width / 2, y: 4 } })
     await expect(circle).toHaveAttribute('data-pointing', '')
     await expect(circle).not.toHaveAttribute('data-target', '10')
-    const box = (await invite.boundingBox())!
     await page.mouse.move(box.x + box.width / 2, box.y + box.height - 4)
     await expect(circle).toHaveAttribute('data-target', '6')
     await expect(circle.locator('.fact-circle-prompt')).toHaveCSS('opacity', '1')
