@@ -38,9 +38,11 @@ There is no inside index or feed index.
 ## Rendering
 
 Poem: opener, artist-supplied welcome with “Enter the Temple of Sound”, continuous
-poem and closing “Enter”. Header fades in when the welcome action reaches its
-centered header position. It contains only “Enter the Temple of Sound” centered
-plus the site-menu logo; no wordmark/date. The closing action fades in beneath
+poem and closing “Enter”. Header background and menu logo fade in when the welcome
+action reaches its centered header position. The welcome action disappears
+immediately and its header replacement appears at full opacity, avoiding duplicate
+button images. It contains only “Enter the Temple of Sound” centered plus the
+site-menu logo; no wordmark/date. The closing action fades in beneath
 the held final phrase, centered in the space between its ink and the viewport
 bottom. The artist defers button artwork to a separate exploration.
 
@@ -81,3 +83,19 @@ The entry-only staged snapshot builds and typechecks with `content/` absent.
 All 39 selected browser checks (entry, memory, navigation, scrubber and opener)
 and both entry-memory helper checks pass. The combined workspace also passed
 the same 39 browser checks before the welcome-spacing refinement.
+
+## Shared cursor investigation — 2026-11-05
+
+The artist still sees cursor changes in Chrome and Helium on macOS while moving
+across the wordmark, main nav and other screen areas; also reported on feed
+scrubbers. Entry owns this broader investigation. The feed chat previously
+reproduced cursor changes only when a drag left the track and controls moved
+during panel activation; its pointer capture and drag-cursor changes are retained.
+Entry's full native-target sweeps remained stable. Fast headed Chromium and WebKit
+checks also sampled actual X11 cursor images during six back-and-forth passes
+over each wordmark, nav and playing synthetic video's slider:1080 samples per
+surface/engine, with no intermediate cursor changes. These Linux results do not
+reproduce or explain the reported Mac behavior. A cursor-visible recording or
+access to that browser is needed to narrow it further; no additional cursor CSS
+workaround has been added. Direct chat messaging is unavailable; this note and
+read-only video-chat inspection carry the shared findings.

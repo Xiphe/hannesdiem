@@ -111,8 +111,26 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(header).not.toHaveAttribute('data-nav-visible', '')
   await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
   await expect(header).toHaveAttribute('data-nav-visible', '')
-  await expect(header).toHaveCSS('transition-property', 'opacity, visibility')
+  await expect(header).toHaveCSS('transition-property', 'none')
   await expect(header).toHaveCSS('opacity', '1')
+  await expect(button).toHaveCSS('visibility', 'hidden')
+  await expect(header.locator('.temple-nav-enter a')).toBeVisible()
+  const handoff = await header.evaluate(async (node) => {
+    const welcome = document.querySelector('.temple-entry-welcome a')!
+    const action = node.querySelector('.temple-nav-enter a')!
+    const samples = []
+    for (let frame = 0; frame < 20; frame++) {
+      samples.push({
+        old: getComputedStyle(welcome).visibility,
+        opacity: getComputedStyle(action).opacity,
+        parentOpacity: getComputedStyle(node).opacity,
+      })
+      await new Promise(requestAnimationFrame)
+    }
+    return samples
+  })
+  expect(handoff.every((frame) => frame.old === 'hidden')).toBe(true)
+  expect(handoff.every((frame) => frame.opacity === '1' && frame.parentOpacity === '1')).toBe(true)
   await expect
     .poll(() => header.evaluate((node) => Math.round(node.getBoundingClientRect().top)))
     .toBe(0)
@@ -120,6 +138,9 @@ test('the welcome button hands over to the centered header button at the top', a
   const action = (await header.locator('.temple-nav-enter a').boundingBox())!
   expect(Math.abs(action.y + action.height / 2 - box.y - box.height / 2)).toBeLessThan(1)
   await expect(button).toHaveText((await header.locator('.temple-nav-enter a').textContent()) ?? '')
+  await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 100))
+  await expect(header).not.toHaveAttribute('data-nav-visible', '')
+  await expect(button).toBeVisible()
 })
 
 for (const width of [390, 1440]) {
