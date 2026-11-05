@@ -73,20 +73,22 @@
 }
 .temple-post-preview-play {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  color: #e1d9ce;
-  background: rgb(0 0 0 / 60%);
+  color: #fff;
+  background: rgb(0 0 0 / 70%);
   pointer-events: none;
 }
 .temple-post-preview-play svg {
-  width: 26px;
-  height: 26px;
+  width: 44px;
+  height: 44px;
 }
 .temple-post-preview:focus-visible {
   outline: 3px solid currentColor;

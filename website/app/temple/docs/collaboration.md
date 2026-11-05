@@ -503,6 +503,11 @@ at the top right, keeping titles and centered focal subjects clear. Show it on
 video/audio cards, omit it on text cards, and keep the entire thumbnail as one
 native link into the viewer. The icon adds no separate control or player.
 
+The artist cannot see the indicator in the shared preview and requests it
+“front and center.” Replace the small corner treatment with a72px shaded
+circle and44px white glyph centered above the cover. Refresh the shared
+preview's stale snapshot so the requested change is visible there.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to
