@@ -179,6 +179,7 @@
 }
 .feed-summary {
   position: relative;
+  transform: translateY(-15px);
   padding: 16px max(20px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
     max(20px, env(safe-area-inset-left));
   opacity: 0;
@@ -319,7 +320,7 @@
   height: 3px;
   border-radius: 2px;
   background: currentColor;
-  opacity: 0.55;
+  opacity: 0.44;
 }
 .feed-details {
   max-height: var(--details-height);
