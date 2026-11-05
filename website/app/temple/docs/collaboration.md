@@ -1,5 +1,19 @@
 # Temple of Sound: client–artist collaboration
 
+**Continuous practical background — 2026-11-05.** The artist reports flat cuts
+in Watch and Create's reading shapes and requests the opener page's background
+parallax throughout the page. Reuse the existing three-depth fragment ground on
+the practical page from Visit through Share, preserving ambient drift, bounded
+viewport rendering and reduced-motion/native-timeline fallback. There is no
+opener to reserve on that page. Preserve existing reading contours and text.
+
+The practical page's shorter section gaps exposed the old verse-protection
+boundary: it clipped the fitted contours vertically. Extend that boundary to
+contain the complete fitted SVG on the practical page, retaining horizontal
+clipping and the poem's original verse protection. Synthetic desktop/mobile
+checks reproduce the cut before the fix and cover intact contours, native
+parallax, bounded layers and reduced motion afterward. Local review only.
+
 **Entry and navigation feedback — 2026-11-05.** Practical navigation pieces are
 purely decorative: remove their hover growth and separate hit areas. Native
 section links share each intervening gap, retain a pointer through it, and

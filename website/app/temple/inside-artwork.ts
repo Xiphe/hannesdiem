@@ -5,8 +5,9 @@ import { createAtmosphere } from './atmosphere.ts'
 import { createNavigationArtwork } from './top-navigation-artwork.ts'
 import { colourCopy } from './copy-colour.ts'
 import type { TypeFrame } from './typography.ts'
+import { mountFragmentGround } from './fragment-button/ground.ts'
 
-/** Keep the accepted header material without mounting an invisible poem scene. */
+/** Share the header material and fragment ground without mounting a poem scene. */
 export async function mountInsideArtwork(
   host: HTMLElement,
   props: OpeningProps,
@@ -22,6 +23,7 @@ export async function mountInsideArtwork(
     document.fonts.load('700 48px CinzelDecorative'),
   ])
   if (signal.aborted) return
+  mountFragmentGround(host, [], signal)
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const appearance = matchMedia('(prefers-color-scheme: dark)')
   const escapes = createEscapes(signal)

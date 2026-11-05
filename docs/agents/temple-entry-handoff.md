@@ -53,6 +53,11 @@ immediately. Wordmark links to the poem root. Progress/scrubbing follows practic
 content only. Inspire/Be Held/Wish remain visible; activating them shows
 “coming soon”. Header links have section paths as their native destinations;
 enhancement can scroll between existing sections without reloading the document.
+Reuse the poem's three-depth fragment ground across Visit through Share, retaining
+viewport-bounded rendering and motion fallbacks. Practical reading boundaries
+contain the complete fitted contours; only the interleaved poem bounds them to
+protect neighbouring verses. Feed rendering and static share-card patterns keep
+their existing owners.
 
 Validate with synthetic fixtures and keep website checks independent of content/.
 

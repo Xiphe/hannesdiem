@@ -48,14 +48,21 @@ export function mountReadingMaterial(section: HTMLElement, signal: AbortSignal) 
     const reach = innerWidth > 760 ? Math.max(0, copyTile.offsetLeft - photoRight + 24) : 0
     const scaleX = (copyTile.offsetWidth + reach) / (clear.width * cellWidth)
     const scaleY = copyTile.offsetHeight / (clear.height * cellHeight)
-    // Let the contour use Watch's own preceding gap instead of slicing it at
-    // the section edge. The clip still ends before the neighbouring verse.
+    const width = view.width * scaleX
+    const height = view.height * scaleY
+    const top = copyTile.offsetTop - clear.y * cellHeight * scaleY
     const headroom = parseFloat(getComputedStyle(section).marginTop)
-    materialBoundary.style.top = `${-headroom}px`
-    material.style.width = `${view.width * scaleX}px`
-    material.style.height = `${view.height * scaleY}px`
+    const inside = section.closest('[data-temple-view="inside"]') !== null
+    // Practical sections have no neighbouring verses to protect. Keep the
+    // whole fitted contour, even when it extends beyond the section's spacing.
+    // The poem still bounds its material to the gap before the next verse.
+    const boundaryTop = inside ? Math.min(-headroom, top) : -headroom
+    materialBoundary.style.top = `${boundaryTop}px`
+    materialBoundary.style.bottom = `${inside ? Math.min(0, section.clientHeight - top - height) : 0}px`
+    material.style.width = `${width}px`
+    material.style.height = `${height}px`
     material.style.left = `${copyTile.offsetLeft - reach - clear.x * cellWidth * scaleX}px`
-    material.style.top = `${copyTile.offsetTop + headroom - clear.y * cellHeight * scaleY}px`
+    material.style.top = `${top - boundaryTop}px`
   }
   const observer = new ResizeObserver(layout)
   observer.observe(copyTile)

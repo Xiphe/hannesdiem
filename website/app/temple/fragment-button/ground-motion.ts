@@ -19,7 +19,7 @@ export function createGroundMotion(
   const scroll = new ScrollTimeline({ source: document.scrollingElement, axis: 'block' })
   const viewport = createGroundViewport(host, field, planes, scroll, signal)
   function resize() {
-    const height = host.querySelector<HTMLElement>('.temple-stage')!.clientHeight
+    const opener = host.querySelector<HTMLElement>('.temple-stage')
     const distance = Math.max(1, document.documentElement.scrollHeight - innerHeight)
     const origin = scrollY + host.getBoundingClientRect().top
     const bridge = host.querySelector<HTMLElement>('.bridge-body')
@@ -53,11 +53,11 @@ export function createGroundMotion(
     const bands = depths.map((depth) => {
       const available: GroundBand[] = []
       const end = host.clientHeight - distance * depth
-      // Keep the initial viewport empty; forms emerge below it as the opener
-      // leaves. These planes travel slightly faster than the foreground, giving
+      // When present, keep the opener's viewport empty; forms emerge below it
+      // as it leaves. These planes travel slightly faster than the foreground, giving
       // even the short first verse room for large forms and a clear chorus reading area.
       // Match the largest float excursion, removing extra entry dead space.
-      let cursor = height + 40
+      let cursor = opener ? opener.clientHeight + 40 : 0
       for (const hold of holds) {
         if (!Number.isFinite(hold.start) || hold.length === 0) continue
         const start = Math.max(
