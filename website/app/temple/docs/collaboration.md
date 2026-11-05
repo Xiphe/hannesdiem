@@ -148,6 +148,23 @@ and review address remain8796; no website integration or publication requested.
 Material direction is retained; crisp contour and centre treatment remain for
 review. [Source, measurements and limits](liquid-simulation-research.md).
 
+**A gentler dot coating — 2026-11-05.** The artist accepts the SVG edges and
+protected centre (“love it”) and asks to reduce liquid reaching one dot so it
+forms a gentler border. Retain actual simulation, SVG reconstruction and the
+minimum centre. A weaker pull alone only delayed pooling, so regulate the
+external intake field from the measured nearby particle load and bring its
+preferred shell from21px to16px. A smooth local adhesive field retains a light
+coating while farther attraction eases off. No particle deletion, contour
+clipping or painted dot rim; pressure/viscosity transport still forms the surface.
+
+A16s held-target check reduces particles within35px of the dot from274 to57
+(~79%), retains all661 particles and the connected liquid surface, and returns
+to one central contour after release. No velocity clamps or nonfinite positions
+occur in that check. Local switching records3.2ms median/3.5ms p95 JS work and
+16.8ms p95 frame intervals. The retained material response is unchanged in scope;
+this thinner coating remains for review on8796. No website integration or
+publication requested. [Mechanism and evidence](liquid-simulation-research.md).
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

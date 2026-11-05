@@ -262,3 +262,31 @@ per frame. Timings exclude deferred SVG paint/compositing. An earlier run on the
 shared machine had total p957.7ms and physics p956.6ms; performance varies with
 load. These observations do not establish native Mac or whole-page budgets.
 No additional production code, dependencies or CMX contracts are introduced.
+
+## Gentler coating around a selected dot
+
+The artist accepts the SVG/centre update and asks for less liquid per dot to
+form a gentler border. Reducing attraction alone was insufficient: at160,
+material near the target kept accumulating during a long hold. Keep pressure,
+viscosity, particle mass/count, transport, SVG reconstruction and centre floor;
+change the selected-dot external field.
+
+The preferred shell is now the actual dot radius+3px (16px instead of21px).
+Measure nearby particle load with weight1 up to24px, linearly declining to0
+at32px. The farther-field intake multiplier is `1/(1+(load/36)^6)`. The36-unit
+value is a soft feedback budget, not a hard particle count. A local adhesive
+field smoothly rises between28px and20px, retaining already-arrived material
+with4× radial attraction while suppressing the central field nearby. Farther
+intake eases off as coating accumulates. Releasing the dot removes this field;
+free-pointer attraction preserves its prior behavior. No particle is teleported,
+deleted or hidden, and no rim or neck is drawn independently of the liquid.
+
+Same synthetic16s hold at dot2, after2s rest, attraction250 and viscosity100:
+particles within35px of the dot decrease from274 before to57 after (~79%). All
+661 particles remain, the new contour remains connected, and after8s release
+the material returns to one central contour with centroid within0.1px of the
+centre. No nonfinite positions or velocity clamps occur in this check. A local
+browser target-switch trace records median3.2ms/p953.5ms JS work, with display
+p9516.8ms. These remain isolated-study timings with the previously stated limits.
+The solver module URL is revisioned to avoid reuse of the cached old import.
+The thinner coating remains an artistic review on8796, not page integration.
