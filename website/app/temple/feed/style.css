@@ -602,7 +602,6 @@
   height: 100%;
 }
 .feed-post[data-active] .feed-transport .feed-seek:disabled {
-  opacity: 0.35;
   cursor: default;
 }
 .feed-ended {

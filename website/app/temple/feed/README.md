@@ -46,7 +46,9 @@ Watch; the entry and share-image conversations own their corresponding views.
   with the rest of the UI and gain a subtle darker shade on cursor hover. One shared set of corner buttons
   stays fixed to the viewport. Each post’s title and bottom panel travel with its
   media at full opacity. Scrolling does not fade the departing or incoming
-  panels; they simply travel with their video edges.
+  panels; they simply travel with their video edges. Keep the scrubber's brightness
+  steady as a post becomes active and its source loads; temporarily disabling
+  seeking must not dim it at snap completion.
   An icon-only fullscreen toggle sits immediately left of Share on browsers
   supporting element fullscreen, with a fine pointer, hover and at least 768px
   viewport width. Hide it on mobile/touch devices and narrow layouts, updating

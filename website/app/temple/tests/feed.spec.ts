@@ -334,6 +334,89 @@ for (const paused of [false, true]) {
   })
 }
 
+for (const width of [390, 1440]) {
+  for (const paused of [false, true]) {
+    test(`the scrubber stays steady through snap and source loading at ${width}px${paused ? ' while paused' : ''}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 844 })
+      await arrive(page, 'middle')
+      await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
+      await page.evaluate(() => document.fonts.ready)
+      await post(page, 'middle')
+        .locator('.feed-tap')
+        .hover({ position: { x: 100, y: 150 } })
+      if (paused) {
+        await post(page, 'middle')
+          .locator('.feed-tap')
+          .click({ position: { x: 100, y: 150 } })
+        await expect(post(page, 'middle').locator('.feed-panel')).not.toHaveAttribute(
+          'data-animating',
+          '',
+        )
+      }
+      let release!: () => void
+      const gate = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      await page.route(
+        'https://customer-fixture.cloudflarestream.com/0123456789abcdef0123456789abcdef/manifest/video.m3u8',
+        async (route) => {
+          await gate
+          await route.fallback()
+        },
+      )
+      const recording = await post(page, 'latest').evaluateHandle((incoming) => {
+        const seek = incoming.querySelector<HTMLInputElement>('.feed-video-seek')!
+        const samples: { active: boolean; opacity: number; offset: number; disabled: boolean }[] =
+          []
+        let tick: number
+        const sample = () => {
+          const box = seek.getBoundingClientRect()
+          if (box.top < innerHeight && box.bottom > 0) {
+            let opacity = 1
+            for (let element: Element | null = seek; element; element = element.parentElement)
+              opacity *= Number(getComputedStyle(element).opacity)
+            samples.push({
+              active: incoming.hasAttribute('data-active'),
+              opacity,
+              offset: box.top - incoming.getBoundingClientRect().top,
+              disabled: seek.disabled,
+            })
+          }
+          tick = requestAnimationFrame(sample)
+        }
+        sample()
+        incoming.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        return {
+          stop() {
+            cancelAnimationFrame(tick)
+            return samples
+          },
+        }
+      })
+      try {
+        await expect(page).toHaveURL(path('latest'))
+        await page.waitForTimeout(150)
+        release()
+        await expect(post(page, 'latest').locator('.feed-video-seek')).toBeEnabled()
+        await page.waitForTimeout(250)
+        const samples = await recording.evaluate((recording) => recording.stop())
+        expect(samples.some((sample) => !sample.active)).toBe(true)
+        expect(samples.some((sample) => sample.active && sample.disabled)).toBe(true)
+        expect(samples.some((sample) => sample.active && !sample.disabled)).toBe(true)
+        expect([...new Set(samples.map((sample) => sample.opacity))]).toEqual([1])
+        const offsets = samples.map((sample) => sample.offset)
+        expect(Math.max(...offsets) - Math.min(...offsets)).toBeLessThan(1)
+      } finally {
+        release()
+        await recording.evaluate((recording) => recording.stop())
+        await recording.dispose()
+      }
+    })
+  }
+}
+
 test('orientation changes cover matching video and contain opposite video', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await arrive(page, 'latest')
