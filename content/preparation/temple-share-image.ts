@@ -108,9 +108,7 @@ export async function renderTempleShareImage(input: {
   const poem = input.lines !== undefined
   const nameHeight = showWordmark ? Math.max(Math.ceil(nameSize * 1.15), name.info.height) : 0
   const nameGap = showWordmark ? gap : 0
-  const available = poem
-    ? height - bottom - 160
-    : height - bottom - captionTop - nameHeight - nameGap
+  const available = poem ? height - 2 * 140 : height - bottom - captionTop - nameHeight - nameGap
   let fitted: Awaited<ReturnType<typeof measureTitle>> | undefined
   let size = templeCard.maxTitleSize as number
   let titleText = input.lines?.map((line) => line.text).join('\n') ?? input.title
@@ -157,9 +155,7 @@ export async function renderTempleShareImage(input: {
     fitted = await measureTitle(titleText, size)
   }
   const titleHeight = fitted.height
-  const titleTop = poem
-    ? Math.round(160 + (available - titleHeight) / 2)
-    : height - bottom - titleHeight
+  const titleTop = poem ? Math.round((height - titleHeight) / 2) : height - bottom - titleHeight
   const visibleGap = (titleHeight - fitted.info.height + nameGap) * (input.wordmarkGapScale ?? 1)
   const nameTop = poem
     ? 48

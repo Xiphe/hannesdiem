@@ -98,7 +98,10 @@ test('poem cards retain explicit lines and fit each native typeface independentl
   assert.equal(card.layout.titleLines, 2)
   assert.equal(card.layout.titleTruncated, false)
   assert.ok(card.layout.titleLineSizes[1] > card.layout.titleLineSizes[0])
-  assert.ok(card.layout.titleTop >= 160)
+  assert.ok(
+    Math.abs(card.layout.titleTop + card.layout.titleHeight / 2 - templeCard.height / 2) <= 0.5,
+  )
+  assert.ok(card.layout.titleTop >= 140)
   assert.ok(card.layout.titleTop + card.layout.titleHeight <= templeCard.height - templeCard.bottom)
   await renderTempleShareImage({
     title: 'Synthetic typography',

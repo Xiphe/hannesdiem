@@ -168,7 +168,7 @@ export async function prepareTempleShareImages(
               (await cardFor(title, {
                 seed: key,
                 showWordmark: !metadata.verseShares,
-                wordmarkGapScale: 0.5,
+                wordmarkGapScale: 0.7,
               })),
             ...(verseShares ? { verseShares } : {}),
           },

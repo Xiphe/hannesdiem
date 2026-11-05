@@ -342,6 +342,20 @@ visible name/title gap, including the title font’s leading, rather than only
 halving a spacing token. Other post-card spacing remains unchanged. Local
 implementation and review; no deployment requested.
 
+**Share-card alignment and opener face correction — 2026-11-05.** The artist
+likes the main-card direction but excludes Germania for TEMPLE. Recapture the
+native scene with TEMPLE still in Bricolage while the other words transition;
+retain the escaped glimmers, raised artwork and date treatment. This selects
+only the captured frame, leaving the live opener's random transitions unchanged.
+
+Manifesto share phrases center horizontally and vertically in the whole card,
+independently of the centered top wordmark. Fit them within symmetric140px
+top/bottom bounds. Correct the supplied final opening to “I'm devoting this to
+you and to the”. The artist asks to lift the practical cards' wordmark a little;
+use70% of the original visible gap, up from the previous50%, without moving
+their main titles. These measurements are concrete refinements for local review.
+No deployment requested.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to

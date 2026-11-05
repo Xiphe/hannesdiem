@@ -50,9 +50,9 @@ export const metadata = {
       ],
     },
     'i devote': {
-      title: 'im devoting this to you and to the tension and resonance',
+      title: "I'm devoting this to you and to the tension and resonance",
       lines: [
-        { text: 'im devoting this to you and to the' },
+        { text: "I'm devoting this to you and to the" },
         { text: 'tension and resonance', face: 'cinzel' },
       ],
     },

@@ -13,6 +13,16 @@ try {
     colorScheme: 'dark',
     locale: 'en',
   })
+  // This capture-only seed puts OF and SOUND before TEMPLE in the native
+  // transition order. At 16px, TEMPLE still has its original Bricolage face.
+  await page.addInitScript(() => {
+    const random = crypto.getRandomValues.bind(crypto)
+    crypto.getRandomValues = (array) => {
+      const result = random(array)
+      if (array instanceof Uint32Array && array.length === 1) array[0] = 0
+      return result
+    }
+  })
   await page.goto(url)
   await page.locator('.temple-opening[data-ready]').waitFor({ timeout: 20000 })
   // Let actual forest particles escape through the type before capturing them.
