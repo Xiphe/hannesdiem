@@ -198,7 +198,7 @@
     var(--summary-height, 68px) + var(--feed-drawer-open) * var(--caption-height, 0px) + 64px
   );
   transform: translateY(calc((var(--feed-drawer-open) - 1) * var(--caption-height, 0px)));
-  background: linear-gradient(transparent, rgb(0 0 0 / 78%) 42%, rgb(0 0 0 / 94%));
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 94%));
   opacity: 0;
   transition: opacity 3s ease;
   pointer-events: none;

@@ -21,9 +21,9 @@ Watch; the entry and share-image conversations own their corresponding views.
   percentage drives its position, shape, drawer travel and backdrop extent,
   including during dragging. Space toggles playback without a focus
   outline on the video surface. The chevron and scrubber have no focus outline; other controls retain keyboard focus indicators.
-  The bottom gradient stays anchored to the viewport bottom throughout animation
-  and dragging. Collapsed, it covers only the controls and a short fade above
-  them; it grows with the description drawer. The centered top title has
+  The bottom gradient fades evenly from transparent to 94% black across its
+  full height, anchored to the viewport bottom throughout animation and dragging.
+  Collapsed, it covers only the controls and a short fade above them; it grows with the description drawer. The centered top title has
   its own dark fade. Back and Share remain icon-only corner controls; all appear
   with the rest of the UI.
 - During video playback the summary and corner controls fade in over one second
