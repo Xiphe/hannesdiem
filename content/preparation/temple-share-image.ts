@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { measurePoemShareTitle, type ShareLine } from './temple-share-type.ts'
+import { cropTempleCover } from './temple-cover.ts'
 
 export const templeCard = {
   width: 1200,
@@ -96,6 +97,8 @@ export async function renderTempleShareImage(input: {
   lines?: readonly ShareLine[]
   background?: Uint8Array
   backgroundColor?: string
+  focalX?: number
+  focalY?: number
   /** The whole-Temple card needs its name once, as the main title. */
   showWordmark?: boolean
 }) {
@@ -168,7 +171,7 @@ export async function renderTempleShareImage(input: {
   const titleLeft = poem ? Math.round((width - titleWidth) / 2) : left
   const background = await (
     input.background
-      ? sharp(input.background).rotate().resize(width, height, { fit: 'cover' })
+      ? await cropTempleCover(input.background, width, height, input.focalX, input.focalY)
       : sharp({
           create: { width, height, channels: 3, background: input.backgroundColor ?? '#000000' },
         })

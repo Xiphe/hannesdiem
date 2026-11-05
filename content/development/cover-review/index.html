@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Temple cover review</title>
+    <link
+      rel="stylesheet"
+      href="/style.css"
+    />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Choose a cover</h1>
+        <p>Choose a frame, mark what matters, then check both cards.</p>
+      </header>
+      <nav aria-label="Recording">
+        <label
+          >Video
+          <select
+            id="recording"
+            disabled
+          ></select
+        ></label>
+        <span
+          id="progress"
+          aria-live="polite"
+        ></span>
+      </nav>
+      <h2 id="title"></h2>
+      <div class="sources">
+        <section aria-labelledby="frame-heading">
+          <h3 id="frame-heading">Choose the frame</h3>
+          <video
+            id="video"
+            controls
+            playsinline
+            preload="metadata"
+            crossorigin="anonymous"
+          ></video>
+          <div class="controls">
+            <button
+              id="use-frame"
+              type="button"
+            >
+              Use current frame
+            </button>
+            <span id="playhead"></span>
+          </div>
+          <div class="controls">
+            <label
+              >Cover time (seconds)
+              <input
+                id="time"
+                type="number"
+                min="0"
+                step="0.1"
+                value="0"
+            /></label>
+            <button
+              id="back"
+              type="button"
+              aria-label="Previous second"
+            >
+              −1s
+            </button>
+            <button
+              id="forward"
+              type="button"
+              aria-label="Next second"
+            >
+              +1s
+            </button>
+          </div>
+        </section>
+        <section aria-labelledby="focus-heading">
+          <h3 id="focus-heading">Mark the focal point</h3>
+          <p>Click the face, instrument or detail to keep in the crop.</p>
+          <div class="focus-area">
+            <div id="focus-frame">
+              <img
+                id="frame"
+                alt="Selected uncropped video frame"
+                draggable="false"
+              />
+              <span
+                id="focus-marker"
+                aria-hidden="true"
+              ></span>
+            </div>
+          </div>
+          <div class="controls">
+            <label
+              >Horizontal %
+              <input
+                id="focal-x"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value="50"
+            /></label>
+            <label
+              >Vertical %
+              <input
+                id="focal-y"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value="50"
+            /></label>
+            <button
+              id="center"
+              type="button"
+            >
+              Center
+            </button>
+          </div>
+        </section>
+      </div>
+      <div
+        id="status"
+        role="status"
+        aria-live="polite"
+      >
+        Loading videos…
+      </div>
+      <div
+        id="error"
+        role="alert"
+        hidden
+      ></div>
+      <button
+        id="retry"
+        type="button"
+        hidden
+      >
+        Retry preview
+      </button>
+      <div
+        class="results"
+        aria-busy="true"
+      >
+        <section>
+          <h3>Share card</h3>
+          <img
+            id="share"
+            width="1200"
+            height="630"
+            alt="Share card with the Temple wordmark"
+          />
+          <h4>Messaging size</h4>
+          <img
+            id="small"
+            width="1200"
+            height="630"
+            alt="Share card at messaging size"
+          />
+        </section>
+        <section>
+          <h3>Watch preview</h3>
+          <img
+            id="watch"
+            width="1200"
+            height="630"
+            alt="Watch preview without the Temple wordmark"
+          />
+        </section>
+      </div>
+      <footer>
+        <button
+          id="save"
+          type="button"
+          disabled
+        >
+          Save cover choice
+        </button>
+        <button
+          id="next"
+          type="button"
+          disabled
+        >
+          Next video
+        </button>
+        <p>Choices are saved locally for review. They are applied to content together afterward.</p>
+      </footer>
+    </main>
+    <script
+      type="module"
+      src="/app.js"
+    ></script>
+  </body>
+</html>

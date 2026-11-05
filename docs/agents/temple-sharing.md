@@ -60,6 +60,37 @@ the cover plus native post title rather than showing a branded share card.
 The two shared fonts live under `contracts/assets/temple/`, so website-only and
 content-only builds both receive the same files.
 
+## Cover frame and focal-point review
+
+After a local content build, run `npm run content:review-covers` and forward
+port8794 (`sand tunnel 18794:8794`). Open `http://localhost:18794`.
+The tool collects recording identities from the existing Publication with CMX's
+node reducer, including nested slots. It has no separate recording catalogue.
+
+For each recording, scrub the native video and choose **Use current frame**,
+or enter its time in seconds. Click the subject in the uncropped frame to mark
+the focal point; percentage inputs provide the same keyboard-accessible control.
+Review the actual renderer's Share card, messaging-size copy and unbranded Watch
+preview, then **Save cover choice**. Frame extraction preserves the complete
+source image. Crop coordinates refer to its visible orientation after rotation;
+the crop centers on the chosen point and stops at image edges.
+
+Choices and immutable source frames stay under `.generated/temple-cover-review/`.
+Saving is local draft persistence, not publication. The draft records the Stream
+video identity, timestamp, focal coordinates and selected frame filename, and is
+ignored after a recording's source video changes. After the artist selects all
+covers, apply those source frames through native CMX image imports, with focal
+coordinates in existing image metadata and source/timestamp provenance retained
+with the authored cover. Rebuild the normal Publication to generate final cards.
+This review store is not a Publication input or a second media adapter.
+
+`temple-share-images.ts` forwards imported covers' existing `focalX`/`focalY`
+values to both card variants. They participate in card cache identities;
+cover downloads remain deduplicated. Omitted coordinates keep the previous
+central crop. Explicit share/preview overrides retain their precedence. The
+playing video remains unchanged. The review tool requires only public playback
+identifiers and is separate from the shared website preview on8787.
+
 ## Temple, section and poem cards
 
 The photographic card work is accepted at checkpoint `bc5fc04` (implementation

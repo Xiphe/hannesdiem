@@ -278,6 +278,69 @@ test('publication uses CMX slots, deduplicates cards, retains rich content and h
   assert.equal((await sharp(bytes).metadata()).width, 1200)
 })
 
+test('CMX cover focus reaches both cards and distinguishes crops of the same source', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'temple-cover-focus-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  const source = fixtures()
+  const cover = {
+    src: 'https://example.invalid/synthetic-cover.png',
+    width: 300,
+    height: 900,
+    focalX: 50,
+    focalY: 0,
+  }
+  ;(source._site.content.site as any).media = { synthetic: cover }
+  const node = source.watch.content.default as {
+    props: { posts: Record<string, any>[] }
+    slots: unknown[]
+  }
+  node.slots = []
+  node.props.posts = [
+    {
+      id: 'top',
+      kind: 'text',
+      title: 'Synthetic focus',
+      postedAt: '2030-01-01T00:00:00Z',
+      cover: 'synthetic',
+    },
+    {
+      id: 'bottom',
+      kind: 'text',
+      title: 'Synthetic focus',
+      postedAt: '2030-01-02T00:00:00Z',
+      cover: { ...cover, focalY: 100 },
+    },
+  ]
+  const bytes = await sharp(
+    Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="900"><path fill="#f00" d="M0 0h300v450H0z"/><path fill="#00f" d="M0 450h300v450H0z"/></svg>',
+    ),
+  )
+    .png()
+    .toBuffer()
+  let requests = 0
+  const result = await prepareTempleShareImages(source, { base: '/media', directory }, async () => {
+    requests++
+    return new Response(bytes)
+  })
+  const posts = (result.watch.content.default as typeof node).props.posts
+  assert.equal(requests, 1)
+  for (const field of ['shareImage', 'previewImage']) {
+    assert.notEqual(posts[0][field].src, posts[1][field].src)
+    for (const [index, channel] of [
+      [0, 0],
+      [1, 2],
+    ]) {
+      const path = join(directory, posts[index][field].src.slice('/media/'.length))
+      const { data } = await sharp(await readFile(path))
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true })
+      assert.ok(data[channel] > data[(channel + 1) % 3] + 40)
+    }
+  }
+})
+
 test('an unavailable poster stops preparation instead of publishing a broken card', async () => {
   await assert.rejects(
     prepareTempleShareImages(

@@ -17,6 +17,7 @@
     "check": "npm run format:check && npm run typecheck && npm test",
     "deploy": "wrangler deploy --config website/wrangler.jsonc",
     "content:build": "node content/preparation/prepare.ts",
+    "content:review-covers": "node content/development/cover-review.ts",
     "content:publish": "cmx-publish .generated/publication.json \"$CMX_PUBLISH_URL\" --config content/publishing/config.ts",
     "predeploy": "npm run build:app",
     "typecheck:website": "wrangler types --config website/wrangler.jsonc worker-configuration.d.ts && tsc --noEmit -p website/tsconfig.json",

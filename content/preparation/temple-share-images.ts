@@ -26,10 +26,12 @@ export async function prepareTempleShareImages(
       seed?: string
       showWordmark?: boolean
       lines?: readonly ShareLine[]
+      focalX?: number
+      focalY?: number
     } = {},
   ) {
-    const { src, seed, showWordmark = true, lines } = options
-    const key = JSON.stringify({ title, src, seed, showWordmark, lines })
+    const { src, seed, showWordmark = true, lines, focalX, focalY } = options
+    const key = JSON.stringify({ title, src, seed, showWordmark, lines, focalX, focalY })
     let card = cards.get(key)
     if (!card) {
       card = (async () => {
@@ -38,6 +40,8 @@ export async function prepareTempleShareImages(
           lines,
           background: src ? await source(src) : seed ? templeSharePattern(seed) : undefined,
           showWordmark,
+          focalX,
+          focalY,
         })
         const digest = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
         const url = await storeMedia(storage, `og/temple-${digest}.jpg`, bytes, 'image/jpeg')
@@ -74,11 +78,15 @@ export async function prepareTempleShareImages(
     if (typeof title !== 'string' || typeof post.id !== 'string')
       throw new Error('Temple share cards require a post ID and title')
     let src: string | undefined
+    let focalX: number | undefined
+    let focalY: number | undefined
     if (post.cover) {
       const cover = typeof post.cover === 'string' ? media[post.cover] : (post.cover as MediaImage)
       if (!cover || typeof cover.src !== 'string')
         throw new Error(`Missing Temple cover: ${post.id}`)
       src = cover.src
+      focalX = cover.focalX
+      focalY = cover.focalY
     } else if (recording || post.kind === 'video') {
       if (
         typeof post.customerCode !== 'string' ||
@@ -90,8 +98,9 @@ export async function prepareTempleShareImages(
     }
     return {
       ...post,
-      shareImage: post.shareImage ?? (await cardFor(title, { src })),
-      previewImage: post.previewImage ?? (await cardFor(title, { src, showWordmark: false })),
+      shareImage: post.shareImage ?? (await cardFor(title, { src, focalX, focalY })),
+      previewImage:
+        post.previewImage ?? (await cardFor(title, { src, focalX, focalY, showWordmark: false })),
     }
   }
   const output: PublishedDocuments = {}

@@ -407,6 +407,18 @@ size and line count. Remove per-section spacing overrides. Fit the complete
 caption within its existing bounds. Centered manifesto cards and the captured
 opener retain their separate compositions. Local implementation only.
 
+**Cover-frame review requested — 2026-11-05.** The artist accepts choosing a
+video frame and focal point together before publication and requests the flow
+for the three existing recordings. Provide a local tool with native video
+scrubbing, an uncropped selected frame, click/percentage focus controls and
+actual Share/Watch cards, including a messaging-size preview. Reuse their
+accepted typography and spacing. No frame or focal point is selected by the
+agent; the artist saves each choice. Keep drafts and immutable original frames
+locally until all three can be applied to native CMX cover imports together.
+Use existing image focal metadata for both generated card variants, centering
+the crop on the point within source bounds. Playback keeps the full video.
+Local review only; no publication requested.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to
