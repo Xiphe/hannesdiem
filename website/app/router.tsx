@@ -9,6 +9,8 @@ import { Page } from './page.tsx'
 import { routes } from './routes.ts'
 import { contentCacheTag } from './document-host/index.ts'
 import { ContactCard } from './contact/card.tsx'
+import { renderFeed } from './temple/feed/route.tsx'
+import { templePath, watchPath } from './temple/feed/model.ts'
 
 const privateHeaders = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
 function contactMailto(request: Request) {
@@ -178,6 +180,44 @@ export function createApp(content: ContentLoader) {
   )
   router.get(routes.content, async ({ request, render }) => {
     const path = new URL(request.url).pathname
+    if (path.startsWith(`${watchPath}/`) && !path.endsWith('/')) {
+      let id: string
+      try {
+        id = decodeURIComponent(path.slice(watchPath.length + 1))
+      } catch {
+        id = ''
+      }
+      if (id && !id.includes('/')) {
+        let page = await content(new Request(new URL(watchPath, request.url), request))
+        // Keep existing Publications usable while the entry split is published.
+        if (page.status === 404)
+          page = await content(new Request(new URL(templePath, request.url), request))
+        const feed = page.status === 200 ? await renderFeed(page, id) : undefined
+        if (feed)
+          return render(
+            <SiteContent
+              site={page.site}
+              routes={page.routes}
+            >
+              <Page
+                {...feed}
+                route={{ ...page.route!, path, title: feed.title }}
+                path={path}
+                plain
+                feed
+              />
+            </SiteContent>,
+            {
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Cloudflare-CDN-Cache-Control': 'public, max-age=60, stale-if-error=0',
+                'Cache-Tag': `content,page:${page.key}`,
+                'X-Content-Revision': page.contentHash,
+              },
+            },
+          )
+      }
+    }
     const page = await content(request)
     const destination = page.redirects.find((redirect) => redirect.path === path)
     if (destination)

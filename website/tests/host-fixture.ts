@@ -17,6 +17,7 @@ import {
 import assets from '../../.generated/assets.json' with { type: 'json' }
 import { CMX_DOCUMENT_SCHEMA, type CmxDocument } from '@cmx-tools/contracts'
 import type { PublishedDocuments, SiteMetadata } from '../../contracts/content.ts'
+import { feedFixtureDocument } from './feed-fixture.ts'
 
 // Synthetic CMS input: website checks never compile or read authored content.
 const page: CmxDocument = {
@@ -115,6 +116,7 @@ export const documents: PublishedDocuments = {
       },
     ]),
   ),
+  'temple-of-sound/watch': feedFixtureDocument(page),
   _redirects: {
     ...structuredClone(page),
     interface: { imports: {}, exports: { redirects: {} } },

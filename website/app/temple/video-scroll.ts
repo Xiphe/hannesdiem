@@ -1,8 +1,10 @@
 /** Center a fitting collection initially; user input snaps individual recordings. */
 export function mountRecordingScroll(host: HTMLElement, signal: AbortSignal) {
   if (signal.aborted) return
-  for (const feed of host.querySelectorAll<HTMLElement>('.temple-recordings')) {
-    const videos = [...feed.querySelectorAll<HTMLElement>('.temple-video')]
+  for (const feed of host.querySelectorAll<HTMLElement>(
+    '.temple-recordings, .temple-post-previews',
+  )) {
+    const videos = [...feed.querySelectorAll<HTMLElement>('.temple-video, .temple-post-preview')]
     if (!videos.length) continue
     let interacted = false
     let groupedOffset = 0

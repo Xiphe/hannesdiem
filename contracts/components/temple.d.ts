@@ -86,11 +86,33 @@ export interface TempleVideoProps extends StreamVideoProps {
   id: string
   /** ISO posting timestamp with timezone; display is localized by the website. */
   postedAt?: string
+  /** Optional cover; defaults to the Stream thumbnail. */
+  cover?: ImageSource
   /** Rich-text description, authored as ordinary CMX children. */
   children?: RemixNode
 }
 export interface TempleRecordingsProps {
   videos: readonly (TempleVideoProps & { postedAt: string })[]
+}
+interface TemplePostBase {
+  id: string
+  title: string
+  postedAt: string
+  cover?: ImageSource
+  /** Rich description displayed in the paused viewer's bottom layer. */
+  children?: RemixNode
+}
+export type TemplePost =
+  | (TemplePostBase & StreamVideoProps & { kind: 'video' })
+  | (TemplePostBase & {
+      kind: 'audio'
+      src: string
+      /** Normalized, precomputed peaks; otherwise decoded when the audio is opened. */
+      waveform?: readonly number[]
+    })
+  | (TemplePostBase & { kind: 'text'; body: RemixNode })
+export interface TemplePostsProps {
+  posts: readonly TemplePost[]
 }
 export interface PoemLocation {
   image: ImageSource
@@ -116,3 +138,4 @@ export declare const PoemOpening: Component<PoemOpeningProps>
 export declare const PoemSection: Component<PoemSectionProps>
 export declare const TempleVideo: Component<TempleVideoProps>
 export declare const TempleRecordings: Component<TempleRecordingsProps>
+export declare const TemplePosts: Component<TemplePostsProps>

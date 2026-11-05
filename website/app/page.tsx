@@ -15,11 +15,12 @@ export function Page(
     path?: string
     noindex?: boolean
     plain?: boolean
+    feed?: boolean
   }>,
 ) {
   const site = handle.context.get(SiteContent)
   return () => {
-    const { title, body, route, path = '/', noindex, plain } = handle.props
+    const { title, body, route, path = '/', noindex, plain, feed } = handle.props
     const temple = route?.kind === 'temple'
     const canonical = `https://hannesdiem.de${path}`
     const image = route?.ogImage ?? (route?.image ? getMedia(site.media, route.image) : undefined)
@@ -29,7 +30,7 @@ export function Page(
       <html
         lang="en"
         data-layout={temple ? 'temple' : undefined}
-        data-temple-loading={temple ? '' : undefined}
+        data-temple-loading={temple && !feed ? '' : undefined}
       >
         <head>
           <meta charSet="utf-8" />

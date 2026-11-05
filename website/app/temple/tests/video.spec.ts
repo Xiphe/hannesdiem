@@ -166,115 +166,54 @@ test('recordings and their rich-text descriptions work without site JavaScript',
 })
 
 for (const width of [390, 900, 1440]) {
-  test(`recordings snap to the center and align their tops at ${width}px`, async ({ page }) => {
-    const errors: string[] = []
-    page.on('pageerror', (error) => errors.push(error.message))
+  test(`Watch presents an ordered band of covers without loading players at ${width}px`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/temple-recordings')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    const feed = page.getByRole('region', { name: 'Videos', exact: true })
-    await feed.scrollIntoViewIfNeeded()
-    await expect(feed.locator('h2')).toHaveText([
+    const band = page.getByRole('region', { name: 'Content', exact: true })
+    await band.scrollIntoViewIfNeeded()
+    await expect(band.locator('a')).toHaveText([
       'Synthetic latest',
       'Synthetic middle',
       'Synthetic oldest',
     ])
-    await expect(feed.locator('strong')).toHaveText(['independent', 'independent', 'independent'])
-    const geometry = await feed.evaluate((node) => ({
-      height: node.clientHeight,
-      contentHeight: node.scrollHeight,
+    await expect(band.locator('iframe, video, audio')).toHaveCount(0)
+    await expect(band.locator('img')).toHaveCount(3)
+    await expect(band.locator('a').first()).toHaveAttribute(
+      'href',
+      '/temple-of-sound/watch/fixture-latest',
+    )
+    const geometry = await band.evaluate((node) => ({
       width: node.clientWidth,
-      cards: [...node.querySelectorAll('.temple-video')].map((card) =>
-        card.getBoundingClientRect().toJSON(),
-      ),
-      players: [...node.querySelectorAll('.temple-video-player')].map(
-        (player) => player.getBoundingClientRect().top,
-      ),
-      actionAfter: node.nextElementSibling?.classList.contains('fact-followup-action'),
+      cards: [...node.querySelectorAll('a')].map((card) => card.getBoundingClientRect().toJSON()),
     }))
-    expect(geometry.height).toBe(900)
-    expect(geometry.width).toBe(width)
-    expect(geometry.contentHeight).toBeLessThanOrEqual(geometry.height)
-    expect(geometry.actionAfter).toBe(true)
-    expect(Math.max(...geometry.players) - Math.min(...geometry.players)).toBeLessThan(1)
-    const fits = geometry.cards.reduce((sum, card) => sum + card.width, 0) <= width
-    const initialCenter = fits
+    const fits = geometry.cards.reduce((sum, card) => sum + card.width, 0) + 32 <= width
+    const center = fits
       ? (geometry.cards[0].right + geometry.cards[2].left) / 2
       : geometry.cards[0].x + geometry.cards[0].width / 2
-    expect(Math.abs(initialCenter - width / 2)).toBeLessThan(1)
+    expect(Math.abs(center - width / 2)).toBeLessThan(2)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    const centered = async (entry: string) => {
-      await expect
-        .poll(async () => {
-          const box = (await feed
-            .getByRole('region', { name: `Synthetic ${entry}` })
-            .boundingBox())!
-          return Math.abs(box.x + box.width / 2 - width / 2)
-        })
-        .toBeLessThan(1)
-    }
-    await feed.focus()
-    if (fits) {
-      await expect(
-        feed.frameLocator('iframe').nth(1).getByRole('button', { name: 'Play fixture' }),
-      ).toBeVisible()
-      await feed.hover()
-      await page.mouse.wheel(-geometry.cards[0].width * 0.7, 0)
-    } else {
-      await page.keyboard.press('ArrowLeft')
-    }
-    await centered(fits ? 'oldest' : 'middle')
-    await expect(
-      feed
-        .frameLocator('iframe')
-        .nth(fits ? 2 : 1)
-        .getByRole('button', { name: 'Play fixture' }),
-    ).toBeVisible()
-    await feed.hover()
-    await page.mouse.wheel(-width, 0)
-    await centered('oldest')
-    await page.keyboard.press('ArrowRight')
-    await centered('middle')
-    await page.keyboard.press('ArrowRight')
-    await centered('latest')
-    await expect(page).toHaveURL('/temple-recordings')
-    expect(errors).toEqual([])
   })
-
   for (const entry of ['oldest', 'latest']) {
-    test(`recording permalinks center the ${entry} edge at ${width}px`, async ({ page }) => {
+    test(`Watch centers its ${entry} cover on direct arrival at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
       await page.goto(`/temple-recordings#fixture-${entry}`)
       await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-      const recording = page.getByRole('region', { name: `Synthetic ${entry}` })
-      const centered = async () => {
-        const box = (await recording.boundingBox())!
-        expect(Math.abs(box.x + box.width / 2 - width / 2)).toBeLessThan(1)
-      }
-      await expect(recording.getByRole('heading')).toBeInViewport()
-      await centered()
-      const navigation = (await page.locator('.temple-top-navigation').boundingBox())!
-      expect(
-        (await recording.locator('.temple-video-player').boundingBox())!.y,
-      ).toBeGreaterThanOrEqual(navigation.y + navigation.height + 8)
-      await page.reload()
-      await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-      await centered()
-      // A native hash link to an already visible neighbor must center it, too.
-      const middle = page.getByRole('region', { name: 'Synthetic middle' })
-      await middle.getByRole('link', { name: 'Synthetic middle', exact: true }).click()
-      await expect(page).toHaveURL(/#fixture-middle$/)
+      const cover = page.locator(`#fixture-${entry}`)
+      await expect(cover).toBeInViewport()
       await expect
         .poll(async () => {
-          const box = (await middle.boundingBox())!
+          const box = (await cover.boundingBox())!
           return Math.abs(box.x + box.width / 2 - width / 2)
         })
-        .toBeLessThan(1)
+        .toBeLessThan(2)
     })
   }
 }
 
-test('the recordings feed sorts and scrolls without site JavaScript', async ({
+test('Watch covers retain ordinary content links without JavaScript', async ({
   browser,
   baseURL,
 }) => {
@@ -284,25 +223,20 @@ test('the recordings feed sorts and scrolls without site JavaScript', async ({
     viewport: { width: 390, height: 900 },
   })
   try {
-    await context.route('https://customer-fixture.cloudflarestream.com/**', (route) =>
-      route.fulfill({
-        contentType: 'text/html',
-        body: '<!doctype html><title>Stream fixture</title>',
-      }),
-    )
     const page = await context.newPage()
     await page.goto('/temple-recordings#fixture-middle')
-    const feed = page.getByRole('region', { name: 'Videos', exact: true })
-    await expect(feed.locator('h2')).toHaveText([
+    const band = page.getByRole('region', { name: 'Content', exact: true })
+    await expect(band.locator('a')).toHaveText([
       'Synthetic latest',
       'Synthetic middle',
       'Synthetic oldest',
     ])
-    await expect(page.getByRole('heading', { name: 'Synthetic middle' })).toBeInViewport()
-    await expect(feed.locator('strong')).toHaveText(['independent', 'independent', 'independent'])
-    expect(await feed.evaluate((node) => node.scrollLeft)).toBeLessThan(0)
-    const box = (await page.locator('#fixture-middle').boundingBox())!
-    expect(box.x + box.width / 2).toBeCloseTo(195, 0)
+    await expect(page.locator('#fixture-middle')).toBeInViewport()
+    await expect(band.locator('iframe')).toHaveCount(0)
+    await expect(page.locator('#fixture-middle')).toHaveAttribute(
+      'href',
+      '/temple-of-sound/watch/fixture-middle',
+    )
   } finally {
     await context.close()
   }

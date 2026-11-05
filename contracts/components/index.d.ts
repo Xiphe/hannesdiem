@@ -160,7 +160,14 @@ export declare const Release: Component<ReleaseProps>
 export declare const Song: Component<SongProps>
 export declare const LinkTree: Component<LinkTreeProps>
 
-export { PoemCanvas, PoemOpening, PoemSection, TempleVideo, TempleRecordings } from './temple.d.ts'
+export {
+  PoemCanvas,
+  PoemOpening,
+  PoemSection,
+  TempleVideo,
+  TempleRecordings,
+  TemplePosts,
+} from './temple.d.ts'
 export type {
   PoemCanvasProps,
   PoemOpeningProps,
@@ -171,4 +178,6 @@ export type {
   PoemFact,
   TempleVideoProps,
   TempleRecordingsProps,
+  TemplePost,
+  TemplePostsProps,
 } from './temple.d.ts'

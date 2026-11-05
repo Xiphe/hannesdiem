@@ -5,26 +5,16 @@ import assets from '../../../.generated/assets.json' with { type: 'json' }
 import { StreamVideo } from '../ui-library/video.tsx'
 import { readingContours, watchReadingViewBox } from './facts/material.ts'
 import { fragmentStroke } from './fragment-button/material.ts'
+import { TemplePosts } from './posts.tsx'
 
 const LocalDate = clientEntry(`${assets.date}#LocalDate`, DateComponent)
 
 export function TempleRecordings(handle: Handle<TempleRecordingsProps>) {
   return () => {
-    const videos = handle.props.videos.toSorted(
-      (a, b) => Date.parse(b.postedAt) - Date.parse(a.postedAt),
-    )
     return (
-      <div
-        class="temple-recordings"
-        role="region"
-        aria-label="Videos"
-        tabIndex={0}
-        style={{ '--video-aspect': videos[0]?.aspectRatio ?? 16 / 9 }}
-      >
-        {videos.map((video) => (
-          <TempleVideo {...video} />
-        ))}
-      </div>
+      <TemplePosts
+        posts={handle.props.videos.map((video) => ({ ...video, kind: 'video' as const }))}
+      />
     )
   }
 }
