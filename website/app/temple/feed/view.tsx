@@ -13,7 +13,9 @@ export interface FeedProps {
 }
 
 export function FeedIcon(
-  handle: Handle<{ name: 'back' | 'share' | 'play' | 'pause' | 'sound' | 'muted' | 'down' }>,
+  handle: Handle<{
+    name: 'back' | 'share' | 'play' | 'pause' | 'sound' | 'muted' | 'down' | 'replay' | 'next'
+  }>,
 ) {
   return () => (
     <svg
@@ -37,6 +39,17 @@ export function FeedIcon(
           fill="currentColor"
           stroke="none"
         />
+      ) : handle.props.name === 'replay' ? (
+        <path d="M3 10a9 9 0 1 1 2.6 8.4M3 4v6h6" />
+      ) : handle.props.name === 'next' ? (
+        <>
+          <path
+            d="m6 5 10 7-10 7Z"
+            fill="currentColor"
+            stroke="none"
+          />
+          <path d="M19 5v14" />
+        </>
       ) : handle.props.name === 'pause' ? (
         <path
           d="M8 5v14m8-14v14"
@@ -198,6 +211,7 @@ export function Feed(handle: Handle<FeedProps>) {
                 class="feed-end-action"
                 data-replay
               >
+                <FeedIcon name="replay" />
                 Play again
               </button>
               <button
@@ -205,6 +219,7 @@ export function Feed(handle: Handle<FeedProps>) {
                 class="feed-end-action"
                 data-next
               >
+                <FeedIcon name="next" />
                 Next Video
               </button>
             </div>

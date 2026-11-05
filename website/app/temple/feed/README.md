@@ -26,7 +26,7 @@ Watch; the entry and share-image conversations own their corresponding views.
   full height, anchored to the viewport bottom throughout animation and dragging.
   Collapsed, it covers only the controls and a 48px fade above them; it grows with the description drawer. The centered top title has
   its own dark fade. Back and Share remain icon-only corner controls; all appear
-  with the rest of the UI.
+  with the rest of the UI and gain a subtle darker shade on cursor hover.
 - During video playback the summary and corner controls fade in over one second
   after interaction or cursor movement. After four inactive seconds they fade
   out over three seconds. Neither entry nor cursorless scrolling
@@ -60,7 +60,8 @@ Watch; the entry and share-image conversations own their corresponding views.
   state before reactivating a post so scrolling never flashes old metadata.
 - Try audible autoplay and retain the same media element across posts. If
   blocked, show a play control. Videos stop at their end and offer “Play again”
-  and “Next Video”; the latter selects the next newer video in feed order,
+  and “Next Video” as borderless icon-and-label actions with opaque black hover
+  backgrounds; the latter selects the next newer video in feed order,
   skipping audio/text, and is absent on the final video. Audio ends normally.
 - Switching tabs/apps no longer deliberately pauses media. Release speculative
   preload while hidden, and expose current metadata and play/pause/seek/next
