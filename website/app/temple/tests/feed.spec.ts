@@ -434,7 +434,7 @@ for (const viewport of [
     expect(layout.height).toBeLessThanOrEqual(viewport.height * 0.4 + 1)
     expect(layout.paddingBelowTransport).toBe(8)
     expect(layout.chevronBelowTrack).toBeGreaterThanOrEqual(0)
-    expect(layout.chevronBottom).toBeLessThanOrEqual(layout.summaryBottom)
+    expect(layout.chevronBottom).toBeLessThanOrEqual(layout.summaryBottom + 10)
     expect(layout.icon.width).toBeGreaterThan(layout.icon.height * 2)
     expect(layout.titleBottom).toBeLessThanOrEqual(layout.transport)
     expect(layout.titleTop).toBeLessThan(48)
@@ -451,7 +451,7 @@ for (const viewport of [
   })
 }
 
-test('cursor movement reveals transport for ten seconds without pausing the video', async ({
+test('cursor movement reveals UI in one second and fades it over three after four inactive seconds', async ({
   page,
 }) => {
   await arrive(page, 'latest')
@@ -461,14 +461,16 @@ test('cursor movement reveals transport for ten seconds without pausing the vide
   await page.clock.install()
   await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
   await expect(item.locator('.feed-transport')).toBeVisible()
+  await expect(item.locator('.feed-summary')).toHaveCSS('transition-duration', '1s, 0s')
   await expect(item).toHaveAttribute('data-playing', '')
-  await page.clock.fastForward(9_000)
+  await page.clock.fastForward(3_000)
   await expect(page.locator('.temple-feed')).toHaveAttribute('data-transport-peek', '')
   await item.locator('.feed-tap').hover({ position: { x: 120, y: 100 } })
-  await page.clock.fastForward(9_000)
+  await page.clock.fastForward(3_000)
   await expect(page.locator('.temple-feed')).toHaveAttribute('data-transport-peek', '')
   await page.clock.fastForward(1_100)
   await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-transport-peek', '')
+  await expect(item.locator('.feed-summary')).toHaveCSS('transition-duration', '3s, 0s')
   await expect(item.locator('.feed-transport')).not.toBeVisible()
 })
 
@@ -498,6 +500,9 @@ test('scrubbing holds its position and returns to the previous playback state', 
   await expect(item.locator('.feed-caption')).toBeVisible()
   await expect.poll(async () => (await seek.boundingBox())!.y).toBeLessThan(playingBox.y - 20)
   await seek.fill('35')
+  await seek.focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(seek).toHaveCSS('outline-style', 'none')
   await expect(item.locator('.feed-caption')).toBeVisible()
   expect(await page.locator('video').evaluate((node: HTMLVideoElement) => node.paused)).toBe(true)
 })
@@ -515,6 +520,20 @@ test('desktop volume defaults to full, remembers adjustments, and shares one mut
   await item.locator('[data-sound]').hover()
   await expect(item.locator('[data-volume]')).toBeVisible()
   const volume = item.locator('[data-volume]')
+  await expect
+    .poll(() =>
+      item.locator('.feed-volume-popover').evaluate((node) => node.getAnimations().length),
+    )
+    .toBe(0)
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 100 } })
+  await expect(volume).not.toBeVisible()
+  await item.locator('[data-sound]').hover()
+  await expect(volume).toBeVisible()
+  await expect
+    .poll(() =>
+      item.locator('.feed-volume-popover').evaluate((node) => node.getAnimations().length),
+    )
+    .toBe(0)
   const volumeBox = (await volume.boundingBox())!
   const soundBox = (await item.locator('[data-sound]').boundingBox())!
   const popoverBox = (await item.locator('.feed-volume-popover').boundingBox())!
@@ -574,10 +593,10 @@ test.describe('touch-only playback', () => {
     await page.clock.install()
     await page.touchscreen.tap(100, 150)
     await expect(post(page, 'middle')).toHaveAttribute('data-playing', '')
-    await page.clock.fastForward(5_000)
+    await page.clock.fastForward(2_000)
     await move(page, 'latest')
     await expect(page.locator('.temple-feed')).toHaveAttribute('data-transport-peek', '')
-    await page.clock.fastForward(5_100)
+    await page.clock.fastForward(2_100)
     await expect(page.locator('.temple-feed')).not.toHaveAttribute('data-transport-peek', '')
   })
 })
@@ -725,15 +744,22 @@ test('description state changes animate while dragging follows the pointer direc
     animation.pause()
     animation.currentTime = 110
     const middle = new DOMMatrixReadOnly(getComputedStyle(panel).transform).m42
-    const frames = (animation.effect as KeyframeEffect).getKeyframes()
-    const start = new DOMMatrixReadOnly(frames[0].transform as string).m42
-    const end = new DOMMatrixReadOnly(frames.at(-1)!.transform as string).m42
+    const open = Number(getComputedStyle(panel).getPropertyValue('--feed-drawer-open'))
+    const height = article.querySelector('.feed-details')!.getBoundingClientRect().height
+    const chevron = article.querySelector('.feed-disclosure')!
+    const chevronY = new DOMMatrixReadOnly(getComputedStyle(chevron).transform).m42
+    const chevronPhase = new DOMMatrixReadOnly(
+      getComputedStyle(chevron.querySelector('path')!).transform,
+    ).m22
     animation.finish()
-    return { start, middle, end }
+    return { middle, open, height, chevronY, chevronPhase }
   })
   expect(movement).toBeDefined()
-  expect(movement!.middle).toBeGreaterThan(movement!.end)
-  expect(movement!.middle).toBeLessThan(movement!.start)
+  expect(movement!.open).toBeGreaterThan(0)
+  expect(movement!.open).toBeLessThan(1)
+  expect(movement!.middle).toBeCloseTo((1 - movement!.open) * movement!.height, 2)
+  expect(movement!.chevronY).toBeCloseTo(10 * movement!.open, 2)
+  expect(movement!.chevronPhase).toBeCloseTo(1 - 2 * movement!.open, 2)
   await expect(panel).not.toHaveAttribute('data-animating', '')
   const closing = await item.evaluate((article) => {
     article.querySelector<HTMLButtonElement>('[data-details-toggle]')!.click()
@@ -751,6 +777,19 @@ test('description state changes animate while dragging follows the pointer direc
   await page.mouse.move(box.x + box.width / 2, box.y - 70, { steps: 6 })
   await expect(panel).toHaveAttribute('data-dragging', '')
   expect(await panel.evaluate((node) => node.getAnimations().length)).toBe(0)
+  const dragged = await panel.evaluate((node) => {
+    const open = Number(getComputedStyle(node).getPropertyValue('--feed-drawer-open'))
+    const chevron = node.querySelector('.feed-disclosure')!
+    return {
+      open,
+      y: new DOMMatrixReadOnly(getComputedStyle(chevron).transform).m42,
+      phase: new DOMMatrixReadOnly(getComputedStyle(chevron.querySelector('path')!).transform).m22,
+    }
+  })
+  expect(dragged.open).toBeGreaterThan(0)
+  expect(dragged.open).toBeLessThan(1)
+  expect(dragged.y).toBeCloseTo(10 * dragged.open, 2)
+  expect(dragged.phase).toBeCloseTo(1 - 2 * dragged.open, 2)
   await page.mouse.up()
   expect(await panel.evaluate((node) => node.getAnimations().length)).toBe(0)
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
@@ -807,6 +846,9 @@ test('bottom dimming remains in place midway through the drawer closing', async 
   await arrive(page, 'latest')
   const item = post(page, 'latest')
   await expect(item).toHaveAttribute('data-playing', '')
+  const collapsed = await item.locator('.feed-bottom-shade').boundingBox()
+  expect(collapsed!.height).toBeLessThan(844 * 0.2)
+  expect(collapsed!.y + collapsed!.height).toBeCloseTo(844, 1)
   await page.clock.install()
   await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
   await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
@@ -820,6 +862,8 @@ test('bottom dimming remains in place midway through the drawer closing', async 
       animation.currentTime = 150
     }
   })
+  const midway = (await item.locator('.feed-bottom-shade').boundingBox())!
+  expect(midway.y + midway.height).toBeCloseTo(844, 1)
   const pixel = await sharp(await page.screenshot())
     .extract({ left: 2, top: 842, width: 1, height: 1 })
     .removeAlpha()

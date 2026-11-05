@@ -163,10 +163,6 @@ export function Feed(handle: Handle<FeedProps>) {
               )}
             </div>
           )}
-          <div
-            class="feed-bottom-shade"
-            aria-hidden="true"
-          />
           <div class="feed-corners">
             <a
               href={templePath}
@@ -214,6 +210,10 @@ export function Feed(handle: Handle<FeedProps>) {
             </div>
           )}
           <div class="feed-panel">
+            <div
+              class="feed-bottom-shade"
+              aria-hidden="true"
+            />
             <div class="feed-summary">
               {post.kind !== 'text' && (
                 <div class="feed-transport">

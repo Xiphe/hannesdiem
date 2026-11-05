@@ -15,16 +15,20 @@ Watch; the entry and share-image conversations own their corresponding views.
 - Video covers when its orientation matches the viewport; otherwise contains on
   black. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
-  wide, shallow down-chevron tucked into the existing bottom padding.
-  Only the chevron’s center moves between directions; its ends stay fixed, with
-  dimmer ink and a 6px higher position. Space toggles playback without a focus
-  outline on the video surface. The chevron has no focus outline; the other controls retain keyboard focus indicators.
-  The bottom gradient is anchored independently of the moving drawer, covering
-  the bottom edge throughout animation and dragging. The centered top title has
+  shallow down-chevron tucked into the existing bottom padding.
+  Only the chevron’s center moves between directions; its ends stay fixed. The
+  narrower, dimmer icon moves down 10px as the drawer opens. A single open
+  percentage drives its position, shape, drawer travel and backdrop extent,
+  including during dragging. Space toggles playback without a focus
+  outline on the video surface. The chevron and scrubber have no focus outline; other controls retain keyboard focus indicators.
+  The bottom gradient stays anchored to the viewport bottom throughout animation
+  and dragging. Collapsed, it covers only the controls and a short fade above
+  them; it grows with the description drawer. The centered top title has
   its own dark fade. Back and Share remain icon-only corner controls; all appear
   with the rest of the UI.
-- During video playback the summary and corner controls appear for ten seconds
-  after interaction or cursor movement. Neither entry nor cursorless scrolling
+- During video playback the summary and corner controls fade in over one second
+  after interaction or cursor movement. After four inactive seconds they fade
+  out over three seconds. Neither entry nor cursorless scrolling
   reveals, hides or restarts that timer. A deliberate pause, the chevron or an
   upward drag on the summary opens the date/description drawer; a downward drag
   or chevron closes it. Opening the drawer does not interrupt playback. The
@@ -45,11 +49,12 @@ Watch; the entry and share-image conversations own their corresponding views.
   directly, with no animation on release. New post activation resets immediately
   to avoid stale metadata flashing; reduced motion skips panel animations.
 - Cursor devices reveal a vertical volume slider in one connected pill above
-  the speaker when hovering/focusing it;
+  the speaker when hovering/focusing it, with a short expanding/fading transition
+  on entrance and exit;
   clicking the speaker mutes/unmutes. Volume starts at 100% and remembers
   adjustments. Touch devices start at 100% without the slider. Mute/unmute
   carries across posts. Device/system volume remains under the visitor's control.
-- UI fades take 180ms and respect reduced motion. Model intentional pause
+- UI transitions respect reduced motion. Model intentional pause
   separately from source loading and temporary seek pauses. Clear stale drawer
   state before reactivating a post so scrolling never flashes old metadata.
 - Try audible autoplay and retain the same media element across posts. If

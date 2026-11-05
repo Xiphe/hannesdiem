@@ -1,5 +1,5 @@
 const volumeKey = 'hannesdiem.temple.volume'
-const controlsTimeout = 10_000
+const controlsTimeout = 4_000
 
 /** Interaction visibility is shared across posts; scrolling never resets it. */
 export function mountFeedControls(

@@ -29,7 +29,7 @@ export function mountFeedDrawer(
   const reset = () => {
     if (!drag) return
     if (drag.summary.hasPointerCapture(drag.id)) drag.summary.releasePointerCapture(drag.id)
-    drag.panel.style.removeProperty('--drawer-offset')
+    drag.panel.style.removeProperty('--feed-drawer-open')
     delete drag.panel.dataset.dragging
     drag = undefined
   }
@@ -73,7 +73,10 @@ export function mountFeedDrawer(
         0,
         Math.min(drag.height, (drag.offset ?? (drag.open ? 0 : drag.height)) + drag.delta),
       )
-      drag.panel.style.setProperty('--drawer-offset', `${offset}px`)
+      drag.panel.style.setProperty(
+        '--feed-drawer-open',
+        String(drag.height > 0 ? 1 - offset / drag.height : Number(drag.open)),
+      )
       interact()
       event.preventDefault()
     },
@@ -114,7 +117,10 @@ export function mountFeedDrawer(
     setExpanded(article: HTMLElement, open: boolean, animate = true) {
       const panel = article.querySelector<HTMLElement>('.feed-panel')!
       const changed = article.hasAttribute('data-details') !== open
-      const from = animate && changed ? getComputedStyle(panel).transform : undefined
+      const from =
+        animate && changed
+          ? getComputedStyle(panel).getPropertyValue('--feed-drawer-open')
+          : undefined
       if (changed || !animate) stopMotion()
       article.toggleAttribute('data-details', open)
       article.querySelector<HTMLElement>('.feed-details')!.inert = !open
@@ -122,14 +128,17 @@ export function mountFeedDrawer(
       button.setAttribute('aria-expanded', String(open))
       button.setAttribute('aria-label', open ? 'Hide description' : 'Show description')
       if (!changed || !animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return
-      const to = getComputedStyle(panel).transform
+      const to = getComputedStyle(panel).getPropertyValue('--feed-drawer-open')
       if (from === to) return
       movingPanel = panel
       panel.dataset.animating = ''
-      const current = panel.animate([{ transform: from! }, { transform: to }], {
-        duration: 220,
-        easing: 'cubic-bezier(.2,.7,.2,1)',
-      })
+      const current = panel.animate(
+        [{ '--feed-drawer-open': from! }, { '--feed-drawer-open': to }],
+        {
+          duration: 220,
+          easing: 'cubic-bezier(.2,.7,.2,1)',
+        },
+      )
       motion = current
       void current.finished.then(
         () => {

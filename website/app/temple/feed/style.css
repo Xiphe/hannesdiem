@@ -1,3 +1,9 @@
+@property --feed-drawer-open {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
 .temple-post-previews {
   --preview-width: min(82vw, 380px);
   --preview-room: max(0px, calc((100vw - var(--preview-width)) / 2));
@@ -157,15 +163,16 @@
   overflow: clip;
 }
 .feed-panel {
+  --feed-drawer-open: 0;
   --details-height: max(0px, calc(40dvh - var(--summary-height, 130px)));
   position: fixed;
   inset: auto 0 0;
   z-index: 4;
   pointer-events: none;
-  transform: translateY(var(--drawer-offset, var(--caption-height, 0px)));
+  transform: translateY(calc((1 - var(--feed-drawer-open)) * var(--caption-height, 0px)));
 }
 .feed-post[data-details] .feed-panel {
-  transform: translateY(var(--drawer-offset, 0px));
+  --feed-drawer-open: 1;
 }
 .feed-post:not([data-active]) :is(.feed-panel, .feed-corners, .feed-ended, .feed-bottom-shade) {
   display: none;
@@ -180,17 +187,20 @@
   touch-action: none;
   user-select: none;
   transition:
-    opacity 180ms ease,
-    visibility 0s linear 180ms;
+    opacity 3s ease,
+    visibility 0s linear 3s;
 }
 .feed-bottom-shade {
-  position: fixed;
+  position: absolute;
   inset: auto 0 0;
-  z-index: 3;
-  height: calc(var(--summary-height, 68px) + var(--caption-height, 0px) + 64px);
+  z-index: -1;
+  height: calc(
+    var(--summary-height, 68px) + var(--feed-drawer-open) * var(--caption-height, 0px) + 64px
+  );
+  transform: translateY(calc((var(--feed-drawer-open) - 1) * var(--caption-height, 0px)));
   background: linear-gradient(transparent, rgb(0 0 0 / 78%) 42%, rgb(0 0 0 / 94%));
   opacity: 0;
-  transition: opacity 180ms ease;
+  transition: opacity 3s ease;
   pointer-events: none;
 }
 .feed-title {
@@ -225,8 +235,8 @@
   visibility: hidden;
   pointer-events: none;
   transition:
-    opacity 180ms ease,
-    visibility 0s linear 180ms;
+    opacity 3s ease,
+    visibility 0s linear 3s;
 }
 .feed-corners::before {
   content: '';
@@ -241,6 +251,7 @@
 .feed-post[data-active]:has(.feed-panel[data-animating], .feed-panel[data-dragging])
   .feed-bottom-shade {
   opacity: 1;
+  transition-duration: 1s;
 }
 .feed-corners .feed-control {
   background: rgb(0 0 0 / 25%);
@@ -253,6 +264,7 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  transition-duration: 1s, 0s;
   transition-delay: 0s;
 }
 .feed-control {
@@ -279,17 +291,19 @@
 }
 .feed-control:focus-visible,
 .feed-caption:focus-visible,
-.feed-seek:focus-visible,
 .feed-volume:focus-visible,
 .feed-end-action:focus-visible {
   outline: 2px solid #e1d9ce;
   outline-offset: 3px;
 }
+.feed-seek:focus-visible {
+  outline: none;
+}
 .feed-disclosure {
   position: absolute;
   left: 50%;
   bottom: max(6px, calc(env(safe-area-inset-bottom) - 2px));
-  transform: translateX(-50%);
+  transform: translate(-50%, calc(10px * var(--feed-drawer-open)));
   width: 72px;
   min-height: 20px;
   height: 20px;
@@ -299,17 +313,14 @@
   outline: none;
 }
 .feed-disclosure svg {
-  width: 36px;
+  width: 30px;
   height: 12px;
-  opacity: 0.65;
+  opacity: 0.55;
 }
 .feed-disclosure path {
   transform-box: view-box;
   transform-origin: 50% 50%;
-  transition: transform 180ms ease;
-}
-.feed-post[data-details] .feed-disclosure path {
-  transform: scaleY(-1);
+  transform: scaleY(calc(1 - 2 * var(--feed-drawer-open)));
 }
 .feed-details {
   max-height: var(--details-height);
@@ -387,11 +398,16 @@
     border-radius: 22px;
     background: rgb(0 0 0 / 90%);
     opacity: 0;
-    transition: opacity 140ms ease;
+    transform: scaleY(0.24);
+    transform-origin: center bottom;
+    transition:
+      opacity 180ms ease,
+      transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
     pointer-events: none;
   }
   .feed-volume-control:is(:hover, :focus-within)::before {
     opacity: 1;
+    transform: scaleY(1);
   }
   .feed-volume-control .feed-sound {
     position: relative;
@@ -409,14 +425,18 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+    transform: translateY(6px) scaleY(0.88);
+    transform-origin: center bottom;
     transition:
-      opacity 140ms ease,
-      visibility 0s linear 140ms;
+      opacity 180ms ease,
+      transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      visibility 0s linear 220ms;
   }
   .feed-volume-control:is(:hover, :focus-within) .feed-volume-popover {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
+    transform: translateY(0px) scaleY(1);
     transition-delay: 0s;
   }
 }
