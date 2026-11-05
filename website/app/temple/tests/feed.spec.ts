@@ -352,13 +352,17 @@ test('a native wheel gesture snaps to the next full-screen post', async ({ page 
   await expect(page.locator('video')).toHaveCount(1)
 })
 
-test('returning to a previously paused post does not fade out stale controls', async ({ page }) => {
+test('resuming clears paused drawer state before returning to a loading post', async ({ page }) => {
   await arrive(page, 'middle')
   const item = post(page, 'middle')
   await expect(item).toHaveAttribute('data-playing', '')
   await item.locator('.feed-tap').click({ position: { x: 100, y: 100 } })
   await expect(item.locator('.feed-caption')).toBeVisible()
   await move(page, 'latest')
+  await expect(post(page, 'latest').locator('.feed-seek')).toBeEnabled()
+  await post(page, 'latest')
+    .locator('.feed-tap')
+    .click({ position: { x: 100, y: 100 } })
   await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
   let release!: () => void
   const gate = new Promise<void>((resolve) => {
@@ -531,7 +535,7 @@ test('paused swipe carries titles and expanded panels at full opacity with their
   ).toBe('1')
 })
 
-test('a paused swipe keeps its drawer stable until playback hands off at scroll end', async ({
+test('a paused swipe keeps its drawer open and remains paused after scroll end', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -581,10 +585,71 @@ test('a paused swipe keeps its drawer stable until playback hands off at scroll 
     ),
   ).toBe(true)
   await expect(page).toHaveURL(path('latest'))
-  await expect(post(page, 'latest')).toHaveAttribute('data-playing', '')
+  await expect(post(page, 'latest').locator('.feed-seek')).toBeEnabled()
+  await expect(post(page, 'latest')).not.toHaveAttribute('data-playing', '')
+  expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(true)
+  await expect(post(page, 'latest')).toHaveAttribute('data-details', '')
   await expect(item).not.toHaveAttribute('data-details', '')
   await expect(page.locator('[data-back]')).toHaveCount(1)
   await expect(page.locator('[data-share]')).toHaveAttribute('aria-label', 'Share Synthetic latest')
+  // An audio or text post between videos must not discard the paused browsing choice.
+  for (const id of ['audio', 'text', 'middle']) {
+    await move(page, id)
+    if (id !== 'text') await expect(post(page, id).locator('.feed-seek')).toBeEnabled()
+    expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
+      true,
+    )
+    expect(
+      await post(page, 'latest')
+        .locator('.feed-panel')
+        .evaluate((node) => getComputedStyle(node).getPropertyValue('--feed-drawer-open').trim()),
+    ).toBe('1')
+  }
+  await expect(item).toHaveAttribute('data-details', '')
+})
+
+test('paused browsing remembers a collapsed drawer until Play, then Pause opens it afresh', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+  await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+  const handle = (await item.locator('[data-details-toggle]').boundingBox())!
+  const x = handle.x + handle.width / 2,
+    y = handle.y + handle.height / 2
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x, y + 100, { steps: 8 })
+  await page.mouse.up()
+  await expect(item).not.toHaveAttribute('data-details', '')
+  await expect(item).not.toHaveAttribute('data-playing', '')
+  const incoming = post(page, 'latest')
+  expect(
+    await incoming
+      .locator('.feed-panel')
+      .evaluate((node) => getComputedStyle(node).getPropertyValue('--feed-drawer-open').trim()),
+  ).toBe('0')
+  await expect(incoming.locator('.feed-details')).toHaveCSS('visibility', 'hidden')
+  for (const id of ['latest', 'middle']) {
+    await move(page, id)
+    await expect(post(page, id).locator('.feed-seek')).toBeEnabled()
+    await expect(post(page, id)).not.toHaveAttribute('data-details', '')
+    await expect(post(page, id)).not.toHaveAttribute('data-playing', '')
+    expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
+      true,
+    )
+  }
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+  await expect(item).toHaveAttribute('data-playing', '')
+  await move(page, 'latest')
+  await expect(incoming).toHaveAttribute('data-playing', '')
+  await incoming.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+  await expect(incoming).not.toHaveAttribute('data-playing', '')
+  await expect(incoming.locator('[data-details-toggle]')).toHaveAttribute('aria-expanded', 'true')
+  await expect(incoming.locator('.feed-caption')).toBeVisible()
 })
 
 test('top controls stay fixed while posts scroll behind them', async ({ page }) => {

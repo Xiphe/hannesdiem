@@ -44,11 +44,13 @@ Watch; the entry and share-image conversations own their corresponding views.
   timer or reveal a hidden playing UI. A swipe that begins with visible UI keeps
   the incoming bars fully rendered at their own video’s bottom edge, without
   waiting for activation. They travel into view with that edge and never stick
-  to the screen while entering. While the current video is paused, incoming
-  video panels include their expanded date/description. Keep that expanded state
-  through source loading, then close it only after playback starts. Their normal
-  playback fade resumes after
-  scrolling settles. A deliberate pause, the drag indicator or an upward drag on the summary opens the date/description drawer; a downward drag
+  to the screen while entering. A deliberate pause keeps subsequent media paused
+  while browsing. Incoming video panels inherit the paused drawer’s open/collapsed
+  choice, including before activation and through source loading. Explicit Play
+  ends that paused browsing session and forgets its drawer choice; the next Pause
+  opens the date/description afresh. This choice is not saved across visits.
+  Their normal playback fade resumes when playback resumes. A deliberate pause,
+  the drag indicator or an upward drag on the summary opens the date/description drawer; a downward drag
   or clicking the indicator closes it. Opening the drawer does not interrupt playback. The
   complete expanded panel occupies at most 40% of the viewport; its description
   scrolls internally. Use 6px between the date and first description block,
