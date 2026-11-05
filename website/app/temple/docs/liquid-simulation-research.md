@@ -311,3 +311,16 @@ hold), so these checks do not claim unconstrained dynamics at every setting.
 Browser checks cover live independent values and preservation through reset.
 Existing synthetic SVG contour/topology checks still pass. Review remains
 on8796; no website integration or publication is requested.
+
+## Cursor releases toward the outside — 2026-11-05
+
+The artist requests less cursor attraction and held material farther outside.
+For the free cursor, multiply both collection budget and intake gain by a
+smoothstep envelope: full through radius54, fading to zero at radius145.
+This also restores the central anchoring field as influence falls. Physical
+dot selection keeps its independent collection budget and adhesive field.
+Synthetic checks verify decreasing influence, exact released dynamics at/beyond
+145, unchanged dot response, and finite state with all661 particles retained
+while a loaded cursor moves outward. Its weighted load falls from197 to0 in
+that replay. Browser checks confirm free-pointer falloff and outer release.
+Review on8796 (`?collection=2`); no website integration requested.

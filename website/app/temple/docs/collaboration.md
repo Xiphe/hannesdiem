@@ -176,6 +176,14 @@ updates and reset preservation. SVG topology checks still pass. These controls
 support ongoing artistic review, not production integration or publication.
 [Mechanism, evidence and limitations](liquid-simulation-research.md).
 
+**Cursor release toward the outside — 2026-11-05.** The artist requests
+progressively less cursor attraction and held liquid farther out. Apply a
+smooth radial falloff to both free-pointer force and collection budget,
+from full at radius54 to zero at145. Keep selected-dot behavior independent.
+Synthetic and browser checks confirm falloff, release, conserved finite
+particles and unchanged dot response. The8796 study remains for review;
+no website integration requested. [Evidence](liquid-simulation-research.md).
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
