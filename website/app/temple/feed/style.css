@@ -179,7 +179,7 @@
 }
 .feed-summary {
   position: relative;
-  transform: translateY(-15px);
+  transform: translateY(calc(15px * var(--feed-drawer-open)));
   padding: 16px max(20px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
     max(20px, env(safe-area-inset-left));
   opacity: 0;
