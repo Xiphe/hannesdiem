@@ -14,9 +14,9 @@ an active review. After changing code or content, stop and restart
 `node content/development/preview.mjs` to start without rebuilding. Simulated
 contacts, email and Circle reservations reset when the process restarts.
 
-After building only assets with `npm run build:app`, restore generated media with
-`node content/development/media.ts` before starting the preview; the asset build
-replaces `dist/`.
+The simulated preview copies prepared media from `.generated/media` directly into
+its snapshot, including after asset-only builds replace `dist/`. Plain Wrangler
+still needs `node content/development/media.ts` after an asset-only build.
 
 `npm run dev` remains the live-reloading Wrangler server. Its unconfigured local
 runtime does not enable signup/login/Circle flows; use the simulated preview to

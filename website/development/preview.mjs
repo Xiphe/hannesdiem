@@ -1,7 +1,7 @@
 import { build } from 'esbuild'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { createServer } from 'node:http'
-import { resolve } from 'node:path'
+import { basename, resolve } from 'node:path'
 import { cp, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 
@@ -27,6 +27,13 @@ const emails = []
 // Keep the manifest and its files together while other agents rebuild dist.
 const previewAssets = await mkdtemp(resolve(tmpdir(), 'hannesdiem-preview-assets-'))
 await cp(resolve('dist'), previewAssets, { recursive: true })
+// Asset-only builds replace dist. Pair the authored Publication with its prepared
+// media directly rather than relying on a previous development-media copy.
+if (process.env.WEBSITE_TEST !== 'true')
+  await cp(resolve('.generated/media'), resolve(previewAssets, 'media'), {
+    recursive: true,
+    filter: (path) => basename(path) !== '.cmx',
+  })
 const mf = new Miniflare(
   convertV4MiniflareOptions({
     modules: true,
