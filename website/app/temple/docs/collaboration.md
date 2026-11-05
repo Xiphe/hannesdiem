@@ -20,6 +20,13 @@ and asks to dim its explanatory line. Hold desktop progress at zero through
 the return area, starting at the native Visit arrival, and keep mobile scrubbing
 within the practical sections. Native upward scrolling still reveals the link.
 
+**Keep the signup above the next image — 2026-11-05.** The artist reports
+Create's image painting over Watch's floating signup panel. On the practical
+page, the action sits outside the fact after its post collection, so the old
+fact-only stacking rule misses it. Raise that outer action while its floating
+panel is open; preserve the existing closed layout and header order. Synthetic
+phone/desktop overlap hit tests fail before and pass after the correction.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

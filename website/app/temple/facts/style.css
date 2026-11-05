@@ -538,8 +538,9 @@
   }
 }
 
-/* Floating controls must paint above the recording that follows Watch. */
-.fact-story:has(.temple-signup[data-floating] .temple-signup-expanded) {
+/* Floating controls must paint above following recordings and section images. */
+.fact-story:has(.temple-signup[data-floating] .temple-signup-expanded),
+.fact-followup-action:has(.temple-signup[data-floating] .temple-signup-expanded) {
   z-index: 4;
 }
 

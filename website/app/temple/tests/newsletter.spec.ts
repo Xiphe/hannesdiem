@@ -243,6 +243,34 @@ test('a verified subscriber can unsubscribe even when their older contact has no
 })
 
 for (const width of [390, 1440]) {
+  test(`the practical signup paints above the next section's images at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.route(endpoint, (route) => route.fulfill({ json: anonymous }))
+    await page.goto('/temple-of-sound/watch')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const signup = page.locator('.fact-followup-action .temple-signup')
+    await signup.getByRole('link', { name: 'Fixture pending action' }).click()
+    const dialog = signup.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await dialog.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    const overlaps = await dialog.evaluate((node) => {
+      const box = node.getBoundingClientRect()
+      return [...document.querySelectorAll('#create .fact-pictures img')].flatMap((image) => {
+        const picture = image.getBoundingClientRect()
+        const left = Math.max(box.left, picture.left, 0)
+        const right = Math.min(box.right, picture.right, innerWidth)
+        const top = Math.max(box.top, picture.top, 0)
+        const bottom = Math.min(box.bottom, picture.bottom, innerHeight)
+        if (right - left < 4 || bottom - top < 4) return []
+        return [node.contains(document.elementFromPoint((left + right) / 2, (top + bottom) / 2))]
+      })
+    })
+    expect(overlaps.length).toBeGreaterThan(0)
+    expect(overlaps.every(Boolean)).toBe(true)
+  })
+
   test(`the floating signup follows the recording and remains usable at ${width}px`, async ({
     page,
   }) => {
