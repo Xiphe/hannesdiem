@@ -67,6 +67,11 @@ through their tangent intersections to preserve convexity at the arc/side
 transitions. A synthetic contour check reproduces the old inward waist and
 covers the new whole silhouette in all directions. Local review continues.
 
+The artist accepts the whole directional silhouette (“beautiful”) and asks for
+slower, more fluid motion, including when choosing another dot. Ease the shared
+native path transition over480ms with a gentle start and finish, applying to
+hover, selected-place changes and return to rest. Keep reduced motion immediate.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
