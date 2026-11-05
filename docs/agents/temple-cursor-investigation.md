@@ -52,12 +52,28 @@ the DOM probe still establishes the absence of a media overlay. It does not
 reproduce or verify the native Mac cursor. Linux headless CSS/hit-target checks
 cannot validate the Mac cursor's displayed pixels.
 
-## Next discriminator
+## Plain-control result
 
 The preview-only `/__preview/cursor` page contains plain HTML controls without
-JavaScript, media, canvas or application CSS. Compare it with Temple on the
-affected Mac. If it also flickers, Temple's media and artwork are not required to
-trigger the symptom. If it stays stable, retain the site as a necessary condition
-and isolate active canvas painting, browser state after media playback, and page
-hit testing separately. Do not treat either outcome as proof of a specific OS or
-browser defect, and do not add more cursor overrides before this comparison.
+JavaScript, media, canvas or application CSS. The artist confirms the same flicker
+there in the affected browser. Temple's active media, canvas painting and header
+hit areas are therefore not required for the observed symptom. This does not
+identify whether Chromium, macOS, an extension or another cursor utility owns the
+incorrect state. Do not add further Temple cursor overrides to address it.
+
+The artist uses direct port 8787 forwarding, with no 18787 alias. Review URL:
+`http://localhost:8787/__preview/cursor`; tunnel command: `sand tunnel 8787`.
+
+## Next discriminator
+
+Compare that same page in Safari on the affected Mac. If Safari remains stable,
+investigate Chromium-specific cursor state and browser profiles/extensions next.
+If Safari also flickers, investigate system cursor state or cursor utilities.
+That comparison has been requested and is pending.
+
+[Chromium issue 40925746](https://issues.chromium.org/issues/40925746) documents
+macOS cursor failures after Accessibility pointer-size changes, with low-level
+cursor caching suspected and a 2026 reproduction noted. This is related evidence,
+not an identification of the artist's defect. Apple documents the size, colour
+and shake-to-locate settings in its
+[pointer settings guide](https://support.apple.com/guide/mac-help/make-the-pointer-easier-to-see-mchlp2920/mac).

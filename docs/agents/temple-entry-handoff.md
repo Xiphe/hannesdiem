@@ -106,3 +106,11 @@ the affected Mac. No additional cursor CSS workaround has been added. See
 `docs/agents/temple-cursor-investigation.md` for evidence and next probes. Direct
 chat messaging is unavailable; these notes and read-only video-chat inspection
 carry the shared findings.
+
+The artist confirms the same flicker on the static native-control page, without
+Temple scripts, media or artwork. Stop treating it as a Temple hit-area defect;
+the next comparison is Safari versus the affected Chrome/Helium browsers. This
+does not yet identify an OS or browser root cause.
+
+The artist tunnels port 8787 directly, with no alias. Use
+`http://localhost:8787/temple-of-sound` and `sand tunnel 8787` in review handoffs.
