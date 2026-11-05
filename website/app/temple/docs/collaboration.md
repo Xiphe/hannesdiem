@@ -184,6 +184,17 @@ Synthetic and browser checks confirm falloff, release, conserved finite
 particles and unchanged dot response. The8796 study remains for review;
 no website integration requested. [Evidence](liquid-simulation-research.md).
 
+**Liquid material and settings selected — 2026-11-05.** The artist says
+“lets run with this” and supplies viscosity61, attraction682, dot collection63,
+cursor collection245 and minimum centre radius0. Converge on this liquid
+material with those settings. Save them as the live8796 defaults and freeze
+the exact source/settings in `archive/selected-2026-11-05/` inside the local
+study. Preserve SVG density contours and outward cursor release; radius0
+removes the display-only centre cover. Browser checks confirm the five
+values, solver agreement, reset preservation and finite selected-dot state.
+This is selection of the material/settings; page integration and publication
+have not been carried out. [Recovery and scope](liquid-simulation-research.md).
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

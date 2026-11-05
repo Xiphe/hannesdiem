@@ -324,3 +324,18 @@ Synthetic checks verify decreasing influence, exact released dynamics at/beyond
 while a loaded cursor moves outward. Its weighted load falls from197 to0 in
 that replay. Browser checks confirm free-pointer falloff and outer release.
 Review on8796 (`?collection=2`); no website integration requested.
+
+## Selected material settings — 2026-11-05
+
+The artist selects the supplied control values: viscosity61, attraction682,
+dot collection63, cursor collection245 and minimum centre radius0. These are
+now the study's startup defaults and survive Reset liquid. Retain the radial
+free-cursor falloff and SVG density reconstruction. Zero centre radius means
+no display-only disc is added; the particle surface supplies the centre.
+
+The exact selected source, contour helper, synthetic contour checks and
+settings are frozen under the study's `archive/selected-2026-11-05/` directory.
+The live study is available on8796 at `?selected=1`. Browser checks confirm
+all five controls/outputs, matching solver values, reset and finite simulated
+state after dot selection. This records selection of the liquid treatment and
+settings; it does not assert full-page integration or publication.
