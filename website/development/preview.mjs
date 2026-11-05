@@ -2,7 +2,7 @@ import { build } from 'esbuild'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { createServer } from 'node:http'
 import { basename, resolve } from 'node:path'
-import { cp, mkdtemp, rm } from 'node:fs/promises'
+import { cp, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 
 // This preview never reads runtime credentials or forwards provider requests.
@@ -98,6 +98,14 @@ await mf.ready
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`)
+    if (url.pathname === '/__preview/cursor') {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      })
+      res.end(await readFile(new URL('./cursor-check.html', import.meta.url)))
+      return
+    }
     if (url.pathname === '/__preview/email') {
       const email = [...emails].reverse().find((mail) => mail.html)
       res.writeHead(200, {

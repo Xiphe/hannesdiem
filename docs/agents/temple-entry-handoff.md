@@ -97,7 +97,12 @@ Entry's full native-target sweeps remained stable. Fast headed Chromium and WebK
 checks also sampled actual X11 cursor images during six back-and-forth passes
 over each wordmark, nav and playing synthetic video's slider:1080 samples per
 surface/engine, with no intermediate cursor changes. These Linux results do not
-reproduce or explain the reported Mac behavior. A cursor-visible recording or
-access to that browser is needed to narrow it further; no additional cursor CSS
-workaround has been added. Direct chat messaging is unavailable; this note and
-read-only video-chat inspection carry the shared findings.
+reproduce or explain the reported Mac behavior. The artist's subsequent recording
+shows a speaker-shaped cursor and an arrow while the link/wordmark remains
+highlighted. No hidden player exists on the practical page and the site requests
+no custom cursor image. The preview-only `/__preview/cursor` now isolates plain
+native controls from all Temple scripts, media and animation for comparison on
+the affected Mac. No additional cursor CSS workaround has been added. See
+`docs/agents/temple-cursor-investigation.md` for evidence and next probes. Direct
+chat messaging is unavailable; these notes and read-only video-chat inspection
+carry the shared findings.

@@ -18,6 +18,10 @@ The simulated preview copies prepared media from `.generated/media` directly int
 its snapshot, including after asset-only builds replace `dist/`. Plain Wrangler
 still needs `node content/development/media.ts` after an asset-only build.
 
+`/__preview/cursor` is a static browser-control page for cursor diagnosis. It has
+native links, a button and a text field, with no Temple styles, scripts or media.
+Compare it in the affected browser before changing artwork or cursor rules.
+
 `npm run dev` remains the live-reloading Wrangler server. Its unconfigured local
 runtime does not enable signup/login/Circle flows; use the simulated preview to
 review those flows.
