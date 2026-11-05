@@ -405,6 +405,11 @@
   transition-delay: 0s;
 }
 .temple-artwork[data-temple-view='poem']
+  .temple-top-navigation[data-nav-mounted]:not([data-nav-visible]) {
+  /* The returning invitation belongs to the poem's foreground stacking layer. */
+  z-index: 1;
+}
+.temple-artwork[data-temple-view='poem']
   .temple-top-navigation[data-nav-mounted]:not([data-nav-visible])
   .temple-nav-enter {
   visibility: hidden;

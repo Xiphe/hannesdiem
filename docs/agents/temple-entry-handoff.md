@@ -42,7 +42,8 @@ poem and closing “Enter”. Header background and menu logo fade over500ms in 
 directions when the welcome action crosses its centered header position. Delay
 hiding the header until its exit fade finishes. The welcome action disappears
 immediately and its header replacement appears at full opacity, avoiding duplicate
-button images. It contains only “Enter the Temple of Sound” centered plus the
+button images. During exit, lower the bar beneath the poem's foreground stacking
+layer so the returning invitation stays above it. It contains only “Enter the Temple of Sound” centered plus the
 site-menu logo; no wordmark/date. The closing action fades in beneath
 the held final phrase, centered in the space between its ink and the viewport
 bottom. The artist defers button artwork to a separate exploration.

@@ -139,7 +139,11 @@ test('the welcome button hands over to the centered header button at the top', a
   expect(Math.abs(action.y + action.height / 2 - box.y - box.height / 2)).toBeLessThan(1)
   await expect(button).toHaveText((await header.locator('.temple-nav-enter a').textContent()) ?? '')
   await expect(header.locator('.temple-nav-logo')).toHaveCSS('opacity', '1')
-  await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 100))
+  await button.evaluate((node) => {
+    const header = document.querySelector<HTMLElement>('.temple-top-navigation')!
+    const top = (header.offsetHeight - (node as HTMLElement).offsetHeight) / 2 + 2
+    scrollTo(0, scrollY + node.getBoundingClientRect().top - top)
+  })
   await expect(header).not.toHaveAttribute('data-nav-visible', '')
   await expect(button).toBeVisible()
   await expect(header.locator('.temple-nav-enter')).toHaveCSS('visibility', 'hidden')
@@ -149,6 +153,8 @@ test('the welcome button hands over to the centered header button at the top', a
       visibility: getComputedStyle(node).visibility,
       backdrop: Number(getComputedStyle(node, '::before').opacity),
       logo: Number(getComputedStyle(node.querySelector('.temple-nav-logo')!).opacity),
+      headerLayer: Number(getComputedStyle(node).zIndex),
+      invitationLayer: Number(getComputedStyle(document.querySelector('.poem-pairs')!).zIndex),
     }
   })
   expect(exit.visibility).toBe('visible')
@@ -156,6 +162,7 @@ test('the welcome button hands over to the centered header button at the top', a
   expect(exit.backdrop).toBeLessThan(1)
   expect(exit.logo).toBeGreaterThan(0)
   expect(exit.logo).toBeLessThan(1)
+  expect(exit.invitationLayer).toBeGreaterThan(exit.headerLayer)
   await expect(header).not.toBeVisible()
 })
 
