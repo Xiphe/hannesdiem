@@ -15,7 +15,8 @@ Watch; the entry and share-image conversations own their corresponding views.
 - Video covers when its orientation matches the viewport; otherwise contains on
   black. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
-  shallow down-chevron tucked into the existing bottom padding.
+  shallow chevron tucked into the existing bottom padding, pointing up when
+  collapsed and down when open.
   Only the chevron’s center moves between directions; its ends stay fixed. The
   narrower, dimmer icon moves down 10px as the drawer opens. A single open
   percentage drives its position, shape, drawer travel and backdrop extent,
@@ -23,7 +24,7 @@ Watch; the entry and share-image conversations own their corresponding views.
   outline on the video surface. The chevron and scrubber have no focus outline; other controls retain keyboard focus indicators.
   The bottom gradient fades evenly from transparent to 94% black across its
   full height, anchored to the viewport bottom throughout animation and dragging.
-  Collapsed, it covers only the controls and a short fade above them; it grows with the description drawer. The centered top title has
+  Collapsed, it covers only the controls and a 48px fade above them; it grows with the description drawer. The centered top title has
   its own dark fade. Back and Share remain icon-only corner controls; all appear
   with the rest of the UI.
 - During video playback the summary and corner controls fade in over one second

@@ -759,7 +759,7 @@ test('description state changes animate while dragging follows the pointer direc
   expect(movement!.open).toBeLessThan(1)
   expect(movement!.middle).toBeCloseTo((1 - movement!.open) * movement!.height, 2)
   expect(movement!.chevronY).toBeCloseTo(10 * movement!.open, 2)
-  expect(movement!.chevronPhase).toBeCloseTo(1 - 2 * movement!.open, 2)
+  expect(movement!.chevronPhase).toBeCloseTo(2 * movement!.open - 1, 2)
   await expect(panel).not.toHaveAttribute('data-animating', '')
   const closing = await item.evaluate((article) => {
     article.querySelector<HTMLButtonElement>('[data-details-toggle]')!.click()
@@ -789,7 +789,7 @@ test('description state changes animate while dragging follows the pointer direc
   expect(dragged.open).toBeGreaterThan(0)
   expect(dragged.open).toBeLessThan(1)
   expect(dragged.y).toBeCloseTo(10 * dragged.open, 2)
-  expect(dragged.phase).toBeCloseTo(1 - 2 * dragged.open, 2)
+  expect(dragged.phase).toBeCloseTo(2 * dragged.open - 1, 2)
   await page.mouse.up()
   expect(await panel.evaluate((node) => node.getAnimations().length)).toBe(0)
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
