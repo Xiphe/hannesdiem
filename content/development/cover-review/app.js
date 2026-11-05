@@ -221,11 +221,12 @@ $('save').addEventListener('click', async () => {
 try {
   videos = await api('/api/videos')
   for (const video of videos) {
+    const applied = video.cover?.videoFrame?.videoId === video.videoId
     state.set(video.id, {
-      time: video.choice?.time ?? 0,
+      time: video.choice?.time ?? (applied ? video.cover.videoFrame.time : 0),
       focalX: video.choice?.focalX ?? video.cover?.focalX ?? 50,
       focalY: video.choice?.focalY ?? video.cover?.focalY ?? 50,
-      saved: video.choice?.compositionVersion === video.compositionVersion,
+      saved: video.choice ? video.choice.compositionVersion === video.compositionVersion : applied,
     })
     const option = document.createElement('option')
     option.value = video.id

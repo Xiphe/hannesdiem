@@ -98,6 +98,18 @@ coordinates in existing image metadata and source/timestamp provenance retained
 with the authored cover. Rebuild the normal Publication to generate final cards.
 This review store is not a Publication input or a second media adapter.
 
+The tool is committed under `content/development/cover-review*`, with the
+`content:review-covers` package script. For later uploads, add the recording to
+native CMX content, rebuild the Publication and restart that script; new videos
+appear in the picker automatically. No standalone catalogue needs updating.
+
+The artist's three approved covers are now imported in `_recordings.tsx`.
+Their full source JPEGs live in Git LFS under `content/media/`. Each native cover
+object retains `focalX`, `focalY` and `videoFrame: { videoId, time }`. This durable
+metadata reopens the selected time and point even when the local review cache
+is absent. The authored cover is then treated as saved, while a changed source
+video requires a new choice. Playback continues using the original Stream video.
+
 `temple-share-images.ts` forwards imported covers' existing `focalX`/`focalY`
 values to both card variants. They participate in card cache identities;
 cover downloads remain deduplicated. Omitted coordinates keep the previous
@@ -109,6 +121,7 @@ identifiers and is separate from the shared website preview on8787.
 comparison of the original and corrected handlers. After scrubbing to20.5s,
 the old +1s handler incorrectly chooses1s; the new handler chooses21.5s.
 It also checks adjacent frame stepping from that manually selected playhead.
+Its synthetic persisted-cover case checks restoration without a local draft.
 This manual diagnostic needs the installed Playwright browser; content unit
 tests cover crop targets, frame math and HTTP ranges without a browser or ffmpeg.
 

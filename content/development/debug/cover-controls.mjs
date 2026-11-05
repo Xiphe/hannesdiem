@@ -23,6 +23,7 @@ try {
   for (const [version, source] of [
     ['before', old],
     ['after', current],
+    ['persisted-cover', current],
   ]) {
     const page = await browser.newPage()
     await page.addInitScript(() => {
@@ -68,6 +69,18 @@ try {
               duration: 60,
               frameRate: 30,
               compositionVersion: 2,
+              ...(version === 'persisted-cover'
+                ? {
+                    cover: {
+                      src: 'https://example.invalid/synthetic-cover.jpg',
+                      width: 300,
+                      height: 900,
+                      focalX: 30,
+                      focalY: 20,
+                      videoFrame: { videoId: 'abcdef', time: 12.5 },
+                    },
+                  }
+                : {}),
             },
           ],
         })
@@ -78,7 +91,15 @@ try {
       return route.fulfill({ status: 204 })
     })
     await page.goto('http://review.test/')
-    await page.waitForFunction(() => !document.getElementById('save').disabled)
+    await page.waitForFunction(
+      () => document.querySelector('.results').getAttribute('aria-busy') === 'false',
+    )
+    if (version === 'persisted-cover') {
+      assert.equal(Number(await page.locator('#time').inputValue()), 12.5)
+      assert.equal(Number(await page.locator('#focal-x').inputValue()), 30)
+      assert.equal(Number(await page.locator('#focal-y').inputValue()), 20)
+      assert.match(await page.locator('#progress').textContent(), /^1 of 1 saved/)
+    }
     await page.evaluate(() => (document.getElementById('video').currentTime = 20.5))
     await page.locator('#forward').click()
     const second = Number(await page.locator('#time').inputValue())

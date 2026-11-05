@@ -460,6 +460,15 @@ Preserve all three prior choices and original frames, back up their draft and
 reopen them for review under the new composition version. The artist will
 remark true focal points and save again. No cover choices applied or published.
 
+**Cover choices accepted and tool retained — 2026-11-05.** The artist confirms
+the refined process works much better, saves all three covers and asks to keep
+the tool for future uploads. Retain the committed local tool and package script;
+it discovers videos from each rebuilt native Publication. Apply the approved
+source frames as CMX cover imports, keeping focal coordinates and video-frame
+source/time metadata in the authored cover objects. Store originals in Git LFS.
+The tool can recover these choices without its temporary draft cache. This
+accepts the selected frames and focus, not a deployment request.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to

@@ -1,4 +1,7 @@
 import { TempleRecordings } from '@hannesdiem/content-components'
+import micTechCover from '../../media/temple-recording-mic-tech-check-cover.jpg'
+import permissionsCover from '../../media/temple-recording-permission-spaces-cover.jpg'
+import kennstDuDasCover from '../../media/temple-recording-kennst-du-das-cover.jpg'
 
 export const recordings = (
   <TempleRecordings
@@ -9,6 +12,13 @@ export const recordings = (
         postedAt: '2026-11-02T20:00:00+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: '54f94a6c1df7a504f462ecc8e2564f6d',
+        cover: {
+          ...micTechCover,
+          alt: 'Mic/Tech-Check',
+          focalX: 30.4,
+          focalY: 26.6,
+          videoFrame: { videoId: '54f94a6c1df7a504f462ecc8e2564f6d', time: 0 },
+        },
         aspectRatio: 9 / 16,
         children: (
           <p>
@@ -24,6 +34,13 @@ export const recordings = (
         postedAt: '2026-11-04T20:00:00+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: 'dd0296e50e2491fef540cdd9ce9e5439',
+        cover: {
+          ...permissionsCover,
+          alt: 'Can we briefly talk about permissions?',
+          focalX: 60.7,
+          focalY: 36.7,
+          videoFrame: { videoId: 'dd0296e50e2491fef540cdd9ce9e5439', time: 9.033333 },
+        },
         aspectRatio: 9 / 16,
         children: <p>What inner and outer permission do you need to get creative?</p>,
       },
@@ -33,6 +50,13 @@ export const recordings = (
         postedAt: '2026-11-05T09:00:00+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: '608f25dbd40bc1e9ba15446d30e17906',
+        cover: {
+          ...kennstDuDasCover,
+          alt: 'Kennst du das?',
+          focalX: 51.7,
+          focalY: 28.3,
+          videoFrame: { videoId: '608f25dbd40bc1e9ba15446d30e17906', time: 30.2 },
+        },
         aspectRatio: 9 / 16,
         children: <p>Also was macht man da? Könnte hilfe brauchen.</p>,
       },

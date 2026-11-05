@@ -15,6 +15,8 @@ export interface MediaImage {
   alt?: string
   focalX?: number
   focalY?: number
+  /** Selected video-frame provenance, retained alongside an imported cover. */
+  videoFrame?: { videoId: string; time: number }
   color?: string
   palette?: PaletteColor[]
 }
