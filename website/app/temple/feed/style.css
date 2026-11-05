@@ -311,6 +311,7 @@
   min-height: 20px;
   height: 20px;
   padding: 0;
+  cursor: grab;
 }
 .feed-disclosure:focus-visible {
   outline: none;
@@ -321,6 +322,21 @@
   border-radius: 2px;
   background: currentColor;
   opacity: 0.2;
+  transition: opacity 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .feed-disclosure:hover .feed-drag-indicator {
+    opacity: 0.9;
+  }
+}
+.feed-disclosure:focus-visible .feed-drag-indicator,
+.feed-panel[data-dragging] .feed-drag-indicator {
+  opacity: 0.9;
+}
+.feed-disclosure:active,
+.feed-panel[data-dragging] .feed-summary,
+.feed-panel[data-dragging] .feed-summary * {
+  cursor: grabbing;
 }
 .feed-details {
   max-height: var(--details-height);
@@ -657,7 +673,8 @@
   .feed-volume-popover,
   .feed-volume-control::before,
   .feed-corners .feed-control,
-  .feed-end-action {
+  .feed-end-action,
+  .feed-drag-indicator {
     transition: none;
   }
 }
