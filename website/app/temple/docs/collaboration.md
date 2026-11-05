@@ -227,6 +227,23 @@ caption area. Preserve Unicode graphemes and keep the full page title and share
 metadata. An authored `shareTitle` remains optional. Regenerate all gallery
 examples, including the formerly failing 287-character case. Local review only.
 
+**Recording-card checkpoint accepted — 2026-11-05.** The artist says “LGTM”
+and requests a checkpoint before moving to text-only titles. Accept the
+photographic post-card implementation through `ef04008`: lower-left caption,
+40px orange Temple name, 90px maximum Cloud ink title, shrinking to 48px then
+trimming with `...`, and adaptive linear shading. The preceding implementation
+is `34ed0d5`; all 48 background/capacity cases render. This is acceptance of
+the local implementation, not a deployment request.
+
+The artist clarifies that the next exploration covers the whole Temple,
+practical sections and poem cards. Phase: Expansion. Start with three purely
+typographic compositions using the existing Temple name and Visit/Watch/Create/
+Share labels: the accepted caption placement, a centered composition, and large
+poster typography. Preserve the selected palette as shared ground while varying
+hierarchy and placement. Poem share wording remains open; ask whether the five
+agreed URL phrases should now become card titles. Keep these studies separate
+from the website implementation and the accepted recording gallery.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to
