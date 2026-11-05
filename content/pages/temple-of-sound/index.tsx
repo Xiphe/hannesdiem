@@ -17,7 +17,17 @@ import { watchActionContext, watchIntroduction, watchFragments } from './_watch.
 import { createCopy } from './_create.ts'
 import { recordings } from './_recordings.tsx'
 
-export const metadata = { kind: 'temple', image: forest } satisfies PageMetadata
+export const metadata = {
+  kind: 'temple',
+  image: forest,
+  verseShares: {
+    'im in love': { title: 'im in love' },
+    'im in grief': { title: 'im in grief' },
+    'i resist': { title: 'I resist' },
+    'i stay': { title: 'I stay' },
+    'i devote': { title: 'I devote' },
+  },
+} satisfies PageMetadata
 
 export const title = 'Temple of Sound'
 

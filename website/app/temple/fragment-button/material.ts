@@ -1,7 +1,7 @@
 import type { Piece } from './fragment-generator.ts'
 
 // Shared soft joins retain the straight cuts used to assemble the live border.
-export const fragmentStroke = 1.8
+export { fragmentStroke } from '../../../../contracts/temple/fragments.ts'
 export type GroundMaterial = { pieces: readonly Piece[]; seed: string }
 const groundMaterials = new WeakMap<HTMLElement, GroundMaterial>()
 export const groundMaterialEvent = 'fragment-ground-material'

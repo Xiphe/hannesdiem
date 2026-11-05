@@ -240,6 +240,19 @@ export function createApp(content: ContentLoader) {
       )
     if (path.endsWith('/') && path !== '/')
       return redirect(path.slice(0, -1) + new URL(request.url).search, 308)
+    let route = page.route
+    let canonicalPath = path
+    const verse = new URL(request.url).searchParams.get('verse')?.trim().toLowerCase()
+    if (
+      verse &&
+      route?.kind === 'temple' &&
+      route.verseShares &&
+      Object.hasOwn(route.verseShares, verse)
+    ) {
+      const share = route.verseShares[verse]
+      route = { ...route, ogTitle: share.title, ogImage: share.ogImage ?? route.ogImage }
+      canonicalPath += `?verse=${encodeURIComponent(verse)}`
+    }
     return render(
       <SiteContent
         site={page.site}
@@ -247,8 +260,8 @@ export function createApp(content: ContentLoader) {
       >
         <Page
           {...renderContent(page.document)}
-          route={page.route}
-          path={path}
+          route={route}
+          path={canonicalPath}
           noindex={page.status === 404}
         />
       </SiteContent>,

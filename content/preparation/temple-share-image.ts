@@ -88,12 +88,16 @@ export async function renderTempleShareImage(input: {
   title: string
   background?: Uint8Array
   backgroundColor?: string
+  /** The whole-Temple card needs its name once, as the main title. */
+  showWordmark?: boolean
 }) {
   if (!input.title.trim()) throw new Error('Temple share cards require a nonempty title')
   const { width, height, left, bottom, captionTop, gap, nameSize, bottomOpacity } = templeCard
   const name = await textMask('Temple of Sound', nameSize, true)
-  const nameHeight = Math.max(Math.ceil(nameSize * 1.15), name.info.height)
-  const available = height - bottom - captionTop - nameHeight - gap
+  const showWordmark = input.showWordmark !== false
+  const nameHeight = showWordmark ? Math.max(Math.ceil(nameSize * 1.15), name.info.height) : 0
+  const nameGap = showWordmark ? gap : 0
+  const available = height - bottom - captionTop - nameHeight - nameGap
   let fitted: Awaited<ReturnType<typeof measureTitle>> | undefined
   let size = templeCard.maxTitleSize as number
   let titleText = input.title
@@ -139,7 +143,7 @@ export async function renderTempleShareImage(input: {
   }
   const titleHeight = fitted.height
   const titleTop = height - bottom - titleHeight
-  const nameTop = titleTop - gap - nameHeight
+  const nameTop = titleTop - nameGap - nameHeight
   const background = await (
     input.background
       ? sharp(input.background).rotate().resize(width, height, { fit: 'cover' })
@@ -196,7 +200,11 @@ export async function renderTempleShareImage(input: {
     `<defs><linearGradient id="shade" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="${startY}" y2="${height}"><stop stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${bottomOpacity}"/></linearGradient></defs><path d="M0 0h${width}v${height}H0z" fill="url(#shade)"/>`,
   )
   const nameMask = await sharp({ create: { width, height, channels: 4, background: '#0000' } })
-    .composite([{ input: name.data, left, top: nameTop + nameHeight - name.info.height }])
+    .composite(
+      showWordmark
+        ? [{ input: name.data, left, top: nameTop + nameHeight - name.info.height }]
+        : [],
+    )
     .png()
     .toBuffer()
   const titleMask = await sharp({ create: { width, height, channels: 4, background: '#0000' } })

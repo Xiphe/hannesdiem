@@ -7,6 +7,7 @@ import sharp from 'sharp'
 import { CMX_DOCUMENT_SCHEMA, CMX_DOCUMENT_VERSION, type CmxDocument } from '@cmx-tools/contracts'
 import { renderTempleShareImage, templeCard } from '../preparation/temple-share-image.ts'
 import { prepareTempleShareImages } from '../preparation/temple-share-images.ts'
+import { templeSharePattern } from '../preparation/temple-share-pattern.ts'
 
 test('short and long titles keep all glyphs inside a fixed caption area, shrinking only the title', async () => {
   const short = await renderTempleShareImage({ title: 'Synthetic title' })
@@ -65,6 +66,21 @@ test('background brightness can extend a straight fade across the whole image', 
   const sample = (y: number) => data[(y * info.width + 1190) * 3]
   // A synthetic white background exposes the actual fade, clear of all glyphs.
   assert.ok(Math.abs(sample(315) - (sample(0) + sample(629)) / 2) <= 2)
+})
+
+test('fragment share patterns are stable per identity and vary between identities', async () => {
+  const first = templeSharePattern('synthetic-first')
+  assert.deepEqual(first, templeSharePattern('synthetic-first'))
+  assert.notDeepEqual(first, templeSharePattern('synthetic-second'))
+  const card = await renderTempleShareImage({
+    title: 'Synthetic identity',
+    background: first,
+    showWordmark: false,
+  })
+  assert.equal(card.layout.titleText, 'Synthetic identity')
+  assert.equal(card.layout.titleSize, 90)
+  assert.equal(card.layout.captionTop, card.layout.titleTop)
+  assert.equal((await sharp(card.bytes).metadata()).height, 630)
 })
 
 function document(
@@ -170,16 +186,20 @@ test('publication uses CMX slots, deduplicates cards, retains rich content and h
   assert.deepEqual(source, before)
   assert.equal(requests, 1)
   assert.match(posts[0].shareImage.src, /^\/media\/og\/temple-[a-f0-9]{16}\.jpg$/)
+  assert.match(posts[0].previewImage.src, /^\/media\/og\/temple-[a-f0-9]{16}\.jpg$/)
+  assert.notEqual(posts[0].previewImage.src, posts[0].shareImage.src)
   assert.equal(posts[0].cover, undefined)
   assert.equal(posts[0].children, 'Synthetic description')
   assert.equal(posts[1].title, beforePosts[1].title)
   assert.equal(posts[1].shareImage.alt, 'Short synthetic card title')
   assert.deepEqual(posts[2].shareImage, beforePosts[2].shareImage)
+  assert.ok(posts[2].previewImage)
   assert.equal(posts[3].title, beforePosts[3].title)
   assert.equal(posts[3].shareImage.alt, beforePosts[3].title)
   assert.equal(posts[3].shareTitle, undefined)
   const nested = result.root.content.default as { props: { facts: { after: typeof node }[] } }
   assert.deepEqual(nested.props.facts[0].after.props.posts[0].shareImage, posts[0].shareImage)
+  assert.deepEqual(nested.props.facts[0].after.props.posts[0].previewImage, posts[0].previewImage)
   const bytes = await readFile(join(directory, posts[0].shareImage.src.slice('/media/'.length)))
   assert.equal((await sharp(bytes).metadata()).width, 1200)
 })
@@ -193,4 +213,55 @@ test('an unavailable poster stops preparation instead of publishing a broken car
     ),
     /Temple cover request failed \(503\)/,
   )
+})
+
+test('Temple page and verse cards attach to existing metadata without fetching photographs', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'temple-verse-share-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  const source = {
+    _site: fixtures()._site,
+    'synthetic-temple': document(
+      {
+        title: 'Synthetic Temple',
+        default: 'Complete synthetic poem',
+        metadata: {
+          kind: 'temple',
+          image: { src: 'https://example.invalid/unrequested.jpg', width: 600, height: 900 },
+          verseShares: {
+            'synthetic opening': { title: 'Synthetic opening' },
+            'synthetic ending': { title: 'Synthetic ending' },
+          },
+        },
+      },
+      [],
+    ),
+    'synthetic-section': document(
+      {
+        title: 'Synthetic Temple',
+        default: 'Complete synthetic practical page',
+        metadata: { kind: 'temple', ogTitle: 'Synthetic section' },
+      },
+      [],
+    ),
+  }
+  const before = structuredClone(source)
+  const result = await prepareTempleShareImages(source, { base: '/media', directory }, async () => {
+    throw new Error('Text-only cards must not fetch photographs')
+  })
+  assert.deepEqual(source, before)
+  assert.equal(result['synthetic-temple'].content.default, 'Complete synthetic poem')
+  const metadata = result['synthetic-temple'].content.metadata as any
+  const section = result['synthetic-section'].content.metadata as any
+  const cards = [
+    metadata.ogImage,
+    section.ogImage,
+    ...Object.values(metadata.verseShares).map((verse: any) => verse.ogImage),
+  ]
+  assert.equal(new Set(cards.map((card) => card.src)).size, 4)
+  assert.equal(metadata.verseShares['synthetic opening'].title, 'Synthetic opening')
+  assert.equal(section.ogTitle, 'Synthetic section')
+  for (const card of cards) {
+    const bytes = await readFile(join(directory, card.src.slice('/media/'.length)))
+    assert.equal((await sharp(bytes).metadata()).width, 1200)
+  }
 })

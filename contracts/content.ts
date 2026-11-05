@@ -10,6 +10,8 @@ export interface ContentRoute {
   description?: string
   image?: ImageSource
   ogImage?: MediaImage
+  /** Share identities within a complete poem page; keys are normalized verse query values. */
+  verseShares?: Record<string, { title: string; ogImage?: MediaImage }>
   theme?: string
   releaseDate?: string
   creationDate?: string
@@ -193,7 +195,18 @@ function validateRoutes({ routes, site, redirects }: PublicationIndex) {
         (typeof route.image === 'string'
           ? !Object.hasOwn(site.media, route.image)
           : !image(route.image))) ||
-      (route.ogImage !== undefined && !image(route.ogImage))
+      (route.ogImage !== undefined && !image(route.ogImage)) ||
+      (route.verseShares !== undefined &&
+        (!record(route.verseShares) ||
+          !Object.entries(route.verseShares).every(
+            ([key, value]) =>
+              key.length > 0 &&
+              key === key.trim().toLowerCase() &&
+              record(value) &&
+              typeof value.title === 'string' &&
+              value.title.trim().length > 0 &&
+              (value.ogImage === undefined || image(value.ogImage)),
+          )))
     )
       throw new Error('Invalid or duplicate content route')
     paths.add(route.path)

@@ -2,10 +2,11 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { resolve, sep } from 'node:path'
 import { reduceCmxDocumentNodes } from '@cmx-tools/reduce'
-import type { MediaImage, PublishedDocuments } from '../../contracts/content.ts'
+import type { ContentRoute, MediaImage, PublishedDocuments } from '../../contracts/content.ts'
 import { readSite, siteEntry } from '../../contracts/content.ts'
 import { storeMedia, type MediaStorage } from './media-storage.ts'
 import { renderTempleShareImage } from './temple-share-image.ts'
+import { templeSharePattern } from './temple-share-pattern.ts'
 
 /** Attach cards to the same CMX post props the viewer and overview already read. */
 export async function prepareTempleShareImages(
@@ -15,7 +16,34 @@ export async function prepareTempleShareImages(
 ) {
   const media = readSite(documents[siteEntry]).media
   const cards = new Map<string, Promise<MediaImage>>()
-  async function source(src: string) {
+  const sources = new Map<string, Promise<Uint8Array>>()
+  async function cardFor(title: string, src?: string, seed?: string, showWordmark = true) {
+    const key = JSON.stringify({ title, src, seed, showWordmark })
+    let card = cards.get(key)
+    if (!card) {
+      card = (async () => {
+        const { bytes, width, height } = await renderTempleShareImage({
+          title,
+          background: src ? await source(src) : seed ? templeSharePattern(seed) : undefined,
+          showWordmark,
+        })
+        const digest = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
+        const url = await storeMedia(storage, `og/temple-${digest}.jpg`, bytes, 'image/jpeg')
+        return { src: url, width, height, alt: title }
+      })()
+      cards.set(key, card)
+    }
+    return card
+  }
+  function source(src: string) {
+    let bytes = sources.get(src)
+    if (!bytes) {
+      bytes = loadSource(src)
+      sources.set(src, bytes)
+    }
+    return bytes
+  }
+  async function loadSource(src: string) {
     if ('directory' in storage && src.startsWith(`${storage.base}/`)) {
       const directory = resolve(storage.directory)
       const path = resolve(directory, src.slice(storage.base.length + 1))
@@ -29,7 +57,7 @@ export async function prepareTempleShareImages(
     return new Uint8Array(await response.arrayBuffer())
   }
   async function prepare(post: Record<string, unknown>, recording: boolean) {
-    if (post.shareImage) return post
+    if (post.shareImage && post.previewImage) return post
     const title = post.shareTitle ?? post.title
     if (typeof title !== 'string' || typeof post.id !== 'string')
       throw new Error('Temple share cards require a post ID and title')
@@ -48,21 +76,11 @@ export async function prepareTempleShareImages(
         throw new Error(`Missing Stream identity: ${post.id}`)
       src = `https://customer-${post.customerCode}.cloudflarestream.com/${encodeURIComponent(post.videoId)}/thumbnails/thumbnail.jpg?width=1200&height=1200&fit=clip`
     }
-    const key = JSON.stringify({ title, src })
-    let card = cards.get(key)
-    if (!card) {
-      card = (async () => {
-        const { bytes, width, height } = await renderTempleShareImage({
-          title,
-          background: src ? await source(src) : undefined,
-        })
-        const digest = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
-        const url = await storeMedia(storage, `og/temple-${digest}.jpg`, bytes, 'image/jpeg')
-        return { src: url, width, height, alt: title }
-      })()
-      cards.set(key, card)
+    return {
+      ...post,
+      shareImage: post.shareImage ?? (await cardFor(title, src)),
+      previewImage: post.previewImage ?? (await cardFor(title, src, undefined, false)),
     }
-    return { ...post, shareImage: await card }
   }
   const output: PublishedDocuments = {}
   for (const [key, document] of Object.entries(documents)) {
@@ -89,7 +107,38 @@ export async function prepareTempleShareImages(
         return { ...node, props: { ...node.props, [field]: posts } }
       },
     })
-    output[key] = result.document
+    const metadata = result.document.content.metadata as Partial<ContentRoute> | undefined
+    if (metadata?.kind === 'temple') {
+      const title = metadata.ogImageTitle ?? metadata.ogTitle ?? result.document.content.title
+      if (typeof title !== 'string') throw new Error('Temple share cards require a title')
+      const verseShares = metadata.verseShares
+        ? Object.fromEntries(
+            await Promise.all(
+              Object.entries(metadata.verseShares).map(async ([verse, value]) => [
+                verse,
+                {
+                  ...value,
+                  ogImage:
+                    value.ogImage ??
+                    (await cardFor(value.title, undefined, `${key}?verse=${verse}`)),
+                },
+              ]),
+            ),
+          )
+        : undefined
+      output[key] = {
+        ...result.document,
+        content: {
+          ...result.document.content,
+          metadata: {
+            ...metadata,
+            ogImage:
+              metadata.ogImage ?? (await cardFor(title, undefined, key, !metadata.verseShares)),
+            ...(verseShares ? { verseShares } : {}),
+          },
+        },
+      }
+    } else output[key] = result.document
   }
   return output
 }

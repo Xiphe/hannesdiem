@@ -52,6 +52,33 @@ Older Publications without generated cards retain their existing preview fallbac
 The two shared fonts live under `contracts/assets/temple/`, so website-only and
 content-only builds both receive the same files.
 
+## Temple, section and poem cards
+
+The photographic card work is accepted at checkpoint `bc5fc04` (implementation
+through `ef04008`). For the text cards the artist selected the same caption
+layout over random fragment shapes like the page, withdrawing the intervening
+layout and excerpt studies. Use the five supplied poem phrases as headlines;
+do not add excerpts or invent descriptions.
+
+`contracts/temple/fragments.ts` owns the page's existing seeded shape generator;
+the browser keeps its placement helpers. `temple-share-pattern.ts` composes a
+static dark crop with those shapes and soft joins. Seed it from each document
+or document/verse identity, so patterns differ while repeated publishing stays
+stable. Whole-Temple cards show their name once as the large title; section and
+poem cards retain the small orange wordmark above the large Cloud ink headline.
+
+Native CMX metadata declares `verseShares` on the complete poem page, mapping
+normalized `verse` query values to authored titles and optional custom images.
+The existing preparation adapter attaches generated `ogImage` values to this
+metadata and to each Temple route. Section entrypoints supply their own OG titles
+without inheriting the poem query map. No separate route/share index is created.
+Validation checks the nested metadata and media URLs with the Publication.
+
+The server selects a matching verse's OG title/image without changing the page
+body. Canonical and `og:url` retain only the normalized, percent-encoded verse
+query; unknown values fall back to the whole Temple. Browser fragment and query
+arrival behavior remains with the entry implementation.
+
 ## Review and checks
 
 Generate the synthetic coverage gallery with:
@@ -64,7 +91,9 @@ Optional `--photo NAME PATH` arguments add actual source images for manual revie
 The gallery and measured results go to `.generated/temple-share-overview/`.
 Automated assertions use synthetic text, backgrounds and CMX documents only.
 
-This change implements post cards. Whole-Temple, practical-section and poem-card
-artwork remain separate; the artist deferred missing poem titles/descriptions.
-Server-rendered metadata for verse query identities is also still outstanding.
-Existing entry compatibility already handles public legacy links.
+After a local content build, generate a gallery of the actual prepared text
+cards with `node content/preparation/temple-text-card-overview.ts`. It writes ten
+cards, their destinations and a contact sheet under
+`.generated/temple-share-overview/text-cards/`. This is manual review material,
+not an automated test fixture. The inline review is
+`/home/agent/.codex/visualizations/2026/11/05/01a1ab72-6377-72d2-b7fb-537a14ef85d8/temple-text-cards.html`.

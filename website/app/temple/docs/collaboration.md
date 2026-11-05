@@ -244,6 +244,34 @@ hierarchy and placement. Poem share wording remains open; ask whether the five
 agreed URL phrases should now become card titles. Keep these studies separate
 from the website implementation and the accepted recording gallery.
 
+**Text cards use the established layout and fragment ground — 2026-11-05.**
+The artist tentatively accepts the five agreed poem phrases as headlines and
+briefly considers adding content. They then explicitly simplify the direction:
+withdraw the excerpt/layout exploration, use a random background pattern like
+the page's backdrop, and keep the established caption layout. This supplies the
+specification for direct implementation, superseding the expansion plan above.
+Do not add excerpts or descriptions. Preserve the supplied casing: `im in love`,
+`im in grief`, `I resist`, `I stay`, `I devote`.
+
+Use the page's actual pure shape generator and dark material tones in a static
+pattern, seeded by the share identity. Temple, four practical sections and five
+poem destinations receive separate stable patterns. Section and poem cards retain
+40px orange name above the 90px Cloud ink title; the whole Temple shows its name
+once as the main title. The same minimum size and trimming rules remain.
+
+Native page metadata contains the verse title/image pairs in the existing CMX
+Publication. The existing preparation step attaches images; the server selects
+the verse metadata while rendering the complete poem and retains that verse in
+canonical/OG URLs, excluding unrelated notice queries. Existing browser deep-link
+compatibility remains with the entry work. The shape generator moves, unchanged,
+under `contracts/temple/` for content-only and website-only builds.
+
+The ten actual prepared cards are available in
+`.generated/temple-share-overview/text-cards/`; the inline review source is
+`/home/agent/.codex/visualizations/2026/11/05/01a1ab72-6377-72d2-b7fb-537a14ef85d8/temple-text-cards.html`.
+Phase: implementation for review within the selected direction. No deployment
+requested.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to
