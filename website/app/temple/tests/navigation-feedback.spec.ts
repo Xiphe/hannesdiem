@@ -111,7 +111,7 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(header).not.toHaveAttribute('data-nav-visible', '')
   await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
   await expect(header).toHaveAttribute('data-nav-visible', '')
-  await expect(header).toHaveCSS('transition-property', 'none')
+  await expect(header).toHaveCSS('transition-property', 'visibility')
   await expect(header).toHaveCSS('opacity', '1')
   await expect(button).toHaveCSS('visibility', 'hidden')
   await expect(header.locator('.temple-nav-enter a')).toBeVisible()
@@ -138,9 +138,25 @@ test('the welcome button hands over to the centered header button at the top', a
   const action = (await header.locator('.temple-nav-enter a').boundingBox())!
   expect(Math.abs(action.y + action.height / 2 - box.y - box.height / 2)).toBeLessThan(1)
   await expect(button).toHaveText((await header.locator('.temple-nav-enter a').textContent()) ?? '')
+  await expect(header.locator('.temple-nav-logo')).toHaveCSS('opacity', '1')
   await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 100))
   await expect(header).not.toHaveAttribute('data-nav-visible', '')
   await expect(button).toBeVisible()
+  await expect(header.locator('.temple-nav-enter')).toHaveCSS('visibility', 'hidden')
+  const exit = await header.evaluate(async (node) => {
+    await new Promise((resolve) => setTimeout(resolve, 120))
+    return {
+      visibility: getComputedStyle(node).visibility,
+      backdrop: Number(getComputedStyle(node, '::before').opacity),
+      logo: Number(getComputedStyle(node.querySelector('.temple-nav-logo')!).opacity),
+    }
+  })
+  expect(exit.visibility).toBe('visible')
+  expect(exit.backdrop).toBeGreaterThan(0)
+  expect(exit.backdrop).toBeLessThan(1)
+  expect(exit.logo).toBeGreaterThan(0)
+  expect(exit.logo).toBeLessThan(1)
+  await expect(header).not.toBeVisible()
 })
 
 for (const width of [390, 1440]) {

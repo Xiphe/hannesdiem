@@ -38,8 +38,9 @@ There is no inside index or feed index.
 ## Rendering
 
 Poem: opener, artist-supplied welcome with “Enter the Temple of Sound”, continuous
-poem and closing “Enter”. Header background and menu logo fade in when the welcome
-action reaches its centered header position. The welcome action disappears
+poem and closing “Enter”. Header background and menu logo fade over500ms in both
+directions when the welcome action crosses its centered header position. Delay
+hiding the header until its exit fade finishes. The welcome action disappears
 immediately and its header replacement appears at full opacity, avoiding duplicate
 button images. It contains only “Enter the Temple of Sound” centered plus the
 site-menu logo; no wordmark/date. The closing action fades in beneath

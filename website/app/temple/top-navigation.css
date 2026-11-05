@@ -385,7 +385,7 @@
   background: transparent;
   box-shadow: none;
   border: 0;
-  transition: none;
+  transition: visibility 0s 500ms;
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before {
   content: '';
@@ -399,7 +399,15 @@
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before,
 .temple-artwork[data-temple-view='poem'] .temple-nav-logo {
   opacity: 0;
-  transition: opacity 300ms ease-out;
+  transition: opacity 500ms ease-in-out;
+}
+.temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-visible] {
+  transition-delay: 0s;
+}
+.temple-artwork[data-temple-view='poem']
+  .temple-top-navigation[data-nav-mounted]:not([data-nav-visible])
+  .temple-nav-enter {
+  visibility: hidden;
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-visible]::before,
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-visible] .temple-nav-logo {
@@ -412,6 +420,7 @@
   visibility: hidden;
 }
 @media (prefers-reduced-motion: reduce) {
+  .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-mounted],
   .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before,
   .temple-artwork[data-temple-view='poem'] .temple-nav-logo {
     transition: none;
