@@ -89,6 +89,8 @@ export interface TempleVideoProps extends StreamVideoProps {
   shareTitle?: string
   /** Generated during publication, or an imported custom card. */
   shareImage?: import('./index.d.ts').MediaImage
+  /** Overview card without the Temple name; independent of the shared image. */
+  previewImage?: import('./index.d.ts').MediaImage
   /** ISO posting timestamp with timezone; display is localized by the website. */
   postedAt?: string
   /** Optional cover; defaults to the Stream thumbnail. */
@@ -104,6 +106,7 @@ interface TemplePostBase {
   title: string
   shareTitle?: string
   shareImage?: import('./index.d.ts').MediaImage
+  previewImage?: import('./index.d.ts').MediaImage
   postedAt: string
   cover?: ImageSource
   /** Rich description displayed in the paused viewer's bottom layer. */

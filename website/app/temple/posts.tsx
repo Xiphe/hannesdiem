@@ -19,7 +19,7 @@ export function TemplePosts(handle: Handle<TemplePostsProps>) {
       tabIndex={0}
     >
       {sortedPosts(handle.props.posts).map((post) => {
-        const cover = post.shareImage?.src ?? resolvePostCover(post, site.media)
+        const cover = post.previewImage?.src ?? resolvePostCover(post, site.media)
         return (
           <a
             id={post.id}
@@ -33,11 +33,11 @@ export function TemplePosts(handle: Handle<TemplePostsProps>) {
                 src={cover}
                 alt=""
                 loading="lazy"
-                width={post.shareImage?.width ?? 1052}
-                height={post.shareImage?.height ?? 550}
+                width={post.previewImage?.width ?? 1052}
+                height={post.previewImage?.height ?? 550}
               />
             )}
-            {!post.shareImage && <span class="temple-post-preview-title">{post.title}</span>}
+            {!post.previewImage && <span class="temple-post-preview-title">{post.title}</span>}
           </a>
         )
       })}

@@ -33,22 +33,26 @@ conservative contrast aid, not a guarantee for every pixel or every platform cro
 ## Publication and runtime
 
 `prepareTempleShareImages()` uses CMX's node reducer, including declared prop
-slots, to find `TempleRecordings` and `TemplePosts`. Attach `shareImage` to
-their existing post props within the same Publication. Deduplicate identical
-title/cover inputs across section documents. Publish immutable, byte-hashed JPEGs
+slots, to find `TempleRecordings` and `TemplePosts`. Attach `shareImage` and
+`previewImage` to their existing post props within the same Publication. Deduplicate
+identical title/cover inputs across section documents. Publish immutable, byte-hashed JPEGs
 through the existing media storage, finishing storage before returning the URL.
 Do not create another sharing index. The post-render asset-generation gap and
 existing temporary media exception are documented in ADR 0007.
 
-An explicit `shareImage` bypasses generation. Otherwise use the supplied `cover`,
-then the Stream default thumbnail for video, or a black ground for pictureless
+An explicit `shareImage` bypasses share-card generation. Otherwise use the supplied
+`cover`, then the Stream default thumbnail for video, or a black ground for pictureless
 audio/text. `shareTitle` overrides only the share title, preserving the full
 reader-facing title. Cover fetch failures stop preparation. Keep playback posters
 independent from generated share cards.
 
-The feed route emits each post's generated image and share title as server HTML
-metadata. Watch uses that same image without drawing a second title over it.
-Older Publications without generated cards retain their existing preview fallback.
+The feed route emits each post's generated share image and share title as server
+HTML metadata. The artist requests no Temple-name label in Watch's overview, so
+Watch uses a separate `previewImage`, generated with the same card renderer and
+`showWordmark: false`, without drawing a second title over it. Reuse background
+bytes across both variants. A custom `previewImage` remains intact independently
+of a custom `shareImage`. Older Publications without overview cards fall back to
+the cover plus native post title rather than showing a branded share card.
 The two shared fonts live under `contracts/assets/temple/`, so website-only and
 content-only builds both receive the same files.
 

@@ -118,3 +118,15 @@ identified the Ableton overlay, resolving the investigation.
 
 The artist tunnels port 8787 directly, with no alias. Use
 `http://localhost:8787/temple-of-sound` and `sand tunnel 8787` in review handoffs.
+
+## Watch overview labels — 2026-11-05
+
+The artist asks to omit the Temple name from Watch's content overview cards.
+Entry adds optional `previewImage` to post/video props and generates a
+wordmark-free variant through the existing card renderer's `showWordmark: false`.
+`shareImage` and external sharing keep their selected branding. `TemplePosts`
+consumes `previewImage`; earlier Publications fall back to cover plus native
+post title. This touches only the preparation post branch, not the sharing chat's
+page/verse metadata or pattern work. Shared background bytes are reused across
+the two variants to avoid duplicate poster requests. Direct thread messaging is
+unavailable; preserve this distinction when continuing sharing/feed changes.
