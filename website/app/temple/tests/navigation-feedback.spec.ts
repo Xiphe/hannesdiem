@@ -148,13 +148,21 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(button).toBeVisible()
   await expect(header.locator('.temple-nav-enter')).toHaveCSS('visibility', 'hidden')
   const exit = await header.evaluate(async (node) => {
-    await new Promise((resolve) => setTimeout(resolve, 120))
-    return {
-      visibility: getComputedStyle(node).visibility,
-      backdrop: Number(getComputedStyle(node, '::before').opacity),
-      logo: Number(getComputedStyle(node.querySelector('.temple-nav-logo')!).opacity),
-      headerLayer: Number(getComputedStyle(node).zIndex),
-      invitationLayer: Number(getComputedStyle(document.querySelector('.poem-pairs')!).zIndex),
+    const start = performance.now()
+    for (;;) {
+      await new Promise(requestAnimationFrame)
+      const sample = {
+        visibility: getComputedStyle(node).visibility,
+        backdrop: Number(getComputedStyle(node, '::before').opacity),
+        logo: Number(getComputedStyle(node.querySelector('.temple-nav-logo')!).opacity),
+        headerLayer: Number(getComputedStyle(node).zIndex),
+        invitationLayer: Number(getComputedStyle(document.querySelector('.poem-pairs')!).zIndex),
+      }
+      if (
+        (sample.backdrop > 0 && sample.backdrop < 1 && sample.logo > 0 && sample.logo < 1) ||
+        performance.now() - start > 1000
+      )
+        return sample
     }
   })
   expect(exit.visibility).toBe('visible')
@@ -164,6 +172,99 @@ test('the welcome button hands over to the centered header button at the top', a
   expect(exit.logo).toBeLessThan(1)
   expect(exit.invitationLayer).toBeGreaterThan(exit.headerLayer)
   await expect(header).not.toBeVisible()
+})
+
+for (const width of [390, 1440]) {
+  test(`Enter expands its label in the sticky header and reverses smoothly at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.addInitScript(() => {
+      const original = Element.prototype.animate
+      Element.prototype.animate = function (keyframes, options) {
+        const motion = original.call(this, keyframes, options)
+        if (
+          this.matches('.temple-nav-enter a, .temple-entry-welcome a, .temple-enter-label-extra')
+        ) {
+          motion.pause()
+          motion.currentTime = 210
+        }
+        return motion
+      }
+    })
+    await page.goto('/temple-entry-poem')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await expect(page.locator('.temple-entry-greeting')).toHaveCount(0)
+    const button = page.locator('.temple-entry-welcome a')
+    const header = page.locator('.temple-top-navigation')
+    const fixed = header.locator('.temple-nav-enter a')
+    await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 100))
+    await expect(header).not.toHaveAttribute('data-nav-visible', '')
+    await expect(button.locator('span').first()).toHaveText('Enter')
+    await expect(button.locator('.temple-enter-label-extra')).toHaveCSS('max-width', '0px')
+    const initial = (await button.boundingBox())!.width
+    const full = (await fixed.boundingBox())!.width
+    const padding = await button.evaluate((node) =>
+      parseFloat(getComputedStyle(node).paddingInlineStart),
+    )
+    expect(padding).toBeGreaterThanOrEqual(64)
+    await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
+    await expect(header).toHaveAttribute('data-nav-visible', '')
+    const opening = await fixed.evaluate((node) => ({
+      width: node.getBoundingClientRect().width,
+      opacity: Number(getComputedStyle(node.querySelector('.temple-enter-label-extra')!).opacity),
+    }))
+    expect(opening.width).toBeGreaterThan(initial)
+    expect(opening.width).toBeLessThan(full)
+    expect(opening.opacity).toBeGreaterThan(0)
+    expect(opening.opacity).toBeLessThan(1)
+    // Reverse before the first handoff finishes; the new motion starts from its painted width.
+    await button.evaluate((node) => {
+      const header = document.querySelector<HTMLElement>('.temple-top-navigation')!
+      const top = (header.offsetHeight - (node as HTMLElement).offsetHeight) / 2 + 4
+      scrollTo(0, scrollY + node.getBoundingClientRect().top - top)
+    })
+    await expect(header).not.toHaveAttribute('data-nav-visible', '')
+    const returning = (await button.boundingBox())!.width
+    expect(returning).toBeGreaterThan(initial)
+    expect(returning).toBeLessThan(opening.width)
+    expect(await fixed.evaluate((node) => node.getAnimations().length)).toBe(0)
+    await page.evaluate(() => {
+      for (const motion of document.getAnimations()) {
+        const target = (motion.effect as KeyframeEffect)?.target
+        if (
+          target instanceof Element &&
+          target.matches('.temple-nav-enter a, .temple-entry-welcome a, .temple-enter-label-extra')
+        )
+          motion.finish()
+      }
+    })
+    await expect(button.locator('.temple-enter-label-extra')).toHaveCSS('max-width', '0px')
+    expect((await button.boundingBox())!.width).toBeCloseTo(initial, 0)
+    await expect(button).toHaveAttribute('href', '/temple-of-sound/visit')
+  })
+}
+
+test('reduced motion switches Enter labels directly', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/temple-entry-poem')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const button = page.locator('.temple-entry-welcome a')
+  const fixed = page.locator('.temple-nav-enter a')
+  await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
+  await expect(page.locator('.temple-top-navigation')).toHaveAttribute('data-nav-visible', '')
+  await expect(fixed).toHaveText('Enter the Temple of Sound')
+  await expect(fixed.locator('.temple-enter-label-extra')).toHaveCSS('opacity', '1')
+  expect(
+    await fixed.evaluate(
+      (node) =>
+        node
+          .getAnimations({ subtree: true })
+          .filter(
+            (motion) => !(motion instanceof CSSTransition) && !(motion instanceof CSSAnimation),
+          ).length,
+    ),
+  ).toBe(0)
 })
 
 for (const width of [390, 1440]) {

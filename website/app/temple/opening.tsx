@@ -177,9 +177,9 @@ export function Opening(handle: Handle<OpeningProps>) {
           <div class="poem-pairs">
             {handle.props.view === 'poem' && (
               <div class="temple-entry-welcome">
-                <p class="temple-entry-greeting">
-                  {handle.props.welcome?.greeting ?? '[Welcome text placeholder]'}
-                </p>
+                {handle.props.welcome?.greeting && (
+                  <p class="temple-entry-greeting">{handle.props.welcome.greeting}</p>
+                )}
                 {handle.props.welcome?.paragraphs.map((paragraph) => (
                   <p>{paragraph}</p>
                 ))}
@@ -187,8 +187,15 @@ export function Opening(handle: Handle<OpeningProps>) {
                   <a
                     href="/temple-of-sound/visit"
                     data-rmx-document
+                    aria-label="Enter the Temple of Sound"
                   >
-                    Enter the Temple of Sound
+                    <span>Enter</span>
+                    <span
+                      class="temple-enter-label-extra"
+                      aria-hidden="true"
+                    >
+                      {' the Temple of Sound'}
+                    </span>
                   </a>
                 </div>
                 {handle.props.welcome && (

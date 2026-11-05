@@ -440,8 +440,8 @@ export function entryTempleContent(view: 'poem' | 'inside', section?: PoemOpenin
     view,
     ...(section ? { section } : {}),
     welcome: {
-      greeting: 'Synthetic welcome',
-      paragraphs: ['Synthetic entry explanation.', 'Synthetic intention explanation.'],
+      greeting: '',
+      paragraphs: [],
       scrollLabel: 'Continue through the synthetic intention',
     },
     navigation: [

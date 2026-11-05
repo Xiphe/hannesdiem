@@ -9,7 +9,7 @@ test('the intention is a continuous poem with entry invitations and a minimal he
   await expect(artwork.locator('.facts-grid,.fact-story')).toHaveCount(0)
   await expect(artwork.locator('.first-pair')).toHaveCount(2)
   await expect(artwork.locator('.final-refrain')).toHaveCount(1)
-  await expect(page.locator('.temple-entry-greeting')).toHaveText('Synthetic welcome')
+  await expect(page.locator('.temple-entry-greeting')).toHaveCount(0)
   const welcome = await page.locator('.temple-entry-welcome').boundingBox()
   const firstPair = await artwork.locator('.first-pair').first().boundingBox()
   expect(firstPair!.y).toBeGreaterThanOrEqual(welcome!.y + welcome!.height)

@@ -376,9 +376,24 @@
   display: inline-flex;
   text-align: center;
   align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   min-height: 44px;
   padding: 10px clamp(12px, 3vw, 24px);
   font-size: clamp(14px, 2.5vw, 18px);
+}
+.temple-entry-welcome .fact-action a {
+  padding-inline: 4rem;
+}
+.temple-enter-label-extra {
+  display: inline-block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: pre;
+}
+.temple-entry-welcome .temple-enter-label-extra {
+  max-width: 0;
+  opacity: 0;
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-mounted] {
   transform: none;

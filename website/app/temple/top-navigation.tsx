@@ -14,7 +14,8 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
             href="/temple-of-sound/visit"
             data-rmx-document
           >
-            Enter the Temple of Sound
+            <span>Enter</span>
+            <span class="temple-enter-label-extra">{' the Temple of Sound'}</span>
           </a>
         </div>
       ) : (

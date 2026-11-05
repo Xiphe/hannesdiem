@@ -16,12 +16,69 @@ export function mountNavigationPosition(host: HTMLElement, signal: AbortSignal) 
     host.dataset.templeView === 'poem'
       ? host.querySelector<HTMLElement>('.temple-entry-welcome a')
       : null
+  const fixed = header.querySelector<HTMLElement>('.temple-nav-enter a')
+  let previous: boolean | undefined
+  let motions: Animation[] = []
+  const cancelMotion = () => {
+    for (const motion of motions) motion.cancel()
+    motions = []
+  }
   const update = () => {
     const visible = entry
       ? entry.getBoundingClientRect().top <= (header.offsetHeight - entry.offsetHeight) / 2
       : stage.getBoundingClientRect().top < 0
+    const changing = previous !== undefined && previous !== visible && entry && fixed
+    const source = visible ? entry : fixed
+    const target = visible ? fixed : entry
+    // Read the current painted geometry before reversing an unfinished handoff.
+    const from = changing && source ? source.getBoundingClientRect() : undefined
+    const padding = from && source ? getComputedStyle(source) : undefined
+    const fromPaddingStart = padding?.paddingInlineStart
+    const fromPaddingEnd = padding?.paddingInlineEnd
+    const sourceExtra = changing
+      ? source?.querySelector<HTMLElement>('.temple-enter-label-extra')
+      : undefined
+    const fromExtraWidth = sourceExtra?.getBoundingClientRect().width ?? 0
+    const fromExtraOpacity = sourceExtra ? getComputedStyle(sourceExtra).opacity : '0'
+    if (changing) cancelMotion()
+    // Measure both buttons before the visibility switch to preserve native header fades.
+    const animate = from && target && !matchMedia('(prefers-reduced-motion: reduce)').matches
+    const to = animate ? target.getBoundingClientRect() : undefined
+    const toPadding = animate ? getComputedStyle(target) : undefined
+    const toPaddingStart = toPadding?.paddingInlineStart
+    const toPaddingEnd = toPadding?.paddingInlineEnd
+    const extra = animate ? target.querySelector<HTMLElement>('.temple-enter-label-extra') : null
+    const toExtraWidth = extra?.scrollWidth ?? 0
     if (visible) header.dataset.navEntered = ''
     header.toggleAttribute('data-nav-visible', visible)
+    previous = visible
+    if (!from || !target || !to || !extra) return
+    const timing = { duration: 420, easing: 'cubic-bezier(.2,.7,.2,1)' }
+    motions = [
+      target.animate(
+        [
+          {
+            width: `${from.width}px`,
+            paddingInlineStart: fromPaddingStart,
+            paddingInlineEnd: fromPaddingEnd,
+          },
+          {
+            width: `${to.width}px`,
+            paddingInlineStart: toPaddingStart,
+            paddingInlineEnd: toPaddingEnd,
+          },
+        ],
+        timing,
+      ),
+      extra.animate(
+        [
+          { maxWidth: `${fromExtraWidth}px`, opacity: fromExtraOpacity },
+          { maxWidth: visible ? `${toExtraWidth}px` : '0px', opacity: visible ? '1' : '0' },
+        ],
+        timing,
+      ),
+    ]
+    for (const motion of motions) void motion.finished.catch(() => {})
   }
   header.dataset.navMounted = ''
   const observer = new IntersectionObserver(update, { threshold: 1 })
@@ -34,6 +91,7 @@ export function mountNavigationPosition(host: HTMLElement, signal: AbortSignal) 
   signal.addEventListener(
     'abort',
     () => {
+      cancelMotion()
       observer.disconnect()
       header.removeAttribute('data-nav-mounted')
       header.removeAttribute('data-nav-visible')

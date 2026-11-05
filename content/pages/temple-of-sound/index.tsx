@@ -198,7 +198,7 @@ export default function Content({
         view={view}
         section={section}
         welcome={{
-          greeting: 'Welcome Soul!',
+          greeting: '',
           paragraphs: [],
           scrollLabel: 'or read the manifesto',
         }}
