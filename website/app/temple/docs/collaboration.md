@@ -165,6 +165,17 @@ occur in that check. Local switching records3.2ms median/3.5ms p95 JS work and
 this thinner coating remains for review on8796. No website integration or
 publication requested. [Mechanism and evidence](liquid-simulation-research.md).
 
+**Independent liquid collection controls — 2026-11-05.** The artist requests
+controls for how much dots and the free cursor collect. Expose separate live
+Dot collection and Cursor collection sliders in the8796 material study. They
+regulate soft local-load budgets (defaults36 and180, range0–300), separately
+from pulling strength. Zero releases the liquid; Reset liquid preserves both
+settings. Synthetic held-target checks show increasing collected amounts,
+conserved particles and finite state; browser checks confirm independent live
+updates and reset preservation. SVG topology checks still pass. These controls
+support ongoing artistic review, not production integration or publication.
+[Mechanism, evidence and limitations](liquid-simulation-research.md).
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

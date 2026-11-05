@@ -290,3 +290,24 @@ browser target-switch trace records median3.2ms/p953.5ms JS work, with display
 p9516.8ms. These remain isolated-study timings with the previously stated limits.
 The solver module URL is revisioned to avoid reuse of the cached old import.
 The thinner coating remains an artistic review on8796, not page integration.
+
+## Independent collection controls — 2026-11-05
+
+The artist requests separate live controls for dot and cursor collection.
+Dot collection exposes the existing soft weighted-load budget (default36);
+Cursor collection adds the same feedback to a free pointer (default180).
+Both range0–300. These are relative soft budgets, not exact particle limits.
+The shared Attraction control still sets force. A zero collection value removes
+that target's attraction, shielding and adhesive field so material can return.
+Reset liquid preserves both collection settings along with viscosity and force.
+The SVG surface and display-only centre floor are unchanged.
+
+Synthetic16s holds at budgets0,12,36,180,300 retain all661 particles and finite
+state. Dot weighted loads are0,20,52.9,171.8,184.8; cursor loads are
+0,17.7,51.1,203.0,237.3, respectively. Higher settings gather more material;
+feedback is not an exact cap. Free-cursor pooling can engage the existing
+180px/s velocity bound (up to2649 particle/substep clamps in this high-budget
+hold), so these checks do not claim unconstrained dynamics at every setting.
+Browser checks cover live independent values and preservation through reset.
+Existing synthetic SVG contour/topology checks still pass. Review remains
+on8796; no website integration or publication is requested.
