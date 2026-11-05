@@ -1237,7 +1237,7 @@ test('reduced motion opens the description without a panel animation', async ({ 
 })
 
 for (const paused of [false, true]) {
-  test(`leaving a video clears its progress and returning starts at the beginning${paused ? ' while paused' : ''}`, async ({
+  test(`returning to a video restores progress without showing its opening frame${paused ? ' while paused' : ''}`, async ({
     page,
   }) => {
     await arrive(page, 'middle')
@@ -1252,7 +1252,25 @@ for (const paused of [false, true]) {
     if (paused) await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
     await move(page, 'latest')
     await expect(post(page, 'latest').locator('.feed-video-seek')).toBeEnabled()
-    expect.soft(await item.locator('.feed-video-seek').inputValue()).toBe('0')
+    expect.soft(Number(await item.locator('.feed-video-seek').inputValue())).toBeGreaterThan(50)
+    const savedFrame = new URL((await item.locator('.feed-stage > img').getAttribute('src'))!)
+    expect.soft(parseFloat(savedFrame.searchParams.get('time')!)).toBeGreaterThan(6)
+    await page.evaluate(() => {
+      const samples: { time: number; visible: boolean }[] = []
+      ;(window as any).returningVideoFrames = samples
+      const video = document.querySelector('video')!
+      for (const event of ['loadedmetadata', 'loadeddata', 'seeking', 'seeked', 'playing'])
+        video.addEventListener(event, () => {
+          if (
+            document.querySelector('.temple-feed')?.getAttribute('data-current-post') ===
+            'fixture-middle'
+          )
+            samples.push({
+              time: video.currentTime,
+              visible: getComputedStyle(video).visibility === 'visible',
+            })
+        })
+    })
     await move(page, 'middle')
     await expect(item.locator('.feed-video-seek')).toBeEnabled()
     await expect
@@ -1264,12 +1282,91 @@ for (const paused of [false, true]) {
       .toBe(true)
     expect(
       await page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime),
-    ).toBeLessThan(2)
+    ).toBeGreaterThan(6)
     expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
       paused,
     )
+    const samples = await page.evaluate(
+      () => (window as any).returningVideoFrames as { time: number; visible: boolean }[],
+    )
+    expect(samples.length).toBeGreaterThan(0)
+    expect(samples.filter((sample) => sample.visible).every((sample) => sample.time > 6)).toBe(true)
   })
 }
+
+test('a saved frame survives interrupted source loading and releases its snapshot after decoding', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await arrive(page, 'middle')
+  const item = post(page, 'middle')
+  await expect(item).toHaveAttribute('data-playing', '')
+  await item.locator('.feed-tap').hover({ position: { x: 100, y: 150 } })
+  await item.locator('.feed-video-seek').fill('60')
+  await expect
+    .poll(() =>
+      page
+        .locator('video')
+        .evaluate((video: HTMLVideoElement) => video.currentTime > 6 && !video.seeking),
+    )
+    .toBe(true)
+  await item.locator('.feed-tap').click({ position: { x: 100, y: 150 } })
+  await expect(item.locator('.feed-panel')).not.toHaveAttribute('data-animating', '')
+  const sample = async () =>
+    sharp(await page.screenshot())
+      .extract({ left: 195, top: 400, width: 1, height: 1 })
+      .removeAlpha()
+      .raw()
+      .toBuffer()
+  const before = await sample()
+  let releaseFrame!: () => void, releaseStream!: () => void
+  const frameGate = new Promise<void>((resolve) => {
+    releaseFrame = resolve
+  })
+  const streamGate = new Promise<void>((resolve) => {
+    releaseStream = resolve
+  })
+  await page.route('**/thumbnails/thumbnail.jpg?**', async (route) => {
+    if (parseFloat(new URL(route.request().url()).searchParams.get('time') ?? '0') > 0)
+      await frameGate
+    await route.fallback()
+  })
+  try {
+    await move(page, 'latest')
+    await expect(post(page, 'latest').locator('.feed-video-seek')).toBeEnabled()
+    await page.route(
+      'https://customer-fixture.cloudflarestream.com/11111111111111111111111111111111/manifest/video.m3u8',
+      async (route) => {
+        await streamGate
+        await route.fallback()
+      },
+    )
+    await move(page, 'middle')
+    await expect(item).toHaveAttribute('data-restoring', '')
+    await expect(page.locator('video')).toHaveCSS('visibility', 'hidden')
+    await expect(item.locator('.feed-snapshot')).toBeVisible()
+    const returning = await sample()
+    for (let channel = 0; channel < 3; channel++)
+      expect(Math.abs(returning[channel] - before[channel])).toBeLessThan(3)
+    await move(page, 'latest')
+    await expect(post(page, 'latest').locator('.feed-video-seek')).toBeEnabled()
+    releaseStream()
+    await move(page, 'middle')
+    await expect(item.locator('.feed-video-seek')).toBeEnabled()
+    expect(
+      await page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime),
+    ).toBeGreaterThan(6)
+    expect(await page.locator('video').evaluate((video: HTMLVideoElement) => video.paused)).toBe(
+      true,
+    )
+    releaseFrame()
+    await expect(item.locator('.feed-snapshot')).toHaveCount(0)
+    await expect(item.locator('.feed-stage > img')).toBeVisible()
+  } finally {
+    releaseStream()
+    releaseFrame()
+  }
+})
 
 for (const blocked of [false, true]) {
   test(`Space controls playback on entry with body focus${blocked ? ' after blocked autoplay' : ''}`, async ({

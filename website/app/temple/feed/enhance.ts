@@ -6,6 +6,7 @@ import { audioPeaks, drawWaveform } from './waveform.ts'
 import { dateLabel } from '../../date.tsx'
 import { mountFeedControls } from './controls.ts'
 import { mountFeedDrawer } from './drawer.ts'
+import { retainFeedFrames } from './frames.ts'
 
 export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSignal) {
   const articles = [...root.querySelectorAll<HTMLElement>('.feed-post')]
@@ -22,7 +23,8 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   let pausedDetails = true
   let ready = false
   let loading = 0
-  const audioPositions = new Map<string, number>()
+  const positions = new Map<string, number>()
+  const retainFrame = retainFeedFrames(video, signal)
   const peaks = new Map<string, readonly number[]>()
   let waveformTask: AbortController | undefined
   const options = { signal }
@@ -211,13 +213,12 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     const direction = next < index ? -1 : 1
     const incomingOpen = !initial && root.hasAttribute('data-paused-details')
     if (active) {
-      if (post().kind === 'audio') audioPositions.set(post().id, video.currentTime)
-      else if (post().kind === 'video') {
-        const seek = active.querySelector<HTMLInputElement>('.feed-video-seek')!
-        seek.value = '0'
-        seek.style.setProperty('--progress', '0%')
-        seek.disabled = true
+      if (ready && post().kind !== 'text') {
+        const position = post().kind === 'video' && video.ended ? 0 : video.currentTime
+        positions.set(post().id, position)
+        retainFrame(active, post(), position)
       }
+      delete active.dataset.restoring
       drawer.setExpanded(active, false, false)
       active.querySelector<HTMLElement>('.feed-panel-motion')!.inert = true
       delete active.dataset.overlay
@@ -233,6 +234,9 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     waveformTask?.abort()
     index = next
     active = articles[index]
+    const position = positions.get(post().id) ?? 0
+    active.toggleAttribute('data-restoring', post().kind === 'video' && position > 0)
+    active.querySelector<HTMLInputElement>('.feed-seek')?.setAttribute('disabled', '')
     delete active.dataset.blocked
     delete active.dataset.ended
     active.querySelector<HTMLElement>('.feed-ended')?.setAttribute('hidden', '')
@@ -259,18 +263,11 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     active.querySelector<HTMLElement>('.feed-media-mount')!.appendChild(video)
     void waveform(post(), active)
     try {
-      const attached = await playback.load(post())
+      const attached = await playback.load(post(), position)
       if (!attached || signal.aborted || current !== loading) return
       ready = true
-      const position = audioPositions.get(post().id) ?? 0
-      if (position > 0) {
-        const restore = () => {
-          if (current === loading && Number.isFinite(video.duration))
-            video.currentTime = Math.min(position, Math.max(0, video.duration - 0.1))
-        }
-        if (video.readyState >= 1) restore()
-        else video.addEventListener('loadedmetadata', restore, { once: true, signal })
-      }
+      delete active.dataset.restoring
+      updateProgress()
       if (keepPaused) reflect()
       else await play()
       if (current === loading && !signal.aborted && !document.hidden)
@@ -297,7 +294,8 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   const updateProgress = () => {
     if (!active) return
     const seek = active.querySelector<HTMLInputElement>('.feed-seek')
-    const available = Number.isFinite(video.duration) && video.duration > 0 && video.readyState >= 1
+    const available =
+      ready && Number.isFinite(video.duration) && video.duration > 0 && video.readyState >= 1
     if (seek) seek.disabled = !available
     if (!available) return
     const percentage = (video.currentTime / video.duration) * 100

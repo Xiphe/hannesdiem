@@ -1,6 +1,6 @@
 import { ref, type Handle } from 'remix/component'
 import type { TemplePost } from '@hannesdiem/content-components'
-import { firstVideoFrame, postPath, templePath } from './model.ts'
+import { videoFrame, postPath, templePath } from './model.ts'
 import { mountFeed } from './enhance.ts'
 import { FeedIcon } from './icon.tsx'
 
@@ -57,7 +57,7 @@ export function Feed(handle: Handle<FeedProps>) {
               {(post.kind === 'video' || post.cover) && (
                 <img
                   class={post.kind === 'video' ? 'feed-frame' : 'feed-cover'}
-                  src={post.kind === 'video' ? firstVideoFrame(post) : post.cover}
+                  src={post.kind === 'video' ? videoFrame(post) : post.cover}
                   alt=""
                   loading={post.id === handle.props.selected ? 'eager' : 'lazy'}
                 />

@@ -1,6 +1,6 @@
 import type Hls from 'hls.js'
 import type { FeedPost } from './view.tsx'
-import { firstVideoFrame, mediaSource } from './model.ts'
+import { videoFrame, mediaSource } from './model.ts'
 
 /** Keep the actual video element, including its browser sound permission. */
 export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, failed: () => void) {
@@ -8,6 +8,7 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
   let nextHls: Hls | undefined
   let next: HTMLVideoElement | undefined
   let nextId: string | undefined
+  let cancelRestore: (() => void) | undefined
   let revision = 0
   let preloadRevision = 0
   const releaseNext = () => {
@@ -22,6 +23,7 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
   }
   const clear = () => {
     revision++
+    cancelRestore?.()
     activeHls?.destroy()
     activeHls = undefined
     video.pause()
@@ -61,11 +63,51 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
     } else {
       activeHls = hls
       hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal && !stale()) failed()
+        if (data.fatal && !stale()) {
+          cancelRestore?.()
+          failed()
+        }
       })
     }
     hls.loadSource(src)
     hls.attachMedia(target)
+  }
+  function restorePosition(position: number, current: number) {
+    return new Promise<boolean>((resolve) => {
+      let started = false
+      let settled = false
+      const events = ['loadedmetadata', 'durationchange', 'loadeddata', 'seeked']
+      const finish = (restored: boolean) => {
+        if (settled) return
+        settled = true
+        for (const event of events) video.removeEventListener(event, check)
+        video.removeEventListener('error', cancel)
+        signal.removeEventListener('abort', cancel)
+        if (cancelRestore === cancel) cancelRestore = undefined
+        resolve(restored)
+      }
+      const cancel = () => finish(false)
+      const check = () => {
+        if (signal.aborted || current !== revision) return cancel()
+        if (video.readyState < 1 || !Number.isFinite(video.duration) || video.duration <= 0) return
+        if (!started) {
+          started = true
+          try {
+            video.currentTime = Math.min(position, Math.max(0, video.duration - 0.1))
+          } catch {
+            cancel()
+            failed()
+            return
+          }
+        }
+        if (video.readyState >= 2 && !video.seeking) finish(true)
+      }
+      cancelRestore = cancel
+      for (const event of events) video.addEventListener(event, check)
+      video.addEventListener('error', cancel)
+      signal.addEventListener('abort', cancel, { once: true })
+      check()
+    })
   }
   signal.addEventListener(
     'abort',
@@ -78,8 +120,9 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
   )
   return {
     clear,
-    async load(post: FeedPost) {
+    async load(post: FeedPost, position = 0) {
       const current = ++revision
+      cancelRestore?.()
       activeHls?.destroy()
       activeHls = undefined
       video.pause()
@@ -87,9 +130,10 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
       video.load()
       video.loop = false
       video.preload = 'auto'
-      video.poster = post.kind === 'video' ? firstVideoFrame(post) : ''
+      video.poster = post.kind === 'video' ? videoFrame(post, position) : ''
       await attach(video, post, false, () => signal.aborted || current !== revision)
-      return !signal.aborted && current === revision
+      if (signal.aborted || current !== revision) return false
+      return position > 0 ? restorePosition(position, current) : true
     },
     preload(post?: FeedPost) {
       if (post?.id === nextId) return

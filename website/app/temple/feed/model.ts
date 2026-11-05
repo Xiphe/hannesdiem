@@ -38,7 +38,8 @@ export function thumbnail(post: TemplePost) {
     : undefined
 }
 
-/** The viewer starts videos at zero; authored covers belong to Watch. */
-export function firstVideoFrame(post: { customerCode: string; videoId: string }) {
-  return `${streamBase(post)}/thumbnails/thumbnail.jpg?time=0s&width=1920&height=1920&fit=clip`
+/** A plain frame at the playback position; authored video covers belong to Watch. */
+export function videoFrame(post: { customerCode: string; videoId: string }, position = 0) {
+  const time = Number.isFinite(position) ? Math.max(0, Math.round(position * 1000) / 1000) : 0
+  return `${streamBase(post)}/thumbnails/thumbnail.jpg?time=${time}s&width=1920&height=1920&fit=clip`
 }

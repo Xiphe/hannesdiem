@@ -150,6 +150,7 @@
 .feed-player {
   background: #000;
 }
+.feed-post[data-restoring] .feed-player,
 .feed-post[data-kind='audio'] .feed-player {
   visibility: hidden;
 }
