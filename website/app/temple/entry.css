@@ -91,14 +91,22 @@
   padding: 2rem 1.5rem max(6rem, 18svh);
 }
 .temple-practical-content {
-  padding-top: calc(var(--temple-nav-clearance, 88px) + 4rem);
+  padding-top: calc(var(--temple-nav-clearance, 88px) + 1.5rem);
 }
 .temple-intention-return.fact-action {
   position: relative;
   z-index: 3;
-  min-height: 40svh;
-  justify-content: center;
-  padding: 6svh 1.5rem max(12svh, calc(var(--temple-nav-clearance, 88px) + 2rem));
+  padding: 1rem 1.5rem;
+}
+.temple-intention-return > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.temple-intention-return svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 .temple-practical-section {
   display: flow-root;

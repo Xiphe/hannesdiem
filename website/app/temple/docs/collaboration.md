@@ -10,6 +10,11 @@ existing action treatment and preserve the supplied explanation exactly:
 as the button label. Link directly to the poem opener with native document
 navigation. Local review only.
 
+The artist then changes the label to “Back to the Manifesto”, preceded by the
+existing back-arrow icon, and asks for less space before its reveal and above
+it. Remove the tall minimum-height area and large bottom gap, and reduce the
+top inset. Keep the supplied explanation and normal Visit arrival unchanged.
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on

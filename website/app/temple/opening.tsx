@@ -1,6 +1,6 @@
 import { bridgeText } from './bridge-text.tsx'
 import { ref, type Handle } from 'remix/component'
-import { ArrowDownIcon } from '../heroicons.tsx'
+import { ArrowDownIcon, ArrowLeftIcon } from '../heroicons.tsx'
 import { mountArtwork } from './artwork.ts'
 import { FirstPair, Phrase, Refrain } from './first-pair.tsx'
 import { VerseDrop } from './verse-drop.tsx'
@@ -92,7 +92,8 @@ export function Opening(handle: Handle<OpeningProps>) {
                 href="/temple-of-sound"
                 data-rmx-document
               >
-                Manifesto
+                <ArrowLeftIcon />
+                Back to the Manifesto
               </a>
               <p>Read the intention and the charge of this space</p>
             </div>
