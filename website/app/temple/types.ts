@@ -18,6 +18,7 @@ export interface OpeningProps {
   id: string
   view?: PoemOpeningProps['view']
   section?: PoemOpeningProps['section']
+  welcome?: PoemOpeningProps['welcome']
   mark: string
   navigation?: PoemOpeningProps['navigation']
   facts?: readonly FactProps[]

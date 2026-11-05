@@ -184,6 +184,11 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
       const nextWord = stops[index + 1]
       const from = verse ? x(previousWord) + previousWord.getBoundingClientRect().width : x(node)
       const to = verse ? x(nextWord) : x(node) + node.getBoundingClientRect().width
+      const inside = host.dataset.templeView === 'inside'
+      // Decorative gaps belong half to each neighboring practical section.
+      const leading =
+        inside && previousWord ? (x(previousWord) + previousWord.offsetWidth + x(node)) / 2 : from
+      const trailing = inside && nextWord ? (x(node) + node.offsetWidth + x(nextWord)) / 2 : to
       const start = clamp(scenes[i].top - innerHeight)
       const end = Math.max(
         start,
@@ -193,8 +198,8 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
             : scenes[i].bottom - header!.offsetHeight,
         ),
       )
-      endValue = (to - left) / width
-      points.push({ at: start, value: (from - left) / width }, { at: end, value: endValue })
+      endValue = (trailing - left) / width
+      points.push({ at: start, value: (leading - left) / width }, { at: end, value: endValue })
     }
     points.push({ at: range, value: endValue })
     cancelAnimationFrame(scrollFrame)

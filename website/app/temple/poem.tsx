@@ -31,6 +31,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
       id,
       view,
       section,
+      welcome,
       title,
       dates,
       image,
@@ -58,6 +59,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
           id={id}
           view={view}
           section={section}
+          welcome={view === 'poem' ? welcome : undefined}
           mark={assets.templeMark}
           navigation={navigation}
           title={title}

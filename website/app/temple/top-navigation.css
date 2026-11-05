@@ -46,6 +46,16 @@
   flex-direction: column;
   align-items: flex-start;
   justify-self: start;
+  padding: 6px 10px;
+  margin-left: -10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.temple-nav-brand:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+.temple-nav-brand * {
+  cursor: inherit;
 }
 .temple-date,
 .temple-nav-date {
@@ -72,6 +82,7 @@
   }
 }
 .temple-nav-title {
+  display: block;
   position: relative;
   justify-self: start;
   white-space: nowrap;
@@ -257,6 +268,7 @@
     grid-row: 1;
     justify-self: center;
     align-items: center;
+    margin-left: 0;
   }
   .temple-nav-title {
     font-size: clamp(21.6px, 7.08vw, 27.6px);
@@ -345,14 +357,20 @@
   grid-row: 1;
   justify-self: center;
   margin: 0;
+  padding: 0;
+  align-self: center;
 }
-.temple-nav-enter.fact-action a {
+.temple-nav-enter.fact-action a,
+.temple-entry-welcome .fact-action a {
   display: inline-flex;
   text-align: center;
   align-items: center;
   min-height: 44px;
   padding: 10px clamp(12px, 3vw, 24px);
   font-size: clamp(14px, 2.5vw, 18px);
+}
+.temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-mounted] {
+  transition: none;
 }
 .temple-artwork[data-temple-view='inside'] .temple-top-navigation {
   position: fixed;
@@ -373,4 +391,45 @@
   .temple-nav-pending {
     min-height: 1.4em;
   }
+}
+
+/* Native link hit areas meet at each decorative gap's midpoint. */
+.temple-artwork[data-temple-view='inside'] .temple-nav-items {
+  --nav-hit-gap: calc(var(--nav-gap) + 4px);
+  cursor: pointer;
+  user-select: none;
+}
+.temple-artwork[data-temple-view='inside'] .temple-nav-items * {
+  cursor: inherit;
+}
+.temple-nav-items [data-nav-point] {
+  position: relative;
+}
+.temple-nav-items a[data-nav-point]::before,
+.temple-nav-items [data-nav-point] .piece-tooltip-trigger::before {
+  content: '';
+  position: absolute;
+  inset: 0 calc(-1 * var(--nav-hit-gap));
+}
+.temple-nav-items [data-nav-point]:first-child::before {
+  left: calc(-1 * max(var(--nav-hit-gap), var(--nav-leading, 0px)));
+}
+.temple-nav-items [data-nav-point]:last-child .piece-tooltip-trigger::before {
+  right: calc(-1 * max(var(--nav-hit-gap), var(--nav-trailing, 0px)));
+}
+.temple-artwork[data-temple-view='inside'] .temple-nav-separator-slot {
+  pointer-events: none;
+}
+.temple-artwork[data-temple-view='inside'] .temple-nav-separator-slot::before {
+  display: none;
+}
+.temple-artwork[data-temple-view='inside'] .temple-nav-separator {
+  transform: none;
+  opacity: 0.55;
+}
+.temple-nav-pending:has(.piece-tooltip-trigger:hover) {
+  color: light-dark(var(--temple-primary-light), var(--nav-warm-end, #f2ad78));
+}
+.temple-nav-pending .piece-tooltip-trigger:hover {
+  opacity: 1;
 }

@@ -69,6 +69,8 @@ export async function mountArtwork(
       refrainStage: refrain.querySelector<HTMLElement>('.refrain-stage')!,
       phrases: [...refrain.querySelectorAll<HTMLElement>('.refrain-phrase')],
       ink: undefined as ReturnType<typeof createTypeSurface> | undefined,
+      entry: refrain.querySelector<HTMLElement>('.temple-entry-closing'),
+      entryRunway: 0,
     }),
   )
   const timings = refrains.map(({ phrases }) => {
@@ -137,7 +139,8 @@ export async function mountArtwork(
     return { left, right, top, bottom, width: right - left, height: bottom - top }
   }
   function fitRefrain() {
-    for (const { refrain, refrainStage, phrases, final } of refrains) {
+    for (const item of refrains) {
+      const { refrain, refrainStage, phrases, final, entry } = item
       const width = refrainStage.clientWidth * 0.9
       const maxHeight = innerHeight * 0.5
       for (const phrase of phrases) {
@@ -202,6 +205,8 @@ export async function mountArtwork(
       const contentHeight =
         Math.max(...phrases.map((p) => Math.max(p.offsetHeight, inkBounds(p).height))) + 32
       refrain.style.setProperty('--refrain-height', `${contentHeight}px`)
+      item.entryRunway = entry ? stage.clientHeight * 0.28 : 0
+      refrain.style.setProperty('--refrain-entry-runway', `${item.entryRunway}px`)
       if (final) {
         // Match the stable svh viewport. Leave one CSS pixel before sticky
         // release: integer scrollHeight can round past its fractional boundary.
@@ -252,15 +257,26 @@ export async function mountArtwork(
       !appearance.matches,
     )
     activeFrame = navigation?.draw(now, frame) || activeFrame
-    for (const [chorusIndex, { refrain, refrainStage, ink, final }] of refrains.entries()) {
+    for (const [
+      chorusIndex,
+      { refrain, refrainStage, ink, final, entry, entryRunway },
+    ] of refrains.entries()) {
       const transitions = timings[chorusIndex]
       const section = refrain.getBoundingClientRect()
       if (section.bottom < 0 || section.top > stage.clientHeight) continue
       // Resolve the closing phrase before the guarded endpoint, including a
       // further pixel for document-height rounding. Native sticky owns position.
-      const hold = section.height - refrainStage.offsetHeight - (final ? 2 : 0)
+      const hold = section.height - refrainStage.offsetHeight - entryRunway - (final ? 2 : 0)
       const stickyTop = (stage.clientHeight - refrainStage.offsetHeight) / 2
-      const position = Math.max(0, Math.min(1, (stickyTop - section.top) / hold))
+      const travel = stickyTop - section.top
+      const position = Math.max(0, Math.min(1, travel / hold))
+      if (entry) {
+        const reveal = Math.max(0, Math.min(1, (travel - hold) / (entryRunway * 0.8)))
+        const opacity = reduced.matches ? Number(reveal > 0) : reveal
+        entry.style.opacity = String(opacity)
+        entry.toggleAttribute('data-entry-visible', opacity > 0)
+        entry.inert = opacity < 1
+      }
       let index = 0,
         next = 0,
         blend = 0
@@ -353,6 +369,13 @@ export async function mountArtwork(
             refrain.removeAttribute('data-ready')
             refrain.removeAttribute('data-active')
             refrain.style.removeProperty('--refrain-height')
+            refrain.style.removeProperty('--refrain-entry-runway')
+            const entry = refrain.querySelector<HTMLElement>('.temple-entry-closing')
+            if (entry) {
+              entry.removeAttribute('style')
+              entry.removeAttribute('data-entry-visible')
+              entry.inert = false
+            }
             for (const phrase of phrases) phrase.removeAttribute('style')
           }
         },

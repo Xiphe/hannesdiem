@@ -10,23 +10,27 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
     <header class="temple-top-navigation">
       {handle.props.view === 'poem' ? (
         <div class="temple-nav-enter fact-action">
-          <a href="/temple-of-sound/visit">enter the temple of sound</a>
+          <a
+            href="/temple-of-sound/visit"
+            data-rmx-document
+          >
+            Enter the Temple of Sound
+          </a>
         </div>
       ) : (
         <>
-          <div class="temple-nav-brand">
-            <a
-              class="temple-nav-title"
-              href={
-                handle.props.view === 'inside'
-                  ? '/temple-of-sound'
-                  : `#temple-top-${handle.props.id}`
-              }
-              aria-label={handle.props.title}
-            >
+          <a
+            class="temple-nav-brand"
+            data-rmx-document
+            href={
+              handle.props.view === 'inside' ? '/temple-of-sound' : `#temple-top-${handle.props.id}`
+            }
+            aria-label={handle.props.title}
+          >
+            <span class="temple-nav-title">
               <span class="temple-nav-title-ink">{handle.props.title.toUpperCase()}</span>
               <canvas aria-hidden="true" />
-            </a>
+            </span>
             <div class="temple-nav-date">
               <span class="temple-nav-date-ink">
                 <LocalDate
@@ -41,7 +45,7 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
                 />
               </span>
             </div>
-          </div>
+          </a>
           <div class="temple-nav-track">
             <nav
               class="temple-nav-items"
@@ -86,6 +90,7 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
                       <span
                         class="temple-nav-pending"
                         data-nav-stop
+                        data-nav-point
                       >
                         <PieceTooltip
                           id={`${handle.props.id}-soon-${index}`}
@@ -97,6 +102,7 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
                       <a
                         href={destination}
                         data-nav-target={inside ? target : undefined}
+                        data-nav-point={inside ? '' : undefined}
                         aria-disabled={!href || undefined}
                         data-nav-stop
                       >

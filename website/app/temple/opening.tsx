@@ -167,10 +167,27 @@ export function Opening(handle: Handle<OpeningProps>) {
           <div class="poem-pairs">
             {handle.props.view === 'poem' && (
               <div class="temple-entry-welcome">
-                <p class="temple-entry-placeholder">[Welcome text placeholder]</p>
+                <p class="temple-entry-greeting">
+                  {handle.props.welcome?.greeting ?? '[Welcome text placeholder]'}
+                </p>
+                {handle.props.welcome?.paragraphs.map((paragraph) => (
+                  <p>{paragraph}</p>
+                ))}
                 <div class="fact-action">
-                  <a href="/temple-of-sound/visit">Enter</a>
+                  <a
+                    href="/temple-of-sound/visit"
+                    data-rmx-document
+                  >
+                    Enter the Temple of Sound
+                  </a>
                 </div>
+                {handle.props.welcome && (
+                  <small class="temple-entry-more">
+                    <ArrowDownIcon />
+                    {handle.props.welcome.scrollLabel}
+                    <ArrowDownIcon />
+                  </small>
+                )}
               </div>
             )}
             {handle.props.view !== 'poem' && location && <Location {...location} />}
@@ -280,14 +297,20 @@ export function Opening(handle: Handle<OpeningProps>) {
                     <Refrain
                       id={`${handle.props.id}-final-chorus`}
                       phrases={finalVerse.refrain}
+                      entry={handle.props.view === 'poem'}
                     />
                   </div>
                 )}
               </>
             )}
-            {handle.props.view === 'poem' && (
+            {handle.props.view === 'poem' && !finalVerse?.refrain && (
               <div class="temple-entry-closing fact-action">
-                <a href="/temple-of-sound/visit">Enter the Temple</a>
+                <a
+                  href="/temple-of-sound/visit"
+                  data-rmx-document
+                >
+                  Enter the Temple
+                </a>
               </div>
             )}
           </div>

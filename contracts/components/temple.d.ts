@@ -34,6 +34,7 @@ export interface PoemOpeningProps {
   /** Separate intention and practical views of the same authored Temple. */
   view?: 'poem' | 'inside'
   section?: 'visit' | 'watch' | 'create' | 'share'
+  welcome?: { greeting: string; paragraphs: readonly string[]; scrollLabel: string }
   title: string
   dates: { start: string; end: string }
   image: ImageSource

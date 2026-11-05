@@ -1,5 +1,32 @@
 # Temple of Sound: client–artist collaboration
 
+**Entry and navigation feedback — 2026-11-05.** Practical navigation pieces are
+purely decorative: remove their hover growth and separate hit areas. Native
+section links share each intervening gap, retain a pointer through it, and
+highlight the nearest label. Desktop progress allocates each gap half to each
+surrounding section so it does not jump between word boundaries. Make the entire
+wordmark/date area one ghost link to the poem opener.
+
+The artist supplies the welcome wording in `content/pages/temple-of-sound/index.tsx`;
+preserve its wording and order. Move the welcome upward. Both its action and the
+header action say “Enter the Temple of Sound”, with matching dimensions. Show the
+poem header when that action reaches its centered header position, rather than
+on the opener's exit. Remove the inherited action padding that offset the header
+button below its vertical center. Keep the supplied down-arrow continuation hint.
+
+The closing “Enter the Temple” fades in under the final alive phrase while that
+phrase remains held. Add a closing scroll interval without stretching the earlier
+chorus transitions. Preserve native readable fallback and reduced-motion behavior.
+The artist identifies this bottommost button as the one that left Share visible
+under a Visit URL. The synthetic bottom-entry/Back path did not reproduce that
+misarrival in Chromium or WebKit. Use Remix's native document-navigation option
+for Enter and opener links so the deliberate cross-view action starts a fresh
+document; verify Visit arrival after the closing action and after returning Back.
+
+The artist explicitly defers the Enter button's visual “magic” to a separate
+exploration. No new button artwork is selected by this implementation. Local
+review only; no deployment requested.
+
 **Separate the intention from entering — 2026-11-05.** The artist approves a
 continuous poem at `/temple-of-sound`, preserving its authored words and accepted
 artwork. Remove interleaved practical content. After the opener, place a welcome

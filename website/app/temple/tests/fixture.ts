@@ -439,6 +439,11 @@ export function entryTempleContent(view: 'poem' | 'inside', section?: PoemOpenin
     ...opening.props,
     view,
     ...(section ? { section } : {}),
+    welcome: {
+      greeting: 'Synthetic welcome',
+      paragraphs: ['Synthetic entry explanation.', 'Synthetic intention explanation.'],
+      scrollLabel: 'Continue through the synthetic intention',
+    },
     navigation: [
       { label: 'Visit fixture', href: '#facts' },
       { label: 'Watch fixture', href: '#watch' },

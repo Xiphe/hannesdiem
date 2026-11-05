@@ -115,7 +115,9 @@ export function FirstPair(handle: Handle<{ id: string; pair: PoemPair; index: nu
   }
 }
 
-export function Refrain(handle: Handle<{ id?: string; phrases: PoemPair['refrain'] }>) {
+export function Refrain(
+  handle: Handle<{ id?: string; phrases: PoemPair['refrain']; entry?: boolean }>,
+) {
   return () => (
     <section
       id={handle.props.id}
@@ -158,6 +160,16 @@ export function Refrain(handle: Handle<{ id?: string; phrases: PoemPair['refrain
           class="refrain-canvas"
           aria-hidden="true"
         />
+        {handle.props.entry && (
+          <div class="temple-entry-closing fact-action">
+            <a
+              href="/temple-of-sound/visit"
+              data-rmx-document
+            >
+              Enter the Temple
+            </a>
+          </div>
+        )}
       </div>
     </section>
   )

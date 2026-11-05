@@ -157,6 +157,14 @@ export default function Content({
         id="verse-1"
         view={view}
         section={section}
+        welcome={{
+          greeting: 'Welcome Human!',
+          paragraphs: [
+            'There are offerings for you when you choose to enter the space',
+            'Or continue scrolling to learn about the intention with this',
+          ],
+          scrollLabel: 'or explore more',
+        }}
         title={title}
         dates={{ start: '2026-11-01', end: '2026-12-20' }}
         image={forest}

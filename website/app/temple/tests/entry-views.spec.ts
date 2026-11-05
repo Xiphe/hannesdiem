@@ -9,7 +9,7 @@ test('the intention is a continuous poem with entry invitations and a minimal he
   await expect(artwork.locator('.facts-grid,.fact-story')).toHaveCount(0)
   await expect(artwork.locator('.first-pair')).toHaveCount(2)
   await expect(artwork.locator('.final-refrain')).toHaveCount(1)
-  await expect(page.locator('.temple-entry-placeholder')).toHaveText('[Welcome text placeholder]')
+  await expect(page.locator('.temple-entry-greeting')).toHaveText('Synthetic welcome')
   const welcome = await page.locator('.temple-entry-welcome').boundingBox()
   const firstPair = await artwork.locator('.first-pair').first().boundingBox()
   expect(firstPair!.y).toBeGreaterThanOrEqual(welcome!.y + welcome!.height)
@@ -19,13 +19,17 @@ test('the intention is a continuous poem with entry invitations and a minimal he
     header.locator('.temple-nav-brand,.temple-nav-date,.temple-nav-items,.temple-nav-progress'),
   ).toHaveCount(0)
   await page.locator('.temple-entry-welcome').scrollIntoViewIfNeeded()
+  await page
+    .locator('.temple-entry-welcome a')
+    .evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
   await expect(header).toBeVisible()
   await expect(
-    header.getByRole('link', { name: 'enter the temple of sound', exact: true }),
+    header.getByRole('link', { name: 'Enter the Temple of Sound', exact: true }),
   ).toHaveAttribute('href', '/temple-of-sound/visit')
   await header.getByRole('button', { name: 'Open menu' }).click()
   await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Close navigation' }).click()
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
   await page
     .locator('.temple-entry-closing')
     .getByRole('link', { name: 'Enter the Temple', exact: true })
@@ -57,7 +61,7 @@ for (const width of [390, 1440]) {
       .toBeGreaterThan(60)
     const top = await page.locator('#create').evaluate((node) => node.getBoundingClientRect().top)
     expect(top).toBeLessThan(180)
-    await expect(page.locator('.temple-nav-title')).toHaveAttribute('href', '/temple-of-sound')
+    await expect(page.locator('.temple-nav-brand')).toHaveAttribute('href', '/temple-of-sound')
     await expect(page.locator('.temple-nav-separator-link')).toHaveCount(0)
     expect(errors).toEqual([])
   })
@@ -95,13 +99,15 @@ test('native practical and poem views remain readable without JavaScript', async
     const page = await context.newPage()
     await page.goto('/temple-entry-poem')
     await expect(
-      page.locator('.temple-entry-welcome').getByRole('link', { name: 'Enter', exact: true }),
+      page
+        .locator('.temple-entry-welcome')
+        .getByRole('link', { name: 'Enter the Temple of Sound', exact: true }),
     ).toBeVisible()
     await expect(page.locator('.facts-grid,.fact-story')).toHaveCount(0)
     await page.goto('/temple-of-sound/watch')
     await expect(page.locator('.temple-opening,.first-pair')).toHaveCount(0)
     await expect(page.locator('#watch')).toBeVisible()
-    await expect(page.locator('.temple-nav-title')).toHaveAttribute('href', '/temple-of-sound')
+    await expect(page.locator('.temple-nav-brand')).toHaveAttribute('href', '/temple-of-sound')
   } finally {
     await context.close()
   }
