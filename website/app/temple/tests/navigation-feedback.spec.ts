@@ -106,14 +106,17 @@ test('the welcome button hands over to the centered header button at the top', a
   await page.goto('/temple-entry-poem')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   const button = page.locator('.temple-entry-welcome a')
+  const hint = page.locator('.temple-entry-more')
   const header = page.locator('.temple-top-navigation')
   await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 100))
   await expect(header).not.toHaveAttribute('data-nav-visible', '')
+  await expect(hint).toBeVisible()
   await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
   await expect(header).toHaveAttribute('data-nav-visible', '')
   await expect(header).toHaveCSS('transition-property', 'visibility')
   await expect(header).toHaveCSS('opacity', '1')
   await expect(button).toHaveCSS('visibility', 'hidden')
+  await expect(hint).not.toBeVisible()
   await expect(header.locator('.temple-nav-enter a')).toBeVisible()
   const handoff = await header.evaluate(async (node) => {
     const welcome = document.querySelector('.temple-entry-welcome a')!
@@ -146,6 +149,7 @@ test('the welcome button hands over to the centered header button at the top', a
   })
   await expect(header).not.toHaveAttribute('data-nav-visible', '')
   await expect(button).toBeVisible()
+  await expect(hint).toBeVisible()
   await expect(header.locator('.temple-nav-enter')).toHaveCSS('visibility', 'hidden')
   const exit = await header.evaluate(async (node) => {
     const start = performance.now()

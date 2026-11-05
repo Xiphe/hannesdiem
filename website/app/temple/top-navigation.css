@@ -435,8 +435,7 @@
 }
 .temple-artwork[data-temple-view='poem']:has(.temple-top-navigation[data-nav-visible])
   .temple-entry-welcome
-  .fact-action
-  a {
+  :is(.fact-action a, .temple-entry-more) {
   visibility: hidden;
 }
 @media (prefers-reduced-motion: reduce) {
