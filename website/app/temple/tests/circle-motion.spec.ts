@@ -138,7 +138,9 @@ test('reduced motion is static; visible liquid resumes and disposes with its isl
 })
 
 for (const entry of ['seat', 'center'] as const) {
-  test(`a chosen seat keeps its fluid after signed-out ${entry} selection`, async ({ page }) => {
+  test(`closing login releases a signed-out ${entry} choice after holding it while open`, async ({
+    page,
+  }) => {
     await page.route('**/circle', (route) =>
       route.fulfill({
         json: {
@@ -155,13 +157,16 @@ for (const entry of ['seat', 'center'] as const) {
     if (entry === 'seat') await circle.locator('input[value="3"]').click()
     else await invite.click()
     const chosen = await page.locator('.circle-fields input[name="spot"]').inputValue()
-    await page.getByRole('button', { name: 'Close signup' }).click()
     await page.mouse.move(0, 0)
     await expect(circle).toHaveAttribute('data-target', chosen)
-    await circle.locator(`input[value="${chosen === '7' ? '2' : '7'}"]`).hover()
-    await expect(circle).toHaveAttribute('data-target', chosen)
-    const path = circle.locator('.fact-circle-surface path')
-    const before = await path.getAttribute('d')
-    await expect.poll(() => path.getAttribute('d')).not.toBe(before)
+    if (entry === 'seat') await page.getByRole('button', { name: 'Close signup' }).click()
+    else await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await page.mouse.move(0, 0)
+    await expect(circle).not.toHaveAttribute('data-target')
+    await expect(circle.locator('input:checked')).toHaveCount(0)
+    await expect(invite).toBeFocused()
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await expect(circle).not.toHaveAttribute('data-target')
   })
 }

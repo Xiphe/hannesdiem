@@ -417,3 +417,22 @@ hit testing also confirms liquid in the selected seat after leaving the circle.
 Review this filled-seat treatment on8787 at `/temple-of-sound/share`; the
 pre-integration8796 study and saved selected snapshot remain recoverable.
 No deployment requested.
+
+## Donut restored; login dismissal cancels a provisional seat — 2026-11-05
+
+The artist prefers the earlier donut treatment and specifies that closing the
+login dialog unselects the provisional seat. Restore the annular attraction
+shell, physical seat contacts and responsive obstacle mapping. Keep actual
+particle dynamics, selected settings and the separate pre-login visual choice.
+That choice holds while login is open; closing by its button or Escape clears
+it and releases the liquid. Reconcile the artwork after native focus returns,
+so focus cannot immediately retarget a canceled choice. Email reactivation uses
+the same cancellation rule. Closing authenticated signup retains its candidate,
+and confirmed membership keeps its liquid. No server-side reservation is released
+by dismissing a login request.
+
+Synthetic coverage checks both seat and central assignment, hold while open,
+close/Escape cancellation, focus return and refresh without restoring the canceled
+hold. The numerical seat test now verifies an actual hollow interior and liquid
+around the physical obstacle. The filled-seat experiment is withdrawn; its
+source remains recoverable at59d5734. Local review stays on8787; no deployment.

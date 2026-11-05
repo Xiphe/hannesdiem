@@ -253,16 +253,24 @@ export function FactCircle(handle: Handle<CircleProps>) {
                 close={async () => {
                   expanded = false
                   moving = false
+                  if (!state.own && (!state.email || state.reactivation)) {
+                    hasChosen = false
+                    hasSelection = false
+                  }
                   await handle.update()
-                  root
-                    ?.querySelector<HTMLInputElement>(
-                      `input[value="${state.own?.spot ?? selected}"]`,
-                    )
-                    ?.focus({ preventScroll: true })
-                  if (!state.own && !hasSelection)
+                  if (state.own || hasSelection)
+                    root
+                      ?.querySelector<HTMLInputElement>(
+                        `input[value="${state.own?.spot ?? selected}"]`,
+                      )
+                      ?.focus({ preventScroll: true })
+                  else
                     root
                       ?.querySelector<HTMLButtonElement>('.fact-circle-invite')
                       ?.focus({ preventScroll: true })
+                  // Focus return can produce a hover preview; reconcile it
+                  // after restoring focus so a canceled login releases its seat.
+                  root?.dispatchEvent(new Event('circle-selection'))
                 }}
                 result={feedback}
                 onResult={(value) => {

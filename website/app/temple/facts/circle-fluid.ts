@@ -115,8 +115,8 @@ export class CircleFluid {
         load += Math.min(1, Math.max(0, (32 - distance) / 8))
       }
     // Free-pointer influence fades from the central pool to the outer edge.
-    // Apply the same envelope to force and load budget; seats retain their
-    // independently selected collection amount.
+    // Apply the same envelope to force and load budget; the physical dots
+    // retain their independently selected coating amount.
     const radius = target ? Math.hypot(target.x - 180, target.y - 180) : 0
     const outward = Math.min(1, Math.max(0, (radius - 54) / (145 - 54)))
     const reach = target && !target.r ? 1 - outward * outward * (3 - 2 * outward) : 1
@@ -137,18 +137,20 @@ export class CircleFluid {
         const tx = t.x - x[i],
           ty = t.y - y[i],
           d = this.targetDistances[i] || 1
-        // Seats collect through their whole interior, with no excluded centre.
+        // An attractive annular field around a physical circular obstacle.
         const support = Math.exp(-(d * d) / (38 * 38))
         const wet = t.r ? Math.min(1, Math.max(0, (28 - d) / 8)) : 0
         const film = wet * wet * (3 - 2 * wet)
-        // Local adhesion retains arrived liquid throughout the seat. Intake
-        // from farther away is regulated by the measured local load.
+        // A thin adhesive layer retains already-arrived liquid. Intake from
+        // farther away is regulated independently by the measured dot load.
         const shielding = (1 - gain * Math.exp(-(d * d) / (35 * 35))) * (1 - film)
         ax *= shielding
         ay *= shielding
         // Ease the external attraction as the dot fills. Excess material is
         // still simulated and can flow back; nothing is clipped or deleted.
-        const pull = this.attraction * (gain * (1 - film) + 4 * film) * support
+        const pull =
+          (this.attraction * (gain * (1 - film) + 4 * film) * support * (d - (t.r ? t.r + 3 : 0))) /
+          d
         ax += tx * pull
         ay += ty * pull
       }
@@ -226,8 +228,17 @@ export class CircleFluid {
       y[i] += cy
     }
     for (let i = 0; i < n; i++) {
-      // Seat markers are permeable: their filled surface must come from
-      // simulated particles, not an overlaid disc or a clipped donut hole.
+      // Resolve contacts with the surrounding dots; the centre has no shape cage.
+      for (const dot of this.dots) {
+        const dx = x[i] - dot.x,
+          dy = y[i] - dot.y,
+          r = Math.sqrt(dx * dx + dy * dy),
+          limit = dot.r + 1.6
+        if (r < limit && r > 0.001) {
+          x[i] = dot.x + (dx * limit) / r
+          y[i] = dot.y + (dy * limit) / r
+        }
+      }
       x[i] = Math.max(8, Math.min(352, x[i]))
       y[i] = Math.max(8, Math.min(352, y[i]))
       vx[i] = (x[i] - ox[i]) / dt

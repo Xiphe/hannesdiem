@@ -42,6 +42,18 @@ export function mountCircle(
       y: 40 + ((y - box.top) * 280) / box.height,
     }
   }
+  const syncDots = () => {
+    if (!fluid) return
+    const scale = 280 / root.getBoundingClientRect().width
+    fluid.dots = places.map((input) => {
+      const box = input.getBoundingClientRect()
+      const dot = input.parentElement!.querySelector<HTMLElement>('.fact-circle-dot')!
+      return {
+        ...coordinates(box.x + box.width / 2, box.y + box.height / 2),
+        r: (dot.offsetWidth * scale) / 2,
+      }
+    })
+  }
   const stop = () => {
     cancelAnimationFrame(frame)
     frame = 0
@@ -58,6 +70,7 @@ export function mountCircle(
     if (!fluid) {
       fluid = new CircleFluid()
       contour = new DensitySurface()
+      syncDots()
     }
     fluid.target = wanted
     accumulator += last ? Math.min((now - last) / 1000, 0.05) : 1 / 60
@@ -304,6 +317,7 @@ export function mountCircle(
     { signal },
   )
   const size = new ResizeObserver(() => {
+    syncDots()
     reset()
   })
   size.observe(root)

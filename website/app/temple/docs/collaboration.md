@@ -227,6 +227,16 @@ variation on8787 (`sand tunnel 8787`). The real-liquid method stays selected;
 this seat shape is an experiment for review, not publication.
 [Cause, changes and evidence](liquid-simulation-research.md).
 
+**Return to donuts; cancel a dismissed login choice — 2026-11-05.** The artist
+prefers the donut effect and specifies that closing the login dialog unselects
+the provisional place. Restore physical seat exclusion and annular collection;
+withdraw the filled-seat variation. Hold a clicked/centrally assigned choice
+while login is open, then clear it on close or Escape and release the liquid.
+Reconcile after focus return so a canceled choice is not immediately retargeted.
+Authenticated candidates and confirmed places retain their existing holds.
+The actual liquid method/settings remain selected; no publication requested.
+[Behavior and recovery](liquid-simulation-research.md).
+
 **Continuous practical background — 2026-11-05.** The artist reports flat cuts
 in Watch and Create's reading shapes and requests the opener page's background
 parallax throughout the page. Reuse the existing three-depth fragment ground on
