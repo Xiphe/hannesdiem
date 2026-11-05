@@ -23,8 +23,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   let pausedDetails = true
   let ready = false
   let loading = 0
-  let frameReveal: Animation | undefined
-  let frameRevealTick: number | undefined
   const positions = new Map<string, number>()
   const retainFrame = retainFeedFrames(video, signal)
   const peaks = new Map<string, readonly number[]>()
@@ -212,7 +210,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   }
   async function activate(next: number, initial = false) {
     if (!initial && next === index) return
-    cancelFrameReveal()
     const direction = next < index ? -1 : 1
     const incomingOpen = !initial && root.hasAttribute('data-paused-details')
     if (active) {
@@ -238,7 +235,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     index = next
     active = articles[index]
     const position = positions.get(post().id) ?? 0
-    active.toggleAttribute('data-restoring', post().kind === 'video')
+    active.toggleAttribute('data-restoring', post().kind === 'video' && position > 0)
     active.querySelector<HTMLInputElement>('.feed-seek')?.setAttribute('disabled', '')
     delete active.dataset.blocked
     delete active.dataset.ended
@@ -269,7 +266,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       const attached = await playback.load(post(), position)
       if (!attached || signal.aborted || current !== loading) return
       ready = true
-      revealFrame()
+      delete active.dataset.restoring
       updateProgress()
       if (keepPaused) reflect()
       else await play()
@@ -279,40 +276,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       if (current === loading && !signal.aborted) blocked()
     }
   }
-  function revealFrame() {
-    if (
-      !active ||
-      post().kind !== 'video' ||
-      !ready ||
-      video.readyState < 2 ||
-      video.seeking ||
-      !active.hasAttribute('data-restoring')
-    )
-      return
-    cancelFrameReveal()
-    // A decoded frame still needs a paint after leaving visibility:hidden.
-    // Prime its compositor layer underneath the saved frame before blending in.
-    video.style.opacity = '0.001'
-    delete active.dataset.restoring
-    frameRevealTick = requestAnimationFrame(() => {
-      frameRevealTick = requestAnimationFrame(() => {
-        frameRevealTick = undefined
-        video.style.removeProperty('opacity')
-        frameReveal = matchMedia('(prefers-reduced-motion: reduce)').matches
-          ? undefined
-          : video.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' })
-        void frameReveal?.finished.catch(() => {})
-      })
-    })
-  }
-  function cancelFrameReveal() {
-    if (frameRevealTick !== undefined) cancelAnimationFrame(frameRevealTick)
-    frameRevealTick = undefined
-    frameReveal?.cancel()
-    video.style.removeProperty('opacity')
-  }
-  video.addEventListener('loadeddata', revealFrame, options)
-  video.addEventListener('seeked', revealFrame, options)
   video.addEventListener('playing', reflect, options)
   video.addEventListener(
     'pause',
@@ -535,7 +498,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     'abort',
     () => {
       resize.disconnect()
-      cancelFrameReveal()
       waveformTask?.abort()
     },
     { once: true },

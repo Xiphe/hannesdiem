@@ -24,10 +24,7 @@ Watch; the entry and share-image conversations own their corresponding views.
   Stream's explicit timestamp thumbnail with `fit=clip` to preserve source aspect
   ratio for inactive posts and the native poster. New videos start with `time=0s`;
   revisited videos show their saved timestamp. Keep the player hidden until its
-  first frame or seek has decoded the matching frame. Give the visible video layer
-  two rendering frames beneath the preview before a brief opacity blend, so the
-  compositor has its texture ready at snap completion. Reduced motion skips the
-  blend. Cancel pending reveals on source changes or disposal to avoid stale frames
+  seek has decoded the matching frame, then hand over without an opening-frame flash
   ([thumbnail API](https://developers.cloudflare.com/stream/viewing-videos/displaying-thumbnails/)).
   Selected covers remain on Watch thumbnails and audio posts. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
