@@ -487,3 +487,29 @@ cancellation on retarget;20 related browser cases, app build, TypeScript and
 formatting pass. Synthetic SVG frame sequences were visually inspected.
 This is the next release-flow proposal for in-context review on8787, not artistic
 acceptance or publication. Donuts, placement and selected settings remain retained.
+
+## Return current website behavior to the tuning experiment — 2026-11-05
+
+The artist requests another settings pass in the existing8796 experiment. Its
+live solver still predated integration, so transplant the current website
+`CircleFluid` and `DensitySurface` through a local TypeScript-to-JavaScript sync
+script, without maintaining a second solver implementation. The experiment's
+`sync-from-website.mjs` records source fingerprints in `website-source.json`;
+its README describes recovery. Preserve the earlier selected snapshot and
+archive the previous live study before replacement.
+
+Wire actual release transitions into the study, preserving the asymmetric
+angular impulse/circulation from bc1caf3 and preventing spurious release while
+a free cursor moves. Add central selection and explicit Release place/Escape
+so the artist can repeatedly inspect holding and return without account flows.
+Match desktop visible seat diameters and derive physical radii from the DOM.
+Retain the five selected controls and defaults; save values locally and export
+JSON through Save settings, alongside the existing vector export. Study tuning
+does not silently change website defaults.
+
+A seeded held-seat/release replay yields bit-identical particle positions and
+velocities between study and website. Synthetic contour checks and browser
+checks for hold/release, live values, reset, persistence, settings export and
+mobile finite state pass. This restores the current behavior for artistic
+review on8796 (`sand tunnel 8796`); it does not select new settings, change the
+main website, or authorize publication.
