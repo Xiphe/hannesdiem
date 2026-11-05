@@ -430,3 +430,30 @@ recordingsFacts[0].after = {
     })),
   },
 }
+
+/** Both views use the same synthetic poem and facts, never authored content. */
+export function entryTempleContent(view: 'poem' | 'inside', section?: PoemOpeningProps['section']) {
+  const content = structuredClone(factsTempleContent)
+  const opening = (content.default as CmxComponentNode).children![0] as CmxComponentNode
+  opening.props = {
+    ...opening.props,
+    view,
+    ...(section ? { section } : {}),
+    navigation: [
+      { label: 'Visit fixture', href: '#facts' },
+      { label: 'Watch fixture', href: '#watch' },
+      { label: 'Create fixture', href: '#create' },
+      { label: 'Share fixture', href: '#share' },
+      { label: 'Pending fixture A' },
+      { label: 'Pending fixture B' },
+      { label: 'Pending fixture C' },
+    ],
+    facts: (opening.props!.facts as Record<string, unknown>[]).map((fact) => ({
+      ...fact,
+      id: fact.layout,
+    })),
+    finalVerse,
+  }
+  delete opening.children
+  return content
+}

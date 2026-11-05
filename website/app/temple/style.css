@@ -4,6 +4,7 @@
 @import './facts/style.css';
 @import './video.css';
 @import './top-navigation.css';
+@import './entry.css';
 
 html[data-layout='temple'] {
   color-scheme: light dark;

@@ -333,3 +333,44 @@
     display: none;
   }
 }
+
+.temple-artwork[data-temple-view='poem'] .temple-top-navigation {
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 4px;
+  padding-inline: 10px;
+  padding-bottom: 10px;
+}
+.temple-nav-enter.fact-action {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  margin: 0;
+}
+.temple-nav-enter.fact-action a {
+  display: inline-flex;
+  text-align: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px clamp(12px, 3vw, 24px);
+  font-size: clamp(14px, 2.5vw, 18px);
+}
+.temple-artwork[data-temple-view='inside'] .temple-top-navigation {
+  position: fixed;
+  inset-inline: 0;
+}
+.temple-nav-pending {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  color: light-dark(var(--temple-muted-light), #8c8981);
+}
+.temple-nav-pending .piece-tooltip-trigger {
+  text-decoration: none;
+  opacity: 0.7;
+}
+@media (max-width: 1050px) {
+  .temple-nav-pending {
+    min-height: 1.4em;
+  }
+}

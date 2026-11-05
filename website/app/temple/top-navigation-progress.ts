@@ -121,10 +121,14 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
     const known: { node: HTMLAnchorElement; target: HTMLElement }[] = []
     for (const node of stops) {
       const hash = node.getAttribute('href')
-      const target = hash?.startsWith('#') ? document.getElementById(hash.slice(1)) : null
+      const id = node.dataset.navTarget ?? (hash?.startsWith('#') ? hash.slice(1) : undefined)
+      const target = id ? document.getElementById(id) : null
       // Mobile also follows the connected poem pieces after unfinished facts.
       if (!target) continue
-      known.push({ node, target })
+      known.push({
+        node,
+        target: target.closest<HTMLElement>('.temple-practical-section') ?? target,
+      })
     }
     const allScenes = known.map(({ node, target }) => {
       const visuals = [...target.querySelectorAll('[data-nav-visual]')]
@@ -160,7 +164,8 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
         value: x(node) + node.getBoundingClientRect().width / 2,
       })
     }
-    const lastStop = stops.at(-1)!
+    const lastStop =
+      host.dataset.templeView === 'inside' ? (known.at(-1)?.node ?? stops.at(-1)!) : stops.at(-1)!
     mobilePoints.push({
       at: range,
       value: x(lastStop) + lastStop.getBoundingClientRect().width / 2,

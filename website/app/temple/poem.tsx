@@ -29,6 +29,8 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
   return () => {
     const {
       id,
+      view,
+      section,
       title,
       dates,
       image,
@@ -54,25 +56,31 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
       <>
         <Opening
           id={id}
+          view={view}
+          section={section}
           mark={assets.templeMark}
           navigation={navigation}
           title={title}
           dates={dates}
           image={{ src: source, width: item.width, height: item.height }}
           lightSource={lightSource}
-          pair={pair}
-          pairs={pairs}
-          bridge={bridge}
-          bridgeBody={bridgeBody}
-          facts={facts?.map((fact) => ({
-            ...fact,
-            images: [
-              getMedia(site.media, fact.images[0]),
-              ...fact.images.slice(1).map((image) => getMedia(site.media, image)),
-            ],
-          }))}
+          pair={view === 'inside' ? undefined : pair}
+          pairs={view === 'inside' ? undefined : pairs}
+          bridge={view === 'inside' ? undefined : bridge}
+          bridgeBody={view === 'inside' ? undefined : bridgeBody}
+          facts={
+            view === 'poem'
+              ? undefined
+              : facts?.map((fact) => ({
+                  ...fact,
+                  images: [
+                    getMedia(site.media, fact.images[0]),
+                    ...fact.images.slice(1).map((image) => getMedia(site.media, image)),
+                  ],
+                }))
+          }
           location={
-            location
+            view !== 'poem' && location
               ? {
                   ...location,
                   id: `temple-location-${id}`,
@@ -81,7 +89,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
                 }
               : undefined
           }
-          finalVerse={finalVerse}
+          finalVerse={view === 'inside' ? undefined : finalVerse}
         />
         {children != null && (
           <PoemSection

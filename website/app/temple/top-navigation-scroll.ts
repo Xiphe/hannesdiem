@@ -21,11 +21,13 @@ export function mountNavigationScroll(host: HTMLElement, signal: AbortSignal) {
         event.altKey
       )
         return
-      const link = (event.target as Element).closest<HTMLAnchorElement>('a[href^="#"]')
+      const link = (event.target as Element).closest<HTMLAnchorElement>(
+        'a[href^="#"],a[data-nav-target]',
+      )
       if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return
       let id: string
       try {
-        id = decodeURIComponent(link.hash.slice(1))
+        id = link.dataset.navTarget ?? decodeURIComponent(link.hash.slice(1))
       } catch {
         return
       }
@@ -47,7 +49,9 @@ export function mountNavigationScroll(host: HTMLElement, signal: AbortSignal) {
           from + target.getBoundingClientRect().top - margin,
         ),
       )
-      if (location.hash !== link.hash) history.pushState(history.state, '', link.hash)
+      const destination = link.dataset.navTarget ? link.getAttribute('href')! : link.hash
+      if ((link.dataset.navTarget ? location.pathname : location.hash) !== destination)
+        history.pushState(history.state, '', destination)
       const finish = () => {
         frame = 0
         const temporary = !target.hasAttribute('tabindex')

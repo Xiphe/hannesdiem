@@ -12,6 +12,7 @@ import {
   videoTempleContent,
   recordingsTempleContent,
   reservationTempleContent,
+  entryTempleContent,
 } from '../app/temple/tests/fixture.ts'
 import assets from '../../.generated/assets.json' with { type: 'json' }
 import { CMX_DOCUMENT_SCHEMA, type CmxDocument } from '@cmx-tools/contracts'
@@ -101,6 +102,19 @@ export const documents: PublishedDocuments = {
     ...structuredClone(page),
     content: { ...riseTempleContent, metadata: { kind: 'temple' } },
   },
+  'temple-entry-poem': {
+    ...structuredClone(page),
+    content: { ...entryTempleContent('poem'), metadata: { kind: 'temple' } },
+  },
+  ...Object.fromEntries(
+    (['visit', 'watch', 'create', 'share'] as const).map((section) => [
+      `temple-of-sound/${section}`,
+      {
+        ...structuredClone(page),
+        content: { ...entryTempleContent('inside', section), metadata: { kind: 'temple' } },
+      },
+    ]),
+  ),
   _redirects: {
     ...structuredClone(page),
     interface: { imports: {}, exports: { redirects: {} } },

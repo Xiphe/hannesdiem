@@ -1,0 +1,52 @@
+.temple-artwork[data-temple-view='poem'] {
+  --temple-nav-clearance: 88px;
+}
+.temple-entry-welcome {
+  position: relative;
+  z-index: 3;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+  text-align: center;
+}
+.temple-entry-placeholder {
+  margin: 0 0 2rem;
+  font:
+    400 16px/1.6 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  opacity: 0.55;
+}
+.temple-entry-welcome + .first-pair {
+  /* The welcome now occupies the opener handoff's former negative space. */
+  margin-top: 0;
+}
+.temple-entry-welcome .fact-action,
+.temple-entry-closing.fact-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+.temple-entry-closing.fact-action {
+  position: relative;
+  z-index: 3;
+  padding: 2rem 1.5rem max(6rem, 18svh);
+}
+.temple-practical-content {
+  padding-top: calc(var(--temple-nav-clearance, 88px) + 4rem);
+}
+.temple-practical-section {
+  display: flow-root;
+  position: relative;
+}
+.temple-practical-section > .fact-story {
+  margin-block: 4svh 12svh;
+  scroll-margin-top: var(--temple-nav-clearance, 88px);
+}
+.temple-practical-section:has(.facts-grid) {
+  padding-top: 4svh;
+}
+.temple-practical-section + .temple-practical-section {
+  padding-top: 8svh;
+}

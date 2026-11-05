@@ -16,6 +16,8 @@ export type FactProps = Omit<PoemFact, 'images'> & {
 }
 export interface OpeningProps {
   id: string
+  view?: PoemOpeningProps['view']
+  section?: PoemOpeningProps['section']
   mark: string
   navigation?: PoemOpeningProps['navigation']
   facts?: readonly FactProps[]

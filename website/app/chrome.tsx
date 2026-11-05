@@ -1,5 +1,10 @@
 import { Frame, css, on, ref, type Handle } from 'remix/component'
 import { Bars3Icon } from './heroicons.tsx'
+import {
+  hasEnteredTemple,
+  rememberTempleEntry,
+  templeEntryStorageKey,
+} from './temple/entry-state.ts'
 
 const menuStyle = css({
   position: 'fixed',
@@ -47,6 +52,19 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
   function navigationDialog() {
     return document.querySelector<HTMLDialogElement>('[data-navigation-dialog]')
   }
+  function updateTempleEntryLink() {
+    const entered = hasEnteredTemple()
+    navigationDialog()
+      ?.querySelectorAll<HTMLAnchorElement>('[data-temple-entry-link]')
+      .forEach((link) => {
+        link.href = entered ? '/temple-of-sound/visit' : '/temple-of-sound'
+      })
+  }
+  function rememberCurrentTempleEntry() {
+    if (/^\/temple-of-sound\/(visit|watch|create|share)\/?$/.test(location.pathname))
+      rememberTempleEntry()
+    updateTempleEntryLink()
+  }
   function closeNavigation() {
     if (closingNavigation) return closingNavigation
     const navigation = navigationDialog()
@@ -70,6 +88,7 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
     event.preventDefault()
     const navigation = navigationDialog()
     if (!navigation || closingNavigation) return
+    updateTempleEntryLink()
     delete navigation.dataset.closing
     if (!navigation.open) navigation.showModal()
     navigationOpen = true
@@ -97,6 +116,14 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
       handle.signal.addEventListener('abort', () => clearTimeout(timeout), { once: true })
     }
     navigationOpen = navigationDialog()?.open ?? false
+    rememberCurrentTempleEntry()
+    window.addEventListener(
+      'storage',
+      (event) => {
+        if (event.key === templeEntryStorageKey || event.key === null) updateTempleEntryLink()
+      },
+      { signal: handle.signal },
+    )
     document.addEventListener(
       'click',
       (event) => {
@@ -166,6 +193,7 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
     handle.frames.top.addEventListener(
       'reloadComplete',
       () => {
+        rememberCurrentTempleEntry()
         dialog?.close()
         contactTrigger = undefined
         navigationOpen = false

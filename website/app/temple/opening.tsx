@@ -15,6 +15,9 @@ import { mountNavigationProgress } from './top-navigation-progress.ts'
 import { mountRecordingTitles } from './video-title.ts'
 import { mountRecordingScroll } from './video-scroll.ts'
 import { LocalDate } from '../date.tsx'
+import { mountInsideArtwork } from './inside-artwork.ts'
+import { mountSectionArrival } from './section-navigation.ts'
+import { mountLegacyEntry } from './legacy-entry.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
@@ -26,6 +29,8 @@ export function Opening(handle: Handle<OpeningProps>) {
     mountNavigationPosition(host, signal)
     mountNavigationProgress(host, signal)
     mountNavigationScroll(host, signal)
+    mountSectionArrival(host, handle.props, signal)
+    if (handle.props.view === 'poem') mountLegacyEntry(host, signal)
     const controller = new AbortController()
     signal.addEventListener('abort', () => controller.abort(), { once: true })
     host.dataset.state = 'loading'
@@ -38,7 +43,7 @@ export function Opening(handle: Handle<OpeningProps>) {
       // Restore a recording's arrival once that preceding layout has settled.
       try {
         const target = document.getElementById(decodeURIComponent(location.hash.slice(1)))
-        if (target?.matches('.temple-video') && host.contains(target))
+        if (target?.matches('.temple-video, .temple-post-preview') && host.contains(target))
           target.scrollIntoView({ block: 'start', inline: 'center', behavior: 'instant' })
       } catch {
         // Malformed fragments must not prevent the artwork from becoming ready.
@@ -59,7 +64,9 @@ export function Opening(handle: Handle<OpeningProps>) {
     )
     try {
       if (handle.props.location) mountLocation(host, handle.props.location, controller.signal)
-      await mountArtwork(host, handle.props, controller.signal, () => reveal('ready'))
+      if (handle.props.view === 'inside')
+        await mountInsideArtwork(host, handle.props, controller.signal, () => reveal('ready'))
+      else await mountArtwork(host, handle.props, controller.signal, () => reveal('ready'))
     } catch (error) {
       controller.abort()
       reveal('fallback')
@@ -69,9 +76,45 @@ export function Opening(handle: Handle<OpeningProps>) {
   return () => {
     const { title, dates, image, pair, pairs, bridge, bridgeBody, location, finalVerse, facts } =
       handle.props
+    if (handle.props.view === 'inside')
+      return (
+        <div
+          class="temple-artwork"
+          data-temple-view="inside"
+          mix={ref((node) => {
+            root = node
+          })}
+        >
+          <TopNavigation {...handle.props} />
+          <div class="temple-practical-content">
+            {location && (
+              <div class="temple-practical-section">
+                <Location {...location} />
+              </div>
+            )}
+            {facts?.map((fact) => (
+              <div class="temple-practical-section">
+                <Fact
+                  {...fact}
+                  action={fact.after != null ? undefined : fact.action}
+                />
+                {fact.after}
+                {fact.after != null && fact.action && (
+                  <FactAction
+                    id={fact.id}
+                    action={fact.action}
+                    afterContent
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )
     return (
       <div
         class="temple-artwork"
+        data-temple-view={handle.props.view}
         mix={ref((node) => {
           root = node
         })}
@@ -122,7 +165,15 @@ export function Opening(handle: Handle<OpeningProps>) {
 
         {(pairs?.length || pair || location) && (
           <div class="poem-pairs">
-            {location && <Location {...location} />}
+            {handle.props.view === 'poem' && (
+              <div class="temple-entry-welcome">
+                <p class="temple-entry-placeholder">[Welcome text placeholder]</p>
+                <div class="fact-action">
+                  <a href="/temple-of-sound/visit">Enter</a>
+                </div>
+              </div>
+            )}
+            {handle.props.view !== 'poem' && location && <Location {...location} />}
             {(pairs ?? (pair ? [pair] : [])).map((pair, index) => (
               <>
                 <FirstPair
@@ -130,24 +181,25 @@ export function Opening(handle: Handle<OpeningProps>) {
                   pair={pair}
                   index={index}
                 />
-                {facts
-                  ?.filter((fact) => fact.afterPair === index + 1)
-                  .map((fact) => (
-                    <>
-                      <Fact
-                        {...fact}
-                        action={fact.after != null ? undefined : fact.action}
-                      />
-                      {fact.after}
-                      {fact.after != null && fact.action && (
-                        <FactAction
-                          id={fact.id}
-                          action={fact.action}
-                          afterContent
+                {handle.props.view !== 'poem' &&
+                  facts
+                    ?.filter((fact) => fact.afterPair === index + 1)
+                    .map((fact) => (
+                      <>
+                        <Fact
+                          {...fact}
+                          action={fact.after != null ? undefined : fact.action}
                         />
-                      )}
-                    </>
-                  ))}
+                        {fact.after}
+                        {fact.after != null && fact.action && (
+                          <FactAction
+                            id={fact.id}
+                            action={fact.action}
+                            afterContent
+                          />
+                        )}
+                      </>
+                    ))}
               </>
             ))}
             {bridge && (
@@ -232,6 +284,11 @@ export function Opening(handle: Handle<OpeningProps>) {
                   </div>
                 )}
               </>
+            )}
+            {handle.props.view === 'poem' && (
+              <div class="temple-entry-closing fact-action">
+                <a href="/temple-of-sound/visit">Enter the Temple</a>
+              </div>
             )}
           </div>
         )}

@@ -133,6 +133,7 @@ site.navigation = {
   primary: [
     { name: 'Featured fixture', href: '/fixture-long-release' },
     { name: 'Temple fixture', href: '/temple-navigation' },
+    { name: 'Temple entry fixture', href: '/temple-of-sound' },
   ],
   sections: [
     {

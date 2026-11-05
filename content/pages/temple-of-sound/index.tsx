@@ -1,5 +1,10 @@
 import type { PageMetadata } from '../../types.ts'
-import { PoemCanvas, PoemOpening, type PoemPair } from '@hannesdiem/content-components'
+import {
+  PoemCanvas,
+  PoemOpening,
+  type PoemPair,
+  type PoemOpeningProps,
+} from '@hannesdiem/content-components'
 
 import forest from '../../media/IMG_6257.JPG'
 import room from '../../media/steinfurth-grand-piano.jpeg'
@@ -142,11 +147,16 @@ export const thirdPair = {
   ],
 } satisfies PoemPair
 
-export default function Content() {
+export default function Content({
+  view = 'poem',
+  section,
+}: Pick<PoemOpeningProps, 'view' | 'section'> = {}) {
   return (
     <PoemCanvas>
       <PoemOpening
         id="verse-1"
+        view={view}
+        section={section}
         title={title}
         dates={{ start: '2026-11-01', end: '2026-12-20' }}
         image={forest}

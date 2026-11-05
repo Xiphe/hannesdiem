@@ -200,6 +200,7 @@ export function Navigation(
               <a
                 class="nav-item nav-primary"
                 href={item.href}
+                data-temple-entry-link={item.href === '/temple-of-sound' ? '' : undefined}
                 data-rmx-document=""
                 aria-current={handle.props.pathname === item.href ? 'page' : undefined}
               >
@@ -223,6 +224,7 @@ export function Navigation(
                       <a
                         class="nav-item"
                         href={item.href}
+                        data-temple-entry-link={item.href === '/temple-of-sound' ? '' : undefined}
                         data-rmx-document=""
                         aria-current={handle.props.pathname === item.href ? 'page' : undefined}
                       >

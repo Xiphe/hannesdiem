@@ -1,5 +1,32 @@
 # Temple of Sound: client–artist collaboration
 
+**Separate the intention from entering — 2026-11-05.** The artist approves a
+continuous poem at `/temple-of-sound`, preserving its authored words and accepted
+artwork. Remove interleaved practical content. After the opener, place a welcome
+placeholder for the artist to write and an Enter link. Add “Enter the Temple”
+below the final alive phrase. As the opener exits, show a header containing only
+“enter the temple of sound” centered and the main-menu logo; omit its wordmark,
+date and section navigation.
+
+Enter opens `/temple-of-sound/visit`, the first section of one complete practical
+page. There is no inside index. Visit, Watch, Create and Share have section paths;
+each renders the same practical page at its selected destination. Keep the full
+existing entered header, immediately visible, with progress and scrubbing mapped
+only to practical content. Its wordmark returns to the poem opener. Retain
+Inspire, Be Held and Wish as labels whose activation shows “coming soon”.
+
+The bare poem address remains predictable. Practical arrivals remember entry in
+local storage; the sidebar keeps its wording but then points to Visit. Opening a
+feed deep link leaves that state unchanged; returning to the poem preserves it.
+The feed chat owns its back control and playback, and sharing owns metadata/cards.
+Preserve old practical fragments, recording links and signup/circle return-state
+queries. The agreed verse queries select passages within the complete poem.
+
+Native CMX section entrypoints reuse the same authored content; the runtime
+chooses poem/practical rendering through optional component props. Existing
+Publications without those props keep their previous rendering, supporting a
+website-first rollout. Local review only; no deployment requested.
+
 **Horizontal recording collection — 2026-11-05.** The artist supplies two new
 Cloudflare Stream recordings with exact titles, descriptions and posting times,
 and initially asks for vertical scrolling, then corrects the direction to

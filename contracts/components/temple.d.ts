@@ -31,6 +31,9 @@ export interface PoemPair {
 }
 export interface PoemOpeningProps {
   id: string
+  /** Separate intention and practical views of the same authored Temple. */
+  view?: 'poem' | 'inside'
+  section?: 'visit' | 'watch' | 'create' | 'share'
   title: string
   dates: { start: string; end: string }
   image: ImageSource
