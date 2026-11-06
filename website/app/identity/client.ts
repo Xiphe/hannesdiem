@@ -1,4 +1,4 @@
-import { csrfRejectionHeader, type NewsletterState } from './contract.ts'
+import { csrfRejectionHeader, type SessionState } from './contract.ts'
 
 // Shared by the browser's private islands; public CMX HTML remains anonymous.
 let startup: Promise<void> | undefined
@@ -66,7 +66,7 @@ export async function submitSessionForm(
   await response.body?.cancel()
   const refreshed = await readSessionState('/login', signal)
   if (!refreshed.ok) throw new Error('Session refresh unavailable')
-  const state = (await refreshed.json()) as NewsletterState
+  const state = (await refreshed.json()) as SessionState
   if (
     !state.ready ||
     typeof state.csrfToken !== 'string' ||

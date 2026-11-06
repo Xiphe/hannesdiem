@@ -2,7 +2,7 @@ import { on, ref, type Handle } from 'remix/component'
 import { PieceSurface } from '../temple/piece-tooltip/surface.tsx'
 import { NotificationSwitch } from './notification-switch.tsx'
 import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
-import { readSessionState, submitSessionForm, SessionChangedError } from './session-client.ts'
+import { readSessionState, submitSessionForm, SessionChangedError } from '../identity/client.ts'
 import {
   templeMessages,
   templeNewsletterPath,

@@ -1,26 +1,35 @@
 import { createCookie } from 'remix/cookie'
 import { createRouter } from 'remix/router'
-import { cop } from 'remix/middleware/cop'
-import { csrf } from 'remix/middleware/csrf'
+import { cop, type CopFailureReason } from 'remix/middleware/cop'
+import { csrf, type CsrfFailureReason } from 'remix/middleware/csrf'
 import { formData } from 'remix/middleware/form-data'
 import { render } from 'remix/middleware/render'
 import { session } from 'remix/middleware/session'
-import type { NewsletterEnvironment } from './config.ts'
-import { sessionStorage } from './storage.ts'
-import { csrfRejectionHeader, templeMessages } from './contract.ts'
-import { reportNewsletterFailure } from './diagnostics.ts'
+import type { SessionStorage } from 'remix/session'
+import { csrfRejectionHeader } from './contract.ts'
 
-function rejected(request: Request, message: string, reason?: string) {
+interface IdentityRouterOptions {
+  secret: string
+  storage: SessionStorage
+  failureMessage: string
+  reportRejection(
+    request: Request,
+    stage: 'csrf' | 'origin',
+    reason: CsrfFailureReason | CopFailureReason,
+  ): void
+}
+
+function rejected(request: Request, message: string, failureMessage: string, reason?: string) {
   const headers = reason ? { [csrfRejectionHeader]: reason } : undefined
   return request.headers.get('Accept')?.includes('application/json')
-    ? Response.json({ type: 'error', message: templeMessages.failure }, { status: 403, headers })
+    ? Response.json({ type: 'error', message: failureMessage }, { status: 403, headers })
     : new Response(message, { status: 403, headers })
 }
 
-/** Share the same verified identity and CSRF boundary across CTA purposes. */
-export function createNewsletterSessionRouter(env: NewsletterEnvironment) {
+/** Share one cookie, session and CSRF policy across private website features. */
+export function createIdentityRouter(options: IdentityRouterOptions) {
   const cookie = createCookie('hdm_user_session', {
-    secrets: [env.NEWSLETTER_SESSION_SECRET!],
+    secrets: [options.secret],
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
@@ -29,30 +38,31 @@ export function createNewsletterSessionRouter(env: NewsletterEnvironment) {
     middleware: [
       cop({
         onDeny(reason, context) {
-          reportNewsletterFailure(context.request, 'origin', reason)
+          options.reportRejection(context.request, 'origin', reason)
           return rejected(
             context.request,
             reason === 'cross-origin-request'
               ? 'Forbidden: cross-origin request detected from Sec-Fetch-Site header'
               : 'Forbidden: cross-origin request detected, and/or browser is out of date: Sec-Fetch-Site is missing, and Origin does not match Host',
+            options.failureMessage,
           )
         },
       }),
-      session(cookie, sessionStorage(env)),
+      session(cookie, options.storage),
       formData({ maxFiles: 0, maxParts: 5, maxTotalSize: 4096 }),
       csrf({
         onError(reason, context) {
-          reportNewsletterFailure(context.request, 'csrf', reason)
+          options.reportRejection(context.request, 'csrf', reason)
           const messages = {
             'invalid-origin': 'Forbidden: invalid CSRF origin',
             'missing-token': 'Forbidden: missing CSRF token',
             'invalid-token': 'Forbidden: invalid CSRF token',
           }
-          return rejected(context.request, messages[reason], reason)
+          return rejected(context.request, messages[reason], options.failureMessage, reason)
         },
       }),
       render(),
     ],
   })
 }
-export type NewsletterRouter = ReturnType<typeof createNewsletterSessionRouter>
+export type IdentityRouter = ReturnType<typeof createIdentityRouter>

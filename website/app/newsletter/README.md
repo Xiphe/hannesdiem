@@ -20,6 +20,10 @@ private `/newsletter/temple` form endpoint. Public CMX HTML contains no session 
 subscription state. These flows reuse the existing Remix session, CSRF middleware,
 Resend transport and Workers Durable Object; no provider SDK or parallel auth store.
 
+The shared [identity module](../identity/README.md) owns browser startup and the
+session/CSRF middleware used by these flows. Newsletter supplies the existing
+storage adapter, configuration, rejection wording and diagnostic reporter.
+
 Private browser state requests share the first response before starting further
 reads, so Watch, Circle and the sidebar cannot create competing anonymous session
 cookies. Startup uses the browser's Web Locks API to coordinate other tabs where

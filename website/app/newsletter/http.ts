@@ -1,4 +1,4 @@
-import { createNewsletterSessionRouter } from './session-router.ts'
+import { createIdentityRouter } from '../identity/router.ts'
 import { reportNewsletterFailure } from './diagnostics.ts'
 import { completeAuth } from 'remix/auth'
 import * as s from 'remix/data-schema'
@@ -18,7 +18,8 @@ import { renderToString } from 'remix/component/server'
 import { registerCircleRoutes } from '../circle/http.tsx'
 import { circlePath } from '../circle/contract.ts'
 import { NewsletterPage, TempleNewsletterPage } from './view.tsx'
-import type { NewsletterResult, NewsletterState } from './contract.ts'
+import type { SessionState } from '../identity/contract.ts'
+import type { NewsletterResult } from './contract.ts'
 import {
   templeMessages,
   templeNewsletterPath,
@@ -27,7 +28,13 @@ import {
 } from './contract.ts'
 
 import type { NewsletterEnvironment, NewsletterServices } from './config.ts'
-import { storageClient, digest, tokenPattern, type NewsletterIdentity } from './storage.ts'
+import {
+  sessionStorage,
+  storageClient,
+  digest,
+  tokenPattern,
+  type NewsletterIdentity,
+} from './storage.ts'
 import {
   sendConfirmation,
   readNewsletterContact,
@@ -76,10 +83,15 @@ function wantsJson(request: Request): boolean {
 
 function createNewsletterRouter(env: NewsletterEnvironment, services: NewsletterServices) {
   const call = storageClient(env)
-  const router = createNewsletterSessionRouter(env)
+  const router = createIdentityRouter({
+    secret: env.NEWSLETTER_SESSION_SECRET!,
+    storage: sessionStorage(env),
+    failureMessage: templeMessages.failure,
+    reportRejection: reportNewsletterFailure,
+  })
   router.get('/login', (context) => {
     const email = context.session.get('email')
-    const state: NewsletterState = {
+    const state: SessionState = {
       ready: true,
       email: typeof email === 'string' ? email : undefined,
       csrfToken: getCsrfToken(context),

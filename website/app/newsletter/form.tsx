@@ -1,7 +1,8 @@
 import { on, ref, type Handle } from 'remix/component'
 export { StandaloneTempleSignup } from './temple-form.tsx'
-import type { NewsletterState, NewsletterResult } from './contract.ts'
-import { readSessionState, submitSessionForm, SessionChangedError } from './session-client.ts'
+import type { SessionState } from '../identity/contract.ts'
+import type { NewsletterResult } from './contract.ts'
+import { readSessionState, submitSessionForm, SessionChangedError } from '../identity/client.ts'
 import {
   BellIcon,
   CalendarDaysIcon,
@@ -14,7 +15,7 @@ import {
 } from '../heroicons.tsx'
 
 export interface NewsletterFormProps {
-  state: NewsletterState
+  state: SessionState
   signup?: boolean
   result?: NewsletterResult
   emailValue?: string
@@ -93,10 +94,10 @@ async function readResult(response: Response): Promise<NewsletterResult> {
   return result
 }
 
-async function readNewsletterState(signal: AbortSignal): Promise<NewsletterState> {
+async function readNewsletterState(signal: AbortSignal): Promise<SessionState> {
   const response = await readSessionState('/login', signal)
   if (!response.ok) throw new Error('Newsletter session unavailable')
-  const state = (await response.json()) as NewsletterState
+  const state = (await response.json()) as SessionState
   if (
     !state ||
     typeof state.ready !== 'boolean' ||
@@ -304,7 +305,7 @@ export function StandaloneNewsletterForm(handle: Handle<NewsletterFormProps>) {
   return NewsletterForm(handle)
 }
 
-export function NewsletterArea(handle: Handle<{ state: NewsletterState; lazy?: boolean }>) {
+export function NewsletterArea(handle: Handle<{ state: SessionState; lazy?: boolean }>) {
   let state = handle.props.state
   let section: HTMLElement | undefined
   let loaded = !handle.props.lazy

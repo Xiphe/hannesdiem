@@ -4,7 +4,7 @@ import { mountCircle } from './circle-enhance.ts'
 import { mountCirclePanelPosition } from './circle-panel-position.ts'
 import { circleRestSurface } from './circle-surface.ts'
 import { CirclePanel } from '../../circle/panel.tsx'
-import { readSessionState } from '../../newsletter/session-client.ts'
+import { readSessionState } from '../../identity/client.ts'
 import {
   circlePath,
   circleMessages,

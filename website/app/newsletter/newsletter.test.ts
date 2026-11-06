@@ -3,9 +3,9 @@ import { test } from 'node:test'
 import { createCookie } from 'remix/cookie'
 import { templeSegment, templeTopic } from './temple-config.ts'
 import { templeNewsletterPath, type TempleNewsletterState } from './contract.ts'
-import { handleNewsletter, type NewsletterEnvironment, type NewsletterState } from './index.ts'
-import { csrfRejectionHeader } from './contract.ts'
-import { readSessionState, submitSessionForm } from './session-client.ts'
+import { handleNewsletter, type NewsletterEnvironment } from './index.ts'
+import { csrfRejectionHeader, type SessionState } from '../identity/contract.ts'
+import { readSessionState, submitSessionForm } from '../identity/client.ts'
 import {
   cleanupNewsletterStorage,
   handleNewsletterStorage,
@@ -137,7 +137,7 @@ function harness() {
     const response = await handle('/login', {
       headers: { Accept: 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
     })
-    const value = (await response.json()) as NewsletterState
+    const value = (await response.json()) as SessionState
     return { ...value, headers: response.headers, cookie: cookieFrom(response.headers) ?? cookie! }
   }
   const submit = (
@@ -245,7 +245,7 @@ test('private form clients share a real session and recover a rotated cookie bef
     ['/newsletter/temple', '/circle', '/login'].map(async (path) => {
       const response = await readSessionState(path, signal)
       assert.equal(response.status, 200)
-      return response.json() as Promise<NewsletterState>
+      return response.json() as Promise<SessionState>
     }),
   )
   assert.equal(new Set(states.map((state) => state.csrfToken)).size, 1)

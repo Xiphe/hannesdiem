@@ -1,6 +1,6 @@
 import { on, ref, type Handle } from 'remix/component'
 import { templeMessages } from '../newsletter/contract.ts'
-import { submitSessionForm, SessionChangedError } from '../newsletter/session-client.ts'
+import { submitSessionForm, SessionChangedError } from '../identity/client.ts'
 import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
 import {
   circlePath,

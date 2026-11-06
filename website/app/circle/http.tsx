@@ -1,5 +1,5 @@
 import { getCsrfToken } from 'remix/middleware/csrf'
-import type { NewsletterRouter } from '../newsletter/session-router.ts'
+import type { IdentityRouter } from '../identity/router.ts'
 import { reportNewsletterFailure } from '../newsletter/diagnostics.ts'
 import * as s from 'remix/data-schema'
 import * as checks from 'remix/data-schema/checks'
@@ -23,9 +23,9 @@ import {
 } from './contract.ts'
 import { CirclePage } from './page.tsx'
 
-/** Register inside the existing newsletter session / CSRF / bounded form pipeline. */
+/** Register inside the shared identity session / CSRF / bounded form pipeline. */
 export function registerCircleRoutes(
-  router: NewsletterRouter,
+  router: IdentityRouter,
   env: NewsletterEnvironment,
   services: NewsletterServices,
 ) {

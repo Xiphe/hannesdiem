@@ -3,7 +3,8 @@ import assets from '../../.generated/assets.json' with { type: 'json' }
 import { SiteContent } from './ui-library/index.ts'
 import { ServiceLogo } from './icons.tsx'
 import { ChevronDownIcon, XMarkIcon } from './heroicons.tsx'
-import { NewsletterArea, type NewsletterState } from './newsletter/index.ts'
+import { NewsletterArea } from './newsletter/index.ts'
+import type { SessionState } from './identity/contract.ts'
 
 const quietLink = css({ opacity: 0.6, '&:hover': { opacity: 1 } })
 export function Brand(handle: Handle<{ footer?: boolean }>) {
@@ -153,7 +154,7 @@ const navStyle = css({
   '& [aria-current=page]': { fontWeight: 500, color: 'var(--theme-primary)' },
 })
 export function Navigation(
-  handle: Handle<{ pathname: string; state: NewsletterState; lazy?: boolean }>,
+  handle: Handle<{ pathname: string; state: SessionState; lazy?: boolean }>,
 ) {
   const { primary = [], sections } = handle.context.get(SiteContent).navigation
   return () => (

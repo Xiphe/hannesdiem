@@ -1,3 +1,5 @@
+import type { SessionState } from '../identity/contract.ts'
+
 /** Runtime circle state is independent of published CMX content. */
 export const circlePath = '/circle'
 export const circleReturnPath = '/temple-of-sound#share'
@@ -7,14 +9,11 @@ export interface PublicPlace {
   spot: number
   alias: string
 }
-export interface CircleView {
-  ready: boolean
+export interface CircleView extends SessionState {
   places: PublicPlace[]
   unavailable?: number[]
-  email?: string
   name?: string
   waiting?: boolean
-  csrfToken?: string
   own?: PublicPlace
   processing?: boolean
   reactivation?: boolean

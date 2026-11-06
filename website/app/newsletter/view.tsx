@@ -1,6 +1,7 @@
 import { clientEntry } from 'remix/component'
 import assets from '../../../.generated/assets.json' with { type: 'json' }
-import type { NewsletterState, NewsletterResult } from './contract.ts'
+import type { SessionState } from '../identity/contract.ts'
+import type { NewsletterResult } from './contract.ts'
 import { NewsletterArea as NewsletterAreaComponent, StandaloneNewsletterForm } from './form.tsx'
 import { defaultTheme, themeCss } from '../theme.ts'
 import { StandaloneTempleSignup, type TempleSignupProps } from './temple-form.tsx'
@@ -65,7 +66,7 @@ const NewsletterForm = clientEntry(
 )
 
 export function NewsletterPage(props: {
-  state: NewsletterState
+  state: SessionState
   message?: string
   result?: NewsletterResult
   emailValue?: string

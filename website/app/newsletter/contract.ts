@@ -1,19 +1,12 @@
-export interface NewsletterState {
-  ready: boolean
-  email?: string
-  csrfToken?: string
-}
+import type { SessionState } from '../identity/contract.ts'
 
-export const csrfRejectionHeader = 'X-Hdm-Csrf-Rejected'
-
-export interface TempleNewsletterState extends NewsletterState {
+export interface TempleNewsletterState extends SessionState {
   name?: string
   subscribed?: boolean
   unsubscribed?: boolean
 }
 
 export const templeNewsletterPath = '/newsletter/temple'
-export const templeReturnPath = '/temple-of-sound#watch'
 export const templeMessages = {
   pending: 'Awesome, please check your email to confirm your interest',
   confirmed: 'Great, this worked!',
