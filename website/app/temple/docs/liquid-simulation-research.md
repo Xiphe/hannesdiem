@@ -654,7 +654,6 @@ live damping, reset/reload, JSON export and mobile layout.
 Whether this feels sufficiently liquid remains for the artist's review on8796
 (`sand tunnel 8796`); publication and website integration remain separate.
 
-
 ## Selected material and website integration — 2026-11-06
 
 The artist selects the supplied settings screenshot and says “lets use these
