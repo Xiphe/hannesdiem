@@ -116,7 +116,7 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(header).toHaveCSS('transition-property', 'visibility')
   await expect(header).toHaveCSS('opacity', '1')
   await expect(button).toHaveCSS('visibility', 'hidden')
-  await expect(hint).not.toBeVisible()
+  await expect(hint).toBeVisible()
   await expect(header.locator('.temple-nav-enter a')).toBeVisible()
   const handoff = await header.evaluate(async (node) => {
     const welcome = document.querySelector('.temple-entry-welcome a')!
@@ -177,6 +177,59 @@ test('the welcome button hands over to the centered header button at the top', a
   expect(exit.invitationLayer).toBeGreaterThan(exit.headerLayer)
   await expect(header).not.toBeVisible()
 })
+
+for (const width of [390, 1440]) {
+  test(`the manifesto hint scrolls behind the sticky action before staying hidden at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/temple-entry-poem')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const button = page.locator('.temple-entry-welcome a')
+    const hint = page.locator('.temple-entry-more')
+    const header = page.locator('.temple-top-navigation')
+    const fixed = header.locator('.temple-nav-enter a')
+    await button.evaluate((node) => {
+      const header = document.querySelector<HTMLElement>('.temple-top-navigation')!
+      const top = (header.offsetHeight - (node as HTMLElement).offsetHeight) / 2 - 1
+      scrollTo(0, scrollY + node.getBoundingClientRect().top - top)
+    })
+    await expect(header).toHaveAttribute('data-nav-visible', '')
+    await expect(header.locator('.temple-nav-logo')).toHaveCSS('opacity', '1')
+    await expect(hint).toBeVisible()
+    const action = (await fixed.boundingBox())!
+    const actionBottom = action.y + action.height
+    const before = (await hint.boundingBox())!
+    expect(before.y).toBeGreaterThan(actionBottom)
+    // Even after its fade finishes, the backdrop must leave the hint below the button clear.
+    const backdropBottom = await header.evaluate((node) => {
+      const style = getComputedStyle(node, '::before')
+      return node.getBoundingClientRect().top + parseFloat(style.top) + parseFloat(style.height)
+    })
+    expect(backdropBottom).toBeCloseTo(actionBottom, 0)
+    expect(backdropBottom).toBeLessThan(before.y)
+    const moveHint = (top: number) =>
+      hint.evaluate(
+        (node, top) => scrollTo(0, scrollY + node.getBoundingClientRect().top - top),
+        top,
+      )
+    await moveHint(actionBottom - before.height / 2)
+    await expect(header).not.toHaveAttribute('data-nav-hint-covered', '')
+    await expect(hint).toBeVisible()
+    const overlapping = (await hint.boundingBox())!
+    expect(overlapping.y).toBeLessThan(actionBottom)
+    expect(overlapping.y + overlapping.height).toBeGreaterThan(actionBottom)
+    await moveHint(actionBottom - before.height - 1)
+    await expect(hint).not.toBeVisible()
+    // Passing above the action must not expose the hint again.
+    await moveHint(action.y - before.height / 2)
+    await expect(hint).not.toBeVisible()
+    await moveHint(actionBottom - before.height / 2)
+    await expect(hint).toBeVisible()
+    await moveHint(before.y)
+    await expect(hint).toBeVisible()
+  })
+}
 
 for (const width of [390, 1440]) {
   test(`Enter expands its label in the sticky header and reverses smoothly at ${width}px`, async ({
