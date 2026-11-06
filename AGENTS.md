@@ -24,7 +24,7 @@ Never invent prose for the user unless explicitly instructed. Preserve supplied 
 
 ## Agent skills
 
-- Deploy or take over deployment QA: read `.agents/skills/deploy/SKILL.md`; deployment and browser QA are separate, coordinated through the gitignored `.deploy-qa.json`.
+- Deploy or take over deployment QA: read `.agents/skills/deploy/SKILL.md`; use the terse, gitignored `.deploy-qa.json` for routine coordination. Direct chat is reserved for unresolved blockers or ownership conflicts.
 - Remix work: read `.agents/skills/remix/SKILL.md`; use installed docs via `node_modules/remix/INDEX.md`.
 - Tickets: GitHub Issues via `gh`; PRs are not a request surface.
 - Triage: independent label groups; skill overrides in `docs/agents/triage-labels.md`.

@@ -8,29 +8,34 @@ Deploy means integrate the task's changes with current `origin/main`, push to
 agents' uncommitted work. A successful deployment includes fast checks and HTTP
 health checks; browser QA runs separately.
 
-Before QA, inspect your remaining work queue, other active chats working on this
-project, and the shared, gitignored `.deploy-qa.json`. Use the installed
-`codex-ssh-coordination` skill for discovery and messaging, including its SSH
-fallback. Coordinate explicitly:
-finish imminent deployments first when that avoids repeating QA, or agree which
-active agent will check the batch. Before finishing your task, either complete QA
-or hand it to an agent that accepts responsibility. Report deferred QA honestly.
+Use the shared, gitignored `.deploy-qa.json` as the default coordination channel.
+Read it before starting QA; record ownership, deferrals, and results there.
+Batch your imminent deployments and honor existing running claims. Before
+finishing, complete QA, record a blocking prerequisite in owned pending work, or
+hand off to an agent that accepts by recording its own ownership.
+
+Keep routine status updates and acknowledgments in the log. Use direct chat only
+for an unresolved blocker or ownership conflict the log cannot settle, with one
+concise exchange. Use `codex-ssh-coordination` when that exception requires chat
+discovery or messaging.
 
 Keep `.deploy-qa.json` as a small JSON object keyed by target origin. Each target
 has only the relevant fields:
 
-- `pending`: `revision`, `owner` (chat ID), `scope` (`anonymous` or `login`).
+- `pending`: `revision`, `owner` (chat ID), `scope` (`anonymous` or `login`),
+  optional `reason` (short code, e.g. `gmail-oauth` or `queued-deploy`).
 - `running`: `revision`, `owner`, `scope` for the in-flight check.
 - `last`: `revision`, `at` (UTC), `scope`, `result` (`passed` or `failed`).
 
 Serialize file edits with `flock .deploy-qa.lock`: read and update while holding
 the lock, then release it before running tests. Record successful deployments as
 pending; a newer deployment does not replace a running check. Preserve scope
-`login` across newer deployments if any unchecked deployment requires it. Claim pending work
-in `running` only after checking the current owner's chat. After checking, update
+`login` across newer deployments if any unchecked deployment requires it. Record
+your claim in `running` under the lock; honor an existing running claim. After checking, update
 `last`, remove your `running`, and clear only pending work covered by the checked
 revision and scope. Failures remain pending with an owner. Retain no prose or
-history. Check an owner's chat before taking over an abandoned claim.
+history. Inspect an owner's status before taking over an abandoned claim; request
+clarification only if the log and status leave ownership unresolved.
 
 Run `npm run test:qa -- --url <target>` against the running site. Include `--auth`
 when authentication flows changed or login QA was explicitly requested. Such work

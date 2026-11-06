@@ -32,7 +32,7 @@ or provider-failure scenarios run against production. General login itself creat
 or updates a real contact and adds its newsletter segment memberships.
 
 One inbox runs one authenticated QA at a time across all targets. Use the deploy
-skill's local coordination file and active chats to avoid duplicate runs. Email
+skill's local coordination file for ownership, deferrals, and results. Email
 links are matched to the recipient, request time, and target origin. Traces,
 screenshots, and video are disabled for running-site QA so real tokens and sessions
 stay out of artifacts.
