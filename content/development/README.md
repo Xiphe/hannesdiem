@@ -11,7 +11,7 @@ a different port.
 The preview snapshots built assets so concurrent builds cannot remove files from
 an active review. After changing code or content, stop and restart
 `npm run dev:preview`. If a coordinated build is already complete, run
-`node content/development/preview.ts` to start without rebuilding. Simulated
+`node website/development/preview.ts` to start without rebuilding. Simulated
 contacts, email and Circle reservations reset when the process restarts.
 
 The simulated preview copies prepared media from `.generated/media` directly into

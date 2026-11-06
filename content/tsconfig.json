@@ -5,7 +5,6 @@
     "pages/**/*.tsx",
     "preparation/**/*.ts",
     "publishing/**/*.ts",
-    "development/preview.ts",
     "development/debug/cover-controls.ts"
   ]
 }
