@@ -1,4 +1,11 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["*.ts", "pages/**/*.tsx", "preparation/**/*.ts", "publishing/**/*.ts"]
+  "include": [
+    "*.ts",
+    "pages/**/*.tsx",
+    "preparation/**/*.ts",
+    "publishing/**/*.ts",
+    "development/preview.ts",
+    "development/debug/cover-controls.ts"
+  ]
 }

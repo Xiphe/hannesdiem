@@ -8,8 +8,6 @@
     "qa",
     "cmx.config.ts",
     "playwright.config.ts",
-    "../content/development/preview.ts",
-    "../content/development/debug/cover-controls.ts",
     "../contracts",
     "../worker-configuration.d.ts"
   ]
