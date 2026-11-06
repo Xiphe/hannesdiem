@@ -1,5 +1,6 @@
 import { circleRestSurface, DensitySurface } from './circle-surface.ts'
 import { createCircleFluid, type CircleFluid, type CircleTarget } from './circle-fluid.ts'
+import { createVisibleAnimation } from '../visible-animation.ts'
 
 /** Actual particle liquid behind native controls; bounded to the visible island. */
 export function mountCircle(
@@ -30,11 +31,9 @@ export function mountCircle(
   let fluid: CircleFluid | undefined
   let contour: DensitySurface | undefined
   let wanted: CircleTarget | null = null
-  let frame = 0
   let last = 0
   let accumulator = 0
   let idle = 0
-  let visible = false
   const coordinates = (x: number, y: number) => {
     const box = root.getBoundingClientRect()
     return {
@@ -54,15 +53,7 @@ export function mountCircle(
       }
     })
   }
-  const stop = () => {
-    cancelAnimationFrame(frame)
-    frame = 0
-    last = 0
-    accumulator = 0
-  }
-  const draw = (now: number) => {
-    frame = 0
-    if (signal.aborted || document.hidden || !visible) return
+  function draw(now: number) {
     if (reduced.matches) {
       shape(rest)
       return
@@ -85,16 +76,24 @@ export function mountCircle(
     idle = wanted ? 0 : idle + steps / 120
     // Preserve the actual released material rather than substituting a pose.
     // Stop residual numerical motion once calm, with an eight-second ceiling.
-    if (wanted || (idle < 8 && (idle < 2 || fluid.metrics().energy > 1)))
-      frame = requestAnimationFrame(draw)
-    else stop()
+    if (wanted || (idle < 8 && (idle < 2 || fluid.metrics().energy > 1))) animation.request()
+    else animation.stop()
   }
-  const wake = () => {
-    if (signal.aborted || document.hidden || !visible) return
+  const animation = createVisibleAnimation(signal, {
+    target: root,
+    draw,
+    resume: wake,
+    reset() {
+      last = 0
+      accumulator = 0
+    },
+  })
+  function wake() {
+    if (!animation.active) return
     if (reduced.matches) {
-      stop()
+      animation.stop()
       shape(rest)
-    } else if (!frame) frame = requestAnimationFrame(draw)
+    } else animation.request()
   }
   const pull = (next: CircleTarget | null) => {
     if (!reduced.matches) fluid?.setTarget(next)
@@ -102,20 +101,6 @@ export function mountCircle(
     idle = 0
     wake()
   }
-  const visibility = new IntersectionObserver(([entry]) => {
-    visible = entry.isIntersecting
-    if (visible) wake()
-    else stop()
-  })
-  visibility.observe(root)
-  document.addEventListener(
-    'visibilitychange',
-    () => {
-      if (document.hidden) stop()
-      else wake()
-    },
-    { signal },
-  )
   const ripples = new Set<Animation>()
   const cancelRipples = () => {
     for (const animation of ripples) animation.cancel()
@@ -333,8 +318,6 @@ export function mountCircle(
   signal.addEventListener(
     'abort',
     () => {
-      stop()
-      visibility.disconnect()
       size.disconnect()
       shape(rest)
       cancelRipples()

@@ -6,6 +6,7 @@ import { createNavigationArtwork } from './top-navigation-artwork.ts'
 import { colourCopy } from './copy-colour.ts'
 import type { TypeFrame } from './typography.ts'
 import { mountFragmentGround } from './fragment-button/ground.ts'
+import { createVisibleAnimation } from './visible-animation.ts'
 
 /** Share the header material and fragment ground without mounting a poem scene. */
 export async function mountInsideArtwork(
@@ -29,12 +30,14 @@ export async function mountInsideArtwork(
   const escapes = createEscapes(signal)
   const forest = createForest(image, props.lightSource, escapes, signal)
   const mist = createAtmosphere(signal)
-  let raf = 0
   let last = 0
   let elapsed = 0
-  const request = () => {
-    if (!raf && !signal.aborted && !document.hidden) raf = requestAnimationFrame(draw)
-  }
+  const { request } = createVisibleAnimation(signal, {
+    draw,
+    reset() {
+      last = 0
+    },
+  })
   const navigation = createNavigationArtwork(host, signal, request, escapes)
   const copy = colourCopy(host, signal, request)
   const resize = () => {
@@ -52,8 +55,6 @@ export async function mountInsideArtwork(
     resize()
   }
   function draw(now: number) {
-    raf = 0
-    if (signal.aborted || document.hidden) return
     if (!reduced.matches && last) elapsed += Math.min(0.05, (now - last) / 1000)
     last = now
     const frame: TypeFrame = {
@@ -75,18 +76,6 @@ export async function mountInsideArtwork(
   window.addEventListener('scroll', request, { passive: true, signal })
   appearance.addEventListener('change', sync, { signal })
   reduced.addEventListener('change', request, { signal })
-  document.addEventListener(
-    'visibilitychange',
-    () => {
-      if (document.hidden) {
-        cancelAnimationFrame(raf)
-        raf = 0
-        last = 0
-      } else request()
-    },
-    { signal },
-  )
-  signal.addEventListener('abort', () => cancelAnimationFrame(raf), { once: true })
   sync()
   ready()
 }
