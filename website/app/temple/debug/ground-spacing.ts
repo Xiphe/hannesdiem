@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 const root = new URL('../../../..', import.meta.url).pathname
 const result = await build({
   stdin: {
-    contents: `export {paintGroundPieces} from './website/app/temple/fragment-button/ground-pieces.ts';export {provideGroundMaterial} from './website/app/temple/fragment-button/material.ts';export {generateFragments} from './website/app/temple/fragment-button/fragment-generator.ts'`,
+    contents: `export {paintGroundPieces} from './website/app/temple/fragments/ground-pieces.ts';export {provideGroundMaterial} from './website/app/temple/fragments/material.ts';export {generateFragments} from './contracts/temple/fragments.ts'`,
     resolveDir: root,
   },
   bundle: true,
@@ -18,9 +18,9 @@ const result = await build({
 
 declare global {
   interface Window {
-    ground: typeof import('../fragment-button/ground-pieces.ts') &
-      typeof import('../fragment-button/material.ts') &
-      typeof import('../fragment-button/fragment-generator.ts')
+    ground: typeof import('../fragments/ground-pieces.ts') &
+      typeof import('../fragments/material.ts') &
+      typeof import('../../../../contracts/temple/fragments.ts')
   }
 }
 
@@ -40,7 +40,7 @@ export async function checkGroundSpacing(
   )
   await page.goto('https://spacing.test/')
   await page.setContent(
-    `<style>${readFileSync(root + '/website/app/temple/fragment-button/style.css', 'utf8')} body{margin:0}#host{position:relative;width:${width}px;height:${length + 128}px}.fragment-ground-plane{inset:0;animation:none!important}</style><div id="host"><div class="fragment-ground-plane" data-layer="0"></div><div class="fragment-ground-plane" data-layer="1"></div><div class="fragment-ground-plane" data-layer="2"></div></div>`,
+    `<style>${readFileSync(root + '/website/app/temple/fragments/style.css', 'utf8')} body{margin:0}#host{position:relative;width:${width}px;height:${length + 128}px}.fragment-ground-plane{inset:0;animation:none!important}</style><div id="host"><div class="fragment-ground-plane" data-layer="0"></div><div class="fragment-ground-plane" data-layer="1"></div><div class="fragment-ground-plane" data-layer="2"></div></div>`,
   )
   await page.addScriptTag({ content: result.outputFiles[0].text })
   let worstGap = 0

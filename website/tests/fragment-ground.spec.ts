@@ -3,20 +3,20 @@ import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 
-type GroundFixture = typeof import('../app/temple/fragment-button/ground-pieces.ts') &
-  typeof import('../app/temple/fragment-button/material.ts') &
-  typeof import('../app/temple/fragment-button/fragment-generator.ts') &
-  typeof import('../app/temple/fragment-button/ground.ts')
+type GroundFixture = typeof import('../app/temple/fragments/ground-pieces.ts') &
+  typeof import('../app/temple/fragments/material.ts') &
+  typeof import('../../contracts/temple/fragments.ts') &
+  typeof import('../app/temple/fragments/ground.ts')
 
 const bundle = await build({
   stdin: {
     contents: `
       export { paintGroundPieces } from './ground-pieces.ts'
       export { provideGroundMaterial } from './material.ts'
-      export { generateFragments } from './fragment-generator.ts'
+      export { generateFragments } from '../../../../contracts/temple/fragments.ts'
       export { mountFragmentGround } from './ground.ts'
     `,
-    resolveDir: fileURLToPath(new URL('../app/temple/fragment-button', import.meta.url)),
+    resolveDir: fileURLToPath(new URL('../app/temple/fragments', import.meta.url)),
   },
   bundle: true,
   format: 'iife',
@@ -25,7 +25,7 @@ const bundle = await build({
 })
 
 const groundStyle = await readFile(
-  new URL('../app/temple/fragment-button/style.css', import.meta.url),
+  new URL('../app/temple/fragments/style.css', import.meta.url),
   'utf8',
 )
 

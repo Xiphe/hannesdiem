@@ -11,7 +11,7 @@ import { createAtmosphere } from './atmosphere.ts'
 import { createEscapes } from './escapes.ts'
 import { colourCopy } from './copy-colour.ts'
 import { blockType } from './block-type.ts'
-import { mountFragmentGround } from './fragment-button/ground.ts'
+import { mountFragmentGround } from './fragments/ground.ts'
 import { createNavigationArtwork } from './top-navigation-artwork.ts'
 export async function mountArtwork(
   host: HTMLElement,

@@ -35,7 +35,7 @@ The removed workbench is recoverable at `7eeabb0:website/app/temple/text.prototy
 
 For diagnostics, start the synthetic Worker separately: `WEBSITE_TEST=true npx wrangler dev website/tests/worker.ts --config website/wrangler.jsonc --port 8791`. The diagnostic defaults target that fixture server, keeping automated assertions independent of authored content and media. Use the actual content route only for visual review.
 
-The first pair now supports an optional typed `action`; the selected [fragment button](fragment-button/README.md) renders in its final pause. Its native contact link and decorative SVG share the existing Opening island, with per-instance seeds and lifetime/visibility guards.
+The [fragment ground](fragments/README.md) owns the decorative sculpture and travelling traces. Its seeded geometry is shared with navigation, location material and publication images through `contracts/temple/fragments.ts`.
 
 For the third-pair diagnostic, use `REPETITION=true TEMPLE_URL=http://localhost:8791/temple-four-phrases WIDTH=390 HEIGHT=900 node website/app/temple/debug/scroll.ts`. It sweeps the complete repetition and counts its per-frame layout reads. Add `NATIVE_TIMELINES=false` to compare the frame-driven fallback, or `ENGINE=webkit` for WebKit. Frame budgets remain software-browser measurements.
 

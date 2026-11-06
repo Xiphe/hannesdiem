@@ -4,7 +4,7 @@ import { LocalDate as DateComponent } from '../date.tsx'
 import assets from '../../../.generated/assets.json' with { type: 'json' }
 import { StreamVideo } from '../ui-library/video.tsx'
 import { readingContours, watchReadingViewBox } from './facts/material.ts'
-import { fragmentStroke } from './fragment-button/material.ts'
+import { fragmentStroke } from '../../../contracts/temple/fragments.ts'
 import { TemplePosts } from './posts.tsx'
 
 const LocalDate = clientEntry(`${assets.date}#LocalDate`, DateComponent)

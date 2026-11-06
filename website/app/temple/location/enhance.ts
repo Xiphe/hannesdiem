@@ -1,5 +1,5 @@
 import type { LocationProps } from '../types.ts'
-import { fragmentStroke } from '../fragment-button/material.ts'
+import { fragmentStroke } from '../../../../contracts/temple/fragments.ts'
 import { copyInkColour } from '../copy-palette.ts'
 import { defaults } from '../defaults.ts'
 import { mapPiece, textPiece } from './material.ts'

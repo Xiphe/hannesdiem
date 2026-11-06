@@ -5,7 +5,7 @@ import { createAtmosphere } from './atmosphere.ts'
 import { createNavigationArtwork } from './top-navigation-artwork.ts'
 import { colourCopy } from './copy-colour.ts'
 import type { TypeFrame } from './typography.ts'
-import { mountFragmentGround } from './fragment-button/ground.ts'
+import { mountFragmentGround } from './fragments/ground.ts'
 import { createVisibleAnimation } from './visible-animation.ts'
 
 /** Share the header material and fragment ground without mounting a poem scene. */

@@ -1,6 +1,6 @@
 import { ref, type Handle } from 'remix/component'
 import type { FactProps } from '../types.ts'
-import { fragmentStroke } from '../fragment-button/material.ts'
+import { fragmentStroke } from '../../../../contracts/temple/fragments.ts'
 import { mountReadingMaterial } from './enhance.ts'
 import { readingContours } from './material.ts'
 import { FactCircle } from './circle.tsx'

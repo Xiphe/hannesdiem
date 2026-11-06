@@ -1,6 +1,6 @@
 import type { Handle } from 'remix/component'
 import type { OpeningProps } from './types.ts'
-import { generateFragments } from './fragment-button/fragment-generator.ts'
+import { generateFragments } from '../../../contracts/temple/fragments.ts'
 import { LocalDate } from '../date.tsx'
 import { PieceTooltip } from './piece-tooltip/view.tsx'
 

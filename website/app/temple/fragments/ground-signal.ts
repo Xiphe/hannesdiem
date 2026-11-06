@@ -1,10 +1,10 @@
-import { randomFrom, type Piece } from './fragment-generator.ts'
+import { randomFrom, type Piece } from '../../../../contracts/temple/fragments.ts'
 import { traceOutline } from './trace-outline.ts'
 
 /** Occasional outline traces. Native SVG animation follows each drifting piece. */
 export function mountGroundSignal(
   host: HTMLElement,
-  pieces: readonly Piece[],
+  pieces: readonly Pick<Piece, 'd'>[],
   paths: readonly SVGPathElement[],
   seed: string,
   signal: AbortSignal,
@@ -14,7 +14,7 @@ export function mountGroundSignal(
   const geometry = paths.map((path, index) => {
     const length = path.getTotalLength()
     return {
-      outline: traceOutline(pieces[index].d!),
+      outline: traceOutline(pieces[index].d),
       samples: Array.from({ length: 40 }, (_, i) => path.getPointAtLength((i * length) / 40)),
     }
   })

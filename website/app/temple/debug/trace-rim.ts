@@ -6,20 +6,20 @@ import { readFileSync } from 'node:fs'
 import { chromium, webkit, type Page } from '@playwright/test'
 import { build } from 'esbuild'
 import sharp from 'sharp'
-import { generateFragments } from '../fragment-button/fragment-generator.ts'
+import { generateFragments } from '../../../../contracts/temple/fragments.ts'
 
 const bundle = await build({
-  entryPoints: [new URL('../fragment-button/ground-signal.ts', import.meta.url).pathname],
+  entryPoints: [new URL('../fragments/ground-signal.ts', import.meta.url).pathname],
   bundle: true,
   format: 'iife',
   globalName: 'signalModule',
   write: false,
 })
-const css = readFileSync(new URL('../fragment-button/style.css', import.meta.url), 'utf8')
+const css = readFileSync(new URL('../fragments/style.css', import.meta.url), 'utf8')
 
 declare global {
   interface Window {
-    signalModule: typeof import('../fragment-button/ground-signal.ts')
+    signalModule: typeof import('../fragments/ground-signal.ts')
     traceAbort: AbortController
   }
 }

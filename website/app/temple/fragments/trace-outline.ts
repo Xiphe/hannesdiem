@@ -1,4 +1,4 @@
-import { fragmentStroke } from './material.ts'
+import { fragmentStroke } from '../../../../contracts/temple/fragments.ts'
 
 type Point = { x: number; y: number }
 const cross = (a: Point, b: Point) => a.x * b.y - a.y * b.x

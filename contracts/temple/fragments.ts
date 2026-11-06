@@ -1,13 +1,8 @@
-// Pure seeded shape generation and placement. Neither stage animates nor closes the contour.
+// Pure seeded shape geometry shared by the website and publication images.
 export const fragmentStroke = 1.8
 export type Piece = {
-  kind: number
-  x: number
-  y: number
-  angle: number
+  d: string
   size: number
-  d?: string
-  origin?: [number, number]
 }
 export function randomFrom(seed: string) {
   let state = 2166136261
@@ -24,7 +19,7 @@ const rounded = (n: number) => Math.round(n * 1000) / 1000
 export function generateFragments(seed: string, count: number): Piece[] {
   const random = randomFrom(seed)
   const between = (a: number, b: number) => rounded(a + random() * (b - a))
-  return Array.from({ length: Math.max(1, Math.min(20, Math.round(count))) }, (_, index) => {
+  return Array.from({ length: Math.max(1, Math.min(20, Math.round(count))) }, () => {
     const thickness = between(4, 14)
     const cut = between(-5, 4)
     let d: string
@@ -43,6 +38,6 @@ export function generateFragments(seed: string, count: number): Piece[] {
       default:
         d = `M-14 0L9 ${between(-3, -0.5)}Q14 ${-thickness * 0.25} 12 ${-thickness * 0.65}L${cut} ${-thickness}L${between(-12, -8)} ${-thickness * 0.45}Z`
     }
-    return { kind: index % 3, d, x: 0, y: 0, angle: 0, size: between(44, 80) }
+    return { d, size: between(44, 80) }
   })
 }

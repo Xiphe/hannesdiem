@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { generateFragments } from '../app/temple/fragment-button/fragment-generator.ts'
+import { generateFragments } from '../../contracts/temple/fragments.ts'
 
 test('a seed reproduces a batch, while other seeds produce new geometry', () => {
   const first = generateFragments('batch-a', 8)

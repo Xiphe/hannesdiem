@@ -1,4 +1,4 @@
-import { generateFragments } from '../fragment-button/fragment-generator.ts'
+import { generateFragments } from '../../../../contracts/temple/fragments.ts'
 
 const pieces = generateFragments('temple-facts-ground', 8)
 export const textPiece = pieces[2]

@@ -1,6 +1,6 @@
 import { createGroundMotion } from './ground-motion.ts'
 import { groundMaterial, provideGroundMaterial } from './material.ts'
-import { generateFragments } from './fragment-generator.ts'
+import { generateFragments } from '../../../../contracts/temple/fragments.ts'
 import { mountGroundSignal } from './ground-signal.ts'
 
 /** One page-length sculpture. Its negative spaces follow the actual choruses. */

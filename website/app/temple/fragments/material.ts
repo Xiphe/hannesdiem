@@ -1,7 +1,5 @@
-import type { Piece } from './fragment-generator.ts'
+import type { Piece } from '../../../../contracts/temple/fragments.ts'
 
-// Shared soft joins retain the generated fragments’ straight cuts.
-export { fragmentStroke } from '../../../../contracts/temple/fragments.ts'
 export type GroundMaterial = { pieces: readonly Piece[]; seed: string }
 const groundMaterials = new WeakMap<HTMLElement, GroundMaterial>()
 export function provideGroundMaterial(host: HTMLElement, material: GroundMaterial) {

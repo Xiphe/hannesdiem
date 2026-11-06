@@ -1,5 +1,5 @@
-import { fragmentStroke, groundMaterial } from './material.ts'
-import { randomFrom } from './fragment-generator.ts'
+import { groundMaterial } from './material.ts'
+import { fragmentStroke, randomFrom } from '../../../../contracts/temple/fragments.ts'
 
 export type GroundBand = { start: number; end: number }
 
