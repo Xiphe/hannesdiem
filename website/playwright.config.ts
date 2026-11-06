@@ -14,6 +14,18 @@ export default defineConfig({
     browserName: 'chromium',
     trace: 'retain-on-failure',
   },
+  projects: [
+    { name: 'chromium' },
+    {
+      name: 'webkit-regressions',
+      testMatch: [
+        '**/tests/trace-rim.spec.ts',
+        '**/tests/ground-spacing.spec.ts',
+        '**/tests/ink.spec.ts',
+      ],
+      use: { browserName: 'webkit' },
+    },
+  ],
   webServer: {
     cwd: '..',
     command: `npx wrangler dev website/tests/worker.ts --config website/wrangler.jsonc --ip 127.0.0.1 --port ${port}`,

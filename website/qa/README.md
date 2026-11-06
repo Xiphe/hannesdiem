@@ -81,12 +81,14 @@ browser on the same machine.
 ## Synthetic regression suite
 
 ```sh
+npx playwright install --with-deps --only-shell chromium webkit
+npm run build:app
 npm run test:synthetic
 ```
 
 This runs content tests, every website Node test, and the complete fixture browser
 suite. It covers controlled content, errors, edge states, timings, subscriptions,
-and reservations independently of authored content. Run `npm run build:app` first.
+and reservations independently of authored content.
 Its server uses port **8790**, leaving shared dev port 8787 alone; override with
 `PLAYWRIGHT_PORT` if necessary. Browser concurrency is capped at two workers to
 limit contention in the shared workspace. The website suite alone remains runnable with
@@ -95,6 +97,11 @@ limit contention in the shared workspace. The website suite alone remains runnab
 Node tests requiring browsers, runtime processes, or lengthy simulations have the
 suffix `.slow.test.ts`; `npm run test:fast` excludes them. All Node tests remain in
 the complete website suite.
+
+Trace pixels and corners, seeded ground spacing, and cached glyph baselines are
+discovered by `npm run test:browser` in both Chromium and WebKit. Their standalone
+diagnostics remain available under `website/app/temple/debug/*.ts`. These checks
+use synthetic input and belong to this suite, rather than running-site QA.
 
 ## CI
 

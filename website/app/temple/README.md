@@ -25,7 +25,7 @@ CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `te
 
 Run `npm run dev` (default8787), then `sand tunnel 8787`. The repetition performance follow-up uses8798: `sand tunnel 8798`;8790 remains available for the separate content work.
 
-`npm run check:website` checks application behaviour against synthetic CMX input, independent of authored prose. Browser coverage includes startup, failure fallback, themes, selectable text, responsive fitting, navigation/disposal and the no-JavaScript document.
+`npm run check:website` runs formatting, types and fast synthetic tests, independent of authored prose. The separate `npm run test:browser` suite covers startup, failure fallback, themes, selectable text, responsive fitting, navigation/disposal and the no-JavaScript document. It also runs trace, ground-spacing and cached-glyph regressions in Chromium and WebKit. See [QA commands](../../qa/README.md) for the complete synthetic suite and running-site checks.
 
 `node website/app/temple/debug/scroll.ts` measures synthetic-route draw time and total-frame intervals separately. Set `WIDTH`/`HEIGHT` for viewport comparisons, `DPR` and `MOBILE=true` for phone emulation, or `ENGINE=webkit`. `CPU=4` enables Chromium CPU throttling. Software-browser results are not a physical-device60fps guarantee. [Release preparation and remaining hardware check](docs/production-readiness.md).
 
