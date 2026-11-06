@@ -305,6 +305,8 @@ html[data-layout='temple'] body {
 }
 /* Font fitting reads native layout synchronously. The site's reduced-motion
    transition duration must not defer those inherited font-size changes. */
+.verse-copy,
+.verse-copy *,
 .refrain-composition,
 .refrain-composition * {
   transition-property: none;
