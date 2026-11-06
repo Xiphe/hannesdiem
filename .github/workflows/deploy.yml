@@ -3,6 +3,7 @@ name: Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,10 +14,12 @@ concurrency:
 
 jobs:
   changes:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
+    # A manual retry includes content skipped after an earlier website failure.
     outputs:
-      website: ${{ steps.paths.outputs.website == 'true' || steps.paths.outputs.shared == 'true' }}
-      content: ${{ steps.paths.outputs.content == 'true' || steps.paths.outputs.shared == 'true' }}
+      website: ${{ github.event_name == 'workflow_dispatch' || steps.paths.outputs.website == 'true' || steps.paths.outputs.shared == 'true' }}
+      content: ${{ github.event_name == 'workflow_dispatch' || steps.paths.outputs.content == 'true' || steps.paths.outputs.shared == 'true' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -25,6 +28,7 @@ jobs:
           sparse-checkout: .github
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: paths
+        if: github.event_name == 'push'
         with:
           base: ${{ github.event.before }}
           ref: ${{ github.sha }}
