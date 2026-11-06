@@ -53,7 +53,26 @@ for (const interaction of ['hover', 'click'] as const) {
     const before = await path.getAttribute('d')
     await expect.poll(() => path.getAttribute('d')).not.toBe(before)
     if (interaction === 'hover') {
-      await page.mouse.move(0, 0)
+      // Follow the real outward path through the free-pointer band before
+      // leaving the widget; jumping straight outside missed a release bug.
+      const area = (await circle.boundingBox())!
+      const seat = (await circle.locator('input[value="2"]').boundingBox())!
+      const cx = area.x + area.width / 2,
+        cy = area.y + area.height / 2
+      const dx = seat.x + seat.width / 2 - cx,
+        dy = seat.y + seat.height / 2 - cy
+      const distance = Math.hypot(dx, dy)
+      const scale = area.width / 280
+      await page.mouse.move(
+        cx + (dx / distance) * 140 * scale,
+        cy + (dy / distance) * 140 * scale,
+        { steps: 20 },
+      )
+      await page.mouse.move(
+        cx + (dx / distance) * 190 * scale,
+        cy + (dy / distance) * 190 * scale,
+        { steps: 30 },
+      )
       await expect(circle).not.toHaveAttribute('data-pointing')
       // Release keeps the actual material. It calms and stops spending frames.
       await expect

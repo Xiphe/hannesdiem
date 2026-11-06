@@ -642,3 +642,41 @@ Browser checks verify initial18/3, migration/backup, preserved other settings,
 live damping, reset/reload, JSON export and mobile layout.
 Whether this feels sufficiently liquid remains for the artist's review on8796
 (`sand tunnel 8796`); publication and website integration remain separate.
+
+
+## Selected material and website integration — 2026-11-06
+
+The artist selects the supplied settings screenshot and says “lets use these
+settings and call it a day”. This closes material exploration: viscosity18,
+damping2/s, attraction513, dot collection60, cursor collection245, asynchronous
+release0.20s, seat adhesion25%, minimum centre radius0, particles hidden.
+The old circulation multiplier stays0. There is no display-only centre cover.
+
+The website now constructs the selected material through createCircleFluid and
+selectedCircleMaterial. The low-level CircleFluid constructor retains its
+reference baseline so historical synthetic physical fixtures stay independent
+of artistic presets. The live island also uses setTarget for every transition:
+the accepted seat → free cursor → outside release must reach the main page,
+not just the study. Real particles and SVG density contours remain, as do
+selected-seat holds, release on signed-out dialog close, confirmed-seat holds,
+reduced motion, visibility pausing and disposal.
+
+The experiment derives its defaults from the same exported material. On first
+load of selected-2026-11-06 it applies all eight selected controls and backs up
+the previous browser object under
+`temple-liquid-settings-website-v1:before-selected-2026-11-06`.
+Later adjustments persist normally. Reset and JSON export retain the selection.
+The complete study and settings-reference.png are frozen in
+`archive/selected-2026-11-06/` beneath the documented study directory;
+`selected-settings.json` is also available in the live study root.
+
+Seventeen synthetic numerical/topology cases and23 circle/form browser cases
+pass, including actual-size seat holes, finite material, eventual central
+return, continuous mouse exit, selection and dialog close. TypeScript, build
+and scoped formatting checks pass. Separate study browser checks verify exact
+selected values, migration/backup, reset/reload, export and native mouse exit.
+The stronger visible-flank regression explicitly sets a synthetic61/8 material,
+2s delay and100% grip; it tests input wiring independently of the selected
+subtler0.20s/25% material. Manual review of the rebuilt main preview on8787
+exercises seat selection and dialog close without browser errors.
+No deployment or publication was requested.

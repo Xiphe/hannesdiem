@@ -444,3 +444,19 @@ export class CircleFluid {
     }
   }
 }
+
+/** Artist-selected material, 2026-11-06. The centre has no display-only cover. */
+export const selectedCircleMaterial = Object.freeze({
+  sigma: 18,
+  drag: 2,
+  attraction: 513,
+  dotCapacity: 60,
+  cursorCapacity: 245,
+  releaseAsymmetry: 0,
+  releaseSideDelay: 0.2,
+  seatAdhesion: 0.25,
+} satisfies Partial<CircleFluid>)
+
+export function createCircleFluid() {
+  return Object.assign(new CircleFluid(), selectedCircleMaterial)
+}

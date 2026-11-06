@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { CircleFluid } from '../app/temple/facts/circle-fluid.ts'
+import { CircleFluid, createCircleFluid } from '../app/temple/facts/circle-fluid.ts'
 import { DensitySurface } from '../app/temple/facts/circle-surface.ts'
 
 const advance = (fluid: CircleFluid, count: number) => {
@@ -409,4 +409,30 @@ test('normal seat to cursor to outside motion preserves the two-flank release', 
   surface.update(fluid)
   assert.equal(surface.loops.length, 1)
   assert.ok(Math.hypot(...fluid.metrics().centre.map((value) => value - 180)) < 2)
+})
+
+test('selected material keeps real seat holes and returns after native-size pointer exits', () => {
+  for (const radius of [16, (32 * 140) / 240]) {
+    const fluid = createCircleFluid()
+    fluid.dots = fluid.dots.map((seat) => ({ ...seat, r: radius }))
+    const seat = fluid.dots[5]
+    fluid.setTarget(seat)
+    advance(fluid, 360)
+    const surface = new DensitySurface()
+    surface.update(fluid)
+    assert.ok(
+      surface.field[
+        Math.round(seat.y / surface.cell) * surface.size + Math.round(seat.x / surface.cell)
+      ] < 1,
+    )
+    const velocity = fluid.vx.slice()
+    fluid.setTarget({ x: 180, y: 320, r: 0 }, () => 0.2)
+    assert.deepEqual(fluid.vx, velocity, 'selected release adds no rotational kick')
+    advance(fluid, 6)
+    fluid.setTarget(null)
+    advance(fluid, 1200)
+    surface.update(fluid)
+    assert.equal(surface.loops.length, 1)
+    assert.ok(Math.hypot(...fluid.metrics().centre.map((value) => value - 180)) < 2)
+  }
 })

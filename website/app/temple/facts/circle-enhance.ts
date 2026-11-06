@@ -1,5 +1,5 @@
 import { circleRestSurface, DensitySurface } from './circle-surface.ts'
-import { CircleFluid, type CircleTarget } from './circle-fluid.ts'
+import { createCircleFluid, type CircleFluid, type CircleTarget } from './circle-fluid.ts'
 
 /** Actual particle liquid behind native controls; bounded to the visible island. */
 export function mountCircle(
@@ -68,11 +68,11 @@ export function mountCircle(
       return
     }
     if (!fluid) {
-      fluid = new CircleFluid()
+      fluid = createCircleFluid()
       contour = new DensitySurface()
       syncDots()
     }
-    fluid.target = wanted
+    fluid.setTarget(wanted)
     accumulator += last ? Math.min((now - last) / 1000, 0.05) : 1 / 60
     last = now
     let steps = 0
@@ -97,7 +97,7 @@ export function mountCircle(
     } else if (!frame) frame = requestAnimationFrame(draw)
   }
   const pull = (next: CircleTarget | null) => {
-    if (wanted && !next && !reduced.matches) fluid?.release()
+    if (!reduced.matches) fluid?.setTarget(next)
     wanted = next
     idle = 0
     wake()
