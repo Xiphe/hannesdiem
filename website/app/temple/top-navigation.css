@@ -398,19 +398,27 @@
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-mounted] {
   transform: none;
   background: transparent;
-  box-shadow: none;
-  border: 0;
   transition: visibility 0s 500ms;
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before {
   content: '';
   position: absolute;
-  inset: 0 0 auto;
-  height: var(--temple-nav-action-bottom, 100%);
+  inset: 0;
   z-index: -1;
-  background: light-dark(var(--temple-ground-light), #030503);
-  box-shadow: 0 6px 28px light-dark(rgb(30 41 51 / 0.045), transparent);
+  --temple-nav-ground: light-dark(var(--temple-ground-light), #030503);
+  /* Leave the hint clear using solid fills; clipping this layer disrupts WebKit's fade. */
+  background:
+    linear-gradient(var(--temple-nav-ground) 0 0) 0 0 / 100% var(--temple-nav-hint-edge, 100%)
+      no-repeat,
+    linear-gradient(var(--temple-nav-ground) 0 0) 0 0 / var(--temple-nav-hint-left, 0px) 100%
+      no-repeat,
+    linear-gradient(var(--temple-nav-ground) 0 0) 100% 0 /
+      calc(100% - var(--temple-nav-hint-right, 100%)) 100% no-repeat;
   pointer-events: none;
+}
+.temple-artwork[data-temple-view='poem']
+  .temple-top-navigation[data-nav-visible]:not([data-nav-hint-covered])::before {
+  --temple-nav-hint-edge: var(--temple-nav-action-bottom, 100%);
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before,
 .temple-artwork[data-temple-view='poem'] .temple-nav-logo {

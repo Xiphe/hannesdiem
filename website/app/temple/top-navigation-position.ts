@@ -31,11 +31,9 @@ export function mountNavigationPosition(host: HTMLElement, signal: AbortSignal) 
       ? entry.getBoundingClientRect().top <= (header.offsetHeight - entry.offsetHeight) / 2
       : stage.getBoundingClientRect().top < 0
     const actionBox = hint && fixed ? fixed.getBoundingClientRect() : undefined
-    const actionBottom = actionBox
-      ? actionBox.bottom - header.getBoundingClientRect().top
-      : undefined
-    const hintCovered =
-      visible && hint && actionBox && hint.getBoundingClientRect().bottom <= actionBox.bottom
+    const headerBox = actionBox ? header.getBoundingClientRect() : undefined
+    const hintBox = actionBox ? hint!.getBoundingClientRect() : undefined
+    const hintCovered = visible && hintBox && actionBox && hintBox.bottom <= actionBox.bottom
     const changing = previous !== undefined && previous !== visible && entry && fixed
     const source = visible ? entry : fixed
     const target = visible ? fixed : entry
@@ -59,8 +57,14 @@ export function mountNavigationPosition(host: HTMLElement, signal: AbortSignal) 
     const extra = animate ? target.querySelector<HTMLElement>('.temple-enter-label-extra') : null
     const toExtraWidth = extra?.scrollWidth ?? 0
     // Let the hint scroll behind the opaque action before keeping it out of the top gap.
-    if (actionBottom !== undefined)
-      header.style.setProperty('--temple-nav-action-bottom', `${actionBottom}px`)
+    if (actionBox && headerBox && hintBox) {
+      header.style.setProperty(
+        '--temple-nav-action-bottom',
+        `${actionBox.bottom - headerBox.top}px`,
+      )
+      header.style.setProperty('--temple-nav-hint-left', `${hintBox.left - headerBox.left}px`)
+      header.style.setProperty('--temple-nav-hint-right', `${hintBox.right - headerBox.left}px`)
+    }
     if (visible) header.dataset.navEntered = ''
     header.toggleAttribute('data-nav-visible', visible)
     header.toggleAttribute('data-nav-hint-covered', Boolean(hintCovered))
@@ -111,6 +115,8 @@ export function mountNavigationPosition(host: HTMLElement, signal: AbortSignal) 
       header.removeAttribute('data-nav-entered')
       header.removeAttribute('data-nav-hint-covered')
       header.style.removeProperty('--temple-nav-action-bottom')
+      header.style.removeProperty('--temple-nav-hint-left')
+      header.style.removeProperty('--temple-nav-hint-right')
     },
     { once: true },
   )

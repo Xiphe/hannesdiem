@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import sharp from 'sharp'
 
 test('entering from the end of the poem arrives at Visit rather than retaining the old scroll', async ({
   page,
@@ -178,6 +179,52 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(header).not.toBeVisible()
 })
 
+for (const colorScheme of ['light', 'dark'] as const) {
+  test(`the poem header keeps its full frame and inner-page treatment in ${colorScheme} mode`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.emulateMedia({ colorScheme })
+    await page.goto('/temple-of-sound/visit')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const treatment = () =>
+      page.locator('.temple-top-navigation').evaluate((node) => {
+        const style = getComputedStyle(node)
+        return {
+          shadow: style.boxShadow,
+          borderWidth: style.borderBottomWidth,
+          borderStyle: style.borderBottomStyle,
+          borderColor: style.borderBottomColor,
+        }
+      })
+    const inside = await treatment()
+    if (colorScheme === 'light') {
+      expect(inside.borderWidth).toBe('0px')
+      expect(inside.shadow).not.toBe('none')
+    }
+    await page.goto('/temple-entry-poem')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await page
+      .locator('.temple-entry-welcome a')
+      .evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top + 120))
+    const header = page.locator('.temple-top-navigation')
+    await expect(header).toHaveAttribute('data-nav-hint-covered', '')
+    await expect(header.locator('.temple-nav-logo')).toHaveCSS('opacity', '1')
+    const frame = await header.evaluate((node) => {
+      const style = getComputedStyle(node)
+      const backdrop = getComputedStyle(node, '::before')
+      const action = node.querySelector('.temple-nav-enter a')!.getBoundingClientRect()
+      return {
+        paintedBottom: node.getBoundingClientRect().top + parseFloat(backdrop.height),
+        actionBottom: action.bottom,
+        padding: parseFloat(style.paddingBottom),
+      }
+    })
+    expect(frame.paintedBottom - frame.actionBottom).toBeGreaterThanOrEqual(frame.padding - 1)
+    expect(await treatment()).toEqual(inside)
+  })
+}
+
 for (const width of [390, 1440]) {
   test(`the manifesto hint scrolls behind the sticky action before staying hidden at ${width}px`, async ({
     page,
@@ -189,6 +236,12 @@ for (const width of [390, 1440]) {
     const hint = page.locator('.temple-entry-more')
     const header = page.locator('.temple-top-navigation')
     const fixed = header.locator('.temple-nav-enter a')
+    // A synthetic paint marker lets the screenshot detect premature backdrop occlusion.
+    await hint.evaluate((node) => {
+      node.style.backgroundColor = 'rgb(0, 255, 0)'
+      node.style.color = 'rgb(0, 255, 0)'
+      node.style.opacity = '1'
+    })
     await button.evaluate((node) => {
       const header = document.querySelector<HTMLElement>('.temple-top-navigation')!
       const top = (header.offsetHeight - (node as HTMLElement).offsetHeight) / 2 - 1
@@ -206,8 +259,14 @@ for (const width of [390, 1440]) {
       const style = getComputedStyle(node, '::before')
       return node.getBoundingClientRect().top + parseFloat(style.top) + parseFloat(style.height)
     })
-    expect(backdropBottom).toBeCloseTo(actionBottom, 0)
-    expect(backdropBottom).toBeLessThan(before.y)
+    expect(backdropBottom).toBeGreaterThan(actionBottom)
+    const hintPixel = async (y: number) => {
+      const screenshot = await page.screenshot({
+        clip: { x: Math.ceil(before.x + before.width / 2), y: Math.ceil(y), width: 1, height: 1 },
+      })
+      return [...(await sharp(screenshot).removeAlpha().raw().toBuffer())]
+    }
+    expect(await hintPixel(before.y + 1)).toEqual([0, 255, 0])
     const moveHint = (top: number) =>
       hint.evaluate(
         (node, top) => scrollTo(0, scrollY + node.getBoundingClientRect().top - top),
@@ -219,6 +278,7 @@ for (const width of [390, 1440]) {
     const overlapping = (await hint.boundingBox())!
     expect(overlapping.y).toBeLessThan(actionBottom)
     expect(overlapping.y + overlapping.height).toBeGreaterThan(actionBottom)
+    expect(await hintPixel(actionBottom + 2)).toEqual([0, 255, 0])
     await moveHint(actionBottom - before.height - 1)
     await expect(hint).not.toBeVisible()
     // Passing above the action must not expose the hint again.
