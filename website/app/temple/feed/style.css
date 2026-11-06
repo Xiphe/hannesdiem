@@ -304,6 +304,11 @@
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
+@media (width < 768px) {
+  .feed-home-logo {
+    transform: translateY(-1px);
+  }
+}
 .feed-corner-actions {
   display: flex;
   gap: 8px;
