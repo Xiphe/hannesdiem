@@ -4,6 +4,8 @@ import { feedDocument } from '../app/temple/feed/document.ts'
 import { sortedPosts } from '../app/temple/feed/model.ts'
 import { feedFixtureDocument } from './feed-fixture.ts'
 import { documents } from './host-fixture.ts'
+import { createContentSource } from '../app/document-host/index.ts'
+import { createApp } from '../app/router.tsx'
 
 test('feed selection follows CMX prop slots and retains mixed rich content without mutating its Publication', async () => {
   const source = feedFixtureDocument(documents.fixture)
@@ -37,4 +39,30 @@ test('ambiguous dates and duplicate post identities cannot silently change feed 
       { id: 'a', postedAt: '2030-01-02T12:00:00Z' },
     ]),
   )
+})
+
+test('global feed URLs select the latest post and preserve legacy shared links', async () => {
+  const app = createApp(createContentSource(documents))
+  for (const [path, status, location] of [
+    ['/feed', 302, '/feed/fixture-latest'],
+    [
+      '/temple-of-sound/watch/fixture-middle?notice=synthetic',
+      308,
+      '/feed/fixture-middle?notice=synthetic',
+    ],
+    ['/feed/%66ixture-middle', 308, '/feed/fixture-middle'],
+  ] as const) {
+    const response = await app.fetch(`https://example.com${path}`)
+    assert.equal(response.status, status)
+    assert.equal(response.headers.get('Location'), location)
+  }
+  const response = await app.fetch('https://example.com/feed/fixture-text')
+  assert.equal(response.status, 200)
+  const html = await response.text()
+  assert.match(html, /rel="canonical" href="https:\/\/hannesdiem.de\/feed\/fixture-text"/)
+  assert.match(html, /property="og:url" content="https:\/\/hannesdiem.de\/feed\/fixture-text"/)
+  assert.match(html, /aria-label="Home"/)
+  assert.doesNotMatch(html, /Back to Temple of Sound/)
+  for (const invalid of ['/feed/missing', '/feed/%E0%A4%A', '/feed/one%2Ftwo'])
+    assert.equal((await app.fetch(`https://example.com${invalid}`)).status, 404)
 })

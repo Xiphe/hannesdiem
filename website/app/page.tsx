@@ -182,7 +182,7 @@ export function Page(
           />
           <link
             rel="icon"
-            href={temple ? assets.templeMark : assets.mark}
+            href={temple && !feed ? assets.templeMark : assets.mark}
             type="image/svg+xml"
           />
           <link

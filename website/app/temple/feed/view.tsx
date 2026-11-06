@@ -1,6 +1,6 @@
 import { ref, type Handle } from 'remix/component'
 import type { TemplePost } from '@hannesdiem/content-components'
-import { videoFrame, postPath, templePath } from './model.ts'
+import { videoFrame, postPath } from './model.ts'
 import { mountFeed } from './enhance.ts'
 import { FeedIcon } from './icon.tsx'
 
@@ -10,6 +10,7 @@ type ResolvedCover<Post> = Post extends TemplePost
 export type FeedPost = ResolvedCover<TemplePost>
 export interface FeedProps {
   selected: string
+  mark: string
   posts: readonly (FeedPost & { dateLabel: string })[]
 }
 
@@ -262,13 +263,26 @@ export function Feed(handle: Handle<FeedProps>) {
       ))}
       <div class="feed-corners">
         <a
-          href={templePath}
+          href="/"
           data-back
           class="feed-control"
-          aria-label="Back to Temple of Sound"
-          data-rmx-document
+          aria-label="Home"
+          data-rmx-history="replace"
         >
-          <FeedIcon name="back" />
+          <span
+            data-return-back
+            hidden
+          >
+            <FeedIcon name="back" />
+          </span>
+          <img
+            class="feed-home-logo"
+            data-return-home
+            src={handle.props.mark}
+            width={18}
+            height={36}
+            alt=""
+          />
         </a>
 
         <div class="feed-corner-actions">

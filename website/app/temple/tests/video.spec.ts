@@ -181,10 +181,7 @@ for (const width of [390, 900, 1440]) {
     ])
     await expect(band.locator('iframe, video, audio')).toHaveCount(0)
     await expect(band.locator('img')).toHaveCount(3)
-    await expect(band.locator('a').first()).toHaveAttribute(
-      'href',
-      '/temple-of-sound/watch/fixture-latest',
-    )
+    await expect(band.locator('a').first()).toHaveAttribute('href', '/feed/fixture-latest')
     const geometry = await band.evaluate((node) => ({
       width: node.clientWidth,
       cards: [...node.querySelectorAll('a')].map((card) => card.getBoundingClientRect().toJSON()),
@@ -233,10 +230,7 @@ test('Watch covers retain ordinary content links without JavaScript', async ({
     ])
     await expect(page.locator('#fixture-middle')).toBeInViewport()
     await expect(band.locator('iframe')).toHaveCount(0)
-    await expect(page.locator('#fixture-middle')).toHaveAttribute(
-      'href',
-      '/temple-of-sound/watch/fixture-middle',
-    )
+    await expect(page.locator('#fixture-middle')).toHaveAttribute('href', '/feed/fixture-middle')
   } finally {
     await context.close()
   }

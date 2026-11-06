@@ -1,6 +1,6 @@
 import type { FeedProps, FeedPost } from './view.tsx'
-import { postPath, templePath, watchPath } from './model.ts'
-import { hasEnteredTemple } from '../entry-state.ts'
+import { postPath } from './model.ts'
+import { feedOrigin, replaceFeedHistory } from './navigation.ts'
 import { createPlayback } from './playback.ts'
 import { audioPeaks, drawWaveform } from './waveform.ts'
 import { dateLabel } from '../../date.tsx'
@@ -28,6 +28,12 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   const peaks = new Map<string, readonly number[]>()
   let waveformTask: AbortController | undefined
   const options = { signal }
+  const origin = feedOrigin()
+  const back = root.querySelector<HTMLAnchorElement>('[data-back]')!
+  back.href = origin?.href ?? '/'
+  back.setAttribute('aria-label', origin ? 'Back' : 'Home')
+  back.querySelector<HTMLElement>('[data-return-back]')!.hidden = !origin
+  back.querySelector<HTMLElement>('[data-return-home]')!.hidden = !!origin
   const fullscreenAvailable =
     document.fullscreenEnabled && typeof root.requestFullscreen === 'function'
   const fullscreenDesktop = matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)')
@@ -207,10 +213,6 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       // Playback and seeking remain usable when a remote file disallows decoding.
     }
   }
-  function updateBack() {
-    const href = hasEnteredTemple() ? `${watchPath}#${encodeURIComponent(post().id)}` : templePath
-    for (const link of root.querySelectorAll<HTMLAnchorElement>('[data-back]')) link.href = href
-  }
   async function activate(next: number, initial = false) {
     if (!initial && next === index) return
     const direction = next < index ? -1 : 1
@@ -251,8 +253,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     root.dataset.currentPost = post().id
     document.title = `${post().title} • Hannes Diem`
     const path = postPath(post().id)
-    if (location.pathname !== path) history.replaceState(history.state, '', path)
-    updateBack()
+    if (!initial && location.pathname !== path) replaceFeedHistory(history.state, path)
     root
       .querySelector<HTMLButtonElement>('[data-share]')!
       .setAttribute('aria-label', `Share ${post().title}`)

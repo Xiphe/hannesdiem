@@ -45,15 +45,10 @@ test('post share cards and unbranded overview cards keep separate images and pre
     },
   } satisfies CmxNode
   const app = createApp(async () => page)
-  const feed = await (
-    await app.fetch('https://example.com/temple-of-sound/watch/synthetic-post')
-  ).text()
+  const feed = await (await app.fetch('https://example.com/feed/synthetic-post')).text()
   assert.match(feed, /property="og:image" content="https:\/\/images.example.com\/share.jpg"/)
   assert.match(feed, /property="og:title" content="Synthetic share title"/)
-  assert.match(
-    feed,
-    /rel="canonical" href="https:\/\/hannesdiem.de\/temple-of-sound\/watch\/synthetic-post"/,
-  )
+  assert.match(feed, /rel="canonical" href="https:\/\/hannesdiem.de\/feed\/synthetic-post"/)
   assert.match(feed, /https:\/\/images.example.com\/poster.jpg/)
   const overview = await (await app.fetch('https://example.com/temple-of-sound/watch')).text()
   assert.match(overview, /src="https:\/\/images.example.com\/preview.jpg"/)

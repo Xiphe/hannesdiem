@@ -2,7 +2,12 @@ import type { TemplePost } from '@hannesdiem/content-components'
 
 export const templePath = '/temple-of-sound'
 export const watchPath = `${templePath}/watch`
-export const postPath = (id: string) => `${watchPath}/${encodeURIComponent(id)}`
+export const feedPath = '/feed'
+export const postPath = (id: string) => `${feedPath}/${encodeURIComponent(id)}`
+
+export function isFeedPath(path: string) {
+  return path === feedPath || path.startsWith(`${feedPath}/`)
+}
 
 export function sortedPosts<T extends { id: string; postedAt: string }>(posts: readonly T[]) {
   const ids = new Set<string>()

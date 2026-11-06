@@ -10,7 +10,7 @@ import { routes } from './routes.ts'
 import { contentCacheTag } from './document-host/index.ts'
 import { ContactCard } from './contact/card.tsx'
 import { renderFeed } from './temple/feed/route.tsx'
-import { templePath, watchPath } from './temple/feed/model.ts'
+import { feedPath, isFeedPath, templePath, watchPath } from './temple/feed/model.ts'
 
 const privateHeaders = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
 function contactMailto(request: Request) {
@@ -180,19 +180,26 @@ export function createApp(content: ContentLoader) {
   )
   router.get(routes.content, async ({ request, render }) => {
     const path = new URL(request.url).pathname
-    if (path.startsWith(`${watchPath}/`) && !path.endsWith('/')) {
-      let id: string
+    const legacyPost = path.startsWith(`${watchPath}/`)
+    if ((isFeedPath(path) || legacyPost) && !path.endsWith('/')) {
+      const prefix = legacyPost ? watchPath : feedPath
+      let id: string | undefined
       try {
-        id = decodeURIComponent(path.slice(watchPath.length + 1))
+        id = path === feedPath ? undefined : decodeURIComponent(path.slice(prefix.length + 1))
       } catch {
         id = ''
       }
-      if (id && !id.includes('/')) {
+      if (id === undefined || (id && !id.includes('/'))) {
         let page = await content(new Request(new URL(watchPath, request.url), request))
         // Keep existing Publications usable while the entry split is published.
         if (page.status === 404)
           page = await content(new Request(new URL(templePath, request.url), request))
         const feed = page.status === 200 ? await renderFeed(page, id) : undefined
+        if (feed && (legacyPost || id === undefined || path !== feed.path))
+          return redirect(feed.path + new URL(request.url).search, {
+            status: id === undefined ? 302 : 308,
+            headers: { 'Cache-Control': 'no-cache', 'Cache-Tag': `content,page:${page.key}` },
+          })
         if (feed)
           return render(
             <SiteContent

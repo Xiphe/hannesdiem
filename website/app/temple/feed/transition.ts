@@ -1,15 +1,9 @@
 import { navigate } from 'remix/component'
-import { watchPath } from './model.ts'
+import { feedPath, isFeedPath } from './model.ts'
+import { feedOrigin, leaveFeed, rememberFeedEntry, supportsFeedNavigation } from './navigation.ts'
 
-/** Animate the native link destinations through Remix's existing document frame. */
+/** Keep one entry/return journey, with a shared image only while the same post matches. */
 export function mountFeedTransitions() {
-  if (
-    !document.startViewTransition ||
-    !('navigation' in window) ||
-    typeof NavigateEvent === 'undefined' ||
-    !('sourceElement' in NavigateEvent.prototype)
-  )
-    return
   let current: ViewTransition | undefined
   document.addEventListener('click', (event) => {
     if (
@@ -18,8 +12,7 @@ export function mountFeedTransitions() {
       event.metaKey ||
       event.ctrlKey ||
       event.shiftKey ||
-      event.altKey ||
-      matchMedia('(prefers-reduced-motion: reduce)').matches
+      event.altKey
     )
       return
     const link = (event.target as Element).closest<HTMLAnchorElement>('a[href]')
@@ -27,25 +20,61 @@ export function mountFeedTransitions() {
     const url = new URL(link.href)
     if (url.origin !== location.origin) return
     const feed = link.closest<HTMLElement>('.temple-feed')
-    const entering = link.matches('.temple-post-preview')
-    const leaving = !!feed && link.matches('[data-back]') && url.pathname === watchPath
-    if (!entering && !leaving) return
-    if (entering && !url.pathname.startsWith(`${watchPath}/`)) return
-    const id = entering ? link.id : feed!.dataset.currentPost!
-    const before = entering ? link : feed!
+    const entering = !feed && isFeedPath(url.pathname)
+    const switching = !!feed && isFeedPath(url.pathname)
+    const leaving = !!feed && link.matches('[data-back]')
+    if (!entering && !switching && !leaving) return
+    if (entering || switching) rememberFeedEntry(link)
+    if (entering && url.pathname === feedPath) {
+      // The index is a server-selected destination; follow its redirect natively.
+      link.setAttribute('data-rmx-document', '')
+      return
+    }
     event.preventDefault()
     current?.skipTransition()
+    if (switching) {
+      void navigate(url.href, { history: 'replace' })
+      return
+    }
+    const origin = leaving ? feedOrigin() : null
+    const id = entering ? link.id : origin?.preview
+    const before = entering ? link : feed!
+    const perform = async () => {
+      if (!leaving) {
+        await navigate(url.href)
+        return
+      }
+      const arrived = await leaveFeed(origin)
+      if (!arrived || !origin) return
+      if (origin.preview) {
+        const card = await destination(false, origin.preview)
+        card?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'instant' })
+      }
+      scrollTo({ left: origin.x, top: origin.y, behavior: 'instant' })
+    }
+    const animated =
+      typeof document.startViewTransition === 'function' &&
+      supportsFeedNavigation() &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      (entering ? link.matches('.temple-post-preview') : !!id && id === feed!.dataset.currentPost)
+    if (!animated) {
+      void perform().catch((error: unknown) => {
+        // A newer Back/Forward action owns the destination after an interruption.
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        location.assign(url.href)
+      })
+      return
+    }
     before.style.viewTransitionName = 'temple-content'
     let after: HTMLElement | undefined
     const transition = document.startViewTransition(async () => {
-      await navigate(url.href)
+      await perform()
       if (current !== transition) return
-      after = await destination(entering, id)
+      after = await destination(entering, id!)
       if (!after) {
         transition.skipTransition()
         return
       }
-      if (!entering) after.scrollIntoView({ block: 'start', inline: 'center', behavior: 'instant' })
       const image = after.querySelector<HTMLImageElement>(
         entering ? '[data-active] .feed-frame, [data-active] .feed-cover' : 'img',
       )
@@ -64,8 +93,9 @@ export function mountFeedTransitions() {
     })
     current = transition
     void transition.ready.catch(() => {})
-    void transition.updateCallbackDone.catch(() => {
-      if (location.href !== url.href) location.assign(url.href)
+    void transition.updateCallbackDone.catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === 'AbortError') return
+      if (current === transition && location.href !== url.href) location.assign(url.href)
     })
     void transition.finished
       .catch(() => {})
@@ -78,7 +108,7 @@ export function mountFeedTransitions() {
   })
 }
 
-/** Font fitting and the native fragment arrival must precede the return snapshot. */
+/** Font fitting and native fragment arrival precede the return snapshot/restoration. */
 function destination(entering: boolean, id: string) {
   return new Promise<HTMLElement | undefined>((resolve) => {
     const finish = (element?: HTMLElement) => {
@@ -90,10 +120,7 @@ function destination(entering: boolean, id: string) {
       if (entering) {
         const feed = document.querySelector<HTMLElement>('.temple-feed')
         if (feed?.dataset.currentPost === id) finish(feed)
-      } else if (
-        location.pathname === watchPath &&
-        !document.documentElement.hasAttribute('data-temple-loading')
-      ) {
+      } else if (!document.documentElement.hasAttribute('data-temple-loading')) {
         const card = document.getElementById(id)
         if (card?.matches('.temple-post-preview')) finish(card)
       }

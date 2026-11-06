@@ -9,25 +9,29 @@ import { SiteContent } from '../../ui-library/context.ts'
 import { resolvePostCover } from '../posts.tsx'
 import { feedDocument } from './document.ts'
 import { Feed as FeedComponent } from './view.tsx'
-import { sortedPosts, postPath, templePath } from './model.ts'
+import { sortedPosts, postPath } from './model.ts'
 import { dateLabel } from '../../date.tsx'
 import { StreamVideo } from '../../ui-library/video.tsx'
 
 const Feed = clientEntry(`${assets.templeFeed}#Feed`, FeedComponent)
 
-export async function renderFeed(page: ContentPage, id: string) {
+export async function renderFeed(page: ContentPage, id?: string) {
   const { posts, document } = await feedDocument(page.document)
-  const selected = posts.find((post) => post.id === id)
+  const selected = id
+    ? posts.find((post) => post.id === id)
+    : sortedPosts(posts as (Record<string, unknown> & { id: string; postedAt: string })[])[0]
   if (!selected || typeof selected.title !== 'string') return undefined
+  const selectedId = selected.id as string
   function FeedPosts(handle: Handle<TemplePostsProps>) {
     const site = handle.context.get(SiteContent)
     return () => {
       const posts = sortedPosts(handle.props.posts).toReversed()
-      const selected = posts.find((post) => post.id === id)!
+      const selected = posts.find((post) => post.id === selectedId)!
       return (
         <>
           <Feed
-            selected={id}
+            selected={selectedId}
+            mark={assets.mark}
             posts={posts.map((post) => ({
               ...post,
               cover: resolvePostCover(post, site.media),
@@ -38,10 +42,15 @@ export async function renderFeed(page: ContentPage, id: string) {
             <style>{'@media (scripting: none) { .temple-feed { display: none; } }'}</style>
             <article class="feed-fallback">
               <a
-                href={templePath}
-                aria-label="Back to Temple of Sound"
+                href="/"
+                aria-label="Home"
               >
-                &lt;
+                <img
+                  src={assets.mark}
+                  width={20}
+                  height={40}
+                  alt=""
+                />
               </a>
               <h1>{selected.title}</h1>
               {selected.kind === 'video' ? (
@@ -61,7 +70,7 @@ export async function renderFeed(page: ContentPage, id: string) {
               {selected.children}
               <nav aria-label="Content">
                 {posts
-                  .filter((post) => post.id !== id)
+                  .filter((post) => post.id !== selectedId)
                   .map((post) => (
                     <a href={postPath(post.id)}>{post.title}</a>
                   ))}
@@ -83,6 +92,7 @@ export async function renderFeed(page: ContentPage, id: string) {
     },
   }).default
   return {
+    path: postPath(selectedId),
     title: selected.title,
     body,
     shareImage: selected.shareImage as

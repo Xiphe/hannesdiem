@@ -9,7 +9,7 @@ const test = base.extend({
     )
   },
 })
-const path = (id: string) => `/temple-of-sound/watch/fixture-${id}`
+const path = (id: string) => `/feed/fixture-${id}`
 const post = (page: Page, id: string) => page.locator(`[data-post-id="fixture-${id}"]`)
 const audio = () => {
   const samples = 22050 * 12
@@ -369,7 +369,7 @@ test('text scrolls through its full length before snapping to the next piece', a
 })
 
 for (const width of [390, 1440]) {
-  test(`Watch expands into the viewer and returns to the current preview at ${width}px`, async ({
+  test(`Watch expands into the viewer and returns to its entry preview at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 })
@@ -431,19 +431,20 @@ for (const width of [390, 1440]) {
     expect(opening.midway).toBeLessThan(width)
     await expect(page.locator('.temple-feed')).toHaveCSS('view-transition-name', 'none')
     await move(page, 'middle')
-    await post(page, 'middle')
+    await move(page, 'latest')
+    await post(page, 'latest')
       .locator('.feed-tap')
       .click({ position: { x: 100, y: 150 } })
     await page.locator('[data-back]').click()
-    await expect(page).toHaveURL('/temple-of-sound/watch#fixture-middle')
+    await expect(page).toHaveURL('/temple-of-sound/watch#fixture-latest')
     await expect.poll(() => page.evaluate(() => (window as any).feedTransitions.length)).toBe(2)
     const closing = await page.evaluate(() => (window as any).feedTransitions[1])
     expect(closing.from).toBe(width)
     expect(closing.to).toBeCloseTo(cardWidth, 0)
     expect(closing.midway).toBeGreaterThan(cardWidth)
     expect(closing.midway).toBeLessThan(width)
-    await expect(page.locator('#fixture-middle')).toBeInViewport()
-    await expect(page.locator('#fixture-middle')).toHaveCSS('view-transition-name', 'none')
+    await expect(page.locator('#fixture-latest')).toBeInViewport()
+    await expect(page.locator('#fixture-latest')).toHaveCSS('view-transition-name', 'none')
     expect(errors).toEqual([])
   })
 }
@@ -476,31 +477,87 @@ for (const fallback of ['reduced motion', 'unsupported browser'] as const) {
   })
 }
 
-test('feed return reads entry memory, never sets it, and identifies the current post', async ({
-  page,
-}) => {
+test('direct feed links use the home logo regardless of Temple entry memory', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('hannesdiem.temple.entered', 'true'))
   await arrive(page, 'text')
-  await expect(page.locator('[data-back]')).toHaveAttribute('href', '/temple-of-sound')
-  expect(await page.evaluate(() => localStorage.getItem('hannesdiem.temple.entered'))).toBeNull()
-  await page.evaluate(() => localStorage.setItem('hannesdiem.temple.entered', 'true'))
+  const back = page.locator('[data-back]')
+  await expect(back).toHaveAttribute('href', '/')
+  await expect(back).toHaveAttribute('aria-label', 'Home')
+  await expect(back.locator('[data-return-home]')).toBeVisible()
+  await expect(back.locator('[data-return-back]')).toBeHidden()
   await move(page, 'oldest')
   await post(page, 'oldest')
     .locator('.feed-tap')
     .click({ position: { x: 100, y: 100 } })
-  await expect(page.locator('[data-back]')).toHaveAttribute(
-    'href',
-    '/temple-of-sound/watch#fixture-oldest',
-  )
+  await expect(back).toHaveAttribute('href', '/')
+  await page.reload()
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', 'fixture-oldest')
+  await expect(back).toHaveAttribute('aria-label', 'Home')
+  await page.keyboard.press('Escape')
+  await expect(page).toHaveURL('/fixture-links')
+  await expect(page.locator('.temple-feed')).toHaveCount(0)
+})
+
+test('Temple entry retains its original return point through browsing, reload and Forward', async ({
+  page,
+}) => {
+  const origin = '/temple-of-sound/watch#fixture-latest'
+  await page.goto(origin)
+  await expect(page.locator('html')).not.toHaveAttribute('data-temple-loading', '')
+  await page.locator('#fixture-latest').click()
+  await expect(page).toHaveURL(path('latest'))
+  await move(page, 'middle')
+  await page.reload()
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', 'fixture-middle')
+  await move(page, 'text')
+  const back = page.locator('[data-back]')
+  await expect(back).toHaveAttribute('href', origin)
+  await expect(back).toHaveAttribute('aria-label', 'Back')
+  await back.click()
+  await expect(page).toHaveURL(origin)
+  await expect(page.locator('#fixture-latest')).toBeInViewport()
+  await page.goForward()
+  await expect(page).toHaveURL(path('text'))
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', 'fixture-text')
+  await expect(page.locator('[data-back]')).toHaveAttribute('href', origin)
+  await page.goBack()
+  await expect(page).toHaveURL(origin)
+})
+
+test('a global feed entry returns to another site page and restores its scroll', async ({
+  page,
+}) => {
+  const origin = '/fixture-scrolled-long-release?entry=synthetic'
+  await page.goto(origin)
+  await page.evaluate(() => {
+    const link = document.createElement('a')
+    link.id = 'synthetic-feed-entry'
+    link.href = '/feed'
+    link.textContent = 'Synthetic feed entry'
+    link.style.cssText = 'position:fixed;top:100px;left:80px;z-index:1000'
+    document.body.appendChild(link)
+    scrollTo(0, 700)
+  })
+  await page.locator('#synthetic-feed-entry').click()
+  await expect(page).toHaveURL(path('latest'))
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', 'fixture-latest')
+  await move(page, 'text')
+  await expect(page.locator('[data-back]')).toHaveAttribute('href', origin)
   await page.locator('[data-back]').click()
-  await expect(page).toHaveURL('/temple-of-sound/watch#fixture-oldest')
-  const cover = page.locator('#fixture-oldest')
-  await expect(cover).toBeInViewport()
-  await expect
-    .poll(async () => {
-      const box = (await cover.boundingBox())!
-      return Math.abs(box.x + box.width / 2 - 640)
-    })
-    .toBeLessThan(2)
+  await expect(page).toHaveURL(origin)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(700, 0)
+})
+
+test('the feed index opens the newest post and legacy shared links redirect canonically', async ({
+  page,
+}) => {
+  await page.goto('/feed')
+  await expect(page).toHaveURL(path('latest'))
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', 'fixture-latest')
+  await page.goto('/temple-of-sound/watch/fixture-text')
+  await expect(page).toHaveURL(path('text'))
+  await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', 'fixture-text')
+  await expect(page.locator('[data-back]')).toHaveAttribute('aria-label', 'Home')
 })
 
 for (const entered of [false, true]) {
@@ -520,9 +577,9 @@ for (const entered of [false, true]) {
       await page.evaluate(() => {
         ;(document.activeElement as HTMLElement)?.blur()
       })
-    const href = await page.locator('[data-back]').getAttribute('href')
+    await expect(page.locator('[data-back]')).toHaveAttribute('href', '/')
     await page.keyboard.press('Escape')
-    await expect(page).toHaveURL(href!)
+    await expect(page).toHaveURL('/fixture-links')
     await expect(page.locator('.temple-feed')).toHaveCount(0)
   })
 }
@@ -562,7 +619,7 @@ test('sharing copies the current deep link and swiping preloads only its neighbo
 
 test('unknown post URLs are real 404 responses', async ({ page }) => {
   expect((await page.goto(path('missing')))!.status()).toBe(404)
-  expect((await page.goto('/temple-of-sound/watch/%E0%A4%A'))!.status()).toBe(404)
+  expect((await page.goto('/feed/%E0%A4%A'))!.status()).toBe(404)
 })
 
 test('an incoming loading video never flashes its paused overlay', async ({ page }) => {

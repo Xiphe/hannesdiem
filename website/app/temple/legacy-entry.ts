@@ -30,10 +30,7 @@ export function mountLegacyEntry(host: HTMLElement, signal: AbortSignal) {
       )
         return
       const destination = new URL(target.getAttribute('href')!, location.origin)
-      if (
-        destination.origin !== location.origin ||
-        !destination.pathname.startsWith('/temple-of-sound/watch/')
-      )
+      if (destination.origin !== location.origin || !destination.pathname.startsWith('/feed/'))
         return
       destination.search = location.search
       location.replace(destination.href)

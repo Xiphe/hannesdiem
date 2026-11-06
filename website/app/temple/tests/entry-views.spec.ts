@@ -134,19 +134,37 @@ test('old recording fragments resolve through published previews without enterin
   await page.route('**/temple-of-sound/watch', (route) =>
     route.fulfill({
       contentType: 'text/html',
-      body: '<a class="temple-post-preview" id="fixture-latest" href="/temple-of-sound/watch/fixture-latest">Synthetic post</a>',
+      body: '<a class="temple-post-preview" id="fixture-latest" href="/feed/fixture-latest">Synthetic post</a>',
     }),
   )
-  await page.route('**/temple-of-sound/watch/fixture-latest', (route) =>
+  await page.route('**/feed/fixture-latest', (route) =>
     route.fulfill({
       contentType: 'text/html',
       body: '<p>Synthetic post destination</p>',
     }),
   )
   await page.goto('/temple-entry-poem#fixture-latest')
-  await expect(page).toHaveURL(/\/temple-of-sound\/watch\/fixture-latest$/)
+  await expect(page).toHaveURL(/\/feed\/fixture-latest$/)
   expect(await page.evaluate(() => localStorage.getItem('hannesdiem.temple.entered'))).toBeNull()
 })
+
+for (const fragment of ['fixture-text', '%66ixture-text']) {
+  test(`legacy post fragment ${fragment} goes directly to the published feed destination`, async ({
+    page,
+  }) => {
+    const navigations: string[] = []
+    page.on('request', (request) => {
+      if (request.isNavigationRequest() && request.frame() === page.mainFrame())
+        navigations.push(new URL(request.url()).pathname)
+    })
+    await page.goto(`/temple-entry-poem?notice=synthetic#${fragment}`)
+    await expect(page).toHaveURL('/feed/fixture-text?notice=synthetic')
+    await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', 'fixture-text')
+    await expect(page.locator('[data-back]')).toHaveAttribute('aria-label', 'Home')
+    expect(navigations).toEqual(['/temple-entry-poem', '/feed/fixture-text'])
+    expect(await page.evaluate(() => localStorage.getItem('hannesdiem.temple.entered'))).toBeNull()
+  })
+}
 
 test('verse queries select the passage within the complete poem', async ({ page }) => {
   await page.goto('/temple-entry-poem?verse=im%20in%20grief')

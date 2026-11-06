@@ -3,31 +3,41 @@
 Approved after the feed interview, 2026-11-05. Implements only the content below
 Watch; the entry and share-image conversations own their corresponding views.
 
-- `/temple-of-sound/watch/{slug}` opens a specific post in a vertical feed. No
-  feed index. Oldest above newest. Select playback and replace the URL when the
+- `/feed/{slug}` opens a specific post in a site-wide vertical feed. `/feed`
+  redirects to the newest post; old `/temple-of-sound/watch/{slug}` links redirect
+  permanently to their corresponding feed URL. Oldest above newest. Select playback and replace the URL when the
   native scroll settles, preserving browser history and avoiding source/drawer
   changes halfway through a swipe.
+- Legacy `/temple-of-sound#{slug}` links resolve against the published Watch
+  preview links and go straight to `/feed/{slug}`, preserving query parameters.
+  The fragment is browser-only, so this compatibility redirect needs JavaScript;
+  it does not navigate through the Watch overview or mark the Temple as entered.
 - Watch is a horizontal band of share-image-like covers. `TempleRecordings`
   remains supported; `TemplePosts` adds video, audio and rich text.
   Playable covers show the viewer's Play icon in a prominent shaded circle
   centered over the thumbnail. It is decorative; the complete card
   retains its native link into the feed. Text cards omit this indicator.
 - Preview links expand into the viewer over 420ms; the viewer's Back control and
-  Escape shrink it to the current post's centered preview, including after
-  scrolling to another post. Use the browser View Transition API around Remix's
+  Escape return to the original entry point. Shrink back to that preview only
+  while the same post is selected; after browsing other posts, return without
+  a shared-image morph. Use the browser View Transition API around Remix's
   existing frame navigation. Wait for the destination's layout gate and a bounded
   image decode before capturing it; no cover is added over scrolling videos.
-  Direct shared links retain their existing entry behavior. Reduced motion,
+  Direct shared links show the site logo linking home. Reduced motion,
   unsupported browsers, modified clicks and new tabs keep native document links.
   Skip the animation if the destination does not become ready promptly.
   CMX does not provide a shared-element navigation primitive; this is browser
   presentation of its existing published link surface. Keep no-JavaScript viewer
   CSS inside `@media (scripting: none)`: frame navigation can extract inline
   styles from a `noscript` subtree into the active document.
-- The Back control goes to `/temple-of-sound` unless the visitor had
-  entered previously, otherwise `/temple-of-sound/watch#{current-id}`. The feed
-  uses `hasEnteredTemple()` from the entry implementation but never writes it
-  (`hannesdiem.temple.entered`).
+- Same-tab entries from any site page keep one original return URL and scroll
+  position throughout browsing and reload. Back traverses the existing history
+  entry so browser Forward can reopen the feed. This context belongs to browser
+  history, with a short-lived session handoff for document navigation; shared
+  URLs carry no return context. Direct entry and new tabs use the logo/Home
+  control regardless of Temple entry memory. Preserve opaque Navigation API
+  state when replacing classic history URLs, and defer initial persistence until
+  Remix's active frame navigation finishes.
 - Video covers when its orientation matches the viewport; otherwise contains on
   black. Scrolling and loading show the video's own frame, never its selected
   cover. Unfinished videos retain progress; completed videos start afresh. Keep
