@@ -10,12 +10,8 @@ When starting in a folder other than `/workspace/hannesdiem`, inform the user an
 
 ## Cloudflare access
 
-Cloudflare admin access for this project is available in gopass at
-`projects/sites/cloudflare/admin/api-token`, with the account ID at
-`projects/sites/cloudflare/admin/account-id`. These entries serve this project
-despite the `projects/sites` prefix; use the `gopass` skill to consume them inside
-the requesting process. A logged-out Wrangler session does not mean credentials
-are missing. For Stream uploads and playback origins, read `docs/agents/video.md`.
+Use the `gopass` skill with `projects/sites/cloudflare/admin/{api-token,account-id}`.
+Stream uploads and playback origins: `docs/agents/video.md`.
 
 ## CMX
 
