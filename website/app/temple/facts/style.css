@@ -47,8 +47,8 @@
   fill: none;
 }
 .fact-action {
-  --fact-story-ink: light-dark(#2c2721, #e1d9ce);
-  --fact-story-copy: light-dark(#5d5046, #bdb2a5);
+  --fact-story-ink: light-dark(var(--temple-ink-light), #e1d9ce);
+  --fact-story-copy: light-dark(var(--temple-muted-light), #bdb2a5);
   position: relative;
   z-index: 3;
   display: flex;
