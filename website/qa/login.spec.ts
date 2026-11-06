@@ -15,23 +15,32 @@ test('real email login survives navigation and logout clears the session', async
     const inbox = await openGmailInbox(credentials)
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.name))
-    stage = 'login form'
+    stage = 'login page'
     expect((await page.goto('/login', { waitUntil: 'load' }))?.ok()).toBe(true)
     const form = page.locator('form[action="/login"]')
+    stage = 'email entry'
     await form.getByLabel('Email address').fill(credentials.email)
     const since = Date.now()
     async function submit() {
+      stage = 'login submit control'
       const response = page.waitForResponse(
         (response) =>
           new URL(response.url()).pathname === '/login' && response.request().method() === 'POST',
       )
       await form.getByRole('button', { name: 'Get Login Link', exact: true }).click()
+      stage = 'login response wait'
       const result = await response
+      stage = `login response (HTTP ${result.status()})`
       expect(result.ok()).toBe(true)
+      if (!result.headers()['content-type']?.includes('application/json')) {
+        stage = 'native HTML form response'
+        throw new Error()
+      }
       return (await result.json()) as { type: string; nameRequired?: boolean }
     }
     let result = await submit()
     if (result.nameRequired) {
+      stage = 'name entry'
       await form.getByLabel('Name', { exact: true }).fill(credentials.name)
       result = await submit()
     }
