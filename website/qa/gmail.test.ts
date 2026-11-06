@@ -39,7 +39,7 @@ test('QA finds a fresh login link inside multipart mail for exactly the intended
   )
 })
 
-test('QA reads mail without mailbox mutations and ignores other target links', async () => {
+test('QA archives only the matched login message when explicitly requested after use', async () => {
   const calls: { url: URL; init: RequestInit }[] = []
   const transport: typeof fetch = async (input, init = {}) => {
     const url = new URL(String(input))
@@ -50,8 +50,14 @@ test('QA reads mail without mailbox mutations and ignores other target links', a
       assert.equal(new URLSearchParams(String(init.body)).get('grant_type'), 'refresh_token')
       return Response.json({
         access_token: 'synthetic-access',
-        scope: 'https://www.googleapis.com/auth/gmail.readonly',
+        scope: 'https://www.googleapis.com/auth/gmail.modify',
       })
+    }
+    if (url.pathname.endsWith('/modify')) {
+      assert.equal(url.pathname, '/gmail/v1/users/me/messages/this-target/modify')
+      assert.equal(init.method, 'POST')
+      assert.deepEqual(JSON.parse(String(init.body)), { removeLabelIds: ['INBOX'] })
+      return Response.json({ id: 'this-target' })
     }
     assert.equal(init.method ?? 'GET', 'GET')
     if (url.pathname.endsWith('/profile')) return Response.json({ emailAddress: credentials.email })
@@ -69,17 +75,28 @@ test('QA reads mail without mailbox mutations and ignores other target links', a
     )
   }
   const inbox = await openGmailInbox(credentials, transport)
-  assert.equal(await inbox.waitForLogin(origin, Date.now()), link)
+  const login = await inbox.waitForLogin(origin, Date.now())
+  assert.equal(login.link, link)
   assert.equal(calls.length, 5)
+  assert.equal(
+    calls.some(({ url }) => url.pathname.endsWith('/modify')),
+    false,
+  )
+  await login.archive()
+  assert.equal(calls.length, 6)
+  assert.equal(calls.at(-1)!.url.pathname, '/gmail/v1/users/me/messages/this-target/modify')
 })
 
 test('QA rejects broader OAuth grants and hides provider response bodies and credentials', async () => {
-  await assert.rejects(
-    openGmailInbox(credentials, async () =>
-      Response.json({ access_token: 'synthetic', scope: 'https://mail.google.com/' }),
-    ),
-    /only gmail.readonly/,
-  )
+  for (const scope of [
+    'https://mail.google.com/',
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.send',
+  ])
+    await assert.rejects(
+      openGmailInbox(credentials, async () => Response.json({ access_token: 'synthetic', scope })),
+      /only gmail.modify/,
+    )
   await assert.rejects(
     openGmailInbox(
       credentials,
@@ -87,6 +104,31 @@ test('QA rejects broader OAuth grants and hides provider response bodies and cre
     ),
     (error: Error) =>
       error.message.includes('Gmail request failed') &&
+      !error.message.includes(credentials.refresh_token),
+  )
+})
+
+test('QA reports archive failures without exposing provider responses or tokens', async () => {
+  const inbox = await openGmailInbox(credentials, async (input) => {
+    const url = new URL(String(input))
+    if (url.pathname === '/token')
+      return Response.json({
+        access_token: 'synthetic-access',
+        scope: 'https://www.googleapis.com/auth/gmail.modify',
+      })
+    if (url.pathname.endsWith('/profile')) return Response.json({ emailAddress: credentials.email })
+    if (url.pathname.endsWith('/messages'))
+      return Response.json({ messages: [{ id: 'matched-message' }] })
+    if (url.pathname.endsWith('/modify'))
+      return new Response('synthetic-access ' + credentials.refresh_token, { status: 403 })
+    return Response.json(message(link, Date.now() + 1_000))
+  })
+  const login = await inbox.waitForLogin(origin, Date.now())
+  await assert.rejects(
+    login.archive(),
+    (error: Error) =>
+      error.message.includes('Gmail request failed') &&
+      !error.message.includes('synthetic-access') &&
       !error.message.includes(credentials.refresh_token),
   )
 })

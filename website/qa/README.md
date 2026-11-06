@@ -40,11 +40,13 @@ stay out of artifacts.
 ### Gmail access
 
 Use a dedicated Gmail account with OAuth permission
-`https://www.googleapis.com/auth/gmail.readonly`. This permits reading mail, not
-sending or changing it; Google grants it for the whole mailbox, not one label or
-sender. The runner makes only read requests to Gmail and never marks or deletes
-messages. A Google account password, production Resend key, or Cloudflare token is
-not needed by QA.
+`https://www.googleapis.com/auth/gmail.modify`. Google grants it for the whole
+mailbox, not one label or sender, and it also permits sending mail and moving
+messages to Trash. The runner only reads mail and archives the matched login
+message after login, navigation and logout checks succeed. Archiving removes its
+Inbox label; other labels and unread status remain unchanged. Failed checks leave
+the message for inspection. A Google account password, production Resend key, or
+Cloudflare token is not needed by QA.
 
 Create a Google Cloud OAuth client with the Gmail API enabled and authorize only
 that scope with offline access. Keep the OAuth app out of Google's **Testing**
@@ -62,7 +64,7 @@ Store a **single-line JSON object** in gopass at
   "name": "Website QA",
   "client_id": "<OAuth client ID>",
   "client_secret": "<OAuth client secret>",
-  "refresh_token": "<refresh token for gmail.readonly>"
+  "refresh_token": "<refresh token for gmail.modify>"
 }
 ```
 

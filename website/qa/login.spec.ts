@@ -35,8 +35,8 @@ test('real email login survives navigation and logout clears the session', async
     }
     expect(result.type).toBe('success')
     expect(Boolean(result.nameRequired)).toBe(false)
-    const link = await inbox.waitForLogin(new URL(baseURL!).origin, since)
-    await page.goto(link, { waitUntil: 'load' })
+    const login = await inbox.waitForLogin(new URL(baseURL!).origin, since)
+    await page.goto(login.link, { waitUntil: 'load' })
     await expect(page).toHaveURL((url) => url.searchParams.get('login_success') === 'true')
     const session = () =>
       page.evaluate(async () => {
@@ -56,10 +56,11 @@ test('real email login survives navigation and logout clears the session', async
       .click()
     await expect.poll(async () => (await session()).email === undefined).toBe(true)
     expect(errors).toEqual([])
+    await login.archive()
   } catch {
     // Never propagate Playwright call logs containing the emailed token or values.
     throw new Error(
-      'Authenticated QA failed; verify inbox access, email delivery, and login/logout on the target',
+      'Authenticated QA failed; verify inbox access, email delivery, login/logout, and mail archiving',
     )
   } finally {
     await context.close()
