@@ -1,5 +1,16 @@
 # Actual liquid simulation for the Circle
 
+**Current status — 2026-11-06:** the artist selected the final material and
+it is integrated into the website through `selectedCircleMaterial` and
+`createCircleFluid`. See “Selected material and website integration” at the
+end for the exact settings and validation. The isolated tuning server on8796
+is now stopped; its source, selected settings and frozen study are retained.
+Restart it with the command below when needed.
+The earlier sections preserve the research and superseded proposals in order.
+No deployment or publication was requested.
+
+## Original research scope
+
 Research: 2026-11-05. Scope: a local experiment, not an accepted visual treatment
 or production integration. The artist requires actual liquid dynamics rather
 than animated outline poses. The desired material moves slowly, reaches toward
