@@ -294,11 +294,14 @@
 }
 .feed-corners > [data-back] {
   justify-self: start;
+  width: 44px;
+  height: 44px;
 }
 .feed-home-logo {
-  width: 18px;
-  height: 36px;
+  width: 14px;
+  height: 28px;
   object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 .feed-corner-actions {
   display: flex;
