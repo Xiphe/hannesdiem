@@ -28,5 +28,5 @@ and closes the popover on disposal.
 Run the standalone synthetic browser check without a website or content build:
 
 ```sh
-node --import remix/node-tsx --test website/tests/piece-tooltip.test.ts
+node --import remix/node-tsx --test website/tests/piece-tooltip.slow.test.ts
 ```

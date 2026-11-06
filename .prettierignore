@@ -7,6 +7,8 @@ dist/
 worker-configuration.d.ts
 test-results/
 playwright-report/
+.deploy-qa.json
+.deploy-qa.lock
 .env*
 .dev.vars*
 

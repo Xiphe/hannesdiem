@@ -1,0 +1,76 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Suite to run
+        type: choice
+        options: [qa, synthetic]
+        default: qa
+      url:
+        description: Running site URL for QA (empty uses Production SITE_URL)
+        type: string
+      auth:
+        description: Include real email login/logout using the QA Gmail inbox
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic:
+    if: inputs.suite == 'synthetic'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github
+            contracts
+            website
+            content/preparation
+            content/publishing
+            content/tests
+            content/development
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build:app
+      - run: npx playwright install --with-deps --only-shell chromium
+      - run: npm run test:synthetic
+
+  qa:
+    if: inputs.suite == 'qa'
+    runs-on: ubuntu-24.04
+    environment: Production
+    timeout-minutes: 10
+    # One inbox, one login roundtrip at a time. Deployments remain independent.
+    concurrency:
+      group: site-qa
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github
+            contracts
+            website
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps --only-shell chromium
+      - name: Check the running site
+        env:
+          QA_BASE_URL: ${{ inputs.url || vars.SITE_URL }}
+          QA_AUTH: ${{ inputs.auth }}
+          QA_GMAIL_CREDENTIALS: ${{ inputs.auth && secrets.QA_GMAIL_CREDENTIALS || '' }}
+        run: npm run test:qa

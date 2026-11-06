@@ -4,6 +4,7 @@
     "app",
     "build",
     "tests",
+    "qa",
     "cmx.config.ts",
     "playwright.config.ts",
     "../contracts",

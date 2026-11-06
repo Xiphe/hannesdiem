@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: production-main
@@ -16,21 +17,34 @@ jobs:
   changes:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    # A manual retry includes content skipped after an earlier website failure.
+    # Pending runs can be superseded. Include changes since the last deployment,
+    # rather than only the immediately preceding push.
     outputs:
-      website: ${{ github.event_name == 'workflow_dispatch' || steps.paths.outputs.website == 'true' || steps.paths.outputs.shared == 'true' }}
-      content: ${{ github.event_name == 'workflow_dispatch' || steps.paths.outputs.content == 'true' || steps.paths.outputs.shared == 'true' }}
+      website: ${{ steps.baseline.outputs.all == 'true' || steps.paths.outputs.website == 'true' || steps.paths.outputs.shared == 'true' }}
+      content: ${{ steps.baseline.outputs.all == 'true' || steps.paths.outputs.content == 'true' || steps.paths.outputs.shared == 'true' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
           sparse-checkout: .github
+      - name: Find the last successful deployment
+        id: baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          baseline=$(gh api "repos/$GH_REPO/actions/workflows/deploy.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].head_sha // empty')
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch || -z "$baseline" ]] || ! git merge-base --is-ancestor "$baseline" "$GITHUB_SHA"; then
+            echo 'all=true' >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=$baseline" >> "$GITHUB_OUTPUT"
+          fi
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: paths
-        if: github.event_name == 'push'
+        if: steps.baseline.outputs.all != 'true'
         with:
-          base: ${{ github.event.before }}
+          base: ${{ steps.baseline.outputs.sha }}
           ref: ${{ github.sha }}
           filters: |
             website:
@@ -67,7 +81,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:app
-      - run: npx playwright install --with-deps --only-shell chromium
       - run: npm run check:website
       - name: Check compatibility with the published CMS interface
         env:
@@ -114,6 +127,8 @@ jobs:
         env:
           DEPLOYMENT_URL: ${{ steps.deployment.outputs.url }}
         run: node --input-type=module -e 'const r = await fetch(new URL("/health", process.env.DEPLOYMENT_URL), {signal:AbortSignal.timeout(20000)}); if (!r.ok || !(await r.json()).ok) process.exit(1)'
+      - name: Record deferred QA
+        run: echo 'Deployment passed fast checks. Browser QA is separate; run the manual QA workflow or npm run test:qa against the deployed site.' >> "$GITHUB_STEP_SUMMARY"
 
   content:
     name: Publish content

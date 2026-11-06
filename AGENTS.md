@@ -16,12 +16,15 @@ This project exists to battle-test CMX. Use CMX primitives wherever possible. Tr
 
 Use synthetic fixtures for all test assertions. Never assert against authored production content or use its generated Publications and media as fixtures. Keep website builds and checks runnable with `content/` absent to simulate the future repository split.
 
+Operational QA may check a running site's health, UI behavior, and the dedicated test user's login. Keep content regression assertions synthetic. `npm run check:website` is the fast deployment gate. Node tests requiring browsers, runtimes, or long simulations use `.slow.test.ts`; browser suites run separately.
+
 ## Prose
 
 Never invent prose for the user unless explicitly instructed. Preserve supplied wording and order; edit only as requested, including spelling corrections when authorized.
 
 ## Agent skills
 
+- Deploy or take over deployment QA: read `.agents/skills/deploy/SKILL.md`; deployment and browser QA are separate, coordinated through the gitignored `.deploy-qa.json`.
 - Remix work: read `.agents/skills/remix/SKILL.md`; use installed docs via `node_modules/remix/INDEX.md`.
 - Tickets: GitHub Issues via `gh`; PRs are not a request surface.
 - Triage: independent label groups; skill overrides in `docs/agents/triage-labels.md`.

@@ -14,3 +14,5 @@ npm run dev
 ```
 
 [Content](content/README.md)
+
+[Deployment and separate QA](website/qa/README.md)
