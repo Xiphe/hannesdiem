@@ -8,6 +8,15 @@ When work reaches exploratory or competing states, raise this with the user befo
 
 When starting in a folder other than `/workspace/hannesdiem`, inform the user and assume you are working in a branch.
 
+## Cloudflare access
+
+Cloudflare admin access for this project is available in gopass at
+`projects/sites/cloudflare/admin/api-token`, with the account ID at
+`projects/sites/cloudflare/admin/account-id`. These entries serve this project
+despite the `projects/sites` prefix; use the `gopass` skill to consume them inside
+the requesting process. A logged-out Wrangler session does not mean credentials
+are missing. For Stream uploads and playback origins, read `docs/agents/video.md`.
+
 ## CMX
 
 This project exists to battle-test CMX. Use CMX primitives wherever possible. Treat custom glue as a potential CMX gap: investigate available primitives and surface the gap before introducing a workaround.
