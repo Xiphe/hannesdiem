@@ -56,3 +56,60 @@ test('navigation hydrates independently and loads newsletter state when opened',
   await expect(dialog).not.toBeVisible()
   expect(errors).toEqual([])
 })
+
+for (const knownName of [false, true]) {
+  test(`sidebar sends email first and ${knownName ? 'skips the saved name' : 'asks for a missing name and preserves retry values'}`, async ({
+    page,
+  }) => {
+    let submits = 0
+    await page.setViewportSize({ width: 390, height: 900 })
+    await page.route('**/login', async (route) => {
+      if (route.request().method() === 'GET')
+        return route.fulfill({ json: { ready: true, csrfToken: 'fixture-csrf' } })
+      const body = await new Response(new Uint8Array(route.request().postDataBuffer()!), {
+        headers: route.request().headers(),
+      }).formData()
+      expect(body.get('email')).toBe('synthetic@example.org')
+      expect(body.get('_csrf')).toBe('fixture-csrf')
+      submits++
+      if (submits === 1) {
+        expect(body.has('name')).toBe(false)
+        if (!knownName)
+          return route.fulfill({
+            json: { type: 'success', message: 'Synthetic missing name.', nameRequired: true },
+          })
+      } else {
+        expect(body.get('name')).toBe('Aster')
+        if (submits === 2)
+          return route.fulfill({
+            status: 503,
+            json: { type: 'error', message: 'Synthetic delivery failure.' },
+          })
+      }
+      return route.fulfill({ json: { type: 'success', message: 'Synthetic link sent.' } })
+    })
+    await page.goto('/fixture')
+    await page.getByRole('button', { name: 'Open menu', exact: true }).click()
+    const form = page.locator('.newsletter-form')
+    await expect(form.getByLabel('Email address')).toBeEnabled()
+    await expect(form.getByLabel('Name', { exact: true })).toHaveCount(0)
+    await form.getByLabel('Email address').fill('synthetic@example.org')
+    await form.getByRole('button', { name: 'Signup', exact: true }).click()
+    if (!knownName) {
+      const name = form.getByLabel('Name', { exact: true })
+      await expect(name).toBeFocused()
+      await expect(form.getByLabel('Email address')).toHaveValue('synthetic@example.org')
+      await name.fill('Aster')
+      await form.getByRole('button', { name: 'Signup', exact: true }).click()
+      await expect(form.getByRole('alert')).toHaveText('Synthetic delivery failure.')
+      await expect(name).toHaveValue('Aster')
+      const button = await form.getByRole('button', { name: 'Signup', exact: true }).boundingBox()
+      expect(button!.x).toBeGreaterThanOrEqual(0)
+      expect(button!.x + button!.width).toBeLessThanOrEqual(390)
+      await form.getByRole('button', { name: 'Signup', exact: true }).click()
+    }
+    await expect(form.getByRole('status')).toHaveText('Synthetic link sent.')
+    await expect(form.locator('input:not([type=hidden])')).toHaveCount(0)
+    expect(submits).toBe(knownName ? 1 : 3)
+  })
+}

@@ -37,6 +37,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
   let expanded = handle.props.expanded ?? false
   let confirmed = false
   let result = handle.props.result
+  let nameRequired = result?.nameRequired ?? false
   let awaitingConfirmation = result?.confirmationPending ?? false
   let name = handle.props.nameValue ?? state.name ?? ''
   let email = handle.props.emailValue ?? state.email ?? ''
@@ -190,12 +191,13 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
       )
         throw new Error('Invalid signup response')
       result = value
+      nameRequired = value.nameRequired ?? (value.type === 'success' ? false : nameRequired)
       awaitingConfirmation = value.confirmationPending ?? false
       if (awaitingConfirmation) expanded = true
       if (value.csrfToken) state = { ...state, csrfToken: value.csrfToken }
       if (value.state) state = value.state
       if (value.type === 'spam_protection') scheduleRetry(value.remainingSeconds)
-      else if (value.type === 'success' && !value.state) scheduleRetry(120)
+      else if (value.type === 'success' && !value.state && !value.nameRequired) scheduleRetry(120)
     } catch {
       if (handle.signal.aborted) return
       result = { type: 'error', message: templeMessages.failure }
@@ -203,7 +205,8 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
       if (!handle.signal.aborted) {
         pending = false
         optimisticSubscription = undefined
-        void handle.update()
+        await handle.update()
+        if (result?.nameRequired) root?.querySelector<HTMLInputElement>('[name="name"]')?.focus()
       }
     }
   }
@@ -301,7 +304,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
                   name="_csrf"
                   value={state.csrfToken ?? ''}
                 />
-                {!state.email && (
+                {!state.email && nameRequired && (
                   <label>
                     Name
                     <input
@@ -324,6 +327,15 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
                       required
                       maxLength={254}
                       defaultValue={email}
+                      mix={on<HTMLInputElement, 'input'>('input', (event) => {
+                        email = event.currentTarget.value
+                        if (nameRequired) {
+                          nameRequired = false
+                          name = ''
+                          result = undefined
+                          void handle.update()
+                        }
+                      })}
                       disabled={!state.ready || pending}
                     />
                   </label>

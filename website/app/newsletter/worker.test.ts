@@ -34,6 +34,8 @@ test('newsletter sends in Workers and rejects provider redirects without followi
       },
       outboundService: async (request) => {
         outboundUrls.push(request.url)
+        if (request.method === 'GET' && new URL(request.url).pathname.startsWith('/contacts/'))
+          return Response.json({ first_name: 'Synthetic saved name', unsubscribed: false })
         assert.equal(request.url, 'https://api.resend.com/emails')
         assert.equal(request.method, 'POST')
         assert.equal(request.headers.get('Authorization'), 'Bearer test-only-key')
@@ -76,7 +78,8 @@ test('newsletter sends in Workers and rejects provider redirects without followi
   assert.equal(redirected.status, 503)
   assert.equal(((await redirected.json()) as { type: string }).type, 'error')
   assert.equal(deliveries.length, 2)
-  assert.deepEqual(outboundUrls, ['https://api.resend.com/emails', 'https://api.resend.com/emails'])
+  assert.ok(outboundUrls.every((url) => new URL(url).origin === 'https://api.resend.com'))
+  assert.equal(outboundUrls.filter((url) => url.endsWith('/emails')).length, 2)
 
   deliveryStatus = 200
   assert.equal((await submit('retry@example.org')).status, 200)

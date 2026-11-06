@@ -69,6 +69,7 @@ export function NewsletterPage(props: {
   message?: string
   result?: NewsletterResult
   emailValue?: string
+  nameValue?: string
 }) {
   return (
     <html lang="en">
@@ -116,6 +117,7 @@ export function NewsletterPage(props: {
               state={props.state}
               result={props.result}
               emailValue={props.emailValue}
+              nameValue={props.nameValue}
             />
           </div>
         </main>

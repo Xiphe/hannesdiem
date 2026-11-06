@@ -131,22 +131,54 @@ export async function sendConfirmation(
   await response.body?.cancel()
 }
 
-export async function ensureNewsletterContact(
+/** Read private profile data without loading topic preferences. */
+export async function readNewsletterContact(
   email: string,
   env: NewsletterEnvironment,
   services: NewsletterServices,
 ) {
+  const response = await resendRequest(
+    `/contacts/${encodeURIComponent(email)}`,
+    { method: 'GET' },
+    env,
+    services,
+  )
+  if (response.status === 404) {
+    await response.body?.cancel()
+    return { name: '', unsubscribed: false, exists: false }
+  }
+  if (!response.ok) throw new Error('Newsletter contact lookup failed')
+  const contact = (await response.json()) as { first_name?: string; unsubscribed: boolean }
+  if (typeof contact.unsubscribed !== 'boolean') throw new Error('Invalid contact response')
+  return {
+    exists: true,
+    name: typeof contact.first_name === 'string' ? contact.first_name.trim() : '',
+    unsubscribed: contact.unsubscribed,
+  }
+}
+
+/** A login may fill a missing name, but cannot replace an existing profile. */
+export function signupName(contact: { name: string }, submitted: unknown): string {
+  return contact.name || (typeof submitted === 'string' ? submitted.trim() : '')
+}
+
+export async function ensureNewsletterContact(
+  email: string,
+  env: NewsletterEnvironment,
+  services: NewsletterServices,
+  name = '',
+) {
   const contactPath = `/contacts/${encodeURIComponent(email)}`
-  const existing = await resendRequest(contactPath, { method: 'GET' }, env, services)
+  const existing = await readNewsletterContact(email, env, services)
   const segments = [...new Set([AUDIENCE_SEGMENT, env.RESEND_HANNESDIEM_DE_SEGMENT_ID!])]
-  if (existing.status === 404) {
-    await existing.body?.cancel()
+  if (!existing.exists) {
     const created = await resendRequest(
       '/contacts',
       {
         method: 'POST',
         body: JSON.stringify({
           email,
+          ...(name ? { first_name: name } : {}),
           unsubscribed: false,
           segments: segments.map((id) => ({ id })),
         }),
@@ -158,8 +190,16 @@ export async function ensureNewsletterContact(
     await created.body?.cancel()
     return
   }
-  if (!existing.ok) throw new Error('Newsletter contact lookup failed')
-  await existing.body?.cancel()
+  if (!existing.name && name) {
+    const updated = await resendRequest(
+      contactPath,
+      { method: 'PATCH', body: JSON.stringify({ first_name: name }) },
+      env,
+      services,
+    )
+    if (!updated.ok) throw new Error('Contact profile update failed')
+    await updated.body?.cancel()
+  }
   for (const segment of segments) {
     const response = await resendRequest(
       `${contactPath}/segments/${encodeURIComponent(segment)}`,
@@ -179,14 +219,8 @@ export async function readTempleContact(
   topicId = templeTopic,
 ) {
   const path = `/contacts/${encodeURIComponent(email)}`
-  const response = await resendRequest(path, { method: 'GET' }, env, services)
-  if (response.status === 404) {
-    await response.body?.cancel()
-    return { name: '', unsubscribed: false, subscribed: false, exists: false }
-  }
-  if (!response.ok) throw new Error('Newsletter contact lookup failed')
-  const contact = (await response.json()) as { first_name?: string; unsubscribed: boolean }
-  if (typeof contact.unsubscribed !== 'boolean') throw new Error('Invalid contact response')
+  const contact = await readNewsletterContact(email, env, services)
+  if (!contact.exists) return { ...contact, subscribed: false }
   const topicsResponse = await resendRequest(`${path}/topics`, { method: 'GET' }, env, services)
   if (!topicsResponse.ok) throw new Error('Newsletter preferences lookup failed')
   const topics = (await topicsResponse.json()) as {
@@ -195,9 +229,7 @@ export async function readTempleContact(
   }
   if (!Array.isArray(topics.data) || topics.has_more) throw new Error('Incomplete topic response')
   return {
-    exists: true,
-    name: typeof contact.first_name === 'string' ? contact.first_name : '',
-    unsubscribed: contact.unsubscribed,
+    ...contact,
     subscribed: topics.data.some(
       (topic) => topic.id === topicId && topic.subscription === 'opt_in',
     ),
@@ -246,6 +278,7 @@ export async function subscribeTemple(
     if (!segment.ok) throw new Error('Newsletter segment update failed')
     await segment.body?.cancel()
     await setTempleTopic(email, true, env, services)
+    if (contact.name && !(reactivate && contact.unsubscribed)) return
   }
   // Reactivate global delivery last: a failed segment/topic update must not
   // accidentally resume other mail while this subscription is still incomplete.
@@ -256,7 +289,7 @@ export async function subscribeTemple(
       body: JSON.stringify(
         contact.exists
           ? {
-              first_name: name,
+              ...(!contact.name && name ? { first_name: name } : {}),
               ...(reactivate && contact.unsubscribed ? { unsubscribed: false } : {}),
             }
           : {

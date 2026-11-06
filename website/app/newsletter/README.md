@@ -1,13 +1,28 @@
 # Newsletter flows
 
-The general sidebar signup keeps its existing `/login` behavior and segments.
+The sidebar and standalone `/login`, Temple Watch and Circle verification all
+start with email only. Each endpoint looks up the private Resend profile: a saved
+name sends the existing confirmation/login link immediately; a missing or blank
+name returns `nameRequired` and reveals the required name field. Validation and
+delivery errors retain the second step and entered values, including native
+forms without JavaScript. Changing the email resets the browser's name step.
+Provider lookup errors remain retryable errors and never count as missing names.
+
+New names travel in the existing one-use token and are written only after email
+verification. Existing names are never replaced by anonymous login submissions
+or returned in anonymous HTML/JSON. Existing general-login tokens without a name
+remain valid, and signed-in legacy contacts can still manage their preferences.
+Names supplied through `/login` fill missing profiles and keep its two existing
+segments; Temple and Circle retain their separate subscription rules.
+
 Temple's Watch action uses `newsletter: 'temple'` in the CMX fact contract and a
 private `/newsletter/temple` form endpoint. Public CMX HTML contains no session or
-subscription state. Both flows reuse the existing Remix session, CSRF middleware,
+subscription state. These flows reuse the existing Remix session, CSRF middleware,
 Resend transport and Workers Durable Object; no provider SDK or parallel auth store.
 
-Temple requires a name and email. Its one-hour, one-use token stores the trimmed
-name, email and Temple intent server-side. Older general-login tokens still work.
+New Temple profiles require a name after the email lookup. Its one-hour,
+one-use token stores a new trimmed name, email and Temple intent server-side.
+Older general-login tokens still work.
 Only confirmation adds an anonymous contact to the segment and topic in
 `temple-config.ts`. Names are stored verbatim in Resend's `first_name` field,
 without guessing how to split a person's name. The artist supplies the Temple

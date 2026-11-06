@@ -140,6 +140,14 @@ test('signed-out claim asks for name, hides sent fields and resumes a free dot w
     if (route.request().method() === 'POST') {
       const body = await fields(route)
       expect(body.get('intent')).toBe('verify')
+      if (!body.has('name'))
+        return route.fulfill({
+          json: {
+            type: 'success',
+            message: 'Synthetic missing name.',
+            nameRequired: true,
+          },
+        })
       expect(body.get('name')).toBe('Fixture private name')
       expect(body.get('email')).toBe('synthetic@example.org')
       expect(body.has('alias')).toBe(false)
@@ -160,8 +168,11 @@ test('signed-out claim asks for name, hides sent fields and resumes a free dot w
   const section = page.locator(sectionId)
   await section.getByRole('button', { name: 'Fixture claim' }).click()
   await expect(section.getByRole('dialog')).toBeVisible()
-  await section.getByLabel('Name', { exact: true }).fill('Fixture private name')
+  await expect(section.getByLabel('Name', { exact: true })).toHaveCount(0)
   await section.getByLabel('Email address').fill('synthetic@example.org')
+  await section.getByRole('button', { name: 'Request login email', exact: true }).click()
+  await expect(section.getByLabel('Name', { exact: true })).toBeFocused()
+  await section.getByLabel('Name', { exact: true }).fill('Fixture private name')
   await section.getByRole('button', { name: 'Request login email', exact: true }).click()
   await expect(section.getByRole('status')).toHaveText(
     'Awesome, please check your email to confirm your interest',

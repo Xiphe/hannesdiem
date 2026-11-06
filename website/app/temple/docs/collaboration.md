@@ -1,5 +1,18 @@
 # Temple of Sound: client–artist collaboration
 
+**Email first across shared signup and login — 2026-11-06.** The artist asks
+for a consistent flow: collect email, check Resend for an existing name, send the
+login link immediately when named, and request a name only when missing. This
+replaces Watch and Share's initial name fields and fills the sidebar's missing
+profile step. Keep newsletter membership, independent topics, confirmation and
+server-owned return destinations. New names are stored only after email
+verification; anonymous login cannot overwrite or reveal an existing private
+name. Reuse the existing Remix forms/session/CSRF pipeline and Resend contact
+lookup. Public CMX content and the Circle's separate public alias remain intact.
+Validation: asset build, website typechecking, all 121 website Node tests and 27
+synthetic browser checks pass. Local review uses simulated Resend on 8787;
+`sand tunnel 8787`, then `/login`; `/__preview/email` shows the latest local link.
+
 **Main menu follows its trigger — 2026-11-06.** The artist reports that the
 sidebar always enters from the left and requests that it use the logo's side.
 Keep the left entrance on screens up to 1050px; above that breakpoint, align

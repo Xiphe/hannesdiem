@@ -42,6 +42,9 @@ export interface CircleResult {
   message: string
   state?: CircleView
   confirmationPending?: boolean
+  nameRequired?: boolean
+  emailValue?: string
+  nameValue?: string
 }
 export const circleMessages = {
   failure: 'Something went wrong. Please try again.',

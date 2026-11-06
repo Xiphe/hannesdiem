@@ -4,7 +4,12 @@ import * as s from 'remix/data-schema'
 import * as checks from 'remix/data-schema/checks'
 import type { NewsletterEnvironment, NewsletterServices } from '../newsletter/config.ts'
 import { storageClient, digest } from '../newsletter/storage.ts'
-import { sendConfirmation, isTempleMember } from '../newsletter/resend.ts'
+import {
+  sendConfirmation,
+  isTempleMember,
+  readNewsletterContact,
+  signupName,
+} from '../newsletter/resend.ts'
 import { circleProvider } from './provider.ts'
 import { circleClient } from './client.ts'
 import {
@@ -69,7 +74,7 @@ export function registerCircleRoutes(
     const spot = Number(context.formData.get('spot'))
     const alias = context.formData.get('alias')
     const rawName = context.formData.get('name')
-    const name = typeof rawName === 'string' ? rawName.trim() : ''
+    let name = typeof rawName === 'string' ? rawName.trim() : ''
     const state: CircleView = {
       ready: true,
       places: [],
@@ -80,7 +85,18 @@ export function registerCircleRoutes(
     const reply = (result: CircleResult, status = 200) =>
       context.request.headers.get('Accept')?.includes('application/json')
         ? Response.json({ ...result, csrfToken: state.csrfToken }, { status })
-        : context.render(CirclePage({ state: result.state ?? state, result }), { status })
+        : context.render(
+            CirclePage({
+              state: result.state ?? state,
+              result: {
+                ...(rawName !== null && result.type !== 'success' ? { nameRequired: true } : {}),
+                ...result,
+                emailValue: typeof email === 'string' ? email : '',
+                nameValue: typeof rawName === 'string' ? rawName.trim() : '',
+              },
+            }),
+            { status },
+          )
     if (intent === 'verify') {
       const parsed = s.parseSafe(
         s
@@ -89,15 +105,19 @@ export function registerCircleRoutes(
           .pipe(checks.email(), checks.maxLength(254)),
         email,
       )
-      if (
-        (!authenticated && !name) ||
-        name.length > 120 ||
-        !parsed.success ||
-        !Number.isInteger(spot) ||
-        spot < 1 ||
-        spot > 10
-      )
+      if (!parsed.success || !Number.isInteger(spot) || spot < 1 || spot > 10)
         return reply({ type: 'error', message: circleMessages.failure }, 400)
+      const profile = await readNewsletterContact(parsed.value, env, services)
+      name = signupName(profile, rawName)
+      if ((!authenticated && !name) || (!profile.name && name.length > 120))
+        return reply(
+          {
+            type: rawName === null ? 'success' : 'error',
+            message: 'Please enter your name.',
+            nameRequired: true,
+          },
+          rawName === null ? 200 : 400,
+        )
       const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
         byte.toString(16).padStart(2, '0'),
       ).join('')
@@ -105,7 +125,7 @@ export function registerCircleRoutes(
       const issued = await storageClient(env)('/tokens/issue', {
         email: parsed.value,
         scope: 'circle',
-        ...(name ? { name } : {}),
+        ...(!profile.name && name ? { name } : {}),
         spot,
         tokenHash,
       })

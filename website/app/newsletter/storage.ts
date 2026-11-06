@@ -117,15 +117,11 @@ export async function handleNewsletterStorage(
     if (!parsed.success) return new Response(null, { status: 400 })
     const email = parsed.value
     if (
-      body.scope !== undefined &&
-      ((body.scope !== 'temple' && body.scope !== 'circle') ||
-        (body.scope === 'circle' &&
-          (!Number.isInteger(body.spot) ||
-            body.spot! < 1 ||
-            body.spot! > 10 ||
-            (body.name !== undefined &&
-              (typeof body.name !== 'string' || body.name.length > 120)))) ||
-        (body.scope === 'temple' && (typeof body.name !== 'string' || body.name.length > 120)))
+      (body.name !== undefined && (typeof body.name !== 'string' || body.name.length > 120)) ||
+      (body.scope !== undefined && body.scope !== 'temple' && body.scope !== 'circle') ||
+      (body.scope === 'circle' &&
+        (!Number.isInteger(body.spot) || body.spot! < 1 || body.spot! > 10)) ||
+      (body.scope === 'temple' && typeof body.name !== 'string')
     )
       return new Response(null, { status: 400 })
     const cooldownKey = `cooldown:${await digest(email.toLowerCase())}`
@@ -133,14 +129,15 @@ export async function handleNewsletterStorage(
       const existing = await tx.get<Expiring<true>>(cooldownKey)
       if (existing && existing.expires > now) return Math.ceil((existing.expires - now) / 1000)
       await tx.put(tokenKey, {
-        value: body.scope
-          ? {
-              email,
-              ...(body.name ? { name: body.name.trim() } : {}),
-              scope: body.scope,
-              ...(body.scope === 'circle' ? { spot: body.spot } : {}),
-            }
-          : email,
+        value:
+          body.scope || body.name
+            ? {
+                email,
+                ...(body.name ? { name: body.name.trim() } : {}),
+                ...(body.scope ? { scope: body.scope } : {}),
+                ...(body.scope === 'circle' ? { spot: body.spot } : {}),
+              }
+            : email,
         expires: now + HOUR,
       })
       await tx.put(cooldownKey, { value: true, expires: now + 2 * 60 * 1000 })

@@ -607,3 +607,92 @@ test('a verified visitor can register full-circle interest without a Circle subs
     await h.dispose()
   }
 })
+
+test('circle verification asks for a missing name, preserves a known profile, and keeps the chosen spot', async () => {
+  const h = await harness()
+  try {
+    for (const existing of [false, true]) {
+      const email = existing ? 'legacy@example.org' : 'new@example.org'
+      if (existing)
+        h.contacts.set(email, { first_name: ' ', unsubscribed: false, subscribed: false })
+      const initial = await h.read()
+      const fields = { intent: 'verify', email, spot: '4' }
+      const before = h.emails.length
+      const next = await h.submit(initial.cookie, initial.state.csrfToken, fields)
+      assert.equal(next.status, 200)
+      assert.equal(((await next.json()) as { nameRequired: boolean }).nameRequired, true)
+      assert.equal(h.emails.length, before)
+      assert.equal(h.contacts.get(email)?.first_name, existing ? ' ' : undefined)
+      const invalid = await h.submit(initial.cookie, initial.state.csrfToken, {
+        ...fields,
+        name: ' ',
+      })
+      assert.equal(invalid.status, 400)
+      const sent = await h.submit(initial.cookie, initial.state.csrfToken, {
+        ...fields,
+        name: ' Private name ',
+      })
+      assert.equal(sent.status, 200)
+      assert.equal(h.emails.length, before + 1)
+      assert.equal(h.contacts.get(email)?.first_name, existing ? ' ' : undefined)
+      const link = h.emails.at(-1)!.text.match(/https:\/\/example\.org\/login\/api\?\S+/)![0]
+      const confirmed = await h.request(new URL(link).pathname + new URL(link).search, {
+        redirect: 'manual',
+      })
+      assert.equal(
+        confirmed.headers.get('Location'),
+        '/temple-of-sound?circle=confirmed&spot=4#share',
+      )
+      assert.equal(h.contacts.get(email)!.first_name, 'Private name')
+      assert.equal(h.contacts.get(email)!.subscribed, false)
+    }
+    const email = 'known@example.org'
+    h.contacts.set(email, {
+      first_name: 'Saved private name',
+      unsubscribed: false,
+      subscribed: false,
+    })
+    const initial = await h.read()
+    const sent = await h.submit(initial.cookie, initial.state.csrfToken, {
+      intent: 'verify',
+      email,
+      spot: '6',
+    })
+    assert.equal(sent.status, 200)
+    assert.equal(
+      ((await sent.json()) as { confirmationPending: boolean }).confirmationPending,
+      true,
+    )
+    assert.match(h.emails.at(-1)!.text, /Hey Saved private name,/)
+    const link = h.emails.at(-1)!.text.match(/https:\/\/example\.org\/login\/api\?\S+/)![0]
+    await h.request(new URL(link).pathname + new URL(link).search, { redirect: 'manual' })
+    assert.equal(h.contacts.get(email)!.first_name, 'Saved private name')
+  } finally {
+    await h.dispose()
+  }
+})
+
+test('native circle verification preserves the entered email and spot in the name step', async () => {
+  const h = await harness()
+  try {
+    const initial = await h.read()
+    const next = await h.request('/circle', {
+      method: 'POST',
+      headers: { Origin: 'https://example.org', Cookie: initial.cookie },
+      body: new URLSearchParams({
+        email: 'new@example.org',
+        spot: '5',
+        intent: 'verify',
+        _csrf: initial.state.csrfToken,
+      }),
+    })
+    assert.equal(next.status, 200)
+    const html = await next.text()
+    assert.match(html, /name="name"[^>]*required/)
+    assert.match(html, /name="email"[^>]*value="new@example.org"/)
+    assert.match(html, /name="spot" value="5"/)
+    assert.equal(h.emails.length, 0)
+  } finally {
+    await h.dispose()
+  }
+})

@@ -94,7 +94,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
     if (value.state) state = value.state
     selected = availableCircleSpot(state, state.selected ?? selected) ?? selected
     feedback = value
-    if (value.type === 'success' && !value.confirmationPending) {
+    if (value.type === 'success' && !value.confirmationPending && !value.nameRequired) {
       expanded = Boolean(state.waiting)
       hasSelection = false
       hasChosen = false

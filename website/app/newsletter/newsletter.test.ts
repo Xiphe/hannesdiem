@@ -61,7 +61,7 @@ function harness() {
   let failTopic = false
   let unsubscribed = true
   let templeSubscribed = false
-  let name = ''
+  let name = 'Synthetic saved name'
   let member = false
   let pagedMembership = false
   const calls: { url: string; method: string; body: Record<string, unknown> | null }[] = []
@@ -143,11 +143,16 @@ function harness() {
     csrfToken: string,
     cookie: string,
     extra?: Record<string, string>,
+    name?: string,
   ) =>
     handle('/login', {
       method: 'POST',
       headers: { Origin: 'https://example.com', Cookie: cookie, ...extra },
-      body: new URLSearchParams({ email, _csrf: csrfToken }),
+      body: new URLSearchParams({
+        email,
+        _csrf: csrfToken,
+        ...(name !== undefined ? { name } : {}),
+      }),
     })
   const confirmation = () => {
     const email = calls.findLast((call) => call.url.endsWith('/emails'))
@@ -227,10 +232,11 @@ test('confirmation is single-use, rotates an opaque session, preserves unsubscri
   const sent = await h.submit(' test@example.org ', initial.csrfToken, initial.cookie)
   assert.equal(sent.status, 303)
   assert.equal(sent.headers.get('Location'), '/login')
-  assert.equal(h.calls.length, 1)
-  assert.deepEqual(h.calls[0].body?.to, ['test@example.org'])
-  assert.match(String(h.calls[0].body?.html), /Confirm Email/)
-  assert.match(String(h.calls[0].body?.html), /https:\/\/example\.com\/login\/api\?token=/)
+  assert.equal(h.calls.filter((call) => call.url.endsWith('/emails')).length, 1)
+  const delivery = h.calls.find((call) => call.url.endsWith('/emails'))!
+  assert.deepEqual(delivery.body?.to, ['test@example.org'])
+  assert.match(String(delivery.body?.html), /Confirm Email/)
+  assert.match(String(delivery.body?.html), /https:\/\/example\.com\/login\/api\?token=/)
 
   const confirmations = await Promise.all([
     h.handle(h.confirmation(), { headers: { Cookie: initial.cookie } }),
@@ -282,13 +288,13 @@ test('cooldown is case-insensitive and expired links cannot subscribe or authent
   const cooldown = await h.submit('TEST@example.org', state.csrfToken!, state.cookie)
   assert.equal(cooldown.status, 429)
   assert.equal(cooldown.headers.get('Retry-After'), '120')
-  assert.equal(h.calls.length, 1)
+  assert.equal(h.calls.filter((call) => call.url.endsWith('/emails')).length, 1)
   h.advance(2 * 60 * 1000)
   assert.equal((await h.submit('test@example.org', state.csrfToken!, state.cookie)).status, 303)
   h.advance(60 * 60 * 1000)
   const expired = await h.handle(originalLink)
   assert.equal(expired.headers.get('Location'), '/login?error=invalid_token')
-  assert.equal(h.calls.filter((call) => !call.url.endsWith('/emails')).length, 0)
+  assert.ok(h.calls.every((call) => call.method === 'GET' || call.url.endsWith('/emails')))
   await h.cleanup()
   assert.ok([...h.storage.entries.keys()].every((key) => key.startsWith('session:')))
 })
@@ -297,13 +303,14 @@ test('new contacts enter both existing segments only after email confirmation', 
   const h = harness()
   h.setExisting(false)
   const state = await h.state()
-  await h.submit('new@example.org', state.csrfToken!, state.cookie)
-  assert.ok(h.calls.every((call) => call.url.endsWith('/emails')))
+  await h.submit('new@example.org', state.csrfToken!, state.cookie, undefined, 'Synthetic new name')
+  assert.ok(h.calls.every((call) => call.method === 'GET' || call.url.endsWith('/emails')))
   const confirmed = await h.handle(h.confirmation())
   assert.equal(confirmed.headers.get('Location'), '/?login_success=true')
   const created = h.calls.find((call) => call.url.endsWith('/contacts') && call.method === 'POST')
   assert.deepEqual(created?.body, {
     email: 'new@example.org',
+    first_name: 'Synthetic new name',
     unsubscribed: false,
     segments: [{ id: 'ebed0ce7-7220-4955-a176-6e2f31acb5bd' }, { id: 'test-newsletter-segment' }],
   })
@@ -381,7 +388,7 @@ test('inline signup returns success and cooldown results without navigation or f
     message: 'Link sent! Please check your email.',
     csrfToken: state.csrfToken,
   })
-  assert.equal(h.calls.length, 1)
+  assert.equal(h.calls.filter((call) => call.url.endsWith('/emails')).length, 1)
   const page = await h.handle('/login', { headers: { Cookie: cookie } })
   assert.doesNotMatch(await page.text(), /Link sent! Please check your email\./)
 
@@ -396,7 +403,7 @@ test('inline signup returns success and cooldown results without navigation or f
     remainingSeconds: 120,
     csrfToken: state.csrfToken,
   })
-  assert.equal(h.calls.length, 1)
+  assert.equal(h.calls.filter((call) => call.url.endsWith('/emails')).length, 1)
 })
 
 test('inline validation, CSRF, and delivery failures preserve a retryable form without sending twice', async () => {
@@ -515,7 +522,7 @@ test('Temple requires a bounded name and email and never enrolls before confirma
       .status,
     400,
   )
-  assert.equal(h.calls.length, 0)
+  assert.ok(h.calls.every((call) => call.method === 'GET'))
   const sent = await h.submitTemple(
     { name: ' Aster ', email: ' aster@example.org ' },
     state.csrfToken!,
@@ -673,26 +680,32 @@ test('Temple escapes names in email HTML, and failed delivery allows a retry', a
   assert.ok(!String(email.html).includes(values.name))
 })
 
-test('Temple native form includes required name and email, preserves failed values, and confirms without JavaScript', async () => {
+test('Temple native form asks for email first, then a missing name, and confirms without JavaScript', async () => {
   const h = harness()
   h.setExisting(false)
   const response = await h.handle(templeNewsletterPath)
   const html = await response.text()
-  assert.match(html, /name="name"[^>]*required/)
+  assert.doesNotMatch(html, /name="name"/)
   assert.match(html, /name="email"[^>]*required/)
   const csrf = html.match(/name="_csrf" value="([^"]+)"/)![1]
   const cookie = cookieFrom(response.headers)!
-  const post = (name: string) =>
+  const post = (name?: string) =>
     h.handle(templeNewsletterPath, {
       method: 'POST',
       headers: { Origin: 'https://example.com', Cookie: cookie },
       body: new URLSearchParams({
-        name,
+        ...(name !== undefined ? { name } : {}),
         email: 'aster@example.org',
         intent: 'subscribe',
         _csrf: csrf,
       }),
     })
+  const next = await post()
+  assert.equal(next.status, 200)
+  const nameForm = await next.text()
+  assert.match(nameForm, /name="name"[^>]*required/)
+  assert.ok(nameForm.includes('aster@example.org'))
+  assert.ok(h.calls.every((call) => call.method === 'GET'))
   const invalid = await post(' ')
   assert.equal(invalid.status, 400)
   assert.ok((await invalid.text()).includes('aster@example.org'))
@@ -752,6 +765,7 @@ test('an older verified contact can opt in and confirm reactivation without addi
   h.setUnsubscribed(false)
   const initial = await h.state()
   await h.submit('aster@example.org', initial.csrfToken!, initial.cookie)
+  h.setName('')
   const login = await h.handle(h.confirmation())
   const user = await h.templeState(cookieFrom(login.headers))
   assert.equal((await h.submitTemple({}, user.csrfToken!, user.cookie)).status, 200)
@@ -763,3 +777,141 @@ test('an older verified contact can opt in and confirm reactivation without addi
   assert.equal(current.unsubscribed, false)
   assert.equal(current.subscribed, true)
 })
+
+for (const path of ['/login', templeNewsletterPath]) {
+  for (const exists of [false, true]) {
+    test(`${path} asks for a missing name before sending and stores it only after verification (${exists ? 'existing' : 'new'} contact)`, async () => {
+      const h = harness()
+      h.setExisting(exists)
+      h.setName('   ')
+      h.setUnsubscribed(false)
+      const initial = await h.state()
+      const post = (name?: string) =>
+        h.handle(path, {
+          method: 'POST',
+          headers: {
+            Origin: 'https://example.com',
+            Cookie: initial.cookie,
+            Accept: 'application/json',
+          },
+          body: new URLSearchParams({
+            email: ' ASTER@example.org ',
+            intent: 'subscribe',
+            _csrf: initial.csrfToken!,
+            ...(name !== undefined ? { name } : {}),
+          }),
+        })
+      const next = await post()
+      assert.equal(next.status, 200)
+      assert.equal(((await next.json()) as { nameRequired: boolean }).nameRequired, true)
+      assert.ok(h.calls.every((call) => call.method === 'GET'))
+      assert.ok([...h.storage.entries.keys()].every((key) => key.startsWith('session:')))
+      assert.equal((await post(' ')).status, 400)
+      assert.equal((await post('x'.repeat(121))).status, 400)
+      const sent = await post(' Aster ')
+      assert.equal(sent.status, 200)
+      assert.ok(h.calls.every((call) => call.method === 'GET' || call.url.endsWith('/emails')))
+      assert.equal((await h.handle(h.confirmation())).status, 303)
+      const profile = h.calls.findLast((call) => call.body?.first_name)
+      assert.equal(profile?.body?.first_name, 'Aster')
+      assert.equal(profile?.method, exists ? 'PATCH' : 'POST')
+    })
+  }
+  test(`${path} sends directly for a saved name and never overwrites it with an anonymous submission`, async () => {
+    const h = harness()
+    h.setName('Saved private name')
+    h.setUnsubscribed(false)
+    const initial = await h.state()
+    const post = (name?: string) =>
+      h.handle(path, {
+        method: 'POST',
+        headers: {
+          Origin: 'https://example.com',
+          Cookie: initial.cookie,
+          Accept: 'application/json',
+        },
+        body: new URLSearchParams({
+          email: ' ASTER@example.org ',
+          intent: 'subscribe',
+          _csrf: initial.csrfToken!,
+          ...(name ? { name } : {}),
+        }),
+      })
+    const direct = await post()
+    assert.equal(direct.status, 200)
+    assert.equal(((await direct.json()) as { nameRequired?: boolean }).nameRequired, undefined)
+    assert.equal(h.calls.filter((call) => call.url.endsWith('/emails')).length, 1)
+    h.advance(120_000)
+    assert.equal((await post('Changed name')).status, 200)
+    await h.handle(h.confirmation())
+    assert.ok(h.calls.every((call) => !call.body?.first_name))
+  })
+  test(`${path} does not send or request a name when the profile lookup fails`, async () => {
+    const h = harness()
+    h.setFailContact(true)
+    const initial = await h.state()
+    const response = await h.handle(path, {
+      method: 'POST',
+      headers: {
+        Origin: 'https://example.com',
+        Cookie: initial.cookie,
+        Accept: 'application/json',
+      },
+      body: new URLSearchParams({
+        email: 'aster@example.org',
+        intent: 'subscribe',
+        _csrf: initial.csrfToken!,
+      }),
+    })
+    assert.equal(response.status, 503)
+    assert.equal(((await response.json()) as { nameRequired?: boolean }).nameRequired, undefined)
+    assert.ok(h.calls.every((call) => call.method === 'GET'))
+  })
+}
+
+test('general native login preserves the email and missing name across validation and delivery failures', async () => {
+  const h = harness()
+  h.setName('')
+  const initial = await h.state()
+  const post = (name?: string) =>
+    h.handle('/login', {
+      method: 'POST',
+      headers: { Origin: 'https://example.com', Cookie: initial.cookie },
+      body: new URLSearchParams({
+        email: 'aster@example.org',
+        _csrf: initial.csrfToken!,
+        ...(name !== undefined ? { name } : {}),
+      }),
+    })
+  const next = await post()
+  assert.equal(next.status, 200)
+  assert.match(await next.text(), /name="name"[^>]*required/)
+  const invalid = await post(' ')
+  assert.equal(invalid.status, 400)
+  assert.match(await invalid.text(), /value="aster@example.org"/)
+  h.setFailDelivery(true)
+  const failed = await post('Aster')
+  assert.equal(failed.status, 503)
+  assert.match(await failed.text(), /name="name"/)
+})
+
+for (const path of ['/login', templeNewsletterPath]) {
+  test(`${path} keeps existing names out of anonymous HTML and accepts long saved names`, async () => {
+    const h = harness()
+    const privateName = 'Synthetic private name '.repeat(8)
+    h.setName(privateName)
+    const initial = await h.state()
+    const response = await h.handle(path, {
+      method: 'POST',
+      headers: { Origin: 'https://example.com', Cookie: initial.cookie },
+      body: new URLSearchParams({
+        email: 'aster@example.org',
+        intent: 'subscribe',
+        _csrf: initial.csrfToken!,
+      }),
+    })
+    assert.equal(response.status, path === '/login' ? 303 : 200)
+    assert.ok(!(await response.text()).includes('Synthetic private name'))
+    assert.equal(h.calls.filter((call) => call.url.endsWith('/emails')).length, 1)
+  })
+}

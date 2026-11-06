@@ -1,4 +1,4 @@
-import { on, type Handle } from 'remix/component'
+import { on, ref, type Handle } from 'remix/component'
 import { templeMessages } from '../newsletter/contract.ts'
 import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
 import {
@@ -16,6 +16,10 @@ type FieldsProps = {
   pending?: boolean
   moving?: boolean
   aliasValue?: string
+  emailValue?: string
+  nameValue?: string
+  nameRequired?: boolean
+  onEmail?: (value: string) => void
   onAlias?: (value: string) => void
   close?: () => void | Promise<void>
   submit?: (event: SubmitEvent) => void
@@ -28,6 +32,10 @@ export function CircleFields({
   pending,
   moving,
   aliasValue,
+  emailValue = result?.emailValue,
+  nameValue = result?.nameValue,
+  nameRequired = result?.nameRequired,
+  onEmail,
   onAlias,
   close,
   submit,
@@ -89,21 +97,28 @@ export function CircleFields({
               <p class="circle-login-explanation">Please log in via your email to join us</p>
               {!loggedIn && (
                 <>
-                  <label>
-                    Name
-                    <input
-                      name="name"
-                      required
-                      autoComplete="name"
-                      maxLength={120}
-                      disabled={pending}
-                    />
-                  </label>
+                  {nameRequired && (
+                    <label>
+                      Name
+                      <input
+                        name="name"
+                        defaultValue={nameValue}
+                        required
+                        autoComplete="name"
+                        maxLength={120}
+                        disabled={pending}
+                      />
+                    </label>
+                  )}
                   <label>
                     Email address
                     <input
                       type="email"
                       name="email"
+                      defaultValue={emailValue}
+                      mix={on<HTMLInputElement, 'input'>('input', (event) =>
+                        onEmail?.(event.currentTarget.value),
+                      )}
                       required
                       autoComplete="email"
                       maxLength={254}
@@ -202,6 +217,10 @@ export interface CirclePanelProps extends FieldsProps {
 export function CirclePanel(handle: Handle<CirclePanelProps>) {
   let pending = false
   let result = handle.props.result
+  let nameRequired = result?.nameRequired ?? false
+  let emailValue = result?.emailValue ?? ''
+  let nameValue = result?.nameValue ?? ''
+  let panelElement: HTMLDivElement | undefined
   let identity = handle.props.state.email
   let alias = handle.props.state.own?.alias ?? handle.props.state.name ?? ''
   async function submit(event: SubmitEvent) {
@@ -209,6 +228,8 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
     if (pending) return
     const form = event.currentTarget as HTMLFormElement
     const body = new FormData(form, event.submitter)
+    emailValue = String(body.get('email') ?? emailValue)
+    nameValue = String(body.get('name') ?? nameValue)
     pending = true
     result = undefined
     void handle.update()
@@ -225,6 +246,7 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
       if (!['success', 'error'].includes(value.type) || typeof value.message !== 'string')
         throw new Error('Invalid circle response')
       result = value
+      nameRequired = value.nameRequired ?? (value.type === 'success' ? false : nameRequired)
       handle.props.onResult?.(value)
     } catch {
       if (handle.signal.aborted) return
@@ -232,7 +254,9 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
     } finally {
       if (!handle.signal.aborted) {
         pending = false
-        void handle.update()
+        await handle.update()
+        if (result?.nameRequired)
+          panelElement?.querySelector<HTMLInputElement>('[name="name"]')?.focus()
       }
     }
   }
@@ -245,6 +269,9 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
     return (
       <div
         class="temple-signup circle-signup"
+        mix={ref((node) => {
+          panelElement = node
+        })}
         data-floating=""
       >
         <PiecePanel
@@ -257,6 +284,18 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
             result,
             pending,
             submit,
+            emailValue,
+            nameValue,
+            nameRequired,
+            onEmail: (value) => {
+              emailValue = value
+              if (nameRequired) {
+                nameRequired = false
+                nameValue = ''
+                result = undefined
+                void handle.update()
+              }
+            },
             aliasValue: alias,
             onAlias: (value) => {
               alias = value

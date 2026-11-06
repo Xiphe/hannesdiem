@@ -29,6 +29,8 @@ import type { NewsletterEnvironment, NewsletterServices } from './config.ts'
 import { storageClient, digest, tokenPattern, type NewsletterIdentity } from './storage.ts'
 import {
   sendConfirmation,
+  readNewsletterContact,
+  signupName,
   isTempleMember,
   ensureTempleProfile,
   ensureNewsletterContact,
@@ -41,7 +43,7 @@ const loginForm = f.object({
   email: f.field(
     s
       .string()
-      .transform((value) => value.trim())
+      .transform((value) => value.trim().toLowerCase())
       .pipe(checks.email(), checks.maxLength(254)),
   ),
 })
@@ -126,9 +128,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
     const authenticatedEmail = context.session.get('email')
     const signedIn = typeof authenticatedEmail === 'string'
     const email = signedIn ? authenticatedEmail : context.formData.get('email')
-    const contact = signedIn
-      ? await readTempleContact(authenticatedEmail, env, services)
-      : undefined
+    let contact = signedIn ? await readTempleContact(authenticatedEmail, env, services) : undefined
     if (signedIn)
       Object.assign(state, {
         email,
@@ -137,16 +137,19 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
         unsubscribed: contact!.unsubscribed,
       })
     const intent = context.formData.get('intent')
-    const rawName = context.formData.get('name') ?? contact?.name ?? ''
-    const name = typeof rawName === 'string' ? rawName.trim() : ''
+    const rawName = context.formData.get('name')
+    let name = signupName(contact ?? { name: '' }, rawName)
     const reply = (result: TempleNewsletterResult, status = 200, headers?: HeadersInit) =>
       json
         ? Response.json({ ...result, csrfToken: state.csrfToken }, { status, headers })
         : context.render(
             TempleNewsletterPage({
               state: result.state ?? state,
-              result,
-              nameValue: name,
+              result: {
+                ...(rawName !== null && result.type !== 'success' ? { nameRequired: true } : {}),
+                ...result,
+              },
+              nameValue: typeof rawName === 'string' ? rawName.trim() : '',
               emailValue: typeof email === 'string' ? email : '',
             }),
             { status, headers },
@@ -162,12 +165,21 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
         state: { ...state, subscribed: false },
       })
     }
-    if ((!signedIn && !name) || name.length > 120)
-      return reply({ type: 'error', message: 'Please enter your name.' }, 400)
     values.set('email', typeof email === 'string' ? email : '')
     const parsed = s.parseSafe(loginForm, values)
     if (!parsed.success)
       return reply({ type: 'error', message: 'Please enter your email address.' }, 400)
+    contact ??= await readTempleContact(parsed.value.email, env, services)
+    name = signupName(contact, rawName)
+    if ((!signedIn && !name) || (!contact.name && name.length > 120))
+      return reply(
+        {
+          type: rawName === null ? 'success' : 'error',
+          message: 'Please enter your name.',
+          nameRequired: true,
+        },
+        rawName === null ? 200 : 400,
+      )
     if (signedIn && !contact!.unsubscribed) {
       await subscribeTemple(authenticatedEmail, name, env, services)
       return reply({
@@ -182,7 +194,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
     const tokenHash = await digest(token)
     const issued = await call('/tokens/issue', {
       email: parsed.value.email,
-      name,
+      name: contact.name ? '' : name,
       scope: 'temple',
       tokenHash,
     })
@@ -203,7 +215,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       const link = new URL('/login/api', context.url)
       link.searchParams.set('token', token)
       link.searchParams.set('scope', 'temple')
-      const recipient = contact ?? (await readTempleContact(parsed.value.email, env, services))
+      const recipient = contact
       await sendConfirmation(parsed.value.email, link.href, tokenHash, env, services, {
         name: recipient.name,
         returning: recipient.exists && (await isTempleMember(parsed.value.email, env, services)),
@@ -223,10 +235,23 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       typeof context.formData.get('email') === 'string'
         ? String(context.formData.get('email'))
         : undefined
+    const rawName = context.formData.get('name')
+    const nameValue = typeof rawName === 'string' ? rawName.trim() : ''
     const resultResponse = (result: NewsletterResult, status: number, headers?: HeadersInit) =>
       json
         ? Response.json({ ...result, csrfToken: state.csrfToken }, { status, headers })
-        : context.render(NewsletterPage({ state, result, emailValue }), { status, headers })
+        : context.render(
+            NewsletterPage({
+              state,
+              result: {
+                ...(rawName !== null && result.type !== 'success' ? { nameRequired: true } : {}),
+                ...result,
+              },
+              emailValue,
+              nameValue,
+            }),
+            { status, headers },
+          )
     if (!parsed.success)
       return resultResponse(
         {
@@ -237,11 +262,22 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       )
 
     const email = parsed.value.email
+    const contact = await readNewsletterContact(email, env, services)
+    const name = signupName(contact, rawName)
+    if (!name || (!contact.name && name.length > 120))
+      return resultResponse(
+        {
+          type: rawName === null ? 'success' : 'error',
+          message: 'Please enter your name.',
+          nameRequired: true,
+        },
+        rawName === null ? 200 : 400,
+      )
     const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
       byte.toString(16).padStart(2, '0'),
     ).join('')
     const tokenHash = await digest(token)
-    const issued = await call('/tokens/issue', { email, tokenHash })
+    const issued = await call('/tokens/issue', { email, name: contact.name ? '' : name, tokenHash })
     if (issued.status === 429) {
       const { remainingSeconds } = (await issued.json()) as { remainingSeconds: number }
       return resultResponse(
@@ -300,7 +336,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
         // Verification stores the private profile; only claiming subscribes the topic.
         await ensureTempleProfile(email, name ?? '', env, services)
       } else if (scope === 'temple') await subscribeTemple(email, name ?? '', env, services, true)
-      else await ensureNewsletterContact(email, env, services)
+      else await ensureNewsletterContact(email, env, services, name)
     } catch {
       return failure('verification_failed')
     }

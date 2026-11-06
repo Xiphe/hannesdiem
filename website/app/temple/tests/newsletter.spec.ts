@@ -38,8 +38,16 @@ test('Temple signup validates name, floats through retry and updates after confi
           ? { ...anonymous, email: address, name: 'Aster', subscribed: true, unsubscribed: false }
           : anonymous,
       })
-    submits++
     const data = await submittedFields(route)
+    if (!data.has('name'))
+      return route.fulfill({
+        json: {
+          type: 'success',
+          message: 'Synthetic missing name.',
+          nameRequired: true,
+        },
+      })
+    submits++
     expect(data.get('name')).toBe('Aster')
     expect(data.get('email')).toBe(address)
     expect(data.get('_csrf')).toBe(anonymous.csrfToken)
@@ -57,9 +65,11 @@ test('Temple signup validates name, floats through retry and updates after confi
     })
   })
   const signup = await openSignup(page)
-  await expect(signup.getByLabel('Name', { exact: true })).toHaveAttribute('required', '')
+  await expect(signup.getByLabel('Name', { exact: true })).toHaveCount(0)
   await signup.getByLabel('Email address').fill(address)
   await signup.getByRole('button', { name: 'Fixture pending action' }).click()
+  await expect(signup.getByLabel('Name', { exact: true })).toBeFocused()
+  await expect(signup.getByLabel('Name', { exact: true })).toHaveAttribute('required', '')
   expect(submits).toBe(0)
   await signup.getByLabel('Name', { exact: true }).fill('Aster')
   await signup.getByLabel('Name', { exact: true }).press('Escape')
@@ -219,10 +229,10 @@ test('Temple signup can recover when loading private state fails', async ({ page
     ),
   )
   const signup = await openSignup(page)
-  await expect(signup.getByLabel('Name', { exact: true })).toBeDisabled()
+  await expect(signup.getByLabel('Email address')).toBeDisabled()
   fail = false
   await signup.getByRole('button', { name: 'Retry', exact: true }).click()
-  await expect(signup.getByLabel('Name', { exact: true })).toBeEnabled()
+  await expect(signup.getByLabel('Email address')).toBeEnabled()
 })
 
 test('a verified subscriber can unsubscribe even when their older contact has no name', async ({
@@ -247,11 +257,25 @@ for (const width of [390, 1440]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
-    await page.route(endpoint, (route) => route.fulfill({ json: anonymous }))
+    await page.route(endpoint, (route) =>
+      route.fulfill({
+        json:
+          route.request().method() === 'GET'
+            ? anonymous
+            : {
+                type: 'success',
+                message: 'Synthetic missing name.',
+                nameRequired: true,
+              },
+      }),
+    )
     await page.goto('/temple-of-sound/watch')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
     const signup = page.locator('.fact-followup-action .temple-signup')
     await signup.getByRole('link', { name: 'Fixture pending action' }).click()
+    await signup.getByLabel('Email address').fill(address)
+    await signup.getByRole('button', { name: 'Fixture pending action' }).click()
+    await expect(signup.getByLabel('Name', { exact: true })).toBeVisible()
     const dialog = signup.getByRole('dialog')
     await expect(dialog).toBeVisible()
     await dialog.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }))
@@ -350,7 +374,6 @@ test('mobile Watch piece fills 90% of the viewport and shows a spinner during se
   expect(box!.width).toBeCloseTo(390 * 0.9, 0)
   expect(box!.x).toBeGreaterThanOrEqual(0)
   expect(box!.x + box!.width).toBeLessThanOrEqual(390)
-  await signup.getByLabel('Name', { exact: true }).fill('Aster')
   await signup.getByLabel('Email address').fill(address)
   await signup.getByRole('button', { name: 'Fixture pending action' }).click()
   await expect(signup.locator('.temple-loading-spinner')).toBeVisible()

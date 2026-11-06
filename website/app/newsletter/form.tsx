@@ -17,6 +17,7 @@ export interface NewsletterFormProps {
   signup?: boolean
   result?: NewsletterResult
   emailValue?: string
+  nameValue?: string
 }
 
 function NewsletterIcon(
@@ -114,6 +115,9 @@ async function readNewsletterState(signal: AbortSignal): Promise<NewsletterState
 function NewsletterForm(handle: Handle<NewsletterFormProps>) {
   let result = handle.props.result
   let emailValue = handle.props.emailValue ?? ''
+  let nameValue = handle.props.nameValue ?? ''
+  let nameRequired = result?.nameRequired ?? false
+  let formElement: HTMLFormElement | undefined
   let csrfToken = handle.props.state.csrfToken ?? ''
   let pending = false
   let remainingSeconds = result?.type === 'spam_protection' ? result.remainingSeconds : 0
@@ -145,6 +149,7 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
     const form = event.currentTarget as HTMLFormElement
     const body = new FormData(form)
     emailValue = String(body.get('email') ?? '')
+    nameValue = String(body.get('name') ?? nameValue)
     pending = true
     void handle.update()
     try {
@@ -158,6 +163,7 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
           signal: handle.signal,
         }),
       )
+      nameRequired = result.nameRequired ?? (result.type === 'success' ? false : nameRequired)
       csrfToken = result.csrfToken ?? csrfToken
       remainingSeconds = result.type === 'spam_protection' ? result.remainingSeconds : 0
       startCountdown()
@@ -167,7 +173,9 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
     } finally {
       if (!handle.signal.aborted) {
         pending = false
-        void handle.update()
+        await handle.update()
+        if (result?.nameRequired)
+          formElement?.querySelector<HTMLInputElement>('[name="name"]')?.focus()
       }
     }
   }
@@ -181,7 +189,12 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
         method="post"
         action="/login"
         aria-busy={pending}
-        mix={on<HTMLFormElement, 'submit'>('submit', submit)}
+        mix={[
+          on<HTMLFormElement, 'submit'>('submit', submit),
+          ref((node) => {
+            formElement = node
+          }),
+        ]}
       >
         <input
           type="hidden"
@@ -200,7 +213,7 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
             </li>
           </ul>
         )}
-        {result?.type !== 'success' && (
+        {(result?.type !== 'success' || nameRequired) && (
           <>
             <label
               class="sr-only"
@@ -208,7 +221,10 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
             >
               Email address
             </label>
-            <div class="newsletter-controls">
+            <div
+              class="newsletter-controls"
+              data-name-required={nameRequired ? '' : undefined}
+            >
               <input
                 id={signup ? 'newsletter-email' : 'login-email'}
                 name="email"
@@ -218,10 +234,39 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
                 required
                 disabled={disabled}
                 defaultValue={emailValue}
+                mix={on<HTMLInputElement, 'input'>('input', (event) => {
+                  emailValue = event.currentTarget.value
+                  if (nameRequired) {
+                    nameRequired = false
+                    nameValue = ''
+                    result = undefined
+                    void handle.update()
+                  }
+                })}
                 placeholder={
                   signup ? 'Enter your email for updates...' : 'Enter your email address'
                 }
               />
+              {nameRequired && (
+                <>
+                  <label
+                    class="sr-only"
+                    htmlFor={signup ? 'newsletter-name' : 'login-name'}
+                  >
+                    Name
+                  </label>
+                  <input
+                    id={signup ? 'newsletter-name' : 'login-name'}
+                    name="name"
+                    placeholder="Name"
+                    autoComplete="name"
+                    required
+                    maxLength={120}
+                    defaultValue={nameValue}
+                    disabled={disabled}
+                  />
+                </>
+              )}
               <button
                 type="submit"
                 disabled={disabled}
