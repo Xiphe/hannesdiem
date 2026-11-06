@@ -234,7 +234,8 @@
   height: 40px;
 }
 @media (width > 1050px) {
-  html[data-layout='temple'] [data-navigation-panel] {
+  html[data-layout='temple']:not(:has(.temple-artwork[data-temple-view='poem']))
+    [data-navigation-panel] {
     --navigation-slide-offset: 100%;
     margin-left: auto;
   }

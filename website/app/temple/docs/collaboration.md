@@ -15,11 +15,13 @@ synthetic browser checks pass. Local review uses simulated Resend on 8787;
 
 **Main menu follows its trigger — 2026-11-06.** The artist reports that the
 sidebar always enters from the left and requests that it use the logo's side.
-Keep the left entrance on screens up to 1050px; above that breakpoint, align
-the panel right and slide it in and out through the right edge. Reuse the
-native dialog and its CSS transitions. Synthetic browser checks cover both
-animation directions at five widths, keyboard focus, and resizing the open
-menu without JavaScript under reduced motion. Local review on 8787 with
+The artist later reports the start page's left logo opening a right sidebar:
+screen width alone does not determine the trigger's side. Keep the poem start
+page's menu on the left at every width. Other Temple headers use the left up
+to 1050px and the right above that breakpoint. Reuse the native dialog and its
+CSS transitions. Synthetic browser checks measure the logo and both animation
+directions across all three header layouts at five widths, keyboard focus,
+and native opening without JavaScript. Local review on 8787 with
 `sand tunnel 8787`.
 
 **Restore transport icon position, then deploy — 2026-11-06.** The artist

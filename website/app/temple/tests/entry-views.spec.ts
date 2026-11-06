@@ -104,6 +104,13 @@ test('native practical and poem views remain readable without JavaScript', async
         .getByRole('link', { name: 'Enter the Temple of Sound', exact: true }),
     ).toBeVisible()
     await expect(page.locator('.facts-grid,.fact-story')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Open menu', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
+    await expect(dialog).toBeVisible()
+    await expect
+      .poll(async () => (await dialog.locator('[data-navigation-panel]').boundingBox())!.x)
+      .toBeCloseTo(0, 0)
+    await dialog.getByRole('button', { name: 'Close navigation' }).click()
     await page.goto('/temple-of-sound/watch')
     await expect(page.locator('.temple-opening,.first-pair')).toHaveCount(0)
     await expect(page.locator('#watch')).toBeVisible()
