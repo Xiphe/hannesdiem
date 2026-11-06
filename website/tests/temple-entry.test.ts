@@ -4,7 +4,6 @@ import {
   hasEnteredTemple,
   rememberTempleEntry,
   templeEntryStorageKey,
-  watchReturnHref,
 } from '../app/temple/entry-state.ts'
 
 test('Temple entry is an explicit persisted preference shared with the feed return', () => {
@@ -19,13 +18,11 @@ test('Temple entry is an explicit persisted preference shared with the feed retu
   })
   try {
     assert.equal(hasEnteredTemple(), false)
-    assert.equal(watchReturnHref(), '/temple-of-sound')
     values.set(templeEntryStorageKey, 'false')
     assert.equal(hasEnteredTemple(), false)
     rememberTempleEntry()
     assert.equal(values.get('hannesdiem.temple.entered'), 'true')
     assert.equal(hasEnteredTemple(), true)
-    assert.equal(watchReturnHref(), '/temple-of-sound/watch')
   } finally {
     if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor)
     else Reflect.deleteProperty(globalThis, 'localStorage')
@@ -43,7 +40,6 @@ test('unavailable browser storage leaves Temple entry and feed return usable', (
   try {
     assert.equal(hasEnteredTemple(), false)
     assert.doesNotThrow(rememberTempleEntry)
-    assert.equal(watchReturnHref(), '/temple-of-sound')
   } finally {
     if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor)
     else Reflect.deleteProperty(globalThis, 'localStorage')

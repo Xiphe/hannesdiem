@@ -1,7 +1,7 @@
 # Piece tooltip
 
-The artist-approved irregular tooltip material, saved for reuse independently of
-the Create prototype. It has no authored page copy or active page placement.
+The artist-approved irregular tooltip material, extracted from the Create
+prototype. `../top-navigation.tsx` uses it for pending navigation destinations.
 
 Import `PieceTooltip` from `view.tsx` inside a hydrated Remix component and include
 `piece-tooltip/style.css` in that feature's stylesheet:

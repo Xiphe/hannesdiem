@@ -16,7 +16,3 @@ export function rememberTempleEntry() {
     // Privacy settings may block storage without preventing a Temple visit.
   }
 }
-
-export function watchReturnHref() {
-  return hasEnteredTemple() ? '/temple-of-sound/watch' : '/temple-of-sound'
-}

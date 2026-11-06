@@ -8,6 +8,7 @@ The last complete proxy checkpoint is `ed03a03` on
 `codex/temple-watch-exploration`. The original A/B studies are at `7212ac6`.
 Use Git history for discarded controls and the standalone proxy.
 
-“Get notified” remains disabled until the dedicated Temple audience/signup is
-implemented. The Create contact action opens the supplied email address.
-The reusable tooltip is preserved separately in `../piece-tooltip/`.
+The checkpoint predates the dedicated Temple audience/signup implementation;
+its disabled “Get notified” action records that historical state. Current signup
+behavior lives in `../facts/` and `../../newsletter/`. The reusable tooltip lives
+in `../piece-tooltip/` and is used by the current top navigation.

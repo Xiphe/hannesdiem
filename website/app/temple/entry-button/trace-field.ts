@@ -98,7 +98,3 @@ export function traceSample(field: TraceField, distance: number, perimeter: numb
     blue: light ? blue / light : 229,
   }
 }
-
-export function traceLight(field: TraceField, distance: number, perimeter: number) {
-  return traceSample(field, distance, perimeter).light
-}
