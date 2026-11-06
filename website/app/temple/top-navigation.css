@@ -406,19 +406,8 @@
   inset: 0;
   z-index: -1;
   --temple-nav-ground: light-dark(var(--temple-ground-light), #030503);
-  /* Leave the hint clear using solid fills; clipping this layer disrupts WebKit's fade. */
-  background:
-    linear-gradient(var(--temple-nav-ground) 0 0) 0 0 / 100% var(--temple-nav-hint-edge, 100%)
-      no-repeat,
-    linear-gradient(var(--temple-nav-ground) 0 0) 0 0 / var(--temple-nav-hint-left, 0px) 100%
-      no-repeat,
-    linear-gradient(var(--temple-nav-ground) 0 0) 100% 0 /
-      calc(100% - var(--temple-nav-hint-right, 100%)) 100% no-repeat;
+  background: var(--temple-nav-ground);
   pointer-events: none;
-}
-.temple-artwork[data-temple-view='poem']
-  .temple-top-navigation[data-nav-visible]:not([data-nav-hint-covered])::before {
-  --temple-nav-hint-edge: var(--temple-nav-action-bottom, 100%);
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before,
 .temple-artwork[data-temple-view='poem'] .temple-nav-logo {

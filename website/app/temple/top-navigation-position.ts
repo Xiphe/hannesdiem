@@ -30,68 +30,78 @@ export function mountNavigationPosition(host: HTMLElement, signal: AbortSignal) 
     const visible = entry
       ? entry.getBoundingClientRect().top <= (header.offsetHeight - entry.offsetHeight) / 2
       : stage.getBoundingClientRect().top < 0
-    const actionBox = hint && fixed ? fixed.getBoundingClientRect() : undefined
-    const headerBox = actionBox ? header.getBoundingClientRect() : undefined
-    const hintBox = actionBox ? hint!.getBoundingClientRect() : undefined
-    const hintCovered = visible && hintBox && actionBox && hintBox.bottom <= actionBox.bottom
-    const changing = previous !== undefined && previous !== visible && entry && fixed
+    const headerBox = hint ? header.getBoundingClientRect() : undefined
+    const hintBox = hint?.getBoundingClientRect()
+    const hintCovered = visible && hintBox && headerBox && hintBox.bottom <= headerBox.bottom
+    const changing = previous !== undefined && previous !== visible
     const source = visible ? entry : fixed
     const target = visible ? fixed : entry
-    // Read the current painted geometry before reversing an unfinished handoff.
-    const from = changing && source ? source.getBoundingClientRect() : undefined
-    const padding = from && source ? getComputedStyle(source) : undefined
-    const fromPaddingStart = padding?.paddingInlineStart
-    const fromPaddingEnd = padding?.paddingInlineEnd
-    const sourceExtra = changing
-      ? source?.querySelector<HTMLElement>('.temple-enter-label-extra')
-      : undefined
-    const fromExtraWidth = sourceExtra?.getBoundingClientRect().width ?? 0
-    const fromExtraOpacity = sourceExtra ? getComputedStyle(sourceExtra).opacity : '0'
+    const animate =
+      changing && source && target && !matchMedia('(prefers-reduced-motion: reduce)').matches
+    // Capture the painted pose before cancellation so a reversal starts in place.
+    const from = animate ? source.getBoundingClientRect() : undefined
+    const fromLabel = animate ? source.querySelector('span')?.getBoundingClientRect() : undefined
+    const fromExtra = animate ? source.querySelector('.temple-enter-label-extra') : null
+    const fromOpacity = fromExtra ? Number(getComputedStyle(fromExtra).opacity) : 0
     if (changing) cancelMotion()
-    // Measure both buttons before the visibility switch to preserve native header fades.
-    const animate = from && target && !matchMedia('(prefers-reduced-motion: reduce)').matches
     const to = animate ? target.getBoundingClientRect() : undefined
-    const toPadding = animate ? getComputedStyle(target) : undefined
-    const toPaddingStart = toPadding?.paddingInlineStart
-    const toPaddingEnd = toPadding?.paddingInlineEnd
+    const label = animate ? target.querySelector<HTMLElement>('span') : null
     const extra = animate ? target.querySelector<HTMLElement>('.temple-enter-label-extra') : null
-    const toExtraWidth = extra?.scrollWidth ?? 0
-    // Let the hint scroll behind the opaque action before keeping it out of the top gap.
-    if (actionBox && headerBox && hintBox) {
-      header.style.setProperty(
-        '--temple-nav-action-bottom',
-        `${actionBox.bottom - headerBox.top}px`,
-      )
-      header.style.setProperty('--temple-nav-hint-left', `${hintBox.left - headerBox.left}px`)
-      header.style.setProperty('--temple-nav-hint-right', `${hintBox.right - headerBox.left}px`)
-    }
+    const toLabel = label?.getBoundingClientRect()
+    const toExtra = extra?.getBoundingClientRect()
     if (visible) header.dataset.navEntered = ''
     header.toggleAttribute('data-nav-visible', visible)
     header.toggleAttribute('data-nav-hint-covered', Boolean(hintCovered))
     previous = visible
-    if (!from || !target || !to || !extra) return
+    if (!from || !fromLabel || !to || !toLabel || !toExtra || !target || !label || !extra) return
+    // Transform the painted outline only. Native widths stay fixed, so the
+    // glimmer canvas never reallocates while the silhouette changes width.
+    const fromCenter = from.left + from.width / 2
+    const toCenter = to.left + to.width / 2
+    const ratio = from.width / to.width
+    // Sample reciprocal text scales on the same easing curve to keep glyphs
+    // sharp and undistorted, with Enter gliding from its current position.
+    const frames = Array.from({ length: 17 }, (_, index) => {
+      const t = index / 16
+      const scale = ratio + (1 - ratio) * t
+      const center = fromCenter + (toCenter - fromCenter) * t
+      const left = fromLabel.left + (toLabel.left - fromLabel.left) * t
+      const labelX = (left - center) / scale - (toLabel.left - toCenter)
+      const extraX = (left + toLabel.width - center) / scale - (toExtra.left - toCenter)
+      const visibleExtra = Math.max(0, center + (to.width * scale) / 2 - 8 - left - toLabel.width)
+      return {
+        outline: {
+          offset: t,
+          transformOrigin: '50% 50%',
+          transform: `translateX(${center - toCenter}px) scaleX(${scale})`,
+        },
+        label: {
+          offset: t,
+          transformOrigin: '0 50%',
+          transform: `translateX(${labelX}px) scaleX(${1 / scale})`,
+        },
+        extra: {
+          offset: t,
+          transformOrigin: '0 50%',
+          overflow: 'visible',
+          clipPath: `inset(-4px ${toExtra.width - visibleExtra}px -4px 0px)`,
+          transform: `translateX(${extraX}px) scaleX(${1 / scale})`,
+          opacity: fromOpacity + (Number(visible) - fromOpacity) * t,
+        },
+      }
+    })
     const timing = { duration: 420, easing: 'cubic-bezier(.2,.7,.2,1)' }
     motions = [
       target.animate(
-        [
-          {
-            width: `${from.width}px`,
-            paddingInlineStart: fromPaddingStart,
-            paddingInlineEnd: fromPaddingEnd,
-          },
-          {
-            width: `${to.width}px`,
-            paddingInlineStart: toPaddingStart,
-            paddingInlineEnd: toPaddingEnd,
-          },
-        ],
+        frames.map((frame) => frame.outline),
+        timing,
+      ),
+      label.animate(
+        frames.map((frame) => frame.label),
         timing,
       ),
       extra.animate(
-        [
-          { maxWidth: `${fromExtraWidth}px`, opacity: fromExtraOpacity },
-          { maxWidth: visible ? `${toExtraWidth}px` : '0px', opacity: visible ? '1' : '0' },
-        ],
+        frames.map((frame) => frame.extra),
         timing,
       ),
     ]
@@ -114,9 +124,6 @@ export function mountNavigationPosition(host: HTMLElement, signal: AbortSignal) 
       header.removeAttribute('data-nav-visible')
       header.removeAttribute('data-nav-entered')
       header.removeAttribute('data-nav-hint-covered')
-      header.style.removeProperty('--temple-nav-action-bottom')
-      header.style.removeProperty('--temple-nav-hint-left')
-      header.style.removeProperty('--temple-nav-hint-right')
     },
     { once: true },
   )

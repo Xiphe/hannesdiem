@@ -1,5 +1,637 @@
 # Temple of Sound: client–artist collaboration
 
+**Smooth transformed handoff; hint behind the full bar — 2026-11-06.** The
+artist supplies a screenshot of the hint showing through the header and asks
+for a smoother transition than the immediate width switch. Supersede the
+previous opacity-only handoff. Remove the header backdrop's intentional hint
+cutout and its per-scroll CSS coordinates; use a full rectangular background.
+Hide the hint once it is entirely above the bar's bottom, rather than above
+the action's bottom. Keep native occlusion and the header/logo fades.
+
+Morph the painted button outline over420ms with translate/scale transforms,
+keeping native button and label layout widths fixed. Counter-scale the two
+existing text spans on matching sampled keyframes, glide Enter from its current
+painted position, and fade/reveal the extra words. Clip the extra words to the
+moving outline so returning copy cannot spill outside the button. Capture the
+painted pose before cancelling on reverse, so rapid reversals begin in place.
+No width, padding or max-width interpolation and no new DOM/content renderer.
+Reduced motion and restored deep positions still switch directly.
+
+Correct the active light study's pointer normalization to read the painted
+bounds on pointer input, so its light tracks transformed shapes accurately.
+The saved material, settings and separately accepted dark snapshot are unchanged.
+The light README records that functional follow-up. Synthetic pointer checks
+at0.7/1/1.2 scale retain25% pointer placement and unchanged canvas allocation.
+
+The new synthetic full-bar occlusion and smooth-motion tests fail on the
+previous version, then pass after the change. They check partial hint occlusion
+and reverse scroll, intermediate painted widths with fixed layout/observer
+counts, undistorted label widths, reversal continuity and reduced motion.
+All33 navigation/header tests pass. Actual forward/reverse images are visual
+review only; no claim about measured frame rates on the artist's machine.
+Preview8787 rebuilt/restarted and8795 refreshed; use `sand tunnel 8795`.
+No publication requested.
+
+**Simpler button handoff into the header — 2026-11-06.** The artist reports
+jitter during the width animation and authorizes improving performance or
+simplifying that animation. The synthetic handoff replay reproduces changing
+button and label geometry at390px and1440px. The old transition animated
+width, inline padding and label max-width together; those size changes also
+rebuild the button decoration through ResizeObserver.
+
+Keep each native button at its final dimensions and reveal only the header's
+extra words with a240ms opacity animation. Preserve the top-edge handoff,
+short welcome label, full header label, stable foreground opacity, header/logo
+fades, manifesto-hint treatment and reverse scroll. Cancel the reveal on
+reversal/disposal; reduced motion and restored deep positions switch directly.
+Remove the width/padding/max-width animations and their geometry/style reads.
+The saved light/dark material snapshots remain unchanged; handoff behaviour
+belongs to the underlying CMX page's existing navigation lifecycle.
+
+The deterministic regression failed on both widths before the fix and now
+passes with unchanged button/label widths and at most the initial observer
+notification. It also checks reversal and re-entry without leftover opacity.
+Website typecheck and33 synthetic navigation/header tests pass, including
+reduced motion, navigation, hint coverage and theme/frame behaviour. Real page
+review confirms a fixed header-button width and opacity-only label animation;
+this does not claim a measured frame-rate improvement on the artist's device.
+Reproduction command: `PLAYWRIGHT_PORT=8798 npx playwright test --config
+website/playwright.config.ts website/app/temple/tests/navigation-feedback.spec.ts
+--grep 'handoff keeps button geometry' --workers=1`. Shared8787 preview rebuilt
+and restarted; the8795 light review uses that updated page. Local review only.
+
+**Current light version saved; exploration parked — 2026-11-06.** The artist
+says “ok, lets leave it like this”. Preserve the current light version in
+`website/app/temple/button.prototype/light/`, alongside the separately accepted
+dark version. Keep the plain white base, constant1px `#f0eef1` border,1px
+primary-blue cursor light, purple-pearl surface catch,1px traces turning
+brighter purple/pink on hover, and smaller/lighter mixed teal/pink glimmers
+without white centres. Defaults: light2,9glimmers/s,56px drift, idle0.52,
+pointer mode. Native actions, focus and reduced motion remain.
+
+The snapshot includes portable sources, the copied glimmer primitive, settings,
+idle/hover references and recovery instructions. Port8795 now serves this saved
+repository snapshot, preserving the appearance (`sand tunnel 8795`). Background controls remain available
+for review, with white as the saved baseline. Park further exploration at this
+state. This instruction does not request production integration or publication;
+do not infer permission to combine it with the remembered3D passage.
+
+**Earlier return to the very first white test — 2026-11-06.**
+The artist rejects iridescence (“hate it”) and requests the very first white
+test. Restore the original pale pearl surface with dark lettering, copper
+pointer light, cool ink traces and warm glimmers, predating the stone revision
+and the `#373532` restart. Do not mix later interpretations into this recovery.
+Returning to a study is not acceptance of a finished light treatment. Phase:
+Expansion, now reviewing that first version again.
+
+The first-white files were overwritten by the stone revision before the first
+archive. Recover them by reversing the exact recorded edits of2026-11-05T19:08:54
+and19:10:02 in `history/withdrawn-material-trial/`. The restored CSS matches the
+full first-white source recorded at19:08:00 exactly; the original mobile review
+also corroborates the pale treatment. Keep recovered sources/provenance in
+`history/original-white-recovered/`, and park iridescence in
+`history/rejected-iridescence/`. The active8795 preview shows the recovered
+first-white material and original controls. Current native wording/layout come
+from CMX and may have evolved independently. The accepted dark snapshot and
+remembered3D passage remain untouched.
+
+TypeScript and synthetic browser checks pass for the original pearl/ink roles,
+hover and held preview, fixed native bounds, static reduced motion, phone
+sizing, keyboard focus and native navigation without JS errors. Review on8795
+through `sand tunnel 8795`. No production integration or deployment requested.
+
+**Plain white cursor light — 2026-11-06.** On the restored first-white
+study, the artist requests a plain white cursor light. Replace the copper
+pointer stroke and its warm surface catch with pure white and transparent
+white falloff. Preserve strength, proximity response, motion, base surface,
+traces and glimmers. The recovered original snapshot remains intact;8795 shows
+this requested adjustment. This does not select a finished light button.
+
+**Thicker border and purple pearl — 2026-11-06.** The artist requests a2px
+border and a little more purple-pearl colour in the effect on the button.
+Make the cursor stroke and trace core2px, retaining the cursor stroke's pure
+white. Add a pale lavender shoulder to the white surface catch and shift the
+varied trace inks and hover mixture towards purple pearl. Preserve the base,
+strength, motion and warm emitted glimmers. No constant resting border is added.
+This is a scoped adjustment within the restored first-white study on8795.
+
+**Primary teal glimmers — 2026-11-06.** The artist asks to bring the glimmers
+into the primary teal colour world. Replace the warm gold sprite with a pale
+paper centre, the shared teal `#60cbcd` shoulder and blue `#32608b` falloff.
+Resolve those roles from the action’s inherited palette. Preserve glimmer
+motion and hover gating, the2px white cursor light, and purple-pearl surface
+and traces. This is a colour adjustment to the active8795 study.
+
+**White glimmer centres — 2026-11-06.** The artist asks for a white centre
+in each glimmer. Use pure white and a small normally composited core over the
+teal halo, sharing its lifetime fade so the multiply layer cannot darken it.
+Preserve the teal/blue surround, particle motion and hover gating on8795.
+
+**Larger glimmer centres — 2026-11-06.** The artist requests bigger white
+centres. Increase their radius by roughly75%, capped at1.5px, preserving the
+teal halo size and lifetime fade in the8795 study.
+
+**Separate trace and cursor widths — 2026-11-06.** The artist requests
+1px traces and a3px cursor light. Set the trace core to1px and the pure-white
+cursor stroke to3px, retaining the existing colours, falloff and motion on8795.
+
+**Smaller, lighter teal glimmers without white centres — 2026-11-06.**
+The artist requests removal of the white centre and slightly smaller, lighter
+glimmers. Remove the painted white core and use teal at the sprite's centre.
+Reduce overall glimmer size20% and opacity25%, preserving emission/motion,
+1px traces and the3px white cursor light in the active8795 study.
+
+**Primary blue cursor light at1px — 2026-11-06.** The artist requests a
+primary-blue cursor light at1px. Use the inherited shared `#32608b` role for
+the pointer stroke with transparent blue falloff, replacing the3px white
+stroke. Preserve purple-pearl surface/traces and smaller, lighter teal glimmers
+without white centres on8795.
+
+**Brighter purple/pink traces on hover — 2026-11-06.** The artist requests
+brighter purple/pink traces on hover. Smoothly blend85% towards `#e68fdb` and
+raise the hover-only strength multiplier from1.7 to1.9. Preserve the varied
+resting pearl-purple shades,1px trace cores, primary-blue cursor light and
+smaller, lighter teal glimmers. The same response applies to keyboard focus.
+
+**Farther glimmer drift and a pink mix — 2026-11-06.** The artist asks for
+more drift reach and some pink glimmers. Increase default reach from32 to56px.
+Mix about one-third pink glimmers (`#e68fdb`, matching hovered traces) with
+purple-pearl falloff among the teal ones; choose colour once at emission.
+Keep the smaller/lighter treatment without white cores, hover gating and
+emission rate. Preserve the1px blue cursor and1px purple/pink traces on8795.
+
+**Full background colour control — 2026-11-06.** The artist requests full
+colour control for the button background. Add a native colour picker and hex
+field at the top of the8795 panel. Six-digit hex applies live; shorthand
+expands on Enter/blur. Selecting a colour makes the base solid; Restore pearl
+gradient returns the exact current pearl stops. Keep the animated surface
+catch, traces and glimmers separate. Preserve a chosen colour across refreshes
+in this preview origin’s localStorage, cleared by reset. Adapt native label
+ink to the selected background and make the enlarged panel scrollable within
+short/phone screens. No new background colour is artist-selected by this work.
+
+TypeScript and synthetic browser checks pass for input sync/validation,
+shorthand, light/dark/middle-tone label ink, persistence, fixed action bounds,
+pearl reset and complete controls within320×480 without JS errors. The native
+CMX page and canonical palette remain unchanged.
+
+**Plain white base and constant pale border — 2026-11-06.** The artist
+selects plain white for the button base and a constant1px `#f0eef1` border.
+Replace the pearl base gradient with `#ffffff`, preserving it under the surface
+catch on hover/press. Keep the blue pointer light, purple/pink traces and mixed
+teal/pink glimmers. Update picker/hex defaults and reset to white. Supersede old
+experimental browser colour preferences once via a new key for this baseline;
+future picker choices still persist. This accepts the base and border within
+the ongoing light exploration, not a complete final button or publication.
+
+**Earlier rejected light effects — 2026-11-06.** Phase: Expansion. The
+artist rejects all three latest experiments (Ink tide, Stray shadow and Bent
+space): “absolutey not magical. none of them”. Their presence or visibility is
+not evidence of the desired feeling. No light effect is selected.
+
+The artist identifies the accepted dark button's actual appeal: white on its
+dark surface and surroundings conveys glow, light and sparkling. That luminous
+quality is the magic. Dark dots on white do not carry it. A flowery approach is
+explicitly excluded because the page has no floral vocabulary.
+
+The agent proposes a translucent coloured veil around the button to give bright
+glimmers a local medium. The artist rejects this before implementation: do not
+dim or darken the surrounding background to manufacture more shine. The white
+page must remain untouched by such a contrast underlay. The veil proposal was
+not implemented. Do not resume it or treat it as selected. The next exploration
+must address a different way to convey the luminous quality on white within
+the existing palette; its mechanism remains open. Reconsider the approach
+rather than producing further dark particles or variations of the rejected
+studies.
+
+The agent proposes iridescence: cool pearl and colours from the existing
+palette caught within the button's own surface, with fleeting glints. The
+artist says “lets try it”, authorizing this focused experiment, not selection
+of its outcome. Archive the three rejected exterior studies under the local
+study's `history/rejected-material-expansion/`.
+
+The subsequent8795 study tested that material on the earlier accepted starting
+base `#373532`, with a gentle radial face. Pointer angle shifts curved pearl
+catches and restrained palette-blue/teal fringes; fine white microfacets flash
+and soften within the face. All painting is bounded by the button's rounded
+outline. The white surroundings remain unchanged. This is an artistic thin-film
+approximation, not a physical simulation or the reserved header progress
+fill. Sheen, Colour and Glints expose the material; held interaction and Replay
+support review. Proximity is dimmed to at most8%; glints begin on hover/focus.
+The neutral face from the rejected comparison was review scaffolding, not an
+accepted new base. This material itself remains unselected.
+
+Synthetic browser checks pass for idle clearing, dim proximity, pointer-angle
+response, face-only painting with clear corners/no shadow, fixed hit bounds,
+departure settling, keyboard focus, static reduced motion, held preview,
+phone sizing and native navigation without JS errors. Actual page images are
+visual review only. Review via `sand tunnel 8795`; source and rationale remain
+in the existing light study README. The accepted dark snapshot and remembered3D
+passage remain unchanged. Expansion continues; no convergence or deployment is
+approved.
+
+**Restart light exploration in small steps — 2026-11-05.** The artist rejects
+the attempt to solve the complete light button at once: “don't try to one-shot
+this. Lets start from scatch similarly how we did it with the dark button”.
+Reopen the light treatment. The pearl/ink and stone/reflection proposals are
+withdrawn, not selected. Reset8795 to the existing neutral `#6b6966` surface
+and white label, with only a base-shade control. Review the resting surface
+first; develop one effect at a time from the artist's feedback. Do not infer
+that the light version inherits the complete dark treatment. The accepted dark
+snapshot remains saved. Phase: Expansion. Previous light sources are kept only
+for recovery under the study's `history/withdrawn-material-trial/` directory.
+
+The artist supplies `#373532` as the light button's starting base. Set that exact
+solid colour, preserving the plain surface for the next collaborative step.
+
+The artist approves that base and asks what comes next, then requests more
+proactive exploration like the first draft. Proceed with one concrete effect
+per review rather than asking the artist to design each implementation step.
+The next study adds a single fine pointer-following edge reflection inside the
+`#373532` surface. Compare cool pearl, warm champagne and soft white, with a
+strength control and held-light review for touch. A dim proximity response
+reaches20% before hover; focus/hover shows the full selected strength. Explore
+the edge tone and presence first; particles and ambient traces remain open for
+subsequent steps. This is not selection of a complete light treatment.
+
+The artist likes cool pearl at maximum intensity, but finds the corners ugly
+and remains uncertain about the effect. Align the highlight with the actual
+outer curve rather than leaving a dark rim around an inset outline; set the
+default strength to1. In response to a focused question, the artist identifies
+the problem: “it doesn't pop against the light background”. Keep the selected
+tone and intensity, but reopen the reflection mechanism. The next bounded
+proposal extends a local pearl reflection inward over the dark face, behind
+the label, where it has contrast. The resting `#373532` stays the anchor.
+The surface catch and fine edge form one pointer-driven effect; no particles
+or ambient traces are added. The effect itself remains unselected.
+
+The artist rejects the face reflection as essentially invisible and says light
+is probably the wrong medium here. Withdraw illumination rather than increasing
+it again. Keep the accepted `#373532` base and restart the effect question.
+The next single-effect proposal is physical motion: a local elastic deformation
+of the filled silhouette near the pointer, with a stationary native label and
+hit area. Edge pull starts at8px, adjustable0–14px; a held-motion control supports
+touch review. There are no light layers, particles or ambient traces. A short
+spring settles back to the exact rounded resting shape, while reduced motion
+keeps it static. Prior reflection source is archived under
+`history/withdrawn-reflection/` in the local study. Synthetic checks cover shape
+response, stable hit area, reduced motion, focus, mobile bounds and native links.
+Review this physical-response hypothesis on8795; no motion treatment selected.
+
+The artist responds “ok, not bad” to the yielding edge and requests more
+options. This preserves that local progress without selecting the effect.
+The review now compares four responses through a selector on the same button:
+Yielding edge (local deformation), Drawn surface (the complete silhouette
+follows the pointer slightly), Travelling ripple (a brief contour wave on
+entry), and Tilt (the surface tips in perspective). All share the accepted
+base, white native label, stable hit area, Amount control and held-motion
+review. Ripple replays on re-entry. Each respects reduced motion and settles;
+there are no illumination effects or combined final treatment. Synthetic
+checks cover response and stable native bounds in all four modes, reduced
+motion in each, and phone bounds. Next move: compare the kinds of motion.
+
+The artist finds all four options in the same area and explicitly invokes
+`explore` to expand farther. This is a breadth correction, not selection of
+one of the motion variants. Park that comparison under the local study's
+`history/motion-family/`. Keep the base and native label, but change the object
+and timescale of the experiment instead of producing more silhouette movement.
+
+The current selector compares four distinct investigations, each with a visible
+purpose in the review controls: Pigment bloom (coloured ink spreads within the
+surface), Gathering pieces (the Temple's shared seeded fragment primitive
+gathers around the button), Pressed impression (graphite contours spread onto
+the page with an inset pressure mark), and A mark remains (pointer movement
+writes an ink gesture below the button, remaining briefly after departure).
+These investigate material, surrounding space, depth and temporal memory.
+Each is an agent proposal, not an assigned artistic meaning or final shortlist.
+Presence and held-interaction/Replay controls support comparison. Preserve
+synthetic fixture assertions, native links, focus, reduced motion and bounded
+canvas rendering. All four response/reduced-motion checks pass; native area,
+phone bounds, mark decay and navigation pass. Review remains on8795 in the
+existing CMX page. Phase: Expansion; next feedback should concern which kind
+of presence opens a useful direction, not final acceptance of a complete button.
+
+**Cracking open a passage — 2026-11-05.** The artist is interested in Gathering
+pieces and proposes a solid surface that cracks, flips open three-dimensionally
+and creates a tunnel/passage around its outside. Preserve this as the direction
+for the next focused experiment, not approval of a finished button. Archive
+the four broader studies under the local study's `history/broader-studies/`.
+
+The prototype begins as the exact solid `#373532` rounded face. A jagged seam
+appears, then six complementary facets hinge outward around the upper/lower
+edges, exposing a recessed box with perspective walls. The pieces form the
+outside of the passage. Real projected geometry, material backs/thickness,
+bounded shadows and slight pointer parallax investigate the requested depth;
+no luminous effects are restored. The native label and hit area stay in place
+while this first study tests the opening. Six facets,138° maximum folding,
+170 units of depth and the stagger/timing are agent proposals for review.
+Opening can be scrubbed manually; Fold angle, Depth, Hold passage open, Replay
+and Follow pointer expose the consequential choices. Normal hover/focus opens
+it; departure closes it. Reduced motion switches directly between static poses.
+
+The existing preview/CMX document remains the content source on8795. A local
+pure geometry helper verifies that the pieces cover the closed face, project
+within bounded space, unfold outward and recede in depth. Synthetic browser
+checks cover opening, manual scrubbing, fixed native bounds, reduced motion,
+keyboard focus, phone bounds and native navigation without errors. Actual
+closed/half/open images are review material only. Phase: Expansion within the
+artist's passage idea. Next review: whether the crack, hinges and outside frame
+read as an opening/passage, and how the lettered face should relate to that space.
+
+**Start with the fragments, not a hatch — 2026-11-05.** The artist rejects
+that tunnel as a hatch with a cheap Star Wars effect. Their immediate request
+is smaller: fragment the button into parts resembling the existing background
+pieces; first create a crack. The parts may already overlap at rest so no seam
+is visible. Withdraw the hinged/perspective implementation to
+`history/withdrawn-tunnel/`. Do not treat the earlier passage idea as approval
+to develop depth before reviewing the surface division.
+
+The next bounded study uses the background's shared `generateFragments`
+contours to partition the accepted rounded `#373532` face into three flat parts.
+Subpixel overlaps conceal seams at rest. Small planar separation exposes the
+page through oblique cracks on hover/focus; the lettered native link remains
+fixed. Three pieces and4px maximum separation are proposals for review.
+A Riss scrubber, Abstand, held closed/open poses and optional diagnostic piece
+colours make the division inspectable. No folding, recessed box or lighting.
+Synthetic checks confirm seamless closed/reclosed interiors, transparent open
+cracks, stable native bounds, reduced-motion focus, mobile width and navigation.
+Review remains on8795 (`sand tunnel 8795`). Phase: Expansion; the next review
+concerns the fragment shapes and crack only. Dark acceptance stays unaffected.
+
+**Finer fragments with intact background silhouettes — 2026-11-05.** The
+artist requests a finer, more fragmented surface and repeats that the pieces
+must look like the background tiles. Supersede the three large partitioned
+pieces. Their stretched proportions and complementary masks lost that form.
+The next study assembles roughly25–35 complete small tiles, using visible
+background paths (shared generated fallback for the synthetic fixture), uniform
+scales, varied rotations and the exact shared rounded fragment stroke. A seeded
+coverage pass overlaps them into the accepted closed face; only the outer button
+clips the assembly. There is no whole-face backing. Small planar separations
+and16% contraction expose gaps on interaction. Piece count, contraction and3px
+drift remain proposals. Diagnostic colours expose the individual silhouettes.
+
+The existing `assembleBorder` primitive handles perimeter placement; the local
+`tiles.ts` filled-region cover is study composition, with no production change.
+Synthetic browser checks at device scale2 confirm fully opaque closed/reclosed
+interiors, transparent interaction gaps, fixed native bounds, reduced-motion
+focus, phone width and native navigation without errors. Actual page images
+are visual review only. Expansion continues on8795 (`sand tunnel 8795`); next
+review concerns the finer tiles and their resemblance to the background.
+
+**Tiles form the outer rim — 2026-11-05.** The artist now asks that the
+button not be a mask: the pieces themselves must cleanly shape the button's
+edge, and everything should move slightly apart on hover. Remove the outer
+Canvas clipping silhouette. Position complete tiles within the resting bounds;
+use the shared `borderEdge` primitive to align their actual straight runs along
+the perimeter. Rounded tips and small irregular joins belong to intact tiles.
+Keep the accepted base and finer background silhouettes. The local cover pass
+fills the interior; no intact backing plate is introduced. Previous masked
+composition is retained under `history/masked-tiles/`.
+
+Interaction now moves tile centres radially outward, accompanied by7% uniform
+size release to expose joints. Default4px drift and its radial multipliers are
+review proposals. Give the decorative canvas bounded extra room so complete
+tiles can leave the original button extent. Native label, link area and focus
+remain fixed; reduced motion selects static poses. Synthetic checks at device
+scale2 confirm no surface clip calls, opaque closed/reclosed interiors, paint
+outside native bounds while open, no truncation at maximum opening, stable
+bounds, reduced-motion focus, phone width and navigation without JS errors.
+Review remains on8795 (`sand tunnel 8795`), in Expansion for this treatment.
+
+**Clean button silhouette takes priority — 2026-11-05.** The artist
+understands the principle but rejects the jagged natural tile rim: “der shape
+des buttons ist wichtiger als die shapes der teilchen”. This supersedes the
+previous insistence on preserving intact perimeter silhouettes. Restore the
+exact accepted rounded rectangular resting contour with8px corners. Background
+contours still supply the interior pieces; trim perimeter pieces to the button.
+Each cut is expressed in that piece's local coordinates and travels with its
+motion. There is no fixed outer mask and no intact backing plate. Archive the
+rejected irregular rim under `history/irregular-rim/`.
+
+Retain radial outward hover/focus movement,7% uniform release, default4px drift,
+fixed native label/hit area and reduced-motion static poses. Preserve the CSS
+face until the first decorative frame is painted. Synthetic checks at device
+scales1 and2 compare the entire closed/reclosed silhouette against a rounded
+rectangle: no missing interior or stray outside paint. Open pieces demonstrably
+leave that outline, exposing joints; maximum opening stays inside the canvas.
+Native bounds, focus, phone width and navigation pass without JS errors. Page
+images are review only. Phase: Expansion on8795 (`sand tunnel 8795`); current
+review is the clean closed shape and the moving cut fragments.
+
+**Accepted clean face; open a passage with the fragments themselves — 2026-11-05.**
+The artist says “perfect” to the clean cut surface. Preserve that flat study
+under `history/accepted-clean-surface/`. They now explicitly ask for farther
+outward hover movement, perspective twisting and folding to create a passage
+using only these pieces in an imaginary3D space. Outer pieces should turn to
+break the still-straight outside line; rear pieces may become smaller. This
+reopens spatial development from the accepted clean geometry, rather than
+reviving the rejected hatch and separate tunnel box. No final light button or
+publication is approved.
+
+The study uses native CSS3D with individually cut SVG fragment planes. Each
+piece translates in X/Y/Z and turns around its own pivot on all three axes;
+shared perspective makes rear pieces smaller. Radial position and seeded
+variation establish a loose front/middle/rear order; independent outside twists
+break the straight rim. Only the existing fragments form the passage. Keep the
+exact accepted canvas pose when closed, with a corresponding SVG cut carried
+by each plane when opening. Native words remain fixed, changing to dark ink as
+the pale centre opens. Proposed controls/defaults:18px spread,68° tilt,170 depth,
+420px perspective, manual opening and diagnostic piece colours. Hover/focus
+opens; departure closes; reduced motion chooses static poses. The CSS/SVG scene
+is isolated review composition; no new runtime dependency or content index.
+
+Synthetic geometry checks cover identity, outward translation, independent twist,
+rear depth ordering and finite poses across settings. Browser checks cover
+closed/reclosed silhouette coverage, actual varied matrix3d/depth transforms,
+intermediate opening, text tones, renderer handoff, fixed hit bounds, reduced
+motion, phone width and native navigation without errors. Real page closed,
+half and open images are visual review only. Phase: Expansion on8795
+(`sand tunnel 8795`). Next review: whether the fragment depth and folding read
+as a passage, and the balance of spread, tilt and perspective.
+
+**Remember the passage; reopen magic closer to the dark button — 2026-11-05.**
+The artist likes the passage shown with supplied slider settings and asks to
+remember it, but finds the direction insufficiently magical. They then explicitly
+invoke `explore` for a different approach, perhaps closer to the dark-mode button.
+Save the liked passage as a portable snapshot in
+`website/app/temple/button.prototype/light-passage/`, with source, server,
+`settings-reference.png`, `remembered-settings.json`, and closed/open references.
+The screenshot suggests approximately0 opening,35 spread,62° tilt,300 depth,
+320px perspective; record these as estimates, not exact supplied/exported values.
+The frozen source retains original defaults for provenance. It bundles with
+portable imports; website typecheck passes. The liked passage is parked, not
+selected for final light integration. Its standalone review can use8796.
+
+Restart the active8795 study nearer the accepted dark button's living traces
+and glimmers, retaining the clean #373532 face and native white lettering.
+One bounded comparison asks where the effect lives: Im Material places cool
+shooting-star traces6px inside the dark surface and a soft warm pointer catch
+in the face; Am Rand follows the outer edge with traces and a single warm
+pointer filament. The former has no continuous pointer outline. Reuse the
+accepted trace field and opener glimmer primitive. Hover whitens the traces;
+only hover/focus/held review emits glimmers. They blend from pale light on the
+dark face toward warm bronze/ink on the pale page, to address earlier light-mode
+visibility feedback without treating inversion as a selected design. Dim110px
+proximity response remains capped at20% before hover. Defaults1.6 light,0.62
+trace strength,7 glimmers/s and28px reach remain proposals. Controls compare
+location/intensity; held review retains a useful pointer position. No physical
+fragment movement or new content source is introduced.
+
+Synthetic checks cover idle/proximity emission gates, proximity cap, trace count,
+hover response in both modes, held pointer position, reduced motion, keyboard
+focus-visible outline, stable native bounds, phone width and navigation without
+errors. Phase: Expansion on8795 (`sand tunnel 8795`). Next review concerns
+presence and magical character on the pale page; this is not convergence on a
+complete light button. The accepted dark snapshot stays unchanged.
+
+**Try a lighter button background — 2026-11-05.** The artist still finds
+that the nearer-dark effect does not pop and proposes “nen helleren hintergund”.
+Interpret this as the button face, not a request to recolour the surrounding
+page. Reopen the previously accepted #373532 base within this light exploration.
+Propose warm stone #9b968d, with a Grundton slider from the original charcoal
+to #e1dacd cream, plus a hex readout. Native ink adapts to the surface brightness;
+keep the same shape, trace/glimmer effects and controls so this review isolates
+the base shade. No complete light treatment or new base is selected. Expansion
+continues on8795 (`sand tunnel 8795`); next feedback concerns material brightness
+and presence against the light page. Saved passage and dark references remain.
+
+**Dark button accepted and saved; light exploration begins — 2026-11-05.**
+The artist accepts the current dark treatment: “love it, we have your button.
+store it, we need it later”, then requests a light version. Acceptance covers
+the dark button's visual treatment and interactions; no production integration
+or publication is requested. Preserve its source, local preview server, copied
+glimmer primitive, idle/hover screenshots and accepted settings in
+`website/app/temple/button.prototype/dark/`. Its README records recovery and
+the future integration boundary. Imports are portable and DOM append calls
+are mechanically adapted to repository types; the behavior is preserved.
+
+The separate light study remains in Expansion. Propose a pearl radial surface,
+dark ink, one copper pointer highlight, blue/slate/lavender/warmer traces and
+warm glimmers visible on a pale ground. Preserve the accepted geometry,65–120px/s
+motion, one-to-three count, speed-dependent heads, smooth deposited tails,
+110px proximity and20% pre-hover cap. Hover gates particles. Start light trace
+strength at0.52 versus dark0.34; these colours and strength remain proposals.
+Source:
+`/home/agent/.codex/visualizations/2026/11/05/01a1acd3-849a-7e02-8ced-3fff641dc0e2/button-light-study/`.
+Review on port8795 (`sand tunnel 8795`);8794 is occupied by another review.
+The light study uses the existing CMX page, not a second content index.
+Synthetic light checks cover proximity, hover-only particles, reduced motion,
+focus, mobile bounds and native links. Next review: light material and effect
+contrast in page context. Dark remains recoverable on8793.
+
+**Darker light-mode material; rethink inversion — 2026-11-05.** The artist
+requires a darker base and questions simply inverting the effects. The pale
+pearl/copper-outline/ink-trace approach is not selected. Explore a medium stone
+radial surface with white lettering, closer to the established neutral light
+action material, and actual pale reflections rather than dark coloured marks.
+The revised proposal uses `#666963` → `#5e635e` → `#535c5b`, champagne pointer
+light, pale silver/champagne/blue/lilac traces and bright-centred warm glimmers
+composited normally instead of dark multiply particles. Keep the body highlight
+at10% maximum to preserve white-label contrast; the border's proximity cap
+remains20% of its hover strength. Preserve accepted motion and interactions.
+This remains a light-mode exploration on8795, separate from the saved dark
+button. Next review: whether the stone material and reflected-light character
+fit the pale page; exact shades remain open.
+
+**Magical dark button study — 2026-11-05.** The artist asks to explore a button
+borrowing the opener's glimmers and the background's small tracing effects,
+with an interactive shiny border and gentle radiating particles on hover.
+Focus on dark mode. Phase: Expansion; no new button treatment selected.
+
+One adjustable study decorates the existing Enter links in a separate local
+preview of the actual CMX page. It reuses `createGlimmerSprite`, proposing a
+charcoal surface, warm filament, pointer-following light, travelling traces and
+outward glimmers. Controls compare pointer light, traces or both, and adjust
+light, particle count and drift reach; held hover supports touch review.
+The preview consumes the existing page without a second content index or
+Publication. No production button styling is changed. Source and recovery:
+`/home/agent/.codex/visualizations/2026/11/05/01a1acd3-849a-7e02-8ced-3fff641dc0e2/button-study/README.md`.
+Review on port8793 (`sand tunnel 8793`); the shared site remains on8787.
+Next move: review the balance of pointer light, traces and particle strength.
+
+**Pointer light retained; quieter idle traces — 2026-11-05.** The artist likes
+the pointer-light direction and glimmers, rejects the dotted character of the
+border, and requests gentler non-hover traces and subtle resting glimmers.
+They also request different tones for the traces and pointer light. Preserve
+pointer light and glimmers within this study; the full treatment remains in
+Expansion. Interpret “stale” as idle/non-hover. Replace separately stamped
+border segments with continuous gradient strokes. Propose warm honey pointer
+light and cooler pearl-blue traces and resting particles. Idle traces move
+more slowly, fade under pointer hover and emit sparse, fainter, shorter-drift
+glimmers. Use the screenshot's approximate settings: light2, glimmers9,
+reach32, pointer mode; expose idle strength separately at0.18 for review.
+The local study and review address remain the same. Reduced motion freezes
+traces and removes emitted particles. No production integration requested.
+
+**Intermittent traces without a resting border — 2026-11-05.** The artist
+requests removal of the normal border, slightly more visible traces, and less
+predictable traces that come and go. Remove the visible CSS border, inset
+highlight and constant canvas outline while retaining button dimensions and
+keyboard focus. Replace the two continuous orbiters with short-lived traces:
+random starting positions, direction, speed, length, brightness and uneven
+appearance intervals, with occasional overlaps and quiet gaps. Each fades in
+and out. Raise the proposed idle trace strength from0.18 to0.34, keeping sparse
+idle glimmers near their previous rate. Preserve the warm pointer/cool pearl
+separation and hover direction. Same local study; still Expansion.
+
+**Deposited trails and proximity light — 2026-11-05.** The artist finds the
+whole-trace fade too snake-like and requests light left behind by a passing
+tip, a gentle radial surface gradient, proximity activation for pointer light,
+and glimmers starting only on hover. They also request more frequent traces
+and a higher possible speed. Keep this within the same dark-mode study.
+
+Each trace now draws a growing route; its tip disappears before the deposited
+light, which remains fixed and clears from the older end. Random tip travel
+lasts1.1–2.4s; deposited light persists1.8–3.3s at each part of the route.
+Speeds span26–120px/s (formerly24–60); shorter irregular spawn intervals permit
+more overlapping traces. A gentle charcoal radial fill is always present.
+Warm pointer light ramps up within110px of the button. Proximity alone emits
+no glimmers; hover, keyboard focus or the explicit hover-review control starts
+emission. This supersedes the earlier resting-glimmer request. Preserve the
+borderless resting surface, warm/cool separation and reduced-motion behavior.
+Synthetic checks cover proximity without hover, no idle/proximity emission,
+hover emission, radial fill, reduced motion, focus and phone bounds.
+
+**Shooting-star traces, one to three — 2026-11-05.** The artist requests
+softer disappearance like “Sternschnuppen”, shorter bright heads for slower
+traces and longer ones for faster traces, one trace minimum/three maximum,
+and whiter traces on mouseover. Preserve the radial surface and warm proximity
+light; hover still gates glimmer emission.
+
+Replace start-to-end route gradients with light evaluated along the actual
+contour. Sources continue travelling while their output eases down over1.1s;
+each deposited part decays independently and reaches zero smoothly. Head
+length scales from3px at26px/s to24px at120px/s, tapering into a softer tail.
+Count residual trails within the three-trace maximum. The newest source can
+travel longer until a fading trail frees a slot, keeping at least one visible
+trace without cutting off old tails. Pearl-blue eases to white on hover and
+traces remain visible alongside the warm pointer light. The local pure motion
+helper and synthetic checks cover count bounds through five simulated minutes,
+visible continuity, speed-dependent head length and smooth trail decay. Browser
+checks cover hover colour, reduced motion, keyboard focus and phone bounds.
+Same study and port; still Expansion, no production integration requested.
+
+**Brisker traces with individual shades — 2026-11-05.** The artist rejects
+the slowest traces and requests slightly different intensities and shades.
+Raise the minimum speed from26 to65px/s, retaining120px/s as the maximum.
+Remap head lengths to4–24px across that range. Give each trace one stable
+pearl shade (blue, silver, faint lavender or a slightly warmer pearl) and
+brightness between0.75 and1.35. Blend overlapping deposits by their light
+contributions. Hover still whitens the traces, retaining a hint of their
+individual shades. Preserve the one-to-three limit and smooth deposited tails.
+Same local exploration; no production integration requested.
+
+**Single cursor highlight, dimmer before hover — 2026-11-05.** The artist
+asks to try removing the cursor light's glow/double border, then asks to dim
+the light until hover. Remove the8px and3px warm glow strokes, leaving one1px
+gradient line. Cap proximity at half of full light strength (previously0.85);
+hover, keyboard focus and held-hover review still reach full strength smoothly.
+The current trace, radial surface and glimmer treatments remain in this study.
+Same local preview; still Expansion.
+
+The artist then requests further dimming before mouse-in. Reduce the proximity
+cap from0.5 to0.2, retaining full light on hover and keyboard focus.
+
 **Return to the intention above Visit — 2026-11-05.** The artist requests a
 button at the top of the practical page, revealed by scrolling farther upward
 than the first section. Place a native poem link in document flow above Visit;

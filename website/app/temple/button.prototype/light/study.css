@@ -1,0 +1,147 @@
+html,
+body,
+.temple-artwork {
+  color-scheme: light !important;
+}
+.fact-action a.magic-study,
+.temple-top-navigation a.magic-study {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  border: 1px solid #f0eef1;
+  border-radius: 8px;
+  background:
+    radial-gradient(
+      ellipse at var(--shine-x, 50%) var(--shine-y, 50%),
+      rgb(255 255 255 / var(--shine-opacity, 0)),
+      rgb(224 214 242 / var(--shine-opacity, 0)) 35%,
+      transparent 80%
+    ),
+    var(--study-button-colour, #ffffff);
+  color: var(--study-button-ink, #283541);
+  box-shadow: 0 2px 14px #2534400d;
+  transition:
+    background-color 250ms,
+    color 250ms;
+}
+.fact-action a.magic-study:hover,
+.temple-top-navigation a.magic-study:hover {
+  background-color: var(--study-button-colour, #ffffff);
+  color: var(--study-button-ink, #172c3d);
+}
+.magic-study > canvas {
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+}
+.magic-study:focus-visible {
+  outline: 2px solid #32608b !important;
+  outline-offset: 6px;
+}
+.magic-study:active {
+  background-color: var(--study-button-colour, #ffffff) !important;
+}
+#button-study-controls {
+  position: fixed;
+  z-index: 2147483000;
+  right: 20px;
+  bottom: 20px;
+  box-sizing: border-box;
+  width: min(338px, calc(100vw - 32px));
+  max-height: calc(100svh - 40px);
+  overflow-y: auto;
+  padding: 15px 18px;
+  border: 1px solid #58697430;
+  border-radius: 12px;
+  background: #fffefbf5;
+  color: #344453;
+  box-shadow: 0 8px 40px #25344014;
+  font:
+    13px/1.5 system-ui,
+    sans-serif;
+}
+#button-study-controls summary {
+  cursor: pointer;
+  color: #283541;
+}
+#button-study-controls p {
+  font-size: 12px;
+  color: #687581;
+  margin: 10px 0;
+}
+#button-study-controls label {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+#button-study-controls input {
+  min-width: 0;
+  accent-color: #8d6a3b;
+  width: 100%;
+}
+#button-study-controls input[type='color'] {
+  box-sizing: border-box;
+  height: 30px;
+  padding: 2px;
+  cursor: pointer;
+  background: #fffefd;
+  border: 1px solid #aeb7b9;
+  border-radius: 4px;
+}
+#button-study-controls input[type='text'] {
+  box-sizing: border-box;
+  padding: 5px 7px;
+  border: 1px solid #aeb7b9;
+  border-radius: 4px;
+  background: #fffefd;
+  color: #283541;
+  font: inherit;
+}
+#button-study-controls input[aria-invalid='true'] {
+  border-color: #c24029;
+}
+#button-study-controls select {
+  min-width: 0;
+  width: 100%;
+  background: #f0f1ee;
+  border: 1px solid #aeb7b9;
+  border-radius: 4px;
+  color: #283541;
+  padding: 3px;
+}
+#button-study-controls .preview-toggle {
+  display: flex;
+  gap: 8px;
+}
+#button-study-controls .preview-toggle input {
+  width: auto;
+}
+#button-study-controls button {
+  color: #344453;
+  background: transparent;
+  border: 1px solid #aeb7b9;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin: 12px 5px 0 0;
+  font: inherit;
+  cursor: pointer;
+}
+@media (max-width: 600px) {
+  #button-study-controls {
+    right: 16px;
+    bottom: 16px;
+  }
+  #button-study-controls:not([open]) {
+    width: auto;
+  }
+}
+@media (forced-colors: active) {
+  .magic-study canvas {
+    display: none;
+  }
+  .magic-study {
+    border: 1px solid ButtonText !important;
+  }
+}

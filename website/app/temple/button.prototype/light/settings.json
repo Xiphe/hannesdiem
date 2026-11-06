@@ -1,0 +1,37 @@
+{
+  "status": "Current light version, parked at artist request",
+  "date": "2026-11-06",
+  "background": "#ffffff",
+  "border": {
+    "colour": "#f0eef1",
+    "width": 1
+  },
+  "light": 2,
+  "particles": 9,
+  "reach": 56,
+  "idle": 0.52,
+  "mode": "pointer",
+  "preview": false,
+  "cursor": {
+    "colour": "#32608b",
+    "width": 1,
+    "proximity": 110,
+    "preHoverCap": 0.2
+  },
+  "traces": {
+    "coreWidth": 1,
+    "hoverColour": "#e68fdb",
+    "hoverMix": 0.85,
+    "hoverStrengthMultiplier": 1.9,
+    "count": [1, 3],
+    "speed": [65, 120]
+  },
+  "glimmers": {
+    "teal": "#60cbcd",
+    "pink": "#e68fdb",
+    "pinkFraction": 0.3333333333333333,
+    "sizeMultiplier": 0.8,
+    "opacityMultiplier": 0.75,
+    "whiteCore": false
+  }
+}

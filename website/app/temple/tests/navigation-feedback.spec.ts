@@ -117,7 +117,7 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(header).toHaveCSS('transition-property', 'visibility')
   await expect(header).toHaveCSS('opacity', '1')
   await expect(button).toHaveCSS('visibility', 'hidden')
-  await expect(hint).toBeVisible()
+  await expect(hint).not.toBeVisible()
   await expect(header.locator('.temple-nav-enter a')).toBeVisible()
   const handoff = await header.evaluate(async (node) => {
     const welcome = document.querySelector('.temple-entry-welcome a')!
@@ -226,17 +226,14 @@ for (const colorScheme of ['light', 'dark'] as const) {
 }
 
 for (const width of [390, 1440]) {
-  test(`the manifesto hint scrolls behind the sticky action before staying hidden at ${width}px`, async ({
-    page,
-  }) => {
+  test(`the manifesto hint passes behind the full header at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/temple-entry-poem')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
     const button = page.locator('.temple-entry-welcome a')
     const hint = page.locator('.temple-entry-more')
     const header = page.locator('.temple-top-navigation')
-    const fixed = header.locator('.temple-nav-enter a')
-    // A synthetic paint marker lets the screenshot detect premature backdrop occlusion.
+    // A synthetic marker exposes any hole in the opaque header background.
     await hint.evaluate((node) => {
       node.style.backgroundColor = 'rgb(0, 255, 0)'
       node.style.color = 'rgb(0, 255, 0)'
@@ -249,116 +246,142 @@ for (const width of [390, 1440]) {
     })
     await expect(header).toHaveAttribute('data-nav-visible', '')
     await expect(header.locator('.temple-nav-logo')).toHaveCSS('opacity', '1')
-    await expect(hint).toBeVisible()
-    const action = (await fixed.boundingBox())!
-    const actionBottom = action.y + action.height
+    const bar = (await header.boundingBox())!
+    const barBottom = bar.y + bar.height
     const before = (await hint.boundingBox())!
-    expect(before.y).toBeGreaterThan(actionBottom)
-    // Even after its fade finishes, the backdrop must leave the hint below the button clear.
-    const backdropBottom = await header.evaluate((node) => {
-      const style = getComputedStyle(node, '::before')
-      return node.getBoundingClientRect().top + parseFloat(style.top) + parseFloat(style.height)
-    })
-    expect(backdropBottom).toBeGreaterThan(actionBottom)
     const hintPixel = async (y: number) => {
       const screenshot = await page.screenshot({
         clip: { x: Math.ceil(before.x + before.width / 2), y: Math.ceil(y), width: 1, height: 1 },
       })
       return [...(await sharp(screenshot).removeAlpha().raw().toBuffer())]
     }
-    expect(await hintPixel(before.y + 1)).toEqual([0, 255, 0])
+    const expectCovered = async () => {
+      const [red, green, blue] = await hintPixel(barBottom - 3)
+      expect(Math.abs(green - red)).toBeLessThan(15)
+      expect(Math.abs(green - blue)).toBeLessThan(15)
+    }
+    const expectOutside = async () => {
+      // The header's soft shadow can darken the visible marker slightly.
+      const [red, green, blue] = await hintPixel(barBottom + 3)
+      expect(red).toBeLessThan(10)
+      expect(green).toBeGreaterThan(240)
+      expect(blue).toBeLessThan(10)
+    }
     const moveHint = (top: number) =>
       hint.evaluate(
         (node, top) => scrollTo(0, scrollY + node.getBoundingClientRect().top - top),
         top,
       )
-    await moveHint(actionBottom - before.height / 2)
-    await expect(header).not.toHaveAttribute('data-nav-hint-covered', '')
+    await moveHint(barBottom - before.height / 2)
     await expect(hint).toBeVisible()
-    const overlapping = (await hint.boundingBox())!
-    expect(overlapping.y).toBeLessThan(actionBottom)
-    expect(overlapping.y + overlapping.height).toBeGreaterThan(actionBottom)
-    expect(await hintPixel(actionBottom + 2)).toEqual([0, 255, 0])
-    await moveHint(actionBottom - before.height - 1)
+    await expectCovered()
+    await expectOutside()
+    await moveHint(barBottom - before.height - 1)
     await expect(hint).not.toBeVisible()
-    // Passing above the action must not expose the hint again.
-    await moveHint(action.y - before.height / 2)
+    // Neither upward travel nor reverse scroll may expose it inside the bar.
+    await moveHint(bar.y - before.height / 2)
     await expect(hint).not.toBeVisible()
-    await moveHint(actionBottom - before.height / 2)
+    await moveHint(barBottom - before.height / 2)
     await expect(hint).toBeVisible()
-    await moveHint(before.y)
-    await expect(hint).toBeVisible()
+    await expectCovered()
+    await expectOutside()
   })
 }
 
 for (const width of [390, 1440]) {
-  test(`Enter expands its label in the sticky header and reverses smoothly at ${width}px`, async ({
-    page,
-  }) => {
+  test(`Enter handoff keeps button geometry stable at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.addInitScript(() => {
       const original = Element.prototype.animate
       Element.prototype.animate = function (keyframes, options) {
         const motion = original.call(this, keyframes, options)
         if (
-          this.matches('.temple-nav-enter a, .temple-entry-welcome a, .temple-enter-label-extra')
+          this.matches(
+            '.temple-nav-enter a, .temple-entry-welcome a, .temple-nav-enter a > span, .temple-entry-welcome a > span',
+          )
         ) {
           motion.pause()
-          motion.currentTime = 210
+          motion.currentTime = 0
         }
         return motion
       }
     })
     await page.goto('/temple-entry-poem')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    await expect(page.locator('.temple-entry-greeting')).toHaveCount(0)
     const button = page.locator('.temple-entry-welcome a')
     const header = page.locator('.temple-top-navigation')
     const fixed = header.locator('.temple-nav-enter a')
     await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 100))
     await expect(header).not.toHaveAttribute('data-nav-visible', '')
-    await expect(button.locator('span').first()).toHaveText('Enter')
-    await expect(button.locator('.temple-enter-label-extra')).toHaveCSS('max-width', '0px')
     const initial = (await button.boundingBox())!.width
+    const initialLayout = await button.evaluate((node) => (node as HTMLElement).offsetWidth)
     const full = (await fixed.boundingBox())!.width
-    const padding = await button.evaluate((node) =>
-      parseFloat(getComputedStyle(node).paddingInlineStart),
-    )
-    expect(padding).toBeGreaterThanOrEqual(64)
+    const fullLayout = await fixed.evaluate((node) => (node as HTMLElement).offsetWidth)
     await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
     await expect(header).toHaveAttribute('data-nav-visible', '')
-    const opening = await fixed.evaluate((node) => ({
-      width: node.getBoundingClientRect().width,
-      opacity: Number(getComputedStyle(node.querySelector('.temple-enter-label-extra')!).opacity),
-    }))
-    expect(opening.width).toBeGreaterThan(Math.min(initial, full))
-    expect(opening.width).toBeLessThan(Math.max(initial, full))
-    expect(opening.opacity).toBeGreaterThan(0)
-    expect(opening.opacity).toBeLessThan(1)
-    // Reverse before the first handoff finishes; the new motion starts from its painted width.
+    // Width changes rebuild the button's decoration through ResizeObserver.
+    // Sample the real handoff at deterministic animation times, including reverse.
+    const samples = await fixed.evaluate(async (node) => {
+      const extra = node.querySelector<HTMLElement>('.temple-enter-label-extra')!
+      const label = node.querySelector<HTMLElement>('span')!
+      let resizes = 0
+      const observer = new ResizeObserver(() => resizes++)
+      observer.observe(node)
+      const frames = []
+      for (const time of [0, 70, 140, 210]) {
+        for (const motion of node.getAnimations({ subtree: true })) {
+          if (
+            motion.effect instanceof KeyframeEffect &&
+            [node, extra, label].includes(motion.effect.target as HTMLElement)
+          )
+            motion.currentTime = time
+        }
+        await new Promise(requestAnimationFrame)
+        await new Promise(requestAnimationFrame)
+        frames.push({
+          width: node.getBoundingClientRect().width,
+          layoutWidth: (node as HTMLElement).offsetWidth,
+          labelWidth: label.getBoundingClientRect().width,
+          extraWidth: extra.offsetWidth,
+          opacity: Number(getComputedStyle(extra).opacity),
+        })
+      }
+      observer.disconnect()
+      return { frames, resizes }
+    })
+    expect(samples.frames.map((frame) => frame.layoutWidth)).toEqual(
+      samples.frames.map(() => fullLayout),
+    )
+    expect(samples.frames[0].width).toBeCloseTo(initial, 1)
+    expect(samples.frames[2].width).toBeGreaterThan(Math.min(initial, full))
+    expect(samples.frames[2].width).toBeLessThan(Math.max(initial, full))
+    for (const frame of samples.frames)
+      expect(frame.labelWidth).toBeCloseTo(samples.frames[0].labelWidth, 1)
+    expect(new Set(samples.frames.map((frame) => frame.extraWidth)).size).toBe(1)
+    expect(samples.resizes).toBeLessThanOrEqual(1)
+    expect(samples.frames[0].opacity).toBe(0)
+    expect(samples.frames[1].opacity).toBeGreaterThan(0)
+    expect(samples.frames[1].opacity).toBeLessThan(1)
+    // Reverse mid-morph from its painted size, without rebuilding layout.
     await button.evaluate((node) => {
       const header = document.querySelector<HTMLElement>('.temple-top-navigation')!
       const top = (header.offsetHeight - (node as HTMLElement).offsetHeight) / 2 + 4
       scrollTo(0, scrollY + node.getBoundingClientRect().top - top)
     })
     await expect(header).not.toHaveAttribute('data-nav-visible', '')
-    const returning = (await button.boundingBox())!.width
-    expect(returning).toBeGreaterThan(Math.min(initial, opening.width))
-    expect(returning).toBeLessThan(Math.max(initial, opening.width))
-    expect(await fixed.evaluate((node) => node.getAnimations().length)).toBe(0)
-    await page.evaluate(() => {
-      for (const motion of document.getAnimations()) {
-        const target = (motion.effect as KeyframeEffect)?.target
-        if (
-          target instanceof Element &&
-          target.matches('.temple-nav-enter a, .temple-entry-welcome a, .temple-enter-label-extra')
-        )
-          motion.finish()
-      }
-    })
+    expect(await button.evaluate((node) => (node as HTMLElement).offsetWidth)).toBe(initialLayout)
+    expect((await button.boundingBox())!.width).toBeCloseTo(samples.frames.at(-1)!.width, 1)
+    expect(await fixed.evaluate((node) => node.getAnimations({ subtree: true }).length)).toBe(0)
     await expect(button.locator('.temple-enter-label-extra')).toHaveCSS('max-width', '0px')
-    expect((await button.boundingBox())!.width).toBeCloseTo(initial, 0)
-    await expect(button).toHaveAttribute('href', '/temple-of-sound/visit')
+    // A second entry must not inherit a cancelled, partly transparent label.
+    await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
+    await expect(header).toHaveAttribute('data-nav-visible', '')
+    await fixed.evaluate((node) => {
+      for (const motion of node.getAnimations({ subtree: true })) motion.finish()
+    })
+    await expect(fixed.locator('.temple-enter-label-extra')).toHaveCSS('opacity', '1')
+    expect((await fixed.boundingBox())!.width).toBeCloseTo(full, 0)
+    await expect(fixed).toHaveAttribute('href', '/temple-of-sound/visit')
   })
 }
 
