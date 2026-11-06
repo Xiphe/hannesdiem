@@ -18,6 +18,7 @@ import { LocalDate } from '../date.tsx'
 import { mountInsideArtwork } from './inside-artwork.ts'
 import { mountSectionArrival } from './section-navigation.ts'
 import { mountLegacyEntry } from './legacy-entry.ts'
+import { mountEntryButtons } from './entry-button/enhance.ts'
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
@@ -27,6 +28,7 @@ export function Opening(handle: Handle<OpeningProps>) {
     mountRecordingTitles(host, signal)
     mountRecordingScroll(host, signal)
     mountNavigationPosition(host, signal)
+    mountEntryButtons(host, signal)
     mountNavigationProgress(host, signal)
     mountNavigationScroll(host, signal)
     mountSectionArrival(host, handle.props, signal)
@@ -91,11 +93,14 @@ export function Opening(handle: Handle<OpeningProps>) {
               <a
                 href="/temple-of-sound"
                 data-rmx-document
+                class="temple-enter-button"
               >
                 <ArrowLeftIcon />
                 Back to the Manifesto
               </a>
-              <p>Read the intention and the charge of this space</p>
+              <small class="temple-entry-caption">
+                Read the intention and the charge of this space
+              </small>
             </div>
             {location && (
               <div class="temple-practical-section">
@@ -188,6 +193,7 @@ export function Opening(handle: Handle<OpeningProps>) {
                     href="/temple-of-sound/visit"
                     data-rmx-document
                     aria-label="Enter the Temple of Sound"
+                    class="temple-enter-button"
                   >
                     <span>Enter</span>
                     <span
@@ -199,7 +205,7 @@ export function Opening(handle: Handle<OpeningProps>) {
                   </a>
                 </div>
                 {handle.props.welcome && (
-                  <small class="temple-entry-more">
+                  <small class="temple-entry-more temple-entry-caption">
                     <ArrowDownIcon />
                     {handle.props.welcome.scrollLabel}
                     <ArrowDownIcon />
@@ -323,6 +329,7 @@ export function Opening(handle: Handle<OpeningProps>) {
             {handle.props.view === 'poem' && !finalVerse?.refrain && (
               <div class="temple-entry-closing fact-action">
                 <a
+                  class="temple-enter-button"
                   href="/temple-of-sound/visit"
                   data-rmx-document
                 >

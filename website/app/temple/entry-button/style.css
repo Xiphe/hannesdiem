@@ -1,0 +1,76 @@
+.fact-action a.temple-enter-button,
+.temple-top-navigation a.temple-enter-button {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background:
+    radial-gradient(
+      ellipse at var(--temple-enter-shine-x, 50%) var(--temple-enter-shine-y, 50%),
+      rgb(111 80 41 / var(--temple-enter-shine-opacity, 0)),
+      transparent 80%
+    ),
+    radial-gradient(ellipse at 50% 28%, #25211b 0%, #191713 52%, #11100e 100%);
+  color: #e5ded0;
+  box-shadow: 0 2px 14px #0006;
+  transition:
+    background-color 250ms,
+    color 250ms;
+}
+.fact-action a.temple-enter-button:hover,
+.temple-top-navigation a.temple-enter-button:hover {
+  background-color: #191610;
+  color: #fff5e4;
+}
+.temple-enter-button:active {
+  background-color: #251e14 !important;
+}
+.temple-enter-button:focus-visible {
+  outline: 2px solid #d4b07a !important;
+  outline-offset: 6px;
+}
+.temple-enter-effects {
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+}
+@media (prefers-color-scheme: light) {
+  .fact-action a.temple-enter-button,
+  .temple-top-navigation a.temple-enter-button {
+    border-color: #f0eef1;
+    background:
+      radial-gradient(
+        ellipse at var(--temple-enter-shine-x, 50%) var(--temple-enter-shine-y, 50%),
+        rgb(255 255 255 / var(--temple-enter-shine-opacity, 0)),
+        rgb(224 214 242 / var(--temple-enter-shine-opacity, 0)) 35%,
+        transparent 80%
+      ),
+      #ffffff;
+    color: #283541;
+    box-shadow: 0 2px 14px #2534400d;
+  }
+  .fact-action a.temple-enter-button:hover,
+  .temple-top-navigation a.temple-enter-button:hover {
+    background-color: #ffffff;
+    color: #172c3d;
+  }
+  .temple-enter-button:active {
+    background-color: #ffffff !important;
+  }
+  .temple-enter-button:focus-visible {
+    outline-color: var(--temple-primary-light) !important;
+  }
+}
+@media print, (forced-colors: active) {
+  .temple-enter-effects {
+    display: none;
+  }
+  .fact-action a.temple-enter-button,
+  .temple-top-navigation a.temple-enter-button {
+    background: ButtonFace;
+    color: ButtonText;
+    border: 1px solid ButtonText;
+    box-shadow: none;
+  }
+}

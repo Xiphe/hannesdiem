@@ -13,10 +13,11 @@ export type TraceField = {
   next: number
   traces: Trace[]
   random: () => number
+  shades: readonly (readonly [number, number, number])[]
 }
 
 export const traceHeadLength = (speed: number) => 4 + ((speed - 65) / 55) * 20
-const shades = [
+export const darkTraceShades = [
   [183, 211, 229],
   [207, 216, 225],
   [204, 204, 226],
@@ -27,8 +28,11 @@ const smooth = (t: number) => {
   return x * x * (3 - 2 * x)
 }
 
-export function createTraceField(random = Math.random): TraceField {
-  return { time: 0, next: 0, traces: [], random }
+export function createTraceField(
+  shades: TraceField['shades'] = darkTraceShades,
+  random = Math.random,
+): TraceField {
+  return { time: 0, next: 0, traces: [], random, shades }
 }
 
 export function advanceTraces(field: TraceField, seconds: number) {
@@ -53,7 +57,7 @@ export function advanceTraces(field: TraceField, seconds: number) {
       speed: 65 + random() * 55,
       persistence: 1.8 + random() * 1.5,
       brightness: 0.75 + random() * 0.6,
-      shade: shades[Math.floor(random() * shades.length)],
+      shade: field.shades[Math.floor(random() * field.shades.length)],
     })
     field.next = field.time + 0.4 + random() * 1.3
   }

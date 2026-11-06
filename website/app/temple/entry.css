@@ -30,6 +30,8 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+}
+.temple-entry-caption {
   margin-top: 0.35rem;
   font:
     400 12px/1.5 ui-sans-serif,
@@ -107,9 +109,6 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-}
-.temple-intention-return > p {
-  opacity: 0.6;
 }
 .temple-practical-section {
   display: flow-root;

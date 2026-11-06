@@ -4,6 +4,7 @@ Audit for the light palette selected on2026-11-03. “Use secondary where possib
 
 | Button or button-like action                                        | Implementation                                      | Treatment                                                                                                 |
 | ------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Temple entry and manifesto return                                   | `.temple-enter-button`                              | Accepted theme-specific artwork; see [entry buttons](../entry-button/README.md)                           |
 | Visit contact action                                                | `.location-button`                                  | Secondary fill, white text                                                                                |
 | Watch Get notified trigger and submit                               | `.fact-action` / `.temple-signup`                   | Secondary fill, white text; spinner and disabled states retained                                          |
 | Create/Share/future section actions, including contact links        | `.fact-action :is(button, a)`                       | Secondary fill, white text; unavailable actions stay disabled                                             |

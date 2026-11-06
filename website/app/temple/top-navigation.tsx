@@ -11,6 +11,7 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
       {handle.props.view === 'poem' ? (
         <div class="temple-nav-enter fact-action">
           <a
+            class="temple-enter-button"
             href="/temple-of-sound/visit"
             data-rmx-document
           >

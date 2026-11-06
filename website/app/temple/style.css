@@ -6,6 +6,7 @@
 @import './feed/style.css';
 @import './top-navigation.css';
 @import './entry.css';
+@import './entry-button/style.css';
 
 html[data-layout='temple'] {
   color-scheme: light dark;

@@ -43,3 +43,10 @@ Header progress alone uses `linear-gradient(25deg in srgb, #32608b, #60cbcd)`. A
 The [button inventory](buttons.md) records which controls receive the secondary treatment and which retain their existing role. The palette lab is preserved separately on `codex/temple-light-palette-lab`.
 
 Map refinement, 2026-11-03: the artist requests darker water than land but a much lighter map overall. Give the map its own light-mode roles: neutral gray water `#c8c8c5` → `#d6d6d2` (the artist explicitly rejects a blue tint), near-white land `#f8f8f4` → `#fdfcf9`. Both enhanced and native fallback maps share these roles; Visit’s reading piece retains the common section material. The artist further darkens the water and selects the solid primary blue `#32608b` for the light-mode pin. Dark-mode map colors and camera behavior remain unchanged.
+
+Entry-button artwork update, 2026-11-06: integrate the accepted entrance
+material as an explicit exception to ordinary secondary action buttons. Light
+uses a solid white base, constant 1px `#f0eef1` border, the shared primary blue
+cursor light, purple/pink traces and teal/pink glimmers. Dark retains its
+accepted charcoal surface and warm light. Other action roles and the reserved
+header-progress gradient stay unchanged. See [entry buttons](../entry-button/README.md).

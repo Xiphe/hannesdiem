@@ -163,6 +163,7 @@ export function Refrain(
         {handle.props.entry && (
           <div class="temple-entry-closing fact-action">
             <a
+              class="temple-enter-button"
               href="/temple-of-sound/visit"
               data-rmx-document
             >

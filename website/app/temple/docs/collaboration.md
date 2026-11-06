@@ -1,5 +1,42 @@
 # Temple of Sound: client–artist collaboration
 
+**Manifesto return joins the accepted button treatment — 2026-11-06.**
+The artist asks for the shared magical button on “Back to the Manifesto” and
+for “Read the intention and the charge of this space” to match the small,
+dimmed hint below the opener. Use the same entrance class and renderer for
+this native return anchor, retaining its copy, arrow and manifesto destination.
+Both hints share `temple-entry-caption`: 12px/1.5 and 60% opacity. This follow-up
+is included in the main button integration; it adds no separate lifecycle.
+
+**Integrate the accepted entry buttons into main — 2026-11-06.** The artist
+accepts the smooth handoff (“lovely”) and asks to remove the study and move the
+work into the main worktree. This authorizes integration of the accepted light
+and dark entrance materials and header interaction. The shared workspace is
+already on main; no separate worktree merge or publication is requested.
+
+Checkpoint `ca4416f` preserves the accepted light/dark studies, screenshots,
+settings, the remembered 3D passage and preceding collaboration record. Remove
+the active `button.prototype` files and review servers after extracting the
+native implementation; recover historical references from that commit. The
+current source is `entry-button/`, mounted through Opening's existing
+abort-owned Remix task and using the shared opener glimmer primitive. Scope
+remains the welcome, header and closing entry anchors, with native labels and
+destinations intact. CSS supplies both base materials without JavaScript.
+System appearance switches the effect palette live; loading-gate and native
+visibility changes wake/pause it; navigation disposes frames, events,
+observers, sprites and canvases. Omit controls, polling, stored review choices,
+forced theme and proxy injection from the main page. Keep the accepted
+transform handoff and full header occlusion of the hint. Review now on 8787
+with `sand tunnel 8787`.
+
+Validation: website typechecking, all 108 website Node tests and 59 synthetic
+browser checks pass. The browser coverage includes entry views, opening layout,
+navigation, the smooth/reversible header handoff and its hint occlusion, both
+entry materials, proximity versus hover emission, keyboard/no-JavaScript use,
+live appearance changes, reduced motion and abort disposal. A loading-time
+visibility cache initially prevented the reduced-motion response; new input
+and geometry notifications now refresh it without per-frame style reads.
+
 **Smooth transformed handoff; hint behind the full bar — 2026-11-06.** The
 artist supplies a screenshot of the hint showing through the header and asks
 for a smoother transition than the immediate width switch. Supersede the

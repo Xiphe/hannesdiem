@@ -1,71 +1,42 @@
-import { createTraceField, advanceTraces, traceSample } from './trace-field.ts'
-import { createGlimmerSprite } from './glimmer-sprite.ts'
+import { createTraceField, advanceTraces, traceSample, darkTraceShades } from './trace-field.ts'
+import { createGlimmerSprite } from '../glimmer-sprite.ts'
 
-// One tunable hypothesis in the real page. All wording remains in CMX.
-type Settings = {
-  light: number
-  particles: number
-  reach: number
-  idle: number
-  mode: string
-  preview: boolean
-}
-const settings: Settings = {
-  light: 2,
-  particles: 9,
-  reach: 32,
-  idle: 0.34,
-  mode: 'pointer',
-  preview: false,
-}
-const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-const controls = document.createElement('details')
-controls.id = 'button-study-controls'
-controls.open = innerWidth > 600
-controls.innerHTML = `<summary>Dark button study</summary>
-  <p>Approach for warm light. Hover for glimmers. One to three shooting-star traces leave a lingering trail and turn white on hover.</p>
-  <label>Light<input aria-label="Light" type="range" min="0.2" max="2" step="0.05" value="2" data-setting="light"></label>
-  <label>Glimmers<input aria-label="Glimmers" type="range" min="0" max="24" step="1" value="9" data-setting="particles"></label>
-  <label>Drift reach<input aria-label="Drift reach" type="range" min="16" max="100" step="1" value="32" data-setting="reach"></label>
-  <label>Idle light<input aria-label="Idle light" type="range" min="0" max="0.7" step="0.01" value="0.34" data-setting="idle"></label>
-  <label>On hover<select aria-label="Border" data-setting="mode"><option value="pointer">Pointer light</option><option value="both">Pointer + traces</option><option value="traces">Travelling traces</option></select></label>
-  <label class="preview-toggle"><input type="checkbox" data-setting="preview">Hold hover for review</label>
-  <button type="button" data-jump="button">Find button</button><button type="button" data-jump="opener">Opener</button>`
-document.body.appendChild(controls)
-const instances: ReturnType<typeof mount>[] = []
-controls.addEventListener('input', (event) => {
-  const input = event.target as HTMLInputElement
-  const key = input.dataset.setting as keyof Settings | undefined
-  if (key === 'preview') settings.preview = input.checked
-  else if (key === 'mode') settings.mode = input.value
-  else if (key) settings[key] = Number(input.value)
-  instances.forEach((instance) => instance.wake())
-})
-controls.addEventListener('click', (event) => {
-  const jump = (event.target as HTMLElement).dataset.jump
-  if (jump === 'button') findButton()
-  if (jump === 'opener')
-    window.scrollTo({
-      top: 0,
-      behavior: reduced.matches ? 'instant' : 'smooth',
-    })
-})
+const lightTraceShades = [
+  [120, 104, 147],
+  [143, 126, 164],
+  [155, 139, 171],
+  [131, 130, 156],
+] as const
 
-function findButton() {
-  document.querySelector('.temple-entry-welcome .magic-study')?.scrollIntoView({
-    block: 'center',
-    behavior: reduced.matches ? 'instant' : 'smooth',
-  })
+/** Enhance native entry actions within the existing CMX/Remix Opening task. */
+export function mountEntryButtons(host: HTMLElement, signal: AbortSignal) {
+  if (signal.aborted) return
+  const appearance = matchMedia('(prefers-color-scheme: dark)')
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+  for (const button of host.querySelectorAll<HTMLAnchorElement>('a.temple-enter-button'))
+    mountEntryButton(button, host, appearance, reduced, signal)
 }
 
-function mount(button: HTMLAnchorElement) {
-  button.classList.add('magic-study')
+function mountEntryButton(
+  button: HTMLAnchorElement,
+  host: HTMLElement,
+  appearance: MediaQueryList,
+  reduced: MediaQueryList,
+  signal: AbortSignal,
+) {
   const canvas = document.createElement('canvas')
+  canvas.className = 'temple-enter-effects'
   canvas.setAttribute('aria-hidden', 'true')
+  const context = canvas.getContext('2d')
+  if (!context) return
+  const ctx = context
   button.appendChild(canvas)
-  const ctx = canvas.getContext('2d')!
-  const sprite = createGlimmerSprite()
-  const events = new AbortController()
+  const palette = getComputedStyle(button)
+  const teal = palette.getPropertyValue('--temple-primary-end-light').trim() || '#60cbcd'
+  const blue = palette.getPropertyValue('--temple-primary-light').trim() || '#32608b'
+  let dark = appearance.matches
+  let sprites: HTMLCanvasElement[] = []
+  const events = { passive: true, signal }
   const pad = 120
   let sidePad = pad
   let width = 0,
@@ -76,6 +47,7 @@ function mount(button: HTMLAnchorElement) {
   let hovering = false,
     focused = false,
     visible = false,
+    painted = getComputedStyle(button).visibility !== 'hidden',
     raf = 0
   let pointer = { x: 0.5, y: 0.5 },
     proximity = 0,
@@ -92,8 +64,9 @@ function mount(button: HTMLAnchorElement) {
     life: number
     size: number
     phase: number
+    pink: boolean
   }[] = []
-  const field = createTraceField()
+  let field = createTraceField()
   let contour: { offset: number; distance: number }[] = []
   let seamDistance = 0
   let bounds: DOMRect
@@ -153,21 +126,25 @@ function mount(button: HTMLAnchorElement) {
       perimeter
     wake()
   }
-  function wake() {
-    if (!raf && visible && !document.hidden) raf = requestAnimationFrame(draw)
+  function wake(refreshVisibility = true) {
+    // Loading and stylesheet changes can settle after an attribute observer.
+    // Refresh on new input/geometry, without reading styles on every frame.
+    if (refreshVisibility) painted = getComputedStyle(button).visibility !== 'hidden'
+    if (!raf && visible && painted && !document.hidden && !signal.aborted)
+      raf = requestAnimationFrame(draw)
   }
   function draw(now: number) {
     raf = 0
-    if (!visible || document.hidden) {
+    if (!visible || !painted || document.hidden || signal.aborted || !width || !height) {
       last = 0
       return
     }
     const dt = last ? Math.min((now - last) / 1000, 0.05) : 1 / 60
     last = now
-    const active = hovering || focused || settings.preview
+    const active = hovering || focused
     const targetGlow = active ? 1 : proximity * 0.2
     glow += (targetGlow - glow) * (1 - Math.exp(-dt * (targetGlow > glow ? 8 : 3)))
-    button.style.setProperty('--shine-opacity', String(glow * 0.25))
+    button.style.setProperty('--temple-enter-shine-opacity', String(glow * 0.25))
     whiten += (Number(active) - whiten) * (1 - Math.exp(-dt * 6))
     advanceTraces(field, reduced.matches ? 0 : dt)
     ctx.clearRect(0, 0, width + sidePad * 2, height + pad * 2)
@@ -179,26 +156,32 @@ function mount(button: HTMLAnchorElement) {
     // accumulated alpha at their joins and gave the previous border its dots.
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    if (settings.mode !== 'traces' && glow > 0.001) {
+    if (glow > 0.001) {
       const x = pointer.x * width,
         y = pointer.y * height
       const light = ctx.createRadialGradient(x, y, 0, x, y, 185)
-      light.addColorStop(0, '#fff0ce')
-      light.addColorStop(0.35, '#edc48e')
-      light.addColorStop(1, '#edc48e00')
+      light.addColorStop(0, dark ? '#fff0ce' : blue)
+      light.addColorStop(0.35, dark ? '#edc48e' : blue)
+      light.addColorStop(1, dark ? '#edc48e00' : `${blue}00`)
       ctx.strokeStyle = light
       ctx.lineWidth = 1
-      ctx.globalAlpha = Math.min(1, glow * settings.light * 0.66)
+      ctx.globalAlpha = Math.min(1, glow * 2 * 0.66)
       ctx.stroke(border)
     }
-    const traceStrength = settings.idle * (1 + whiten * 0.7)
+    const traceStrength = (dark ? 0.34 : 0.52) * (1 + whiten * (dark ? 0.7 : 0.9))
     const pearl = ctx.createConicGradient(0, width / 2, height / 2)
     const colorAt = (distance: number) => {
       const sample = traceSample(field, distance, perimeter)
       const alpha = Math.min(1, sample.light)
-      const red = Math.round(sample.red + (255 - sample.red) * whiten * 0.92)
-      const green = Math.round(sample.green + (255 - sample.green) * whiten * 0.92)
-      const blue = Math.round(sample.blue + (255 - sample.blue) * whiten * 0.92)
+      const red = Math.round(
+        sample.red + ((dark ? 255 : 230) - sample.red) * whiten * (dark ? 0.92 : 0.85),
+      )
+      const green = Math.round(
+        sample.green + ((dark ? 255 : 143) - sample.green) * whiten * (dark ? 0.92 : 0.85),
+      )
+      const blue = Math.round(
+        sample.blue + ((dark ? 255 : 219) - sample.blue) * whiten * (dark ? 0.92 : 0.85),
+      )
       return `rgba(${red},${green},${blue},${alpha})`
     }
     const seam = colorAt(seamDistance)
@@ -220,21 +203,15 @@ function mount(button: HTMLAnchorElement) {
     }
     ctx.globalAlpha = 1
     if (!reduced.matches && active) {
-      emission += dt * settings.particles
+      emission += dt * 9
       while (emission >= 1 && particles.length < 80) {
         emission--
         let index = Math.floor(Math.random() * samples.length)
-        if (settings.mode !== 'traces') {
-          for (
-            let attempt = 0;
-            attempt < 8 && Math.random() > nearPointer(samples[index]);
-            attempt++
-          )
-            index = Math.floor(Math.random() * samples.length)
-        }
+        for (let attempt = 0; attempt < 8 && Math.random() > nearPointer(samples[index]); attempt++)
+          index = Math.floor(Math.random() * samples.length)
         const p = samples[index],
           life = 1.3 + Math.random() * 1.4
-        const speed = (settings.reach / life) * (0.55 + Math.random() * 0.4)
+        const speed = ((dark ? 32 : 56) / life) * (0.55 + Math.random() * 0.4)
         particles.push({
           x: p.x,
           y: p.y,
@@ -244,11 +221,12 @@ function mount(button: HTMLAnchorElement) {
           life,
           size: 3 + Math.random() ** 2 * 9,
           phase: Math.random() * 6.28,
+          pink: !dark && Math.random() < 1 / 3,
         })
       }
     } else emission = 0
     if (reduced.matches) particles.length = 0
-    ctx.globalCompositeOperation = 'screen'
+    ctx.globalCompositeOperation = dark ? 'screen' : 'multiply'
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i]
       p.age += dt
@@ -261,41 +239,51 @@ function mount(button: HTMLAnchorElement) {
       const age = p.age / p.life
       const opacity =
         Math.sin(Math.PI * age) ** 0.7 * (0.5 + 0.5 * Math.sin(p.age * 5 + p.phase) ** 2)
-      const size = p.size * (1 + age * 0.6)
-      ctx.globalAlpha = opacity * Math.min(1, settings.light)
-      ctx.drawImage(sprite, p.x - size / 2, p.y - size / 2, size, size)
+      const size = p.size * (1 + age * 0.6) * (dark ? 1 : 0.8)
+      ctx.globalAlpha = opacity * (dark ? 1 : 0.75)
+      ctx.drawImage(sprites[p.pink ? 1 : 0], p.x - size / 2, p.y - size / 2, size, size)
     }
     ctx.restore()
     if (
-      (!reduced.matches && (active || settings.idle > 0)) ||
+      !reduced.matches ||
       Math.abs(glow - targetGlow) > 0.005 ||
       Math.abs(whiten - Number(active)) > 0.005 ||
       particles.length
     )
-      wake()
+      wake(false)
     else last = 0
   }
-  button.addEventListener('pointerenter', () => {
-    hovering = true
-    wake()
-  })
-  button.addEventListener('pointerleave', () => {
-    hovering = false
-    wake()
-  })
+  button.addEventListener(
+    'pointerenter',
+    () => {
+      hovering = true
+      wake()
+    },
+    events,
+  )
+  button.addEventListener(
+    'pointerleave',
+    () => {
+      hovering = false
+      wake()
+    },
+    events,
+  )
   let cursor: { x: number; y: number } | undefined
   function updateProximity() {
     if (!cursor || !bounds || !width || !height) return
+    // Pointer coordinates follow the painted header morph, not its fixed layout box.
+    bounds = button.getBoundingClientRect()
     const dx = Math.max(bounds.left - cursor.x, 0, cursor.x - bounds.right)
     const dy = Math.max(bounds.top - cursor.y, 0, cursor.y - bounds.bottom)
     const closeness = Math.max(0, 1 - Math.hypot(dx, dy) / 110)
     proximity = closeness * closeness * (3 - 2 * closeness)
     pointer = {
-      x: (cursor.x - bounds.left) / width,
-      y: (cursor.y - bounds.top) / height,
+      x: (cursor.x - bounds.left) / bounds.width,
+      y: (cursor.y - bounds.top) / bounds.height,
     }
-    button.style.setProperty('--shine-x', `${pointer.x * 100}%`)
-    button.style.setProperty('--shine-y', `${pointer.y * 100}%`)
+    button.style.setProperty('--temple-enter-shine-x', `${pointer.x * 100}%`)
+    button.style.setProperty('--temple-enter-shine-y', `${pointer.y * 100}%`)
     wake()
   }
   document.addEventListener(
@@ -305,7 +293,7 @@ function mount(button: HTMLAnchorElement) {
       cursor = { x: event.clientX, y: event.clientY }
       updateProximity()
     },
-    { passive: true, signal: events.signal },
+    events,
   )
   document.documentElement.addEventListener(
     'pointerleave',
@@ -314,7 +302,7 @@ function mount(button: HTMLAnchorElement) {
       proximity = 0
       wake()
     },
-    { signal: events.signal },
+    { signal },
   )
   window.addEventListener(
     'scroll',
@@ -322,16 +310,24 @@ function mount(button: HTMLAnchorElement) {
       bounds = button.getBoundingClientRect()
       updateProximity()
     },
-    { passive: true, signal: events.signal },
+    events,
   )
-  button.addEventListener('focus', () => {
-    focused = true
-    wake()
-  })
-  button.addEventListener('blur', () => {
-    focused = false
-    wake()
-  })
+  button.addEventListener(
+    'focus',
+    () => {
+      focused = true
+      wake()
+    },
+    events,
+  )
+  button.addEventListener(
+    'blur',
+    () => {
+      focused = false
+      wake()
+    },
+    events,
+  )
   const intersection = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     if (!visible) {
@@ -345,47 +341,85 @@ function mount(button: HTMLAnchorElement) {
   intersection.observe(button)
   const observer = new ResizeObserver(resize)
   observer.observe(button)
-  window.addEventListener('resize', resize)
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
+  window.addEventListener('resize', resize, events)
+  document.addEventListener(
+    'visibilitychange',
+    () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf)
+        raf = 0
+        last = 0
+        particles.length = 0
+      } else wake()
+    },
+    events,
+  )
+  reduced.addEventListener(
+    'change',
+    () => {
+      particles.length = 0
+      wake()
+    },
+    { signal },
+  )
+  function configureAppearance() {
+    for (const sprite of sprites) sprite.width = sprite.height = 0
+    dark = appearance.matches
+    sprites = dark
+      ? [createGlimmerSprite()]
+      : [
+          createGlimmerSprite(false, [teal, `${teal}e0`, `${blue}50`, `${blue}00`]),
+          createGlimmerSprite(false, ['#e68fdb', '#e68fdbe0', '#9f8fb750', '#9f8fb700']),
+        ]
+    field = createTraceField(dark ? darkTraceShades : lightTraceShades)
+    particles.length = 0
+    emission = 0
+    wake()
+  }
+  appearance.addEventListener('change', configureAppearance, { signal })
+  configureAppearance()
+  // IntersectionObserver alone still considers visibility:hidden buttons on
+  // screen. Pause the hidden half of the welcome/header handoff as well.
+  const visibilityHost =
+    button.closest('.temple-entry-closing') ?? host.querySelector('.temple-top-navigation')
+  const visibility = new MutationObserver(() => {
+    painted = getComputedStyle(button).visibility !== 'hidden'
+    if (painted) wake()
+    else {
       cancelAnimationFrame(raf)
       raf = 0
       last = 0
       particles.length = 0
-    } else wake()
+      glow = 0
+      button.style.setProperty('--temple-enter-shine-opacity', '0')
+    }
   })
-  reduced.addEventListener('change', wake)
-  window.addEventListener(
-    'pagehide',
+  if (visibilityHost)
+    visibility.observe(visibilityHost, {
+      attributes: true,
+      attributeFilter: ['data-nav-visible', 'data-nav-mounted', 'data-entry-visible'],
+    })
+  visibility.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-temple-loading'],
+  })
+  signal.addEventListener(
+    'abort',
     () => {
       cancelAnimationFrame(raf)
-      events.abort()
       observer.disconnect()
       intersection.disconnect()
-      sprite.width = sprite.height = 0
+      visibility.disconnect()
+      for (const sprite of sprites) sprite.width = sprite.height = 0
+      canvas.width = canvas.height = 0
+      canvas.remove()
+      particles.length = 0
+      field.traces.length = 0
+      samples = []
+      contour = []
+      for (const property of ['x', 'y', 'opacity'])
+        button.style.removeProperty(`--temple-enter-shine-${property}`)
     },
     { once: true },
   )
-  return { wake }
 }
-
-async function start() {
-  // Wait for CMX's existing island to finish mounting before attaching decoration.
-  for (let attempt = 0; attempt < 120; attempt++) {
-    if (
-      document.querySelector(
-        '.temple-artwork[data-state="ready"], .temple-artwork[data-state="fallback"]',
-      )
-    )
-      break
-    await new Promise((resolve) => setTimeout(resolve, 100))
-  }
-  document
-    .querySelectorAll<HTMLAnchorElement>(
-      '.temple-entry-welcome .fact-action a, .temple-entry-closing a, .temple-nav-enter a',
-    )
-    .forEach((button) => instances.push(mount(button)))
-  // Default to the first actual entry action; Opener returns to its source material.
-  if (new URL(location.href).searchParams.has('button-study')) findButton()
-}
-start()
