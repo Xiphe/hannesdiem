@@ -300,6 +300,7 @@
 .feed-home-logo {
   width: 14px;
   height: 28px;
+  transform: translateY(-3px);
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
