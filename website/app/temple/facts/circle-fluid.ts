@@ -26,6 +26,8 @@ export class CircleFluid {
   dotCapacity: number
   cursorCapacity: number
   releaseAsymmetry: number
+  /** Seconds between flank wetting fronts; null retains the website release. */
+  releaseSideDelay: number | null
   seatAdhesion: number
   targetDistances: Float64Array
   targetLoad: number
@@ -35,6 +37,7 @@ export class CircleFluid {
   drag: number
   clamps: number
   dots: CircleTarget[]
+  private peeling?: { age: number; side: number; relaxation: number }
   private wetSeat?: CircleTarget
   private wetParticles?: Float64Array
   private circulation?: CircleTarget & { age: number; duration: number; strength: number }
@@ -74,6 +77,7 @@ export class CircleFluid {
     this.dotCapacity = 63
     this.cursorCapacity = 245
     this.releaseAsymmetry = 1
+    this.releaseSideDelay = null
     this.seatAdhesion = 0
     this.targetDistances = new Float64Array(this.n)
     this.targetLoad = 0
@@ -87,7 +91,7 @@ export class CircleFluid {
       return { x: 180 + Math.cos(a) * 110, y: 180 + Math.sin(a) * 110, r: 13 }
     })
   }
-  /** Local circulation makes one side drain while its opposite lingers. */
+  /** Release through circulation or explicitly delayed surface wetting. */
   release(random: () => number = Math.random) {
     const target = this.target
     if (!target) return
@@ -102,9 +106,14 @@ export class CircleFluid {
     }
     const sign = random() < 0.5 ? -1 : 1
     const amount = random()
-    const spin = sign * (target.r ? 3.2 + amount * 1.3 : 3 + amount * 3.5)
+    this.peeling =
+      target.r && this.releaseSideDelay !== null
+        ? { age: 0, side: sign, relaxation: 0.8 + amount * 0.2 }
+        : undefined
+    const spin = sign * (target.r ? (this.peeling ? 0 : 3.2 + amount * 1.3) : 3 + amount * 3.5)
+    if (this.peeling) this.circulation = undefined
     const impulse = target.r ? spin * this.releaseAsymmetry : spin
-    if (target.r)
+    if (target.r && !this.peeling)
       this.circulation = { ...target, age: 0, duration: 0.7 + random() * 0.3, strength: spin * 24 }
     const dx = target.x - 180,
       dy = target.y - 180
@@ -161,6 +170,14 @@ export class CircleFluid {
     if (target) {
       circulation = this.circulation = undefined
       this.wetSeat = undefined
+      this.peeling = undefined
+    }
+    if (this.peeling) {
+      this.peeling.age += dt
+      if (this.peeling.age > 0.8 + 2 * (this.releaseSideDelay ?? 0) + this.peeling.relaxation) {
+        this.peeling = undefined
+        this.wetSeat = undefined
+      }
     }
     if (circulation) {
       circulation.age += dt
@@ -197,7 +214,7 @@ export class CircleFluid {
           Math.min(1, Math.max(0, (wetSeat.r + 40 - distance) / 8))
       }
     }
-    const wetting = Math.min(1, bridgeLoad / 12)
+    const wetting = this.peeling ? 1 : Math.min(1, bridgeLoad / 12)
     const adhesion = this.seatAdhesion * wetting * wetting * (3 - 2 * wetting)
     let load = 0
     if (target)
@@ -257,10 +274,27 @@ export class CircleFluid {
         if (near === 0) this.wetParticles![i] = 0
         const contact = near * near * (3 - 2 * near) * this.wetParticles![i]
         // Wet only material already at the surface; do not recruit distant
-        // particles. Let grip weaken as the actual incoming bridge empties.
-        const pull =
-          (this.attraction * 4 * adhesion * contact * (distance - wetSeat.r - 2)) / distance
-        const friction = 40 * adhesion * contact
+        // particles. Relax it through bridge load or each flank's wetting front.
+        let grip = adhesion * contact * (this.peeling ? 2 : 1)
+        if (this.peeling) {
+          const radial = Math.hypot(180 - wetSeat.x, 180 - wetSeat.y) || 1
+          const nx = (180 - wetSeat.x) / radial,
+            ny = (180 - wetSeat.y) / radial
+          const along = ((x[i] - wetSeat.x) * nx + (y[i] - wetSeat.y) * ny) / distance
+          const side = ((x[i] - wetSeat.x) * -ny + (y[i] - wetSeat.y) * nx) / distance
+          const later = Math.min(1, Math.max(0, 0.5 + this.peeling.side * side * 2))
+          const arc = Math.acos(Math.min(1, Math.max(-1, along))) / Math.PI
+          // Release surface wetting from the incoming neck around each flank.
+          // The outer tip loosens last; only real particle contact is affected.
+          const start = arc * (0.8 + 2 * (this.releaseSideDelay ?? 0) * later)
+          const phase = Math.min(
+            1,
+            Math.max(0, (this.peeling.age - start) / this.peeling.relaxation),
+          )
+          grip *= 1 - phase * phase * (3 - 2 * phase)
+        }
+        const pull = (this.attraction * 4 * grip * (distance - wetSeat.r - 2)) / distance
+        const friction = (this.peeling ? 60 : 40) * grip
         ax += tx * pull - vx[i] * friction
         ay += ty * pull - vy[i] * friction
       }

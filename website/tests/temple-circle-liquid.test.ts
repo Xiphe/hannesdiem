@@ -318,3 +318,59 @@ test('seat wetting holds the existing outer coating and releases when grip is re
   assert.ok(Math.hypot(...wet.metrics().centre.map((value) => value - 180)) < 2)
   assert.ok([...wet.x, ...wet.y].every(Number.isFinite))
 })
+
+test('flank delay separates the visible study-size coating and finishes draining', () => {
+  const held = new CircleFluid()
+  held.dots = held.dots.map((seat) => ({ ...seat, r: 16 }))
+  held.target = held.dots[5]
+  advance(held, 360) // The study's Test return collects for three physical seconds.
+  const results = [
+    [0, 0.2],
+    [1, 0.2],
+    [2, 0.2],
+    [1, 0.8],
+  ].map(([delay, sample]) => {
+    const fluid = new CircleFluid()
+    fluid.dots = held.dots.map((seat) => ({ ...seat }))
+    for (const field of ['x', 'y', 'vx', 'vy'] as const) fluid[field].set(held[field])
+    fluid.releaseSideDelay = delay
+    fluid.seatAdhesion = 1
+    fluid.target = fluid.dots[5]
+    fluid.release(() => sample)
+    // This mode changes wetting, without adding a rotational impulse.
+    assert.deepEqual(fluid.vx, held.vx)
+    assert.deepEqual(fluid.vy, held.vy)
+    const seat = fluid.dots[5]
+    const surface = new DensitySurface()
+    const lastCovered = [0, 0]
+    for (let step = 0; step < 960; step++) {
+      fluid.step()
+      if (step % 12 !== 0) continue
+      surface.update(fluid)
+      for (let flank = 0; flank < 2; flank++) {
+        const sign = flank ? 1 : -1
+        let density = 0
+        for (const angle of [-0.15, 0, 0.15]) {
+          const theta = Math.atan2(seat.y - 180, seat.x - 180) + Math.PI / 2 + angle
+          const x = Math.round((seat.x + sign * Math.cos(theta) * (seat.r + 5)) / surface.cell)
+          const y = Math.round((seat.y + sign * Math.sin(theta) * (seat.r + 5)) / surface.cell)
+          density += surface.field[y * surface.size + x] / 3
+        }
+        if (density > 1) lastCovered[flank] = step / 120
+      }
+    }
+    assert.equal(fluid.n, held.n)
+    assert.ok([...fluid.x, ...fluid.y].every(Number.isFinite))
+    assert.ok(Math.hypot(...fluid.metrics().centre.map((value) => value - 180)) < 2)
+    surface.update(fluid)
+    assert.equal(surface.loops.length, 1, 'the coating must drain rather than leave a stale arm')
+    return lastCovered[0] - lastCovered[1]
+  })
+  assert.ok(Math.abs(results[0]) <= 0.3, 'zero adds no deliberate side delay')
+  assert.ok(Math.abs(results[1]) >= 0.6, 'one-second wetting delay is clearly visible')
+  assert.ok(
+    Math.abs(results[2]) >= Math.abs(results[1]) + 0.4,
+    'more delay increases visible separation',
+  )
+  assert.ok(results[1] * results[3] < 0, 'either flank can lead')
+})

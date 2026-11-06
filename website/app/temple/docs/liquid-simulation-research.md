@@ -547,3 +547,43 @@ removing grip. Browser checks cover both named sliders, real parameter updates,
 reset, reload persistence, wet particles, release, export and mobile layout.
 TypeScript and the application build pass. Preview remains8796 through
 `sand tunnel 8796`; no publication requested.
+
+## Make the two-flank release observable — 2026-11-06
+
+The artist confirms that asynchronous means the two flanks of one seat, and
+reports that the effect still cannot be observed. Replaying the actual study
+conditions reveals the missing regression: with16px obstacles and adhesion1,
+both flanks remain covered for eight seconds at asymmetry0,1 and2. The earlier
+phase test used13px obstacles without wetting. Increasing circulation does not
+control the requested visible separation under the live study conditions.
+
+Keep the numerical material and contour reconstruction. Introduce opt-in
+releaseSideDelay (seconds; null preserves the website's existing release). In
+the experiment, withdraw the circulation-strength interpretation of Async and
+set the old rotational multiplier to0. Relax contact wetting from the incoming
+neck around the two flanks, giving one flank a later wetting front and loosening
+the outer tip last. This changes local attraction/friction on captured real
+material, never its positions or rendered outline. Vary the leading flank at
+release. The bounded wetting fronts finish, releasing the coating completely.
+A new target cancels them immediately. Other selected material settings remain.
+
+Async release now displays0–2 seconds. Save/reset/reload and JSON preserve the
+new releaseSideDelay; the JSON also records releaseAsymmetry0. Zero Seat adhesion
+disables the delay slider and explains its dependency. Test return resets the
+same solver with current controls, collects at the last seat for three physical
+seconds, then releases it automatically. Its scheduling follows solver steps,
+so a paused browser does not skip the collection phase. No comparison view or
+new website content/hosting contract is introduced.
+
+With three-second collection and the actual16px seat, measured visible flank
+separation changes from0.2s at zero added delay to0.7s at1s and1.4s at2s in a
+controlled replay. Further orientations/signs show0.7–0.9s at1s. The full browser
+study also shows one dry flank and one wet flank at the2s setting, using the
+actual generated density surface. Physical detachment times need not equal
+the imposed wetting-front offset.
+
+Fifteen numerical/topology cases pass, covering the real study radius/grip,
+increasing visible separation, reversed leading side, no added rotation, finite
+conserved material and complete return to one central contour. TypeScript and
+build pass. This corrects the experiment for further artistic review on8796;
+website defaults and publication remain separate.
