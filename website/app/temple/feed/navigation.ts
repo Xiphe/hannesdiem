@@ -120,13 +120,13 @@ export function supportsFeedNavigation() {
 }
 
 export async function leaveFeed(origin: FeedOrigin | null) {
-  if (origin && history.length > 1) {
-    if (supportsFeedNavigation() && navigation.canGoBack) {
+  if (origin && supportsFeedNavigation() && navigation.canGoBack) {
+    const entry = navigation.currentEntry
+    const previous = entry && navigation.entries()[entry.index - 1]
+    if (previous?.url === new URL(origin.href, location.origin).href) {
       await navigation.back().finished
       return true
     }
-    history.back()
-    return false
   }
   location.replace(origin?.href ?? '/')
   return false

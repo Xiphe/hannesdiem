@@ -122,6 +122,7 @@ export const documents: PublishedDocuments = {
     ]),
   ),
   'temple-of-sound/watch': feedFixtureDocument(page),
+  'temple-feed-entry': feedFixtureDocument(page, 'visit'),
   _redirects: {
     ...structuredClone(page),
     interface: { imports: {}, exports: { redirects: {} } },

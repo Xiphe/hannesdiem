@@ -38,6 +38,11 @@ Watch; the entry and share-image conversations own their corresponding views.
   control regardless of Temple entry memory. Preserve opaque Navigation API
   state when replacing classic history URLs, and defer initial persistence until
   Remix's active frame navigation finishes.
+  Traverse Back only when the previous entry matches the saved return URL. A
+  Temple section-scroll entry can leave the viewer mounted after traversal;
+  explicitly navigate to the saved URL in that case. Without a matching previous
+  entry, replace the document with the saved destination rather than guessing
+  from history length.
 - Video covers when its orientation matches the viewport; otherwise contains on
   black. Scrolling and loading show the video's own frame, never its selected
   cover. Unfinished videos retain progress; completed videos start afresh. Keep

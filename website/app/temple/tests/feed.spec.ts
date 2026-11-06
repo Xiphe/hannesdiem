@@ -524,6 +524,40 @@ test('Temple entry retains its original return point through browsing, reload an
   await expect(page).toHaveURL(origin)
 })
 
+test('Back restores Watch after entering through the Temple section navigation', async ({
+  page,
+}) => {
+  await page.goto('/temple-feed-entry')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await page.locator('.temple-nav-items a[href="/temple-of-sound/watch"]').click()
+  await expect(page).toHaveURL('/temple-of-sound/watch')
+  await page.locator('#fixture-latest').click()
+  await expect(page.locator('[data-back]')).toHaveAttribute('aria-label', 'Back')
+  await page.locator('[data-back]').evaluate((link) => (link as HTMLAnchorElement).click())
+  await expect(page).toHaveURL('/temple-of-sound/watch')
+  await expect(page.locator('.temple-feed')).toHaveCount(0)
+  await expect(page.locator('#fixture-latest')).toBeInViewport()
+})
+
+test('Back still opens its saved destination when browser Back is unavailable', async ({
+  page,
+  context,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Resetting browser history requires the Chromium protocol')
+  await page.goto('/temple-of-sound/watch#fixture-latest')
+  await page.locator('#fixture-latest').click()
+  await expect(page.locator('[data-back]')).toHaveAttribute('aria-label', 'Back')
+  await expect(page.locator('.temple-feed')).toHaveCSS('view-transition-name', 'none')
+  const session = await context.newCDPSession(page)
+  await session.send('Page.resetNavigationHistory')
+  expect(await page.evaluate(() => navigation.canGoBack)).toBe(false)
+  await page.locator('[data-back]').evaluate((link) => (link as HTMLAnchorElement).click())
+  await expect(page).toHaveURL('/temple-of-sound/watch#fixture-latest')
+  await expect(page.locator('.temple-feed')).toHaveCount(0)
+  await expect(page.locator('#fixture-latest')).toBeInViewport()
+})
+
 test('a global feed entry returns to another site page and restores its scroll', async ({
   page,
 }) => {

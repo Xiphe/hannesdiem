@@ -46,6 +46,8 @@ export function mountFeedTransitions() {
       }
       const arrived = await leaveFeed(origin)
       if (!arrived || !origin) return
+      // Section-scroll history entries can change the URL without restoring the page.
+      if (feed!.isConnected) await navigate(origin.href, { history: 'replace' })
       if (origin.preview) {
         const card = await destination(false, origin.preview)
         card?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'instant' })

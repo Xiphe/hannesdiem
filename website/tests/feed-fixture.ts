@@ -59,8 +59,11 @@ posts[1].children = {
   })),
 }
 
-export function feedFixtureDocument(template: CmxDocument): CmxDocument {
-  const content = entryTempleContent('inside', 'watch')
+export function feedFixtureDocument(
+  template: CmxDocument,
+  section: 'visit' | 'watch' = 'watch',
+): CmxDocument {
+  const content = entryTempleContent('inside', section)
   const opening = (content.default as CmxComponentNode).children![0] as CmxComponentNode
   ;(opening.props!.facts as Record<string, unknown>[])[0].after = structuredClone(collection)
   opening.slots = [['facts', 0, 'after']]
