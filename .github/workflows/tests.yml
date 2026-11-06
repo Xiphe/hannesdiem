@@ -41,7 +41,9 @@ jobs:
 
   qa:
     runs-on: ubuntu-24.04
-    environment: Production
+    environment:
+      name: Production
+      deployment: false
     timeout-minutes: 10
     # One inbox, one login roundtrip at a time. Deployments remain independent.
     concurrency:
