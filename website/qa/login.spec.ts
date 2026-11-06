@@ -9,11 +9,13 @@ test('real email login survives navigation and logout clears the session', async
   // include real email links or private form state in its error-page snapshots.
   const context = await browser.newContext({ baseURL })
   const page = await context.newPage()
+  let stage = 'Gmail access'
   try {
     const credentials = readGmailCredentials()
     const inbox = await openGmailInbox(credentials)
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.name))
+    stage = 'login form'
     expect((await page.goto('/login', { waitUntil: 'load' }))?.ok()).toBe(true)
     const form = page.locator('form[action="/login"]')
     await form.getByLabel('Email address').fill(credentials.email)
@@ -35,9 +37,13 @@ test('real email login survives navigation and logout clears the session', async
     }
     expect(result.type).toBe('success')
     expect(Boolean(result.nameRequired)).toBe(false)
+    stage = 'email delivery'
     const login = await inbox.waitForLogin(new URL(baseURL!).origin, since)
-    await page.goto(login.link, { waitUntil: 'load' })
-    await expect(page).toHaveURL((url) => url.searchParams.get('login_success') === 'true')
+    stage = 'emailed login link'
+    expect((await page.goto(login.link, { waitUntil: 'load' }))?.ok()).toBe(true)
+    // Chrome consumes login_success when it shows the welcome notice. Verify the
+    // persisted identity instead of racing that transient query parameter.
+    stage = 'initial session'
     const session = () =>
       page.evaluate(async () => {
         const response = await fetch('/login', { headers: { Accept: 'application/json' } })
@@ -45,9 +51,11 @@ test('real email login survives navigation and logout clears the session', async
         return (await response.json()) as { email?: string }
       })
     expect((await session()).email === credentials.email).toBe(true)
+    stage = 'session persistence'
     await page.goto('/temple-of-sound', { waitUntil: 'load' })
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
     expect((await session()).email === credentials.email).toBe(true)
+    stage = 'logout'
     await page.goto('/temple-of-sound/visit', { waitUntil: 'load' })
     await page.getByRole('button', { name: 'Open menu', exact: true }).click()
     await page
@@ -56,12 +64,11 @@ test('real email login survives navigation and logout clears the session', async
       .click()
     await expect.poll(async () => (await session()).email === undefined).toBe(true)
     expect(errors).toEqual([])
+    stage = 'mail archiving'
     await login.archive()
   } catch {
     // Never propagate Playwright call logs containing the emailed token or values.
-    throw new Error(
-      'Authenticated QA failed; verify inbox access, email delivery, login/logout, and mail archiving',
-    )
+    throw new Error(`Authenticated QA failed during ${stage}`)
   } finally {
     await context.close()
   }
