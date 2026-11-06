@@ -35,21 +35,21 @@ try {
   for (let sample = 0; sample < 24; sample++) {
     await page.waitForTimeout(150)
     const candidate = await page.evaluate(() => {
-      const title = document.querySelector('.temple-stage > canvas')
-      const foreground = document.querySelector('.temple-escapes')
+      const title = document.querySelector<HTMLCanvasElement>('.temple-stage > canvas')!
+      const foreground = document.querySelector<HTMLCanvasElement>('.temple-escapes')!
       const frame = document.createElement('canvas')
       frame.width = 1200
       frame.height = 630
-      const ink = frame.getContext('2d')
+      const ink = frame.getContext('2d')!
       ink.drawImage(title, 0, 0, frame.width, frame.height)
       ink.globalCompositeOperation = 'screen'
       // Lift the real foreground lights a little for a small messaging preview.
       ink.drawImage(foreground, 0, 0, frame.width, frame.height)
       ink.drawImage(foreground, 0, 0, frame.width, frame.height)
       const light = foreground
-        .getContext('2d')
+        .getContext('2d')!
         .getImageData(0, 0, foreground.width, foreground.height).data
-      const letters = title.getContext('2d').getImageData(0, 0, title.width, title.height).data
+      const letters = title.getContext('2d')!.getImageData(0, 0, title.width, title.height).data
       let score = 0
       for (let pixel = 3; pixel < light.length; pixel += 4)
         if (letters[pixel] < 20 && light[pixel] > 30) score += light[pixel]

@@ -5,7 +5,7 @@ import { test } from 'node:test'
 import { request } from '@playwright/test'
 
 test('local preview starts with simulated Circle authentication and provider writes', async (t) => {
-  const child = spawn(process.execPath, ['website/development/preview.mjs'], {
+  const child = spawn(process.execPath, ['website/development/preview.ts'], {
     env: { ...process.env, WEBSITE_TEST: 'true', PREVIEW_PORT: '0' },
     stdio: ['ignore', 'pipe', 'pipe'],
   })

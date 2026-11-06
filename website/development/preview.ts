@@ -1,6 +1,6 @@
 import { build } from 'esbuild'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
-import { createServer } from 'node:http'
+import { createServer, type OutgoingHttpHeaders } from 'node:http'
 import { basename, resolve } from 'node:path'
 import { cp, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -22,8 +22,17 @@ const compiled = await build({
   jsx: 'automatic',
   jsxImportSource: 'remix/component',
 })
-const contacts = new Map()
-const emails = []
+interface PreviewContact {
+  first_name: string
+  unsubscribed: boolean
+  topics: { id: string; subscription?: string }[]
+  segments: { id: string }[]
+}
+interface PreviewEmail {
+  html?: string
+}
+const contacts = new Map<string, PreviewContact>()
+const emails: PreviewEmail[] = []
 // Keep the manifest and its files together while other agents rebuild dist.
 const previewAssets = await mkdtemp(resolve(tmpdir(), 'hannesdiem-preview-assets-'))
 await cp(resolve('dist'), previewAssets, { recursive: true })
@@ -55,23 +64,24 @@ const mf = new Miniflare(
       const url = new URL(request.url)
       if (url.origin !== 'https://api.resend.com') return new Response(null, { status: 502 })
       const raw = request.method === 'GET' ? '' : await request.text()
-      const body = raw ? JSON.parse(raw) : undefined
+      const body: unknown = raw ? JSON.parse(raw) : undefined
       if (url.pathname === '/emails') {
-        emails.push(body)
+        emails.push(body as PreviewEmail)
         return Response.json({ id: `preview-${emails.length}` })
       }
       if (url.pathname === '/contacts' && request.method === 'POST') {
-        contacts.set(body.email.toLowerCase(), {
-          first_name: body.first_name ?? '',
-          unsubscribed: body.unsubscribed ?? false,
-          topics: body.topics ?? [],
-          segments: body.segments ?? [],
+        const input = body as Partial<PreviewContact> & { email: string }
+        contacts.set(input.email.toLowerCase(), {
+          first_name: input.first_name ?? '',
+          unsubscribed: input.unsubscribed ?? false,
+          topics: input.topics ?? [],
+          segments: input.segments ?? [],
         })
         return Response.json({ id: 'preview-contact' })
       }
       const match = url.pathname.match(/^\/contacts\/([^/]+)(.*)$/)
       const contact = match && contacts.get(decodeURIComponent(match[1]).toLowerCase())
-      if (!contact) return new Response(null, { status: 404 })
+      if (!match || !contact) return new Response(null, { status: 404 })
       if (request.method === 'GET' && match[2] === '/segments')
         return Response.json({ data: contact.segments ?? [], has_more: false })
       if (request.method === 'GET')
@@ -79,7 +89,7 @@ const mf = new Miniflare(
           match[2] === '/topics' ? { data: contact.topics, has_more: false } : contact,
         )
       if (match[2] === '/topics') {
-        for (const topic of body) {
+        for (const topic of body as PreviewContact['topics']) {
           contact.topics = contact.topics.filter((existing) => existing.id !== topic.id)
           contact.topics.push(topic)
         }
@@ -97,7 +107,7 @@ const mf = new Miniflare(
 await mf.ready
 const server = createServer(async (req, res) => {
   try {
-    const url = new URL(req.url, `http://${req.headers.host}`)
+    const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
     if (url.pathname === '/__preview/cursor') {
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
@@ -118,16 +128,21 @@ const server = createServer(async (req, res) => {
       )
       return
     }
-    const chunks = []
+    const chunks: Buffer[] = []
     for await (const chunk of req) chunks.push(chunk)
     const body = chunks.length ? Buffer.concat(chunks) : undefined
+    const requestHeaders: [string, string][] = []
+    for (const [name, value] of Object.entries(req.headers)) {
+      for (const item of Array.isArray(value) ? value : value === undefined ? [] : [value])
+        requestHeaders.push([name, item])
+    }
     const response = await mf.dispatchFetch(url.href, {
       method: req.method,
-      headers: req.headers,
+      headers: requestHeaders,
       body,
       redirect: 'manual',
     })
-    const headers = Object.fromEntries(response.headers)
+    const headers: OutgoingHttpHeaders = Object.fromEntries(response.headers)
     if (response.headers.getSetCookie().length)
       headers['set-cookie'] = response.headers.getSetCookie()
     res.writeHead(response.status, headers)
@@ -137,11 +152,13 @@ const server = createServer(async (req, res) => {
     res.end('Preview request failed.')
   }
 })
-server.listen(port, '0.0.0.0', () =>
+server.listen(port, '0.0.0.0', () => {
+  const address = server.address()
+  if (!address || typeof address === 'string') throw new Error('Preview has no TCP address')
   console.log(
-    `Local preview on port ${server.address().port}; provider requests are simulated. Confirmation email: /__preview/email`,
-  ),
-)
+    `Local preview on port ${address.port}; provider requests are simulated. Confirmation email: /__preview/email`,
+  )
+})
 async function stop() {
   server.close()
   await mf.dispose()

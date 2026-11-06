@@ -117,7 +117,7 @@ central crop. Explicit share/preview overrides retain their precedence. The
 playing video remains unchanged. The review tool requires only public playback
 identifiers and is separate from the shared website preview on8787.
 
-`node content/development/debug/cover-controls.mjs` runs a synthetic browser
+`node content/development/debug/cover-controls.ts` runs a synthetic browser
 comparison of the original and corrected handlers. After scrubbing to20.5s,
 the old +1s handler incorrectly chooses1s; the new handler chooses21.5s.
 It also checks adjacent frame stepping from that manually selected playhead.
@@ -162,7 +162,7 @@ slightly for thumbnail viewing. The compositor shifts the artwork32px upward
 and puts the date below it at550px, using the dark top-bar date ink `#403d36`
 and8px tracking. These measurements implement the artist’s layout feedback for
 review. Recapture with a running authored
-preview using `node website/app/temple/debug/capture-share-opener.mjs [URL] [PATH]`.
+preview using `node website/app/temple/debug/capture-share-opener.ts [URL] [PATH]`.
 Only the captured asset is needed for content-only publication, not a browser or
 website implementation. Its date is never baked into the frame.
 

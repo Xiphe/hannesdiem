@@ -1,6 +1,13 @@
 // Local browser performance diagnostic; not a content test or CI check.
 import { chromium, webkit } from '@playwright/test'
 
+declare global {
+  interface Window {
+    __repetitionReads: number
+    __drawTimes: number[]
+  }
+}
+
 const engine = process.env.ENGINE ?? 'chromium'
 if (engine !== 'chromium' && engine !== 'webkit') throw new Error('Unknown browser engine')
 const browser = await { chromium, webkit }[engine].launch({ headless: true })
@@ -21,7 +28,7 @@ try {
     await session.send('Emulation.setCPUThrottlingRate', { rate: cpu })
   }
   await page.addInitScript((fallback) => {
-    if (fallback) delete window.ViewTimeline
+    if (fallback) Reflect.deleteProperty(window, 'ViewTimeline')
     window.__repetitionReads = 0
     const rect = Element.prototype.getBoundingClientRect
     Element.prototype.getBoundingClientRect = function () {
@@ -57,16 +64,16 @@ try {
     const tracks = [...document.querySelectorAll('.repetition-track')]
     if (repetition && !tracks.length) throw new Error('The fixture needs repetition tracks')
     const start = repetition ? scrollY + tracks[0].getBoundingClientRect().top - innerHeight / 2 : 0
-    const end = repetition ? scrollY + tracks.at(-1).getBoundingClientRect().bottom : 2960
+    const end = repetition ? scrollY + tracks.at(-1)!.getBoundingClientRect().bottom : 2960
     scrollTo(0, start)
     await new Promise(requestAnimationFrame)
     await new Promise(requestAnimationFrame)
     window.__drawTimes = []
     window.__repetitionReads = 0
-    const gaps = []
-    let previous,
+    const gaps: number[] = []
+    let previous: number | undefined,
       frame = 0
-    await new Promise((resolve) =>
+    await new Promise<void>((resolve) =>
       requestAnimationFrame(function drive(now) {
         if (previous !== undefined) gaps.push(now - previous)
         previous = now
@@ -75,7 +82,7 @@ try {
         else resolve()
       }),
     )
-    const percentile = (values, quantile) => {
+    const percentile = (values: number[], quantile: number) => {
       const sorted = values.slice().sort((a, b) => a - b)
       return Math.round(sorted[Math.floor((sorted.length - 1) * quantile)] * 10) / 10
     }

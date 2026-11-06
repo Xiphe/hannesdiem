@@ -24,15 +24,15 @@ try {
     ['before', old],
     ['after', current],
     ['persisted-cover', current],
-  ]) {
+  ] as const) {
     const page = await browser.newPage()
     await page.addInitScript(() => {
-      const times = new WeakMap()
+      const times = new WeakMap<HTMLMediaElement, number>()
       Object.defineProperty(HTMLMediaElement.prototype, 'currentTime', {
-        get() {
+        get(this: HTMLMediaElement) {
           return times.get(this) ?? 0
         },
-        set(value) {
+        set(this: HTMLMediaElement, value: number) {
           times.set(this, value)
         },
       })
@@ -92,21 +92,25 @@ try {
     })
     await page.goto('http://review.test/')
     await page.waitForFunction(
-      () => document.querySelector('.results').getAttribute('aria-busy') === 'false',
+      () => document.querySelector('.results')!.getAttribute('aria-busy') === 'false',
     )
     if (version === 'persisted-cover') {
       assert.equal(Number(await page.locator('#time').inputValue()), 12.5)
       assert.equal(Number(await page.locator('#focal-x').inputValue()), 30)
       assert.equal(Number(await page.locator('#focal-y').inputValue()), 20)
-      assert.match(await page.locator('#progress').textContent(), /^1 of 1 saved/)
+      assert.match((await page.locator('#progress').textContent())!, /^1 of 1 saved/)
     }
-    await page.evaluate(() => (document.getElementById('video').currentTime = 20.5))
+    await page.evaluate(
+      () => (document.querySelector<HTMLVideoElement>('#video')!.currentTime = 20.5),
+    )
     await page.locator('#forward').click()
     const second = Number(await page.locator('#time').inputValue())
     if (version === 'before') assert.notEqual(second, 21.5)
     else {
       assert.equal(second, 21.5)
-      await page.evaluate(() => (document.getElementById('video').currentTime = 20.5))
+      await page.evaluate(
+        () => (document.querySelector<HTMLVideoElement>('#video')!.currentTime = 20.5),
+      )
       await page.locator('#forward-frame').click()
       assert.equal(Number(await page.locator('#time').inputValue()), 20.533333)
       await page.locator('#back-frame').click()
