@@ -36,7 +36,6 @@ const firstPair = {
     { text: 'Synthetic coda', face: 'cinzel' },
     { text: 'The native document continues after the bounded hold.' },
   ],
-  action: { label: 'Explore fixture', href: '/fixture', seed: 'fixture-action' },
 } satisfies PoemPair
 
 const secondPair = {
@@ -164,8 +163,7 @@ export const chorusNavigationTempleContent = fixtureContent(
   ],
   finalVerse,
 )
-const { action: _action, ...actionlessPair } = firstPair
-export const actionlessTempleContent = fixtureContent([actionlessPair, secondPair])
+export const actionlessTempleContent = fixtureContent([firstPair, secondPair])
 const fixtureLocation = {
   image: 'fixture-image',
   imageAlt: 'Synthetic room image',
@@ -185,13 +183,13 @@ const fixtureLocation = {
   },
 } satisfies NonNullable<PoemOpeningProps['location']>
 export const locationTempleContent = fixtureContent(
-  [actionlessPair, secondPair],
+  [firstPair, secondPair],
   undefined,
   undefined,
   fixtureLocation,
 )
 export const navigationTempleContent = fixtureContent(
-  [actionlessPair, secondPair],
+  [firstPair, secondPair],
   undefined,
   undefined,
   fixtureLocation,
@@ -270,7 +268,7 @@ export const fourPhraseTempleContent = fixtureContent(
 )
 
 export const factsTempleContent = fixtureContent(
-  [actionlessPair, secondPair],
+  [firstPair, secondPair],
   undefined,
   undefined,
   fixtureLocation,
@@ -338,7 +336,7 @@ export const factsTempleContent = fixtureContent(
 )
 
 export const reservationTempleContent = fixtureContent(
-  [actionlessPair],
+  [firstPair],
   undefined,
   undefined,
   undefined,

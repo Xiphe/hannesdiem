@@ -388,9 +388,7 @@ test('Temple bounds concurrent edge traces and clears them for reduced motion an
     expect(await signals.count()).toBeLessThanOrEqual(6)
   }
   await expect(signals).toHaveCount(0)
-  await page
-    .locator('.fragment-action-stage')
-    .evaluate((node) => node.scrollIntoView({ block: 'center' }))
+  await page.locator('.verse-copy').first().scrollIntoViewIfNeeded()
   // The trace scheduler owns timers; foreground painting is irrelevant here.
   await page.evaluate(() => {
     window.requestAnimationFrame = () => 0
@@ -400,14 +398,10 @@ test('Temple bounds concurrent edge traces and clears them for reduced motion an
   expect(
     await signals.evaluateAll((nodes) => new Set(nodes.map((node) => node.parentElement)).size),
   ).toBe(await signals.count())
-  const shapes = await page
-    .locator('.fragment-action-pieces [data-piece] path')
-    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('d')))
   for (const trace of await signals.all()) {
     const original = await trace.evaluate((node) =>
       node.parentElement!.querySelector(':scope > path')!.getAttribute('d'),
     )
-    expect(shapes).toContain(original)
     const tip = trace.locator('.fragment-signal-tip')
     expect(await tip.getAttribute('d')).not.toBe(original)
     const screenWidth = await tip.evaluate((node) => {
@@ -495,10 +489,6 @@ test('Temple keeps the title and static verse readable without JavaScript', asyn
     expect((await page.goto('/temple-of-sound'))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Temple of Sound' })).toBeVisible()
     await expect(page.locator('[data-poem-text]')).toContainText('Static verse fixture')
-    await expect(page.getByRole('link', { name: 'Explore fixture' })).toHaveAttribute(
-      'href',
-      '/fixture',
-    )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
       'https://hannesdiem.de/temple-of-sound',
@@ -1294,91 +1284,33 @@ test('Temple responsive chorus rows update across the breakpoint', async ({ page
   await expect(rows).toHaveCount(4)
 })
 
-test('Temple renders the authored action after the first pair with theme-aware fragments and native keyboard navigation', async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
+test('Temple keeps ground material stable across themes and viewport changes', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference', colorScheme: 'dark' })
   await page.goto('/temple-multiple')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-  const pairs = page.locator('.first-pair')
-  const stage = pairs.first().locator('.fragment-action-stage')
-  await expect(stage).toHaveAttribute('data-fragments-ready', '')
-  await expect(pairs.nth(1).locator('.fragment-action-stage')).toHaveCount(0)
-  const link = stage.getByRole('link', { name: 'Explore fixture' })
-  await expect(link).toHaveAttribute('href', '/fixture')
-  await expect(stage.locator('[data-piece]')).toHaveCount(11)
-  await stage.scrollIntoViewIfNeeded()
-  const shapes = () =>
-    stage.locator('path').evaluateAll((nodes) => nodes.map((n) => n.getAttribute('d')))
+  await page.locator('.verse-copy').first().scrollIntoViewIfNeeded()
+  const pieces = page.locator('.fragment-ground-piece > g > path')
+  await expect(pieces.first()).toBeAttached()
+  const shapes = () => pieces.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('d')))
   const paths = await shapes()
-  // The reduced-motion ground is unmounted; compare its material while visible.
-  await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await expect(page.locator('.fragment-ground-field')).toBeVisible()
-  const artwork = page.locator('.temple-artwork')
-  const patternPaths = await artwork
-    .locator('.fragment-ground-piece > g > path')
-    .evaluateAll((nodes) => [...new Set(nodes.map((path) => path.getAttribute('d')))])
-  expect(patternPaths.length).toBeGreaterThan(0)
-  for (const path of patternPaths) expect(paths).toContain(path)
-  await expect(stage.locator('path').first()).toHaveAttribute('stroke-linejoin', 'round')
-  await expect(stage.locator('path').first()).toHaveAttribute('stroke-width', '1.8')
-  // Hidden subtrees need not recompute paint styles in WebKit. Exercise the
-  // background theme switch while it is actually rendered.
+  expect(paths.length).toBeGreaterThan(0)
+  await expect(pieces.first()).toHaveAttribute('stroke-linejoin', 'round')
+  await expect(pieces.first()).toHaveAttribute('stroke-width', '1.8')
   const groundInk = page.locator('.fragment-ground-piece linearGradient stop').first()
-  const ground = await groundInk.evaluate((n) => getComputedStyle(n).stopColor)
-  const dark = await stage
-    .locator('linearGradient stop')
-    .first()
-    .evaluate((n) => getComputedStyle(n).stopColor)
+  const dark = await groundInk.evaluate((node) => getComputedStyle(node).stopColor)
   await page.emulateMedia({ colorScheme: 'light' })
   await expect
-    .poll(() =>
-      stage
-        .locator('linearGradient stop')
-        .first()
-        .evaluate((n) => getComputedStyle(n).stopColor),
-    )
+    .poll(() => groundInk.evaluate((node) => getComputedStyle(node).stopColor))
     .not.toBe(dark)
   expect(await shapes()).toEqual(paths)
-  await expect.poll(() => groundInk.evaluate((n) => getComputedStyle(n).stopColor)).not.toBe(ground)
+  const viewport = page.viewportSize()!
   await page.setViewportSize({ width: 390, height: 844 })
-  await stage.scrollIntoViewIfNeeded()
-  expect(await shapes()).toEqual(paths)
+  await page.locator('.verse-copy').first().scrollIntoViewIfNeeded()
+  await expect(pieces.first()).toBeAttached()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-  await link.focus()
-  await link.press('Enter')
-  await expect(page).toHaveURL(/\/fixture$/)
-  await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
-})
-
-test('Temple action scatters on click and zooms the same pieces back to full size', async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/temple-of-sound')
-  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-  const stage = page.locator('.fragment-action-stage')
-  await stage.scrollIntoViewIfNeeded()
-  await expect(stage).toHaveAttribute('data-fragments-ready', '')
-  const board = stage.locator('svg')
-  const scales = () =>
-    stage
-      .locator('[data-piece]')
-      .evaluateAll((nodes) =>
-        nodes.map((n) => Number(n.getAttribute('transform')!.match(/scale\(([^)]+)\)/)![1])),
-      )
-  const base = await scales()
-  const link = stage.getByRole('link', { name: 'Explore fixture' })
-  // Exercise the actual click effect while keeping this synthetic link on screen.
-  await link.evaluate((n) => n.addEventListener('click', (e) => e.preventDefault(), { once: true }))
-  await link.click()
-  await expect(board).toHaveAttribute('data-border-burst', '')
-  await expect.poll(async () => (await scales()).every((s) => s === 0)).toBe(true)
-  await expect.poll(async () => (await scales()).some((s, i) => s > 0 && s < base[i])).toBe(true)
-  await expect(board).not.toHaveAttribute('data-border-burst', '')
-  expect(await scales()).toEqual(base)
-  await page.getByRole('link', { name: 'Return to fixture' }).click()
-  await expect(page.locator('.fragment-action-stage')).toHaveCount(0)
+  await page.setViewportSize(viewport)
+  await page.locator('.verse-copy').first().scrollIntoViewIfNeeded()
+  await expect.poll(shapes).toEqual(paths)
 })
 
 for (const width of [390, 1440]) {

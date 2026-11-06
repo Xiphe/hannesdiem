@@ -1,5 +1,4 @@
 import type { Handle } from 'remix/component'
-import { FragmentAction } from './fragment-button/action.tsx'
 import type { PoemLine, PoemPair } from '@hannesdiem/content-components'
 function TypeLine(handle: Handle<PoemLine>) {
   return () => (
@@ -96,10 +95,7 @@ export function FirstPair(handle: Handle<{ id: string; pair: PoemPair; index: nu
           </div>
         )}
         <Refrain phrases={pair.refrain} />
-        <div
-          class="verse-copy verse-coda"
-          data-has-action={pair.action ? '' : undefined}
-        >
+        <div class="verse-copy verse-coda">
           {[pair.coda, ...(pair.continuation ?? [])].map((lines, index) => (
             <p data-nav-visual>
               <Phrase
@@ -108,7 +104,6 @@ export function FirstPair(handle: Handle<{ id: string; pair: PoemPair; index: nu
               />
             </p>
           ))}
-          {pair.action && <FragmentAction {...pair.action} />}
         </div>
       </article>
     )

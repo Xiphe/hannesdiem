@@ -1,5 +1,5 @@
 import { createGroundMotion } from './ground-motion.ts'
-import { groundMaterial, groundMaterialEvent, provideGroundMaterial } from './material.ts'
+import { groundMaterial, provideGroundMaterial } from './material.ts'
 import { generateFragments } from './fragment-generator.ts'
 import { mountGroundSignal } from './ground-signal.ts'
 
@@ -23,9 +23,8 @@ export function mountFragmentGround(
   }
   ground.appendChild(field)
   host.insertBefore(ground, host.firstChild)
-  // The sculpture remains available when the optional action is unpublished.
-  // When an action exists, it supplies its exact shapes and signal lifecycle.
-  if (!host.querySelector('.fragment-action-stage') && !groundMaterial(host)) {
+  // Each artwork owns its material; synthetic fixtures can supply a stable seed.
+  if (!groundMaterial(host)) {
     const seed = crypto.randomUUID()
     const pieces = generateFragments(seed, 11)
     provideGroundMaterial(host, { pieces, seed })
@@ -44,7 +43,6 @@ export function mountFragmentGround(
   const motion = createGroundMotion(host, field, refrains, signal)
   // Fitted text and arriving styles can settle after the initial asset-ready
   // frame. Observe real layout inputs; our absolute layers cannot resize them.
-  host.addEventListener(groundMaterialEvent, motion.resize, { signal })
   const observer = new ResizeObserver(motion.resize)
   observer.observe(host)
   for (const section of host.querySelectorAll('.bridge-copy, .bridge-body, .final-verse'))

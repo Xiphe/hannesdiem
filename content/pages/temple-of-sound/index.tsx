@@ -62,7 +62,6 @@ export const metadata = {
 export const title = 'Temple of Sound'
 
 // First pair: wording, display casing and typography chosen by the artist.
-// The invitation action stays unpublished while its design is in progress.
 export const firstPair = {
   paragraphs: [
     [
