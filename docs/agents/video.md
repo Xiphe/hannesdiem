@@ -5,6 +5,19 @@ an encoder or uploading multiple versions. Upload one finished Final Cut export
 directly to Stream; Stream handles encoding and adaptive delivery. The artist
 maintains source backups separately.
 
+## Restrict playback origins
+
+For every website video, set Cloudflare Stream's **Allowed Origins** to exactly
+`hannesdiem.de` and `localhost:8787` (`allowedOrigins` in the Stream API).
+Apply this to existing videos and each new or replacement upload before publishing.
+This limits embedding on other sites and their use of delivery bandwidth while
+keeping production playback and local review through `sand tunnel 8787` available.
+`www` redirects to the main domain, and there are no preview hostnames.
+
+Read back each video's saved origins after changing them, then check playback on
+the website and localhost. An empty origins list allows playback from any origin.
+See [Cloudflare's origin restrictions](https://developers.cloudflare.com/stream/viewing-videos/securing-your-stream/).
+
 ## Add a video to content
 
 Wait for Stream to finish processing. Copy the customer code and video ID from
