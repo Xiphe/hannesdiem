@@ -98,7 +98,7 @@ export async function openGmailInbox(
       return await response.json()
     } catch {
       throw new Error(
-        'QA Gmail request failed; check the read-only OAuth grant and Gmail API setup',
+        'QA Gmail request failed; check the gmail.modify OAuth grant and Gmail API setup',
       )
     }
   }
@@ -113,9 +113,9 @@ export async function openGmailInbox(
   })) as { access_token?: string; scope?: string }
   if (
     !token.access_token ||
-    (token.scope && token.scope !== 'https://www.googleapis.com/auth/gmail.readonly')
+    (token.scope && token.scope !== 'https://www.googleapis.com/auth/gmail.modify')
   )
-    throw new Error('QA requires an OAuth grant with only gmail.readonly')
+    throw new Error('QA requires an OAuth grant with only gmail.modify')
   const headers = { Authorization: `Bearer ${token.access_token}` }
   const api = 'https://gmail.googleapis.com/gmail/v1/users/me/'
   const profile = (await json(api + 'profile', { headers })) as { emailAddress?: string }
@@ -123,7 +123,7 @@ export async function openGmailInbox(
     throw new Error('QA Gmail grant belongs to a different inbox')
 
   return {
-    async waitForLogin(origin: string, since: number): Promise<string> {
+    async waitForLogin(origin: string, since: number) {
       const deadline = Date.now() + 120_000
       const seen = new Set<string>()
       while (Date.now() < deadline) {
@@ -141,7 +141,17 @@ export async function openGmailInbox(
             headers,
           })) as GmailMessage
           const link = findLoginLink(message, origin, since)
-          if (link) return link
+          if (link)
+            return {
+              link,
+              async archive() {
+                await json(api + `messages/${encodeURIComponent(id)}/modify`, {
+                  method: 'POST',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ removeLabelIds: ['INBOX'] }),
+                })
+              },
+            }
         }
         await setTimeout(2_000)
       }
