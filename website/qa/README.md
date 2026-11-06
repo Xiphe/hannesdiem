@@ -40,11 +40,13 @@ stay out of artifacts.
 ### Gmail access
 
 Use a dedicated Gmail account with OAuth permission
-`https://www.googleapis.com/auth/gmail.readonly`. This permits reading mail, not
-sending or changing it; Google grants it for the whole mailbox, not one label or
-sender. The runner makes only read requests to Gmail and never marks or deletes
-messages. A Google account password, production Resend key, or Cloudflare token is
-not needed by QA.
+`https://www.googleapis.com/auth/gmail.modify`. Google grants it for the whole
+mailbox, not one label or sender, and it also permits sending mail and moving
+messages to Trash. The runner only reads mail and archives the matched login
+message after login, navigation and logout checks succeed. Archiving removes its
+Inbox label; other labels and unread status remain unchanged. Failed checks leave
+the message for inspection. A Google account password, production Resend key, or
+Cloudflare token is not needed by QA.
 
 Create a Google Cloud OAuth client with the Gmail API enabled and authorize only
 that scope with offline access. Keep the OAuth app out of Google's **Testing**
@@ -62,7 +64,7 @@ Store a **single-line JSON object** in gopass at
   "name": "Website QA",
   "client_id": "<OAuth client ID>",
   "client_secret": "<OAuth client secret>",
-  "refresh_token": "<refresh token for gmail.readonly>"
+  "refresh_token": "<refresh token for gmail.modify>"
 }
 ```
 
@@ -105,7 +107,14 @@ use synthetic input and belong to this suite, rather than running-site QA.
 
 ## CI
 
-The **Tests** workflow is manual and independent of deployment. Select `qa` and a
-URL (default: Production `SITE_URL`), optionally enabling real login, or select
-`synthetic`. A CI runner must be able to reach the target; a local server needs a
-reachable URL or a runner on its machine. Running-site QA does not deploy anything.
+The **Tests** workflow is manual and independent of deployment. Every invocation
+runs the full synthetic suite and running-site QA in parallel; both must pass.
+Select a URL (default: Production `SITE_URL`), optionally enabling real login.
+A CI runner must be able to reach the target; a local server needs a reachable
+URL or a runner on its machine. Running-site QA does not deploy anything.
+
+After a deployment batch, run this workflow at the deployed revision. Agents
+record the checked revision, suites and login scope in the deploy skill's terse
+coordination log. A batch is complete when both suites pass for that revision
+and the required login scope; newer deployments remain pending. Focused local
+tests remain useful during development, but do not replace this full batch check.
