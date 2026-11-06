@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { openGmailInbox, readGmailCredentials } from './gmail.ts'
+import { waitForApplication } from './browser.ts'
 
 test('real email login survives navigation and logout clears the session', async ({
   browser,
@@ -17,6 +18,8 @@ test('real email login survives navigation and logout clears the session', async
     page.on('pageerror', (error) => errors.push(error.name))
     stage = 'login page'
     expect((await page.goto('/login', { waitUntil: 'load' }))?.ok()).toBe(true)
+    stage = 'login form hydration'
+    await waitForApplication(page)
     const form = page.locator('form[action="/login"]')
     stage = 'email entry'
     await form.getByLabel('Email address').fill(credentials.email)
