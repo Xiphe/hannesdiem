@@ -617,3 +617,28 @@ whole-silhouette frame comparison was inspected without adding another view.
 This fixes an observed interaction bug. Whether the resulting motion reads as
 the intended liquid remains for the artist's review on8796 (`sand tunnel 8796`).
 It supersedes the earlier blanket cancellation of wetting on a new target.
+
+## A lighter material after the corrected mouse exit — 2026-11-06
+
+The artist responds “better” to the corrected normal pointer exit and asks
+for less gooey, more liquid motion. Preserve that interaction and the current
+seat grip/async tuning; reopen the material's dissipation for review. In the
+8796 experiment, lower viscosity61→18 and environmental drag8→3, exposing
+Damping as a live control. These are existing solver parameters; no new liquid
+geometry, pressure/cohesion changes or website-default changes are introduced.
+
+Apply the requested tuning once on the next browser load, preserving other
+controls and backing up the prior saved object. A material-revision marker
+keeps subsequent manual tuning intact. Reset, persistence and JSON export
+include the new damping control. Archive the previous study HTML and document
+recovery in its README, rather than adding a competing-view UI.
+
+Controlled traces retain661 finite particles, settle centrally and reconstruct
+one contour for both materials. The lighter trace moves more freely and its
+inspected SVG frames shed thin necks earlier. The existing speed guard engages
+more often in that trace; this is a material proposal, not a performance claim.
+The real continuous-pointer-exit regression and contour/topology checks pass.
+Browser checks verify initial18/3, migration/backup, preserved other settings,
+live damping, reset/reload, JSON export and mobile layout.
+Whether this feels sufficiently liquid remains for the artist's review on8796
+(`sand tunnel 8796`); publication and website integration remain separate.
