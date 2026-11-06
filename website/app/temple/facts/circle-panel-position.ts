@@ -70,6 +70,9 @@ export function mountCirclePanelPosition(
       maxHeight = below
       y = Math.max(top, anchor.bottom + 8)
     }
+    // Keyboard panning can move the seat outside the visual viewport. The
+    // available space is clipped above, so clip the final anchor placement too.
+    y = clamp(y, top, bottom - Math.min(height, maxHeight))
     panel.style.setProperty('--circle-panel-max-height', `${maxHeight}px`)
     panel.style.setProperty('--circle-panel-top', `${y - origin.top}px`)
     panel.style.setProperty('--circle-panel-left', `${x + width / 2 - origin.left}px`)
