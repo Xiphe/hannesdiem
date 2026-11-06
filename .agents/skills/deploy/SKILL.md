@@ -25,22 +25,30 @@ has only the relevant fields:
 - `pending`: `revision`, `owner` (chat ID), `scope` (`anonymous` or `login`),
   optional `reason` (short code, e.g. `gmail-oauth` or `queued-deploy`).
 - `running`: `revision`, `owner`, `scope` for the in-flight check.
-- `last`: `revision`, `at` (UTC), `scope`, `result` (`passed` or `failed`).
+- `last`: `revision`, `at` (UTC), `scope`, `suites` (the checked suites:
+  `qa`, `synthetic`), `result` (`passed` or `failed`).
 
 Serialize file edits with `flock .deploy-qa.lock`: read and update while holding
 the lock, then release it before running tests. Record successful deployments as
 pending; a newer deployment does not replace a running check. Preserve scope
 `login` across newer deployments if any unchecked deployment requires it. Record
 your claim in `running` under the lock; honor an existing running claim. After checking, update
-`last`, remove your `running`, and clear only pending work covered by the checked
-revision and scope. Failures remain pending with an owner. Retain no prose or
+`last`, remove your `running`, and clear pending work only when both `qa` and
+`synthetic` passed for the pending revision and required login scope. A partial
+run or a record without both suites leaves the batch pending. Failures remain
+pending with an owner. Retain no prose or
 history. Inspect an owner's status before taking over an abandoned claim; request
 clarification only if the log and status leave ownership unresolved.
 
-Run `npm run test:qa -- --url <target>` against the running site. Include `--auth`
-when authentication flows changed or login QA was explicitly requested. Such work
-stays pending with scope `login` if the inbox is unavailable; anonymous success
-does not satisfy it.
+After a deployment batch, run the manual **Tests** workflow; every invocation
+runs full synthetic regression and running-site QA in parallel. Select the
+deployed revision's branch and verify that the workflow's commit SHA matches
+the deployed revision. A passing run from another revision leaves it pending.
+For local validation, check out that revision, build the app, and run both
+`npm run test:synthetic` and `npm run test:qa -- --url <target>`.
+Enable real login (`auth` in CI, `--auth` locally) when authentication flows
+changed or login QA was explicitly requested. Such work stays pending with scope
+`login` if the inbox is unavailable; anonymous success does not satisfy it.
 Read [the QA instructions](../../../website/qa/README.md) for inbox access and CI.
 For production bookkeeping, read the latest successful Deploy workflow's SHA and
 active runs at the start and finish of QA. A newer active or completed deployment
@@ -48,7 +56,7 @@ keeps QA pending for that revision. This identifies the deployment batch, not a
 runtime-attested commit. CI results can be recorded by the coordinating agent;
 local results for a different revision do not validate production.
 
-Choose relevant synthetic tests for the change; `npm run test:synthetic` runs the
-complete fixture suite on a separate port. Run the full suite when warranted by
-the change or a QA failure, rather than after every deployment. Investigate QA
-failures, fix regressions within the task, and report unresolved failures.
+During development, choose relevant synthetic tests for the change. The full
+suite runs once per deployment batch, rather than after every rapid-fire deploy.
+Investigate failures, fix regressions within the task, and report unresolved
+failures.

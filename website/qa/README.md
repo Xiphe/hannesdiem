@@ -107,7 +107,14 @@ use synthetic input and belong to this suite, rather than running-site QA.
 
 ## CI
 
-The **Tests** workflow is manual and independent of deployment. Select `qa` and a
-URL (default: Production `SITE_URL`), optionally enabling real login, or select
-`synthetic`. A CI runner must be able to reach the target; a local server needs a
-reachable URL or a runner on its machine. Running-site QA does not deploy anything.
+The **Tests** workflow is manual and independent of deployment. Every invocation
+runs the full synthetic suite and running-site QA in parallel; both must pass.
+Select a URL (default: Production `SITE_URL`), optionally enabling real login.
+A CI runner must be able to reach the target; a local server needs a reachable
+URL or a runner on its machine. Running-site QA does not deploy anything.
+
+After a deployment batch, run this workflow at the deployed revision. Agents
+record the checked revision, suites and login scope in the deploy skill's terse
+coordination log. A batch is complete when both suites pass for that revision
+and the required login scope; newer deployments remain pending. Focused local
+tests remain useful during development, but do not replace this full batch check.
