@@ -587,3 +587,33 @@ increasing visible separation, reversed leading side, no added rotation, finite
 conserved material and complete return to one central contour. TypeScript and
 build pass. This corrects the experiment for further artistic review on8796;
 website defaults and publication remain separate.
+
+## Normal pointer exit bypassed the seat release — 2026-11-06
+
+The artist still cannot observe the difference and clarifies that they mean
+when the mouse leaves the circle. A real pointer-path regression exposes a
+separate wiring bug: seat → free-pointer band → outside releases only the
+free cursor (radius0). The seat's delayed wetting never starts, or a subsequent
+active pointer immediately cancels it. The Test return button skips that band,
+so the previous successful demonstration did not exercise the artist's action.
+
+The browser repro fails with releasedTargets[0], no seat wetting and no flank
+delay. Add CircleFluid.setTarget to own these transitions. In the experimental
+side-delay mode, leaving a seat starts its release before assigning the free
+cursor. Ending that cursor preserves the seat's in-progress release. An active
+free cursor or different seat no longer cancels the previous seat's bounded
+wetting; returning to the same seat replaces it with collection. The study now
+uses this method instead of direct target writes. Existing website defaults
+and legacy direct-target behavior remain; this is not production integration.
+
+The same continuous mouse path now records the16px seat release, retains its
+wetting through the free-pointer band and shows one wet flank/one dry flank
+after exit. Sixteen numerical/topology cases pass, including that transition
+and complete subsequent draining; website TypeScript and application build
+pass. The actual mouse regression is preserved as verify-pointer-exit.mjs in
+the documented study directory, alongside verify-surface.mjs. A diagnostic
+whole-silhouette frame comparison was inspected without adding another view.
+
+This fixes an observed interaction bug. Whether the resulting motion reads as
+the intended liquid remains for the artist's review on8796 (`sand tunnel 8796`).
+It supersedes the earlier blanket cancellation of wetting on a new target.

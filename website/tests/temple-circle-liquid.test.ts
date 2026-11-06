@@ -374,3 +374,39 @@ test('flank delay separates the visible study-size coating and finishes draining
   )
   assert.ok(results[1] * results[3] < 0, 'either flank can lead')
 })
+
+test('normal seat to cursor to outside motion preserves the two-flank release', () => {
+  const fluid = new CircleFluid()
+  fluid.dots = fluid.dots.map((seat) => ({ ...seat, r: 16 }))
+  fluid.releaseSideDelay = 2
+  fluid.seatAdhesion = 1
+  fluid.setTarget(fluid.dots[5])
+  advance(fluid, 360)
+  fluid.setTarget({ x: 180, y: 320, r: 0 }, () => 0.2)
+  advance(fluid, 6)
+  fluid.setTarget(null, () => {
+    throw new Error('a departing free cursor must not replace the released seat')
+  })
+  advance(fluid, 270)
+  const surface = new DensitySurface()
+  surface.update(fluid)
+  const seat = fluid.dots[5]
+  const sides = [-1, 1].map((sign) => {
+    let density = 0
+    for (const angle of [-0.15, 0, 0.15]) {
+      const x = Math.round((seat.x + sign * Math.cos(angle) * (seat.r + 5)) / surface.cell)
+      const y = Math.round((seat.y + Math.sin(angle) * (seat.r + 5)) / surface.cell)
+      density += surface.field[y * surface.size + x] / 3
+    }
+    return density > 1
+  })
+  assert.notEqual(
+    sides[0],
+    sides[1],
+    'the actual pointer exit must leave a visible wet/dry flank interval',
+  )
+  advance(fluid, 720)
+  surface.update(fluid)
+  assert.equal(surface.loops.length, 1)
+  assert.ok(Math.hypot(...fluid.metrics().centre.map((value) => value - 180)) < 2)
+})

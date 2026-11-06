@@ -91,6 +91,18 @@ export class CircleFluid {
       return { x: 180 + Math.cos(a) * 110, y: 180 + Math.sin(a) * 110, r: 13 }
     })
   }
+  /** Preserve a released seat's wetting while the pointer crosses free space. */
+  setTarget(next: CircleTarget | null, random: () => number = Math.random) {
+    const previous = this.target
+    const sameSeat =
+      previous?.r && next?.r && Math.hypot(previous.x - next.x, previous.y - next.y) < 0.1
+    if (previous?.r && !sameSeat && this.releaseSideDelay !== null) {
+      this.release(random)
+    } else if (previous && !next && !(this.peeling && !previous.r)) {
+      this.release(random)
+    }
+    this.target = next
+  }
   /** Release through circulation or explicitly delayed surface wetting. */
   release(random: () => number = Math.random) {
     const target = this.target
@@ -169,8 +181,16 @@ export class CircleFluid {
     let circulation = this.circulation
     if (target) {
       circulation = this.circulation = undefined
-      this.wetSeat = undefined
-      this.peeling = undefined
+      // A free pointer or another seat must not erase the previous seat's
+      // release. Returning to that same seat replaces wetting with collection.
+      const sameSeat =
+        target.r &&
+        this.wetSeat &&
+        Math.hypot(target.x - this.wetSeat.x, target.y - this.wetSeat.y) < 0.1
+      if (!this.peeling || sameSeat) {
+        this.wetSeat = undefined
+        this.peeling = undefined
+      }
     }
     if (this.peeling) {
       this.peeling.age += dt
