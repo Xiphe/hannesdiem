@@ -4,6 +4,8 @@ import { createCookie } from 'remix/cookie'
 import { templeSegment, templeTopic } from './temple-config.ts'
 import { templeNewsletterPath, type TempleNewsletterState } from './contract.ts'
 import { handleNewsletter, type NewsletterEnvironment, type NewsletterState } from './index.ts'
+import { csrfRejectionHeader } from './contract.ts'
+import { readSessionState, submitSessionForm } from './session-client.ts'
 import {
   cleanupNewsletterStorage,
   handleNewsletterStorage,
@@ -219,6 +221,123 @@ function harness() {
 function cookieFrom(headers: Headers): string | undefined {
   return headers.getSetCookie()[0]?.split(';')[0]
 }
+
+test('private form clients share a real session and recover a rotated cookie before delivery', async (t) => {
+  const h = harness()
+  h.env.CIRCLE_STATE = { getByName: () => ({ fetch: async () => Response.json({ places: [] }) }) }
+  let cookie: string | undefined
+  let rejected = 0
+  t.mock.method(console, 'error', () => {})
+  t.mock.method(globalThis, 'fetch', async (input: string, init?: RequestInit) => {
+    assert.equal(init?.credentials, 'same-origin')
+    assert.equal(init?.mode, 'same-origin')
+    const url = new URL(input, 'https://example.com')
+    const headers = new Headers(init?.headers)
+    if (cookie) headers.set('Cookie', cookie)
+    if (init?.method === 'POST') headers.set('Origin', url.origin)
+    const response = await h.handle(url.pathname + url.search, { ...init, headers })
+    cookie = cookieFrom(response.headers) ?? cookie
+    if (response.status === 403) rejected++
+    return response
+  })
+  const signal = new AbortController().signal
+  const states = await Promise.all(
+    ['/newsletter/temple', '/circle', '/login'].map(async (path) => {
+      const response = await readSessionState(path, signal)
+      assert.equal(response.status, 200)
+      return response.json() as Promise<NewsletterState>
+    }),
+  )
+  assert.equal(new Set(states.map((state) => state.csrfToken)).size, 1)
+  assert.equal([...h.storage.entries.keys()].filter((key) => key.startsWith('session:')).length, 1)
+  const values = (email: string, token: string, extra: Record<string, string> = {}) => {
+    const body = new FormData()
+    for (const [key, value] of Object.entries({
+      email,
+      name: 'Synthetic person',
+      _csrf: token,
+      ...extra,
+    }))
+      body.set(key, value)
+    return body
+  }
+  for (const [index, path] of ['/newsletter/temple', '/circle', '/login'].entries()) {
+    const response = await submitSessionForm(
+      path,
+      values(
+        `fixture-${index}@example.org`,
+        states[index].csrfToken!,
+        path === '/circle' ? { intent: 'verify', spot: '1' } : { intent: 'subscribe' },
+      ),
+      signal,
+      undefined,
+    )
+    assert.equal(response.status, 200)
+  }
+  assert.equal(rejected, 0)
+  const rotated = await h.state()
+  cookie = rotated.cookie
+  const response = await submitSessionForm(
+    '/newsletter/temple',
+    values('retry@example.org', states[0].csrfToken!, { intent: 'subscribe' }),
+    signal,
+    undefined,
+  )
+  assert.equal(response.status, 200)
+  assert.equal(rejected, 1)
+  assert.equal(h.calls.filter((call) => call.url.endsWith('/emails')).length, 4)
+})
+
+test('rejected CSRF requests are classified and logged without private request data', async (t) => {
+  const h = harness()
+  const logs: string[] = []
+  t.mock.method(console, 'error', (value: string) => logs.push(value))
+  const state = await h.state()
+  const response = await h.handle('/login?token=synthetic-private-link', {
+    method: 'POST',
+    headers: { Accept: 'application/json', Origin: 'https://example.com', Cookie: state.cookie },
+    body: new URLSearchParams({
+      email: 'private@example.org',
+      name: 'Synthetic private name',
+      _csrf: 'private-invalid-token',
+    }),
+  })
+  assert.equal(response.status, 403)
+  assert.equal(response.headers.get(csrfRejectionHeader), 'invalid-token')
+  assert.deepEqual(await response.json(), {
+    type: 'error',
+    message: 'Something went wrong. Please try again.',
+  })
+  assert.deepEqual(
+    logs.map((value) => JSON.parse(value)),
+    [
+      {
+        event: 'newsletter_failure',
+        path: '/login',
+        method: 'POST',
+        stage: 'csrf',
+        reason: 'invalid-token',
+      },
+    ],
+  )
+  for (const privateValue of [
+    'synthetic-private-link',
+    'private@example.org',
+    'Synthetic private name',
+    'private-invalid-token',
+    state.cookie,
+  ])
+    assert.ok(!logs.join('').includes(privateValue))
+  assert.equal(h.calls.length, 0)
+  const crossOrigin = await h.submit('private@example.org', state.csrfToken!, state.cookie, {
+    Accept: 'application/json',
+    Origin: 'https://elsewhere.example',
+    'Sec-Fetch-Site': 'cross-site',
+  })
+  assert.equal(crossOrigin.status, 403)
+  assert.equal(crossOrigin.headers.get(csrfRejectionHeader), null)
+  assert.equal(JSON.parse(logs.at(-1)!).stage, 'origin')
+})
 
 test('confirmation is single-use, rotates an opaque session, preserves unsubscribe, and logout revokes it', async () => {
   const h = harness()

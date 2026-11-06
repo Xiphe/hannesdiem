@@ -1,4 +1,5 @@
 import { createNewsletterSessionRouter } from './session-router.ts'
+import { reportNewsletterFailure } from './diagnostics.ts'
 import { completeAuth } from 'remix/auth'
 import * as s from 'remix/data-schema'
 import * as checks from 'remix/data-schema/checks'
@@ -222,6 +223,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
         reactivate: recipient.unsubscribed,
       })
     } catch {
+      reportNewsletterFailure(context.request, 'confirmation_delivery')
       await call('/tokens/revoke', { tokenHash })
       return reply({ type: 'error', message: templeMessages.failure }, 503)
     }
@@ -296,6 +298,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       link.searchParams.set('token', token)
       await sendConfirmation(email, link.href, tokenHash, env, services)
     } catch {
+      reportNewsletterFailure(context.request, 'confirmation_delivery')
       await call('/tokens/revoke', { tokenHash })
       return resultResponse(
         { type: 'error', message: 'Something went wrong. Please try again.' },
@@ -338,6 +341,7 @@ function createNewsletterRouter(env: NewsletterEnvironment, services: Newsletter
       } else if (scope === 'temple') await subscribeTemple(email, name ?? '', env, services, true)
       else await ensureNewsletterContact(email, env, services, name)
     } catch {
+      reportNewsletterFailure(context.request, 'verification')
       return failure('verification_failed')
     }
     completeAuth(context).set('email', email)
@@ -381,6 +385,7 @@ export async function handleNewsletter(
   )
     return null
   if (!configured(env)) {
+    reportNewsletterFailure(request, 'configuration')
     if (wantsJson(request))
       return privateResponse(
         Response.json(
@@ -430,6 +435,7 @@ export async function handleNewsletter(
     if (error instanceof FormDataParseError) {
       return failure('Invalid form submission.', 400)
     }
+    reportNewsletterFailure(request, 'request')
     return failure('Something went wrong. Please try again.', 503)
   }
 }

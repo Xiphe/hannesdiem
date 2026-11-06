@@ -4,6 +4,7 @@ import { mountCircle } from './circle-enhance.ts'
 import { mountCirclePanelPosition } from './circle-panel-position.ts'
 import { circleRestSurface } from './circle-surface.ts'
 import { CirclePanel } from '../../circle/panel.tsx'
+import { readSessionState } from '../../newsletter/session-client.ts'
 import {
   circlePath,
   circleMessages,
@@ -30,12 +31,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
     if (refreshing || handle.signal.aborted) return
     refreshing = true
     try {
-      const response = await fetch(circlePath, {
-        headers: { Accept: 'application/json' },
-        credentials: 'same-origin',
-        mode: 'same-origin',
-        signal: handle.signal,
-      })
+      const response = await readSessionState(circlePath, handle.signal)
       const value = (await response.json()) as CircleView
       if (
         !response.ok ||
@@ -92,6 +88,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
   async function result(value: CircleResult) {
     const previous = state.own?.spot
     if (value.state) state = value.state
+    if (value.csrfToken) state = { ...state, csrfToken: value.csrfToken }
     selected = availableCircleSpot(state, state.selected ?? selected) ?? selected
     feedback = value
     if (value.type === 'success' && !value.confirmationPending && !value.nameRequired) {
@@ -250,6 +247,7 @@ export function FactCircle(handle: Handle<CircleProps>) {
             {expanded && (
               <CirclePanel
                 state={state}
+                refresh={refresh}
                 spot={selected}
                 moving={moving}
                 close={async () => {

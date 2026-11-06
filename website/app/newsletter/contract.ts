@@ -4,6 +4,8 @@ export interface NewsletterState {
   csrfToken?: string
 }
 
+export const csrfRejectionHeader = 'X-Hdm-Csrf-Rejected'
+
 export interface TempleNewsletterState extends NewsletterState {
   name?: string
   subscribed?: boolean

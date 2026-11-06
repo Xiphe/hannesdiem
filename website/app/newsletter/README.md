@@ -20,6 +20,26 @@ private `/newsletter/temple` form endpoint. Public CMX HTML contains no session 
 subscription state. These flows reuse the existing Remix session, CSRF middleware,
 Resend transport and Workers Durable Object; no provider SDK or parallel auth store.
 
+Private browser state requests share the first response before starting further
+reads, so Watch, Circle and the sidebar cannot create competing anonymous session
+cookies. Startup uses the browser's Web Locks API to coordinate other tabs where
+available; the shared promise still coordinates islands when locks are unavailable.
+One island's cancellation does not cancel the page's bounded startup request.
+
+Remix's CSRF rejection hook returns `X-Hdm-Csrf-Rejected` and a JSON error for
+enhanced forms. Only a missing/invalid token rejection permits one replay: reload
+`/login` state, verify the authenticated identity is unchanged, replace `_csrf`,
+and resubmit the original fields and submitter intent. An identity change refreshes
+the owning form instead. Origin rejection, unmarked 403s, provider errors, network
+failures and a second rejection never trigger another submission. Native forms
+retain their existing rejection responses and CSRF enforcement.
+
+Server diagnostics use `newsletter_failure` with route path, method, stage and
+the middleware's rejection reason. Confirmation delivery and verification catches
+also record their stage. No form values, email addresses, names, cookies, query
+strings, token values or raw errors are added to these logs. Browser network errors
+remain local; this adds no client telemetry endpoint.
+
 New Temple profiles require a name after the email lookup. Its one-hour,
 one-use token stores a new trimmed name, email and Temple intent server-side.
 Older general-login tokens still work.

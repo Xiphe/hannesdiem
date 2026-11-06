@@ -2,6 +2,7 @@ import { on, ref, type Handle } from 'remix/component'
 import { PieceSurface } from '../temple/piece-tooltip/surface.tsx'
 import { NotificationSwitch } from './notification-switch.tsx'
 import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
+import { readSessionState, submitSessionForm, SessionChangedError } from './session-client.ts'
 import {
   templeMessages,
   templeNewsletterPath,
@@ -69,12 +70,7 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
     request = controller
     let centerConfirmation = false
     try {
-      const response = await fetch(templeNewsletterPath, {
-        headers: { Accept: 'application/json' },
-        credentials: 'same-origin',
-        mode: 'same-origin',
-        signal: controller.signal,
-      })
+      const response = await readSessionState(templeNewsletterPath, controller.signal)
       if (!response.ok) throw new Error('Subscription state unavailable')
       const value = (await response.json()) as TempleNewsletterState
       if (
@@ -176,14 +172,12 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
       optimisticSubscription = body.get('intent') === 'subscribe'
     void handle.update()
     try {
-      const response = await fetch(templeNewsletterPath, {
-        method: 'POST',
+      const response = await submitSessionForm(
+        templeNewsletterPath,
         body,
-        headers: { Accept: 'application/json' },
-        credentials: 'same-origin',
-        mode: 'same-origin',
-        signal: handle.signal,
-      })
+        handle.signal,
+        state.email,
+      )
       const value = (await response.json()) as TempleNewsletterResult
       if (
         !['success', 'error', 'spam_protection'].includes(value.type) ||
@@ -198,9 +192,13 @@ export function TempleSignup(handle: Handle<TempleSignupProps>) {
       if (value.state) state = value.state
       if (value.type === 'spam_protection') scheduleRetry(value.remainingSeconds)
       else if (value.type === 'success' && !value.state && !value.nameRequired) scheduleRetry(120)
-    } catch {
+    } catch (error) {
       if (handle.signal.aborted) return
       result = { type: 'error', message: templeMessages.failure }
+      if (error instanceof SessionChangedError) {
+        pending = false
+        await refresh()
+      }
     } finally {
       if (!handle.signal.aborted) {
         pending = false

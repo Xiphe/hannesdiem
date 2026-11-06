@@ -12,6 +12,7 @@ import {
   videoTempleContent,
   recordingsTempleContent,
   reservationTempleContent,
+  sessionTempleContent,
   entryTempleContent,
 } from '../app/temple/tests/fixture.ts'
 import assets from '../../.generated/assets.json' with { type: 'json' }
@@ -70,6 +71,10 @@ export const documents: PublishedDocuments = {
   'temple-circle': {
     ...structuredClone(page),
     content: { ...reservationTempleContent, metadata: { kind: 'temple' } },
+  },
+  'temple-session': {
+    ...structuredClone(page),
+    content: { ...sessionTempleContent, metadata: { kind: 'temple' } },
   },
   'temple-facts': {
     ...structuredClone(page),

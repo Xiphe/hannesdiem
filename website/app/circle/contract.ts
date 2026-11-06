@@ -40,6 +40,7 @@ export function availableCircleSpot(
 export interface CircleResult {
   type: 'success' | 'error'
   message: string
+  csrfToken?: string
   state?: CircleView
   confirmationPending?: boolean
   nameRequired?: boolean

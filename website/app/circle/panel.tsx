@@ -1,5 +1,6 @@
 import { on, ref, type Handle } from 'remix/component'
 import { templeMessages } from '../newsletter/contract.ts'
+import { submitSessionForm, SessionChangedError } from '../newsletter/session-client.ts'
 import { PiecePanel, LoadingSpinner } from '../temple/piece-tooltip/panel.tsx'
 import {
   circlePath,
@@ -213,6 +214,7 @@ export function CircleFields({
 
 export interface CirclePanelProps extends FieldsProps {
   onResult?: (value: CircleResult) => void
+  refresh?: () => Promise<void>
 }
 export function CirclePanel(handle: Handle<CirclePanelProps>) {
   let pending = false
@@ -234,23 +236,22 @@ export function CirclePanel(handle: Handle<CirclePanelProps>) {
     result = undefined
     void handle.update()
     try {
-      const response = await fetch(circlePath, {
-        method: 'POST',
+      const response = await submitSessionForm(
+        circlePath,
         body,
-        headers: { Accept: 'application/json' },
-        credentials: 'same-origin',
-        mode: 'same-origin',
-        signal: handle.signal,
-      })
+        handle.signal,
+        handle.props.state.email,
+      )
       const value = (await response.json()) as CircleResult
       if (!['success', 'error'].includes(value.type) || typeof value.message !== 'string')
         throw new Error('Invalid circle response')
       result = value
       nameRequired = value.nameRequired ?? (value.type === 'success' ? false : nameRequired)
       handle.props.onResult?.(value)
-    } catch {
+    } catch (error) {
       if (handle.signal.aborted) return
       result = { type: 'error', message: circleMessages.failure }
+      if (error instanceof SessionChangedError) await handle.props.refresh?.()
     } finally {
       if (!handle.signal.aborted) {
         pending = false

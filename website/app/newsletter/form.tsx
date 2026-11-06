@@ -1,6 +1,7 @@
 import { on, ref, type Handle } from 'remix/component'
 export { StandaloneTempleSignup } from './temple-form.tsx'
 import type { NewsletterState, NewsletterResult } from './contract.ts'
+import { readSessionState, submitSessionForm, SessionChangedError } from './session-client.ts'
 import {
   BellIcon,
   CalendarDaysIcon,
@@ -93,12 +94,7 @@ async function readResult(response: Response): Promise<NewsletterResult> {
 }
 
 async function readNewsletterState(signal: AbortSignal): Promise<NewsletterState> {
-  const response = await fetch('/login', {
-    headers: { Accept: 'application/json' },
-    mode: 'same-origin',
-    credentials: 'same-origin',
-    signal,
-  })
+  const response = await readSessionState('/login', signal)
   if (!response.ok) throw new Error('Newsletter session unavailable')
   const state = (await response.json()) as NewsletterState
   if (
@@ -112,7 +108,7 @@ async function readNewsletterState(signal: AbortSignal): Promise<NewsletterState
   return state
 }
 
-function NewsletterForm(handle: Handle<NewsletterFormProps>) {
+function NewsletterForm(handle: Handle<NewsletterFormProps & { refresh?: () => Promise<void> }>) {
   let result = handle.props.result
   let emailValue = handle.props.emailValue ?? ''
   let nameValue = handle.props.nameValue ?? ''
@@ -154,22 +150,19 @@ function NewsletterForm(handle: Handle<NewsletterFormProps>) {
     void handle.update()
     try {
       result = await readResult(
-        await fetch(form.action, {
-          method: 'POST',
-          body,
-          headers: { Accept: 'application/json' },
-          mode: 'same-origin',
-          credentials: 'same-origin',
-          signal: handle.signal,
-        }),
+        await submitSessionForm(form.action, body, handle.signal, handle.props.state.email),
       )
       nameRequired = result.nameRequired ?? (result.type === 'success' ? false : nameRequired)
       csrfToken = result.csrfToken ?? csrfToken
       remainingSeconds = result.type === 'spam_protection' ? result.remainingSeconds : 0
       startCountdown()
-    } catch {
+    } catch (error) {
       if (handle.signal.aborted) return
       result = { type: 'error', message: 'Something went wrong. Please try again.' }
+      if (error instanceof SessionChangedError) {
+        if (handle.props.refresh) await handle.props.refresh()
+        else location.reload()
+      }
     } finally {
       if (!handle.signal.aborted) {
         pending = false
@@ -369,14 +362,7 @@ export function NewsletterArea(handle: Handle<{ state: NewsletterState; lazy?: b
     void handle.update()
     try {
       notice = await readResult(
-        await fetch(form.action, {
-          method: 'POST',
-          body,
-          headers: { Accept: 'application/json' },
-          mode: 'same-origin',
-          credentials: 'same-origin',
-          signal: handle.signal,
-        }),
+        await submitSessionForm(form.action, body, handle.signal, state.email),
       )
       if (notice.type === 'success') {
         state = { ready: false }
@@ -384,10 +370,18 @@ export function NewsletterArea(handle: Handle<{ state: NewsletterState; lazy?: b
         loaded = true
         loadError = !state.ready
       }
-    } catch {
+    } catch (error) {
       if (handle.signal.aborted) return
       loadError = !state.ready
       notice = { type: 'error', message: 'Something went wrong. Please try again.' }
+      if (error instanceof SessionChangedError) {
+        try {
+          state = await readNewsletterState(handle.signal)
+        } catch {
+          state = { ready: false }
+          loadError = true
+        }
+      }
     } finally {
       if (!handle.signal.aborted) {
         pending = false
@@ -467,6 +461,7 @@ export function NewsletterArea(handle: Handle<{ state: NewsletterState; lazy?: b
           <NewsletterForm
             key={state.csrfToken ?? 'loading'}
             state={state}
+            refresh={loadState}
             signup
           />
         </>

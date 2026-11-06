@@ -1,5 +1,6 @@
 import { getCsrfToken } from 'remix/middleware/csrf'
 import type { NewsletterRouter } from '../newsletter/session-router.ts'
+import { reportNewsletterFailure } from '../newsletter/diagnostics.ts'
 import * as s from 'remix/data-schema'
 import * as checks from 'remix/data-schema/checks'
 import type { NewsletterEnvironment, NewsletterServices } from '../newsletter/config.ts'
@@ -151,6 +152,7 @@ export function registerCircleRoutes(
           reactivate: contact.unsubscribed,
         })
       } catch {
+        reportNewsletterFailure(context.request, 'confirmation_delivery')
         await storageClient(env)('/tokens/revoke', { tokenHash })
         return reply({ type: 'error', message: circleMessages.failure }, 503)
       }

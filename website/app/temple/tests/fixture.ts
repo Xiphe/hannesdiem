@@ -357,6 +357,12 @@ export const reservationTempleContent = fixtureContent(
   ],
 )
 
+export const sessionTempleContent = structuredClone(factsTempleContent)
+const sessionOpening = (sessionTempleContent.default as CmxComponentNode)
+  .children![0] as CmxComponentNode
+const sessionFacts = sessionOpening.props!.facts as Record<string, unknown>[]
+sessionFacts[2].circle = { places: 10, label: 'Fixture claim', reservation: 'temple-circle' }
+
 export const videoTempleContent = structuredClone(factsTempleContent)
 const videoOpening = (videoTempleContent.default as CmxComponentNode)
   .children![0] as CmxComponentNode
