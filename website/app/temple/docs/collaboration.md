@@ -1,5 +1,12 @@
 # Temple of Sound: client–artist collaboration
 
+**Restore transport icon position, then deploy — 2026-11-06.** The artist
+points to the bottom Play control and asks to return it to its position before
+the left-edge caption alignment. Remove the positioning overrides introduced
+by `483c9a0`, restoring the control's centered glyph and original padding.
+Keep its 44px target and current pause/resume behavior. The artist then
+explicitly requests deployment of all current main work, including this fix.
+
 **Manifesto return joins the accepted button treatment — 2026-11-06.**
 The artist asks for the shared magical button on “Back to the Manifesto” and
 for “Read the intention and the charge of this space” to match the small,

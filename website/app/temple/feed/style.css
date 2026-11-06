@@ -472,15 +472,6 @@
 }
 .feed-playback-toggle {
   flex: 0 0 44px;
-  justify-content: flex-start;
-  padding-inline: 0;
-}
-/* Remove the 22px glyph's viewBox inset while preserving its 44px hit area. */
-.feed-playback-toggle [data-play-icon] {
-  transform: translateX(-8.25px);
-}
-.feed-playback-toggle [data-pause-icon] {
-  transform: translateX(-5.5px);
 }
 .feed-volume-control {
   position: relative;

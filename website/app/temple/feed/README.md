@@ -40,8 +40,9 @@ Watch; the entry and share-image conversations own their corresponding views.
   ([thumbnail API](https://developers.cloudflare.com/stream/viewing-videos/displaying-thumbnails/)).
   Selected covers remain on Watch thumbnails and audio posts. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
-  small, dim drag indicator above the scrubber. Align the painted Play/Pause
-  glyph with the caption text while retaining its 44px hit area. The indicator has
+  small, dim drag indicator above the scrubber. Center the Play/Pause
+  glyph in its 44px control, restoring its position before the caption alignment.
+  The indicator has
   no shape or position animation; it stays fixed within the moving summary. A single open
   percentage drives drawer travel and backdrop extent, including during dragging.
   Space toggles playback without a focus outline on the video surface. Escape
