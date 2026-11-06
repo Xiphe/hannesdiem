@@ -7,6 +7,8 @@ dimmed hint below the opener. Use the same entrance class and renderer for
 this native return anchor, retaining its copy, arrow and manifesto destination.
 Both hints share `temple-entry-caption`: 12px/1.5 and 60% opacity. This follow-up
 is included in the main button integration; it adds no separate lifecycle.
+The artist then asks to remove the container gap: override its inherited
+12px action gap with zero, leaving the shared caption's own top margin.
 
 **Integrate the accepted entry buttons into main — 2026-11-06.** The artist
 accepts the smooth handoff (“lovely”) and asks to remove the study and move the

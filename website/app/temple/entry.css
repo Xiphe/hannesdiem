@@ -98,6 +98,7 @@
 .temple-intention-return.fact-action {
   position: relative;
   z-index: 3;
+  gap: 0;
   padding: 1rem 1.5rem;
 }
 .temple-intention-return > a {
