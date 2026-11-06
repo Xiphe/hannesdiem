@@ -1,5 +1,14 @@
 # Temple of Sound: client–artist collaboration
 
+**Main menu follows its trigger — 2026-11-06.** The artist reports that the
+sidebar always enters from the left and requests that it use the logo's side.
+Keep the left entrance on screens up to 1050px; above that breakpoint, align
+the panel right and slide it in and out through the right edge. Reuse the
+native dialog and its CSS transitions. Synthetic browser checks cover both
+animation directions at five widths, keyboard focus, and resizing the open
+menu without JavaScript under reduced motion. Local review on 8787 with
+`sand tunnel 8787`.
+
 **Restore transport icon position, then deploy — 2026-11-06.** The artist
 points to the bottom Play control and asks to return it to its position before
 the left-edge caption alignment. Remove the positioning overrides introduced

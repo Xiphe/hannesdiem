@@ -266,6 +266,7 @@ test('native navigation works without artwork or browser JavaScript', async ({
   const context = await browser.newContext({
     baseURL,
     javaScriptEnabled: false,
+    reducedMotion: 'reduce',
     viewport: { width: 390, height: 844 },
   })
   const page = await context.newPage()
@@ -279,7 +280,19 @@ test('native navigation works without artwork or browser JavaScript', async ({
   await header.getByRole('link', { name: 'First target' }).click()
   await expect(page).toHaveURL(/#facts$/)
   await header.getByRole('button', { name: 'Open menu' }).click()
-  await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toBeVisible()
+  const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
+  await expect(dialog).toBeVisible()
+  for (const width of [390, 1440, 390]) {
+    await page.setViewportSize({ width, height: 844 })
+    const logo = (await header.locator('.temple-nav-logo').boundingBox())!
+    const right = logo.x + logo.width / 2 > width / 2
+    await expect
+      .poll(async () => {
+        const panel = (await dialog.locator('[data-navigation-panel]').boundingBox())!
+        return right ? panel.x + panel.width : panel.x
+      })
+      .toBeCloseTo(right ? width : 0, 0)
+  }
   await context.close()
 })
 

@@ -328,7 +328,60 @@ test('mobile wordmark material covers both ends of the native lettering', async 
     .toBeGreaterThan(0.9)
 })
 
-test('the menu opens from the left without automatically outlining its brand', async ({ page }) => {
+for (const width of [390, 820, 1050, 1051, 1440]) {
+  test(`Temple menu enters and leaves on the logo side at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.goto('/temple-navigation')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await page
+      .locator('.temple-opening')
+      .evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().bottom + 30))
+    const trigger = page.getByRole('button', { name: 'Open menu', exact: true })
+    await expect(trigger).toBeVisible()
+    const logo = (await trigger.boundingBox())!
+    const right = logo.x + logo.width / 2 > width / 2
+    await trigger.focus()
+    const dialog = page.locator('[data-navigation-dialog]')
+    const panel = dialog.locator('[data-navigation-panel]')
+    const sampleMotion = async (closing: boolean) =>
+      panel.evaluate((node, closing) => {
+        const control = document.querySelector<HTMLButtonElement>(
+          closing ? '[aria-label="Close navigation"]' : '[data-open-navigation]',
+        )!
+        control.click()
+        const animation = node
+          .getAnimations()
+          .find(
+            (animation) =>
+              animation instanceof CSSTransition && animation.transitionProperty === 'transform',
+          )!
+        animation.pause()
+        animation.currentTime = closing ? Number(animation.effect!.getTiming().duration) : 0
+        const outside = node.getBoundingClientRect().toJSON()
+        animation.currentTime = closing ? 0 : Number(animation.effect!.getTiming().duration)
+        const inside = node.getBoundingClientRect().toJSON()
+        animation.finish()
+        return { outside, inside }
+      }, closing)
+    for (const closing of [false, true]) {
+      const { outside, inside } = await sampleMotion(closing)
+      if (right) {
+        expect(inside.right).toBeCloseTo(width, 0)
+        expect(outside.left).toBeCloseTo(width, 0)
+      } else {
+        expect(inside.left).toBeCloseTo(0, 0)
+        expect(outside.right).toBeCloseTo(0, 0)
+      }
+    }
+    await expect(dialog).not.toBeVisible()
+    await expect(trigger).toBeFocused()
+  })
+}
+
+test('the normal menu opens from the left without automatically outlining its brand', async ({
+  page,
+}) => {
   await page.goto('/fixture-release')
   await page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })

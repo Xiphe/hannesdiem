@@ -233,6 +233,12 @@
   width: 18px;
   height: 40px;
 }
+@media (width > 1050px) {
+  html[data-layout='temple'] [data-navigation-panel] {
+    --navigation-slide-offset: 100%;
+    margin-left: auto;
+  }
+}
 .temple-top-navigation :is(a[href], button):focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 4px;
