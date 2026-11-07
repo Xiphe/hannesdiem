@@ -876,12 +876,12 @@ test('sidebar slide and backdrop share the opening timeline on every open', asyn
       expect(sample.scrollLeft).toBe(0)
       expect(sample.opacity).toBeGreaterThanOrEqual(0)
       expect(sample.opacity).toBeLessThanOrEqual(1)
-      expect(sample.left).toBeGreaterThanOrEqual(-motion.width)
-      expect(sample.left).toBeLessThanOrEqual(0)
-      expect(sample.left).toBeCloseTo(-motion.width * (1 - sample.opacity), 0)
+      expect(sample.left).toBeGreaterThanOrEqual(motion.viewport - motion.width)
+      expect(sample.left).toBeLessThanOrEqual(motion.viewport)
+      expect(sample.left).toBeCloseTo(motion.viewport - motion.width * sample.opacity, 0)
       if (index > 0) {
         expect(sample.opacity).toBeGreaterThanOrEqual(motion.samples[index - 1].opacity)
-        expect(sample.left).toBeGreaterThanOrEqual(motion.samples[index - 1].left)
+        expect(sample.left).toBeLessThanOrEqual(motion.samples[index - 1].left)
       }
     }
     await dialog.getByRole('button', { name: 'Close navigation' }).click()

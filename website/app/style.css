@@ -402,6 +402,10 @@
   transform: translateX(0);
   transition: transform 300ms ease-in-out;
 }
+html:not([data-layout='temple']) [data-navigation-panel] {
+  --navigation-slide-offset: 100%;
+  margin-left: auto;
+}
 .page-dialog[data-closing='true']::backdrop {
   opacity: 0;
 }
