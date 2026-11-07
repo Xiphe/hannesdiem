@@ -398,16 +398,18 @@ and **staying with you**, my child.`,
             </button>
           </span>
         )}
-        <span>
-          With support from the{' '}
-          <a
-            href="https://school-of-intimacy-arts.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            School of Intimacy Arts
-          </a>
-        </span>
+        {view === 'inside' && (
+          <span>
+            With support from the{' '}
+            <a
+              href="https://school-of-intimacy-arts.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              School of Intimacy Arts
+            </a>
+          </span>
+        )}
         <span>
           <a href="/imprint">Imprint</a> • <a href="/privacy">Privacy</a>
         </span>

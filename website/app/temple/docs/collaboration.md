@@ -1,5 +1,13 @@
 # Temple of Sound: client–artist collaboration
 
+**Keep the school support credit on inner pages only — 2026-11-07.** The
+artist asks to remove “With support from the School of Intimacy Arts” from
+the manifesto. Restrict that credit to the inner view, leaving Imprint and
+Privacy in the manifesto footer.
+
+Validation: formatting and content preparation pass. Preview inspection confirms
+only legal links on the manifesto and both credits on Watch. Preview 8787 refreshed.
+
 **Manifesto return caption wording — 2026-11-07.** After discussing the
 poetic sense of “charge”, the artist chooses the exact wording “Read the
 intention and charge of this space”. Remove the second “the” from the caption.
