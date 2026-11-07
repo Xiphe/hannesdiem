@@ -1,5 +1,19 @@
 # Temple of Sound: client–artist collaboration
 
+**Logo stays present through the manifesto opener — 2026-11-07.** The artist
+asks for the logo to be “sticky present all through the opener”. Keep the existing
+main-menu logo fixed in the upper-left corner from arrival through forward and
+reverse scrolling. The header backdrop and Enter action retain their existing
+handoff; only the logo stays visible. Transparent invitation containers pass
+pointer input through to the logo while their text and action remain interactive.
+This uses the existing native CMX page, CSS and menu trigger, with no new lifecycle.
+
+Validation: asset build, `check:website` (81 fast tests), and all 29 synthetic
+entry-view/navigation browser checks pass. Operational checks in Chromium and
+WebKit at 390px and 1440px confirm the fixed position, visibility and menu input
+through the handoff and on return. Review with `sand tunnel 8787`, then
+`http://localhost:8787/temple-of-sound`. No deployment requested.
+
 **Remember explicit entry; reset on manifesto return — 2026-11-07.** The artist
 confirms reuse of `hannesdiem.temple.entered`, including its existing values.
 From now on, only manual Enter activation sets it; direct inner/feed links leave

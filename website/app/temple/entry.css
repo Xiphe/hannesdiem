@@ -1,3 +1,13 @@
+/* Transparent foreground space must leave the persistent logo reachable
+   while the invitation remains above the fading header backdrop. */
+.temple-artwork[data-temple-view='poem'] :is(.poem-pairs, .temple-entry-welcome) {
+  pointer-events: none;
+}
+.temple-artwork[data-temple-view='poem'] .poem-pairs > :not(.temple-entry-welcome),
+.temple-entry-welcome > :not(.fact-action),
+.temple-entry-welcome .fact-action a {
+  pointer-events: auto;
+}
 .temple-artwork[data-temple-view='poem'] {
   --temple-nav-clearance: 88px;
 }

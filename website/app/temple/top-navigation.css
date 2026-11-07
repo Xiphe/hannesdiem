@@ -365,10 +365,17 @@
 }
 
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation {
+  position: fixed;
+  inset-inline: 0;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   gap: 4px;
   padding-inline: 10px;
   padding-bottom: 10px;
+  background: transparent;
+}
+.temple-artwork[data-temple-view='poem'] .temple-top-navigation:not([data-nav-visible]) {
+  box-shadow: none;
+  border-color: transparent;
 }
 .temple-nav-enter.fact-action {
   grid-column: 2;
@@ -403,9 +410,10 @@
   opacity: 0;
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-mounted] {
+  visibility: visible;
   transform: none;
   background: transparent;
-  transition: visibility 0s 500ms;
+  transition: none;
 }
 .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before {
   content: '';
@@ -416,8 +424,7 @@
   background: var(--temple-nav-ground);
   pointer-events: none;
 }
-.temple-artwork[data-temple-view='poem'] .temple-top-navigation::before,
-.temple-artwork[data-temple-view='poem'] .temple-nav-logo {
+.temple-artwork[data-temple-view='poem'] .temple-top-navigation::before {
   opacity: 0;
   transition: opacity 500ms ease-in-out;
 }
@@ -434,8 +441,10 @@
   .temple-nav-enter {
   visibility: hidden;
 }
-.temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-visible]::before,
-.temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-visible] .temple-nav-logo {
+.temple-artwork[data-temple-view='poem'] .temple-nav-logo {
+  pointer-events: auto;
+}
+.temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-visible]::before {
   opacity: 1;
 }
 .temple-artwork[data-temple-view='poem']:has(.temple-top-navigation[data-nav-visible])
@@ -450,8 +459,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .temple-artwork[data-temple-view='poem'] .temple-top-navigation[data-nav-mounted],
-  .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before,
-  .temple-artwork[data-temple-view='poem'] .temple-nav-logo {
+  .temple-artwork[data-temple-view='poem'] .temple-top-navigation::before {
     transition: none;
   }
 }

@@ -114,7 +114,7 @@ test('the welcome button hands over to the centered header button at the top', a
   await expect(hint).toBeVisible()
   await button.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
   await expect(header).toHaveAttribute('data-nav-visible', '')
-  await expect(header).toHaveCSS('transition-property', 'visibility')
+  await expect(header).toHaveCSS('transition-property', 'none')
   await expect(header).toHaveCSS('opacity', '1')
   await expect(button).toHaveCSS('visibility', 'hidden')
   await expect(hint).not.toBeVisible()
@@ -163,20 +163,16 @@ test('the welcome button hands over to the centered header button at the top', a
         headerLayer: Number(getComputedStyle(node).zIndex),
         invitationLayer: Number(getComputedStyle(document.querySelector('.poem-pairs')!).zIndex),
       }
-      if (
-        (sample.backdrop > 0 && sample.backdrop < 1 && sample.logo > 0 && sample.logo < 1) ||
-        performance.now() - start > 1000
-      )
+      if ((sample.backdrop > 0 && sample.backdrop < 1) || performance.now() - start > 1000)
         return sample
     }
   })
   expect(exit.visibility).toBe('visible')
   expect(exit.backdrop).toBeGreaterThan(0)
   expect(exit.backdrop).toBeLessThan(1)
-  expect(exit.logo).toBeGreaterThan(0)
-  expect(exit.logo).toBeLessThan(1)
+  expect(exit.logo).toBe(1)
   expect(exit.invitationLayer).toBeGreaterThan(exit.headerLayer)
-  await expect(header).not.toBeVisible()
+  await expect(header.locator('.temple-nav-logo')).toBeVisible()
 })
 
 for (const colorScheme of ['light', 'dark'] as const) {
@@ -246,6 +242,9 @@ for (const width of [390, 1440]) {
     })
     await expect(header).toHaveAttribute('data-nav-visible', '')
     await expect(header.locator('.temple-nav-logo')).toHaveCSS('opacity', '1')
+    await expect
+      .poll(() => header.evaluate((node) => getComputedStyle(node, '::before').opacity))
+      .toBe('1')
     const bar = (await header.boundingBox())!
     const barBottom = bar.y + bar.height
     const before = (await hint.boundingBox())!

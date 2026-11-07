@@ -14,7 +14,8 @@ test('the intention is a continuous poem with entry invitations and a minimal he
   const firstPair = await artwork.locator('.first-pair').first().boundingBox()
   expect(firstPair!.y).toBeGreaterThanOrEqual(welcome!.y + welcome!.height)
   const header = page.locator('.temple-top-navigation')
-  await expect(header).not.toBeVisible()
+  await expect(header.locator('.temple-nav-logo')).toBeVisible()
+  await expect(header.locator('.temple-nav-enter')).toBeHidden()
   await expect(
     header.locator('.temple-nav-brand,.temple-nav-date,.temple-nav-items,.temple-nav-progress'),
   ).toHaveCount(0)
