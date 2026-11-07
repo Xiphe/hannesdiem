@@ -374,17 +374,8 @@ and **staying with you**, my child.`,
         }}
       />
       <footer class="temple-footer">
-        {view === 'inside' && (
-          <span>
-            Fotos by{' '}
-            <a
-              href="https://www.fanny-soulgraphy.de/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              SOULGRAPHY
-            </a>{' '}
-            and{' '}
+        {view === 'poem' && (
+          <span class="temple-footer-author">
             <button
               type="button"
               command="show-modal"
@@ -394,25 +385,51 @@ and **staying with you**, my child.`,
               aria-expanded="false"
               aria-controls="site-navigation"
             >
-              me
-            </button>
+              Hannes Diem
+            </button>{' '}
+            2026
           </span>
         )}
         {view === 'inside' && (
-          <span>
-            With support from the{' '}
-            <a
-              href="https://school-of-intimacy-arts.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              School of Intimacy Arts
-            </a>
-          </span>
+          <div class="temple-footer-credits">
+            <span>
+              Fotos by{' '}
+              <a
+                href="https://www.fanny-soulgraphy.de/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                SOULGRAPHY
+              </a>{' '}
+              and{' '}
+              <button
+                type="button"
+                command="show-modal"
+                commandFor="site-navigation"
+                data-open-navigation
+                aria-haspopup="dialog"
+                aria-expanded="false"
+                aria-controls="site-navigation"
+              >
+                me
+              </button>
+            </span>
+            <span>
+              Supported by{' '}
+              <a
+                href="https://school-of-intimacy-arts.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                School of Intimacy Arts
+              </a>
+            </span>
+          </div>
         )}
-        <span>
-          <a href="/imprint">Imprint</a> • <a href="/privacy">Privacy</a>
-        </span>
+        <div class="temple-footer-legal">
+          <a href="/imprint">Imprint</a>
+          <a href="/privacy">Privacy</a>
+        </div>
       </footer>
     </PoemCanvas>
   )

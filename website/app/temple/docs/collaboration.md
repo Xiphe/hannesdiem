@@ -1,5 +1,27 @@
 # Temple of Sound: client–artist collaboration
 
+**Open the sidebar from the footer name — 2026-11-08.** The artist asks
+for “Hannes Diem” in the manifesto footer to open the sidebar at every size.
+Use the existing navigation button command and accessibility attributes around
+the name, retaining “2026” beside it and the existing responsive author layout.
+
+Validation: content build and `check:website` pass (82 fast tests). Chromium
+and WebKit preview checks at 320px, 390px and 1440px confirm mouse and keyboard
+activation, Escape dismissal and expanded-state updates. Preview 8787 refreshed;
+the footer work remains unpublished.
+
+**Keep the manifesto credit on small screens — 2026-11-08.** The artist
+confirms that “Hannes Diem 2026” belongs in the small-screen manifesto footer.
+Keep the existing poem-only author span, explicitly place it in the first
+mobile grid column and keep it on one line beside the legal links. The credit
+is part of the pending footer work; it was not included in the animation
+deployments. Inner-page credit visibility remains unchanged.
+
+Validation: app build and `check:website` pass (82 fast tests). Preview checks
+at 320px, 390px and 640px confirm the credit stays visible on one line beside
+the legal links, without overlap or horizontal overflow. Inner pages omit the
+author line. Preview 8787 refreshed; this footer work is not deployed yet.
+
 **Quarter assembly time on small portrait screens — 2026-11-08.** The
 artist asks for assembly to take one quarter of its current time in the small
 vertical layout. Use the existing portrait breakpoint (at most 640px wide) to
@@ -170,6 +192,30 @@ Chromium/WebKit cases pass across the run and a resize-polling rerun. Coverage
 measures normal speed before entry, one-third speed afterward, visible onset,
 reverse travel, call arrivals, drop hold, resize and reduced motion. Preview 8787
 refreshed; review with `sand tunnel 8787`, then `/temple-of-sound`.
+
+**Three-column footer and support wording — 2026-11-07.** The artist asks
+for “Hannes Diem 2026” on the left, the existing credits in the centre and legal
+links on the right. At 640px and below, the artist selects left-aligned photo and support
+credits stacked first, followed by one row with “Hannes Diem 2026” on the left
+and “Imprint • Privacy” on the right, with flexible space between them. Use 16px
+between rows and 24px top/bottom padding on mobile. Keep the bullet between
+Imprint and Privacy at all sizes and omit separators between mobile credits.
+Keep the artist credit on one line in the wider layout, including just above
+the breakpoint.
+The artist subsequently removes the gap between credit lines and restricts
+“Hannes Diem 2026” to the manifesto. Inner pages retain the credits above
+right-aligned legal links on mobile and centred credits beside legal links on
+wider screens.
+Change the inner-page support credit to
+“Supported by School of Intimacy Arts”; retain the manifesto’s existing credit
+visibility and all link and sidebar actions. Use the existing CMX-authored footer
+markup and responsive CSS.
+
+Validation: app/content builds, formatting and `check:website` (81 fast tests)
+pass. Synthetic Chromium/WebKit layouts pass at 320, 390, 1051 and 1440px;
+preview inspection confirms both page variants and exact wording at phone and
+desktop widths. Preview 8787 refreshed; review with `sand tunnel 8787`, then
+`/temple-of-sound/watch` or `/temple-of-sound`.
 
 **Slow the whole closing passage; broaden the logo blend — 2026-11-07.** The
 artist still finds the calls too fast and clarifies that the surrounding scroll
