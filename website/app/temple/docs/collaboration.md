@@ -1,5 +1,15 @@
 # Temple of Sound: client–artist collaboration
 
+**Place the manifesto return 128px further above Watch — 2026-11-07.** The
+artist clarifies the desired upward movement as about 128px. Add that space
+below the return instead of moving it behind the persistent header. Remove
+the earlier 16px visual offset, preserving full access at scroll top and the
+normal feed-first Watch arrival.
+
+Validation: app build, `check:website` (81 fast tests), and all four focused
+phone/desktop entry checks with/without JavaScript pass. Preview 8787 refreshed;
+review with `sand tunnel 8787`, then `/temple-of-sound/watch`.
+
 **Move the manifesto return slightly upward — 2026-11-07.** The artist asks
 to move Back to the Manifesto a little further up. Offset its existing block
 upward by 1rem, retaining its space in document flow and the accepted Watch

@@ -115,11 +115,10 @@
 }
 .temple-intention-return.fact-action {
   position: relative;
-  top: -1rem;
   z-index: 3;
   gap: 0;
   padding: 1rem 1.5rem;
-  margin-bottom: 24px;
+  margin-bottom: calc(24px + 128px);
 }
 .temple-intention-return > a {
   display: inline-flex;
