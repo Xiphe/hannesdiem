@@ -1,3 +1,5 @@
+import type { ClosingPace } from '../closing-pace.ts'
+
 type Placement = {
   node: SVGSVGElement
   top: number
@@ -17,6 +19,7 @@ export function createGroundViewport(
   let layers: Placement[][] = []
   let destinations: number[] = []
   let frame = 0
+  let pace: ClosingPace | undefined
 
   function setPosition(
     node: HTMLElement | SVGSVGElement,
@@ -44,7 +47,13 @@ export function createGroundViewport(
     setPosition(ground, 'height', height)
     const origin = bounds.top + scrollY
     const range = Math.max(1, document.documentElement.scrollHeight - innerHeight)
-    const progress = Math.max(0, Math.min(1, scrollY / range))
+    const scroll = Math.max(0, Math.min(range, scrollY))
+    const progress = (pace?.groundAt(scroll) ?? scroll) / range
+    const driftRate = pace?.groundRateAt(scroll) ?? 1
+    for (const plane of planes)
+      for (const animation of plane.getAnimations()) {
+        if (animation.playbackRate !== driftRate) animation.updatePlaybackRate(driftRate)
+      }
     // Native scrolling and the small ambient drift have breathing room before
     // the next scroll frame updates membership. Every plane still clips paint
     // to its viewport-sized box, including during a jump across the document.
@@ -69,7 +78,16 @@ export function createGroundViewport(
         // A fixed viewport removes the document's natural -scrollY movement.
         // Include it in each small SVG's native timeline alongside its depth.
         piece.animation ??= piece.node.animate(
-          [{ translate: '0px 0px' }, { translate: `0px ${destination}px` }],
+          pace
+            ? [
+                { translate: '0px 0px', offset: 0 },
+                ...pace.groundPoints.map(({ scroll, ground }) => ({
+                  translate: `0px ${(destination * ground) / range}px`,
+                  offset: scroll / range,
+                })),
+                { translate: `0px ${(destination * pace.groundAt(range)) / range}px`, offset: 1 },
+              ]
+            : [{ translate: '0px 0px' }, { translate: `0px ${destination}px` }],
           { timeline, duration: 'auto', fill: 'both' },
         )
       }
@@ -93,8 +111,14 @@ export function createGroundViewport(
   )
 
   return {
-    layout(staging: readonly HTMLElement[], distance: number, depths: readonly number[]) {
+    layout(
+      staging: readonly HTMLElement[],
+      distance: number,
+      depths: readonly number[],
+      clock?: ClosingPace,
+    ) {
       clear()
+      pace = clock
       layers = staging.map((plane) =>
         [...plane.children].map((node) => ({
           node: node as SVGSVGElement,

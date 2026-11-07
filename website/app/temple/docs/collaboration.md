@@ -1,5 +1,234 @@
 # Temple of Sound: client–artist collaboration
 
+**Scroll the calls with the ground; hold only the assembly — 2026-11-07.**
+The artist corrects the whole-foreground hold: the scream must continue scrolling
+in sync with the slowed background. Finishing its entrance does not mean
+stopping its scene travel. Ease foreground velocity into the ground's curve
+over the final 0.15 viewport of the entrance, then share the ground's exact
+travel through assembly. Only the assembling three-line copy stays fixed at
+the viewport centre, using independent compensation for that shared travel.
+Preserve the compact starting gap, protected word entry and assembly duration.
+Both clocks resume normal scrolling on completion; the brief stillness before
+release remains tied to the background's existing stop.
+
+Validation: app build and `check:website` pass (82 fast tests). Synthetic
+Chromium/WebKit checks compare the scream's rendered scroll rate with normalized
+background parallax and verify ongoing call movement beside a stationary,
+centred assembly. Compact separation, entrance completion, paint protection,
+resize, reduced motion and final chorus handoff remain covered. Preview 8787
+refreshed; review with `sand tunnel 8787`, then `/temple-of-sound`.
+
+**Tighten the gap and finish the approach before assembly — 2026-11-07.**
+The artist finds the spacing too generous and sees assembly starting while the
+previous phrase is still approaching its final position. The continuing verse
+drift caused both effects. Ease the whole foreground to rest over the final
+0.15 viewport before the scream settles, then begin assembly immediately in
+that settled composition. Reduce the gap to 2svh, bounded between 16px and
+24px. It remains constant throughout assembly. Preserve viewport centring,
+protected incoming words, the selected assembly duration and the background's
+linear deceleration through release. Ordinary scrolling resumes on completion.
+
+Validation: app build and `check:website` pass (82 fast tests). Synthetic
+Chromium/WebKit checks verify that words remain hidden before the call settles,
+both text sections stay stationary during assembly, the gap stays compact,
+copy stays centred and no paint crosses into the scream. Background braking,
+resize, reduced motion, assembly duration and final chorus handoff remain
+covered. Preview 8787 refreshed; review with `sand tunnel 8787`, then
+`/temple-of-sound`.
+
+**Centre the held assembly; lift the preceding calls — 2026-11-07.** The
+artist asks to centre “what it means…” and permits moving the preceding holding
+position upward to make space. Measure the fitted three-line copy and lift the
+closing verse by the exact amount needed to centre its stationary assembly.
+Ease that lift between the penultimate call's arrival and the final call's
+completion, so the scream is already clear of the centre when assembly starts.
+Move the full verse together to preserve spacing above the first call as well.
+Preserve immediate assembly, the stationary hold, protected incoming words,
+background pacing and normal-speed release. Account for the upward shift in
+the final verse's layout so the chorus follows its visible bounds.
+
+Validation: app build and `check:website` pass (82 fast tests). Synthetic
+Chromium/WebKit checks cover viewport centring, a stationary hold and painted
+separation at phone, desktop and landscape sizes, plus immediate assembly,
+unchanged duration, resize, reduced motion and the final chorus handoff.
+Preview 8787 refreshed; review with `sand tunnel 8787`, then
+`/temple-of-sound`.
+
+**Hold the assembly clear of the calls — 2026-11-07.** The artist asks
+for “what it means…” to stay still and never overlap “and scream out loud”.
+Hold only the three-line assembly at its position when the final call settles;
+the calls and background retain their selected drift. Clip incoming 3D words
+at the assembly area's upper boundary so even their largest starting poses
+cannot cross into the scream. Include the held copy's final extent in layout
+so the following chorus stays below it. Keep immediate assembly, its selected
+duration and the return to ordinary scrolling on completion.
+
+Validation: app build and `check:website` pass (82 fast tests). All 22 focused
+Chromium/WebKit checks pass. Phone, desktop and landscape checks measure a
+stationary assembly across its full range and compare actual paint above its
+boundary with the assembly hidden, confirming no overlap. Call arrivals,
+background drift, completion, resize, reduced motion and final chorus handoff
+remain covered. Preview 8787 refreshed; review with `sand tunnel 8787`, then
+`/temple-of-sound`.
+
+**Begin assembly when the final call settles — 2026-11-07.** The artist
+asks to remove the pause after “and scream out loud”. Align the first word's
+assembly start with the final call's resolved arrival. Advance every word by
+the same amount, preserving the selected assembly duration and stagger. Keep
+the whole-scene drift and release to normal speed when assembly finishes.
+
+Validation: app build and `check:website` pass (82 fast tests). Synthetic
+Chromium/WebKit checks measure zero delay at phone, desktop and landscape
+sizes, unchanged assembly duration, shared drift, release and final chorus
+handoff. Preview 8787 refreshed; review with `sand tunnel 8787`, then
+`/temple-of-sound`.
+
+**Let the whole closing scene drift through assembly — 2026-11-07.** The
+artist likes the pacing but asks to replace the sticky “and scream out loud”
+stack with a slowdown shared by the text and background. Remove the stack's
+separate pinning translation. Ease the entire final verse into the background's
+decelerating travel over 0.3 viewport before assembly, then share its movement
+through the brief stillness and normal-speed release. Keep choreography time
+independent of travel so the selected word assembly duration stays intact.
+Remove the unused sticky spacer from the enhanced layout, letting the final
+chorus follow the moving scene's natural bounds. Preserve the first-call onset,
+call arrivals, reduced-motion flow and two-viewport logo colour blends.
+
+Validation: app build and `check:website` pass (82 fast tests). Synthetic
+Chromium/WebKit checks cover shared text/background velocity, unpinned whole-scene
+travel at phone, desktop and landscape sizes, unchanged assembly duration,
+release, reverse travel, resize and the final chorus. Native-clock measurements
+wait for scroll sampling before capturing reference positions. Preview 8787
+refreshed; phone/desktop inspection confirms a drifting scene with no leftover
+sticky spacer or browser errors. Review with `sand tunnel 8787`, then
+`/temple-of-sound`.
+
+**Halve assembly again; brake the ground to stillness — 2026-11-07.** The
+artist asks to halve the assembly range once more and keep slowing the pieces
+linearly until they are still shortly before release. Raise the drop speed from
+1.4× to 2.8×. Preserve the initial easing, then reduce background velocity
+linearly from its one-sixth rate to zero, holding still for the final 5% of the
+remaining slow interval. Pause the existing ambient drift there as well. Both
+parallax and drift resume at normal speed when the last word completes, without
+a position or animation-phase jump. Keep the foreground's selected slowdown and
+the logo's two-viewport colour blends.
+
+Validation: app build, `check:website` (82 fast tests), and all 32 focused
+Chromium/WebKit checks pass. Browser checks measure linear deceleration, stopped
+parallax and ambient drift before release, normal movement afterward and half
+the previous assembly distance. Preview 8787 refreshed; review with
+`sand tunnel 8787`, then `/temple-of-sound`.
+
+**Ease into slow motion, settle the drop sooner, widen the logo blend —
+2026-11-07.** The artist asks for gentler deceleration when whisper enters,
+slower background parallax through the three-line drop, assembly at twice the speed and
+a return to normal speed when assembly completes. Ease the foreground from
+normal to one-third speed across roughly 0.3 viewport of scroll. Share that
+clock with the existing bounded background renderer, easing it to one-sixth
+speed. Return both clocks to normal at the last word's completion, preserving
+positions and reverse traversal.
+
+Double the drop speed from 0.7× to 1.4× and remove the former early-release
+fraction. Keep the stack pinned through completion, then release it directly
+into ordinary scrolling. Native timelines own movement; the background's
+existing visibility/culling pass follows the same clock and its chorus gaps.
+
+The artist also asks to double the logo's colour-transition area again. Each
+blend now spans two viewport heights, retaining its existing midpoint and SVG
+palettes.
+
+Validation: app build and `check:website` pass (82 fast tests). All 36 selected
+Chromium/WebKit cases pass across the run and focused resize reruns. New
+checks measure eased deceleration, background travel at one-sixth speed through
+the drop, half the previous assembly distance, and normal movement afterward.
+Preview 8787 refreshed; review with `sand tunnel 8787`, then `/temple-of-sound`.
+
+**Start slow motion when whisper enters — 2026-11-07.** The artist moves the
+slowdown's onset to the moment “whisper the glimmer” enters the screen. Keep the
+preceding passage at ordinary document speed, then retain one-third speed through
+the calls and drop. Resolve the first call's visible entry from its existing
+linear catch-up movement, including the portrait duration multiplier. Remap
+animations crossing that boundary piecewise so their earlier movement stays
+unchanged. Reverse scrolling restores ordinary speed at the same point.
+
+Validation: app build, `check:website` (81 fast tests), and 22 focused
+Chromium/WebKit cases pass across the run and a resize-polling rerun. Coverage
+measures normal speed before entry, one-third speed afterward, visible onset,
+reverse travel, call arrivals, drop hold, resize and reduced motion. Preview 8787
+refreshed; review with `sand tunnel 8787`, then `/temple-of-sound`.
+
+**Slow the whole closing passage; broaden the logo blend — 2026-11-07.** The
+artist still finds the calls too fast and clarifies that the surrounding scroll
+area, including the preceding “align the harmonies…” phrases, should feel like
+slow motion. Stretch the complete final verse's scroll time by 3×, including its
+intro, scattered phrases, calls and shared drop hold. Native scroll timelines
+move the foreground at one third document speed and remap its existing entry
+and assembly animations to the same time. Preserve their fitted positions and
+reverse traversal. Reduced motion retains ordinary document flow. The closing
+chorus keeps its own native timing.
+
+CMX provides the authored component structure but has no scroll-time stretching
+primitive. Keep this adapter in the website animation layer, reusing resolved
+CSS animation ranges, the existing scene's layout cycle and abort lifecycle.
+No wheel/touch interception or scroll-time JavaScript position writes.
+
+Double each logo transition from half a viewport to a full viewport of scroll,
+starting the blend earlier and finishing the return later around the bridge.
+
+Validation: app build and `check:website` pass (81 fast tests). All 38 selected
+Chromium/WebKit cases pass across the run and focused reruns, covering measured
+scroll speed, calls and drop, resize, reduced motion, reverse travel, final-chorus
+handoff and the wider logo blend. Operational preview checks at 390px/1440px both
+measure 40px foreground travel for 120px scroll, without page errors. Preview 8787
+refreshed; review with `sand tunnel 8787`, then `/temple-of-sound`.
+
+**Unclamp slow rise entrances; restore the original logo during the bridge —
+2026-11-07.** The artist reports no felt tempo difference at the correct local
+preview URL. A synthetic phone replay confirms that the 4.5× and 9× settings
+produce identical movement: the initial easing stop at 0% clamps the subsequent
+negative stop to 0%. Keep the stops ordered at negative positions so the selected
+0.65× / 9 speed takes effect. Earlier timing checks covered arrival geometry but
+missed this saturation; a new regression compares visible movement per scroll
+pixel and fails before the correction.
+
+The artist also asks for the logo to morph to its original purple-blue colours
+during the bridge. Blend the two existing, aligned SVG assets with a native scroll
+timeline: enter with the bridge introduction, hold through its body and return to
+the Temple palette as it leaves. Reverse scrolling retraces the blend. Reuse the
+scene's layout and cleanup; no per-scroll JavaScript colour writes or new palette.
+
+Validation: app build, `check:website` (81 fast tests), and all 12 focused
+Chromium/WebKit checks pass, including both logo themes, reverse scrolling and
+motion independent of scene repainting. Preview 8787 refreshed; review with
+`sand tunnel 8787`, then `/temple-of-sound`.
+
+**Halve the crescendo entrance speed again — 2026-11-07.** The artist asks
+“slooooower”. Lower the shared rise speed from 0.65× / 4.5 to 0.65× / 9,
+retaining the progression between calls, portrait multiplier and centre arrivals.
+
+Validation: app build, `check:website` (81 fast tests), and all three synthetic
+rise/drop browser checks pass. Preview 8787 refreshed; review with
+`sand tunnel 8787`, then `/temple-of-sound`.
+
+**Slow the crescendo further — 2026-11-07.** The artist asks for still slower
+entrances. Extend the approach distance from 3× to 4.5× the original by setting
+the shared speed to 0.65× / 4.5. Retain the acceleration between calls and their
+centred arrivals.
+
+Validation: app build, `check:website` (81 fast tests), and all three synthetic
+rise/drop browser checks pass. Preview 8787 refreshed; review with
+`sand tunnel 8787`, then `/temple-of-sound`.
+
+**Much slower crescendo entrances — 2026-11-07.** The artist clarifies “more
+like 200% slower”. Give each entrance three times its original scroll distance
+by setting the shared speed to 0.65× / 3. Retain the 1.60× progression, portrait
+multiplier and centred arrivals. Sample the offscreen browser check earlier to
+accommodate the longer approaches.
+
+Validation: app build, `check:website` (81 fast tests), and all three synthetic
+rise/drop browser checks pass. Preview 8787 refreshed; review with
+`sand tunnel 8787`, then `/temple-of-sound`.
+
 **Slightly slower crescendo entrances — 2026-11-07.** The artist asks for the
 four calls from whisper through scream to come in a little slower. Reduce the
 shared rise speed from 0.65× to 0.55×, about 15%, retaining the 1.60× progression,

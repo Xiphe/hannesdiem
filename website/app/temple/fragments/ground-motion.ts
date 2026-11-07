@@ -1,5 +1,6 @@
 import { paintGroundPieces, type GroundBand } from './ground-pieces.ts'
 import { createGroundViewport } from './ground-viewport.ts'
+import { closingPace } from '../closing-pace.ts'
 
 type Refrain = { refrain: HTMLElement; refrainStage: HTMLElement }
 
@@ -19,6 +20,8 @@ export function createGroundMotion(
   const scroll = new ScrollTimeline({ source: document.scrollingElement, axis: 'block' })
   const viewport = createGroundViewport(host, field, planes, scroll, signal)
   function resize() {
+    const pace = closingPace(host)
+    const clock = (scroll: number) => pace?.groundAt(scroll) ?? scroll
     const opener = host.querySelector<HTMLElement>('.temple-stage')
     const distance = Math.max(1, document.documentElement.scrollHeight - innerHeight)
     const origin = scrollY + host.getBoundingClientRect().top
@@ -62,7 +65,7 @@ export function createGroundMotion(
         if (!Number.isFinite(hold.start) || hold.length === 0) continue
         const start = Math.max(
           0,
-          (1 - depth) * (hold.start + hold.length * 0.35) + hold.top - origin - 64,
+          (1 - depth) * clock(hold.start + hold.length * 0.35) + hold.top - origin - 64,
         )
         if (Math.min(end, start) > cursor)
           available.push({ start: cursor, end: Math.min(end, start) })
@@ -72,7 +75,7 @@ export function createGroundMotion(
           ? Infinity
           : Math.max(
               cursor,
-              (1 - depth) * (hold.start + hold.length * 0.65) +
+              (1 - depth) * clock(hold.start + hold.length * 0.65) +
                 hold.top +
                 hold.height -
                 origin +
@@ -84,8 +87,8 @@ export function createGroundMotion(
       // Reserve the bridge body, not everything after it. Resume inside the
       // final verse, with clearance for each plane's parallax and ambient float.
       const bridgeGap = {
-        start: (1 - depth) * bridgeStart + depth * innerHeight - origin - 64,
-        end: finalStart === undefined ? Infinity : (1 - depth) * finalStart - origin + 64,
+        start: (1 - depth) * clock(bridgeStart) + depth * innerHeight - origin - 64,
+        end: finalStart === undefined ? Infinity : (1 - depth) * clock(finalStart) - origin + 64,
       }
       return available.flatMap((band) => {
         if (band.end <= bridgeGap.start || band.start >= bridgeGap.end) return [band]
@@ -100,7 +103,7 @@ export function createGroundMotion(
     // full document extent, even briefly, can create enormous Safari surfaces.
     const staging = planes.map(() => document.createElement('div'))
     if (!reduced.matches) paintGroundPieces(host, staging, bands)
-    viewport.layout(staging, distance, depths)
+    viewport.layout(staging, distance, depths, pace)
   }
   reduced.addEventListener('change', resize, { signal })
   return { resize }

@@ -1,6 +1,6 @@
 import type { Handle } from 'remix/component'
 
-// Assemble while the three lines are pinned, then release into native scroll. All variations
+// Assemble as the closing scene slows, then release into native scroll. All variations
 // are static per-word parameters; no per-frame DOM updates or extra clock.
 export function VerseDrop(handle: Handle<{ text: string }>) {
   return () => {

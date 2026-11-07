@@ -1,6 +1,63 @@
 import { parseBridgeText } from '../bridge-text.tsx'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { bridgeGlyphScale } from '../bridge-reveal.ts'
+
+// Isolate the original line choreography from the enclosing slow scroll scene.
+async function unpacedClosingFixture(page: Page) {
+  await page.route('**/assets/templeStyle-*.css', async (route) => {
+    const response = await route.fetch()
+    await route.fulfill({
+      response,
+      body: `${await response.text()}\n.final-pair { --closing-scroll-stretch: 1; }
+        .verse-finale { --drop-speed: 0.7; --drop-hold-fraction: 0.86; }`,
+    })
+  })
+}
+
+async function closingGeometry(page: Page) {
+  await expect
+    .poll(() =>
+      page
+        .locator('.verse-drop-word')
+        .first()
+        .evaluate((node) =>
+          Number.isFinite(parseFloat(String(node.getAnimations()[0]?.startTime))),
+        ),
+    )
+    .toBe(true)
+  return page.evaluate(() => {
+    const verse = document.querySelector('.final-verse')!
+    const distance = document.documentElement.scrollHeight - innerHeight
+    const points = (verse.getAnimations()[0].effect as KeyframeEffect)
+      .getKeyframes()
+      .map((frame) => {
+        const scroll = frame.offset! * distance
+        return { scroll, scene: scroll - new DOMMatrix(String(frame.transform)).m42 }
+      })
+    const rampEnd = points[17]
+    const assembly = Math.min(
+      ...[...document.querySelectorAll('.verse-drop-word')].map(
+        (node) => (parseFloat(String(node.getAnimations()[0].startTime)) * distance) / 100,
+      ),
+    )
+    return {
+      onset: points[1].scroll,
+      easeEnd: rampEnd.scroll,
+      complete: points.at(-2)!.scroll,
+      assembly,
+      assemblyRange: points.at(-2)!.scroll - assembly,
+      arrivals: [...document.querySelectorAll('.rise-call')].map((node) => {
+        const animation = node.getAnimations()[0]
+        return (
+          ((parseFloat(String(animation.startTime)) +
+            parseFloat(String(animation.effect!.getComputedTiming().duration))) *
+            distance) /
+          100
+        )
+      }),
+    }
+  })
+}
 
 test('Temple leaves room after the opening and scrolls its title independently of repainting', async ({
   page,
@@ -917,6 +974,493 @@ test('mobile curved copy keeps two rows without editor controls', async ({ page 
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   await expect(page.locator('[data-shape="sweep"] .block-row')).toHaveCount(2)
   await expect(page.locator('input, .small-curve-controls')).toHaveCount(0)
+})
+
+for (const colorScheme of ['light', 'dark'] as const) {
+  test(`Temple logo blends to its original colours through the bridge in ${colorScheme}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.emulateMedia({ colorScheme })
+    await page.goto('/temple-bridge-finale')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    await expect(page.locator('.final-pair')).toHaveAttribute('data-paced', '')
+    const logo = page.locator('.temple-nav-logo-original')
+    await expect(logo).toHaveCount(1)
+    await expect
+      .poll(() => logo.evaluate((node) => (node as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0)
+    const bounds = await page.evaluate(() => {
+      const intro = document.querySelector('.bridge-copy')!.getBoundingClientRect()
+      const body = document.querySelector('.bridge-body')!.getBoundingClientRect()
+      return { top: scrollY + intro.top, bottom: scrollY + body.bottom }
+    })
+    // The native animation must keep working without scene repaints.
+    await page.evaluate(() => {
+      window.requestAnimationFrame = () => 0
+    })
+    const seek = (y: number) => page.evaluate((y) => scrollTo(0, y), y)
+    const opacity = () => logo.evaluate((node) => parseFloat(getComputedStyle(node).opacity))
+    await seek(bounds.top - 844 * 1.7)
+    await expect.poll(opacity).toBe(0)
+    await seek(bounds.top - 844 * 1.45)
+    await expect.poll(opacity).toBeGreaterThan(0.02)
+    await expect.poll(opacity).toBeLessThan(0.15)
+    await seek(bounds.top - 844 * 0.6)
+    await expect.poll(opacity).toBeGreaterThan(0.3)
+    await expect.poll(opacity).toBeLessThan(0.7)
+    await seek(bounds.top + 844 * 0.5)
+    await expect.poll(opacity).toBe(1)
+    await seek((bounds.top + bounds.bottom) / 2)
+    await expect.poll(opacity).toBe(1)
+    await seek(bounds.bottom + 844 * 0.5)
+    await expect.poll(opacity).toBeGreaterThan(0.01)
+    await expect.poll(opacity).toBeLessThan(0.1)
+    await seek(bounds.bottom + 844 * 0.7)
+    await expect.poll(opacity).toBe(0)
+    await seek((bounds.top + bounds.bottom) / 2)
+    await expect.poll(opacity).toBe(1)
+  })
+}
+
+test('Temple closing passage slows when the first call enters the screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/temple-rise')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  await expect(page.locator('.final-pair')).toHaveAttribute('data-paced', '')
+  const intro = page.locator('.final-verse-intro')
+  const verse = page.locator('.final-verse')
+  const { onset, easeEnd, complete } = await closingGeometry(page)
+  const seek = async (y: number) => {
+    await page.evaluate((y) => scrollTo(0, Math.round(y)), y)
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    )
+  }
+  await seek(onset - 180)
+  const before = (await intro.boundingBox())!.y
+  await seek(onset - 60)
+  await expect.poll(async () => (await intro.boundingBox())!.y - before).toBeCloseTo(-120, 0)
+  await seek(onset)
+  await expect
+    .poll(() =>
+      page
+        .locator('.rise-call-ink')
+        .first()
+        .evaluate((node) => Math.abs(node.getBoundingClientRect().top - innerHeight)),
+    )
+    .toBeLessThan(1.2)
+  const ramp = easeEnd - onset
+  const rampStart = (await intro.boundingBox())!.y
+  await seek(onset + ramp * 0.25)
+  const earlyRate = (rampStart - (await intro.boundingBox())!.y) / (ramp * 0.25)
+  await seek(onset + ramp * 0.5)
+  const middle = (await intro.boundingBox())!.y
+  await seek(onset + ramp * 0.75)
+  const middleRate = (middle - (await intro.boundingBox())!.y) / (ramp * 0.25)
+  expect(earlyRate).toBeGreaterThan(middleRate)
+  expect(earlyRate).toBeLessThan(1)
+  expect(middleRate).toBeGreaterThan(1 / 3)
+  await seek(easeEnd + 30)
+  const slowed = (await intro.boundingBox())!.y
+  await seek(easeEnd + 150)
+  await expect.poll(async () => (await intro.boundingBox())!.y - slowed).toBeCloseTo(-40, 0)
+  await seek(complete - 30)
+  await expect
+    .poll(() =>
+      page
+        .locator('.verse-drop-word')
+        .evaluateAll((nodes) =>
+          nodes.some((node) => node.getAnimations()[0].effect!.getComputedTiming().progress! < 1),
+        ),
+    )
+    .toBe(true)
+  await seek(complete + 30)
+  const released = (await intro.boundingBox())!.y
+  await seek(complete + 150)
+  await expect.poll(async () => (await intro.boundingBox())!.y - released).toBeCloseTo(-120, 0)
+  await expect
+    .poll(() =>
+      page
+        .locator('.verse-drop-word')
+        .evaluateAll((nodes) =>
+          nodes.every((node) => node.getAnimations()[0].effect!.getComputedTiming().progress === 1),
+        ),
+    )
+    .toBe(true)
+  await seek(onset - 60)
+  await expect
+    .poll(() => verse.evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).m42))
+    .toBeCloseTo(0, 2)
+})
+
+for (const [width, height] of [
+  [390, 900],
+  [1440, 900],
+  [844, 390],
+]) {
+  test(`Temple slowed passage keeps call arrivals and holds assembly clear of the calls at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto('/temple-rise')
+    await expect(page.locator('.final-pair')).toHaveAttribute('data-paced', '')
+    const geometry = await closingGeometry(page)
+    const assemblyDelay = () =>
+      page.evaluate(() => {
+        const distance = document.documentElement.scrollHeight - innerHeight
+        const call = document.querySelector('.rise-call:last-child')!.getAnimations()[0]
+        const settled =
+          parseFloat(String(call.startTime)) +
+          parseFloat(String(call.effect!.getComputedTiming().duration))
+        const assembly = Math.min(
+          ...[...document.querySelectorAll('.verse-drop-word')].map((node) =>
+            parseFloat(String(node.getAnimations()[0].startTime)),
+          ),
+        )
+        return ((assembly - settled) * distance) / 100
+      })
+    await expect.poll(assemblyDelay).toBeCloseTo(0, 2)
+    await page.addStyleTag({ content: '.fragment-ground-plane { animation: none !important; }' })
+    await page.evaluate(() => {
+      window.requestAnimationFrame = () => 0
+    })
+    const calls = page.locator('.rise-call')
+    const seek = async (y: number) => {
+      await page.evaluate((y) => scrollTo(0, y), Math.round(y))
+      // Enhancement frames are paused; wait for the native timeline to sample
+      // the new scroll position before taking a reference measurement.
+      await expect
+        .poll(() =>
+          page
+            .locator('.final-verse')
+            .evaluate(
+              (node) =>
+                node.getAnimations()[0].effect!.getComputedTiming().progress! -
+                scrollY / (document.documentElement.scrollHeight - innerHeight),
+            ),
+        )
+        .toBeCloseTo(0, 6)
+    }
+    for (const index of [0, 1, 2, 3, 0]) {
+      await seek(geometry.arrivals[index])
+      if (index === 3) {
+        expect(
+          (await calls.last().boundingBox())!.y + (await calls.last().boundingBox())!.height,
+        ).toBeLessThan(
+          height / 2 - (await page.locator('.verse-drop-copy').boundingBox())!.height / 2 - 12,
+        )
+        continue
+      }
+      await expect
+        .poll(() =>
+          calls.nth(index).evaluate((node) => {
+            const rect = node.getBoundingClientRect()
+            return Math.abs(rect.top + rect.height / 2 - innerHeight / 2)
+          }),
+        )
+        .toBeLessThan(1.2)
+    }
+    await seek(geometry.assembly - 20)
+    expect(
+      await calls
+        .last()
+        .evaluate((node) => node.getAnimations()[0].effect!.getComputedTiming().progress),
+    ).toBeLessThan(1)
+    expect(
+      await page
+        .locator('.verse-drop-word')
+        .evaluateAll((nodes) => nodes.every((node) => getComputedStyle(node).opacity === '0')),
+    ).toBe(true)
+    const drop = page.locator('.verse-drop-copy')
+    await seek(geometry.assembly + geometry.assemblyRange * 0.25)
+    const anchor = (await drop.boundingBox())!
+    expect(anchor.y + anchor.height / 2).toBeCloseTo(height / 2, 1)
+    expect(anchor.y).toBeGreaterThan(0)
+    expect(anchor.y + anchor.height).toBeLessThan(height)
+    const preceding = (await page.locator('.final-verse-phrase').last().boundingBox())!
+    expect(preceding.y + preceding.height).toBeLessThan((await calls.first().boundingBox())!.y)
+    const before = await page
+      .locator('.verse-finale-stage, .final-verse-intro')
+      .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().top))
+    await expect(page.locator('.verse-finale-stage')).toHaveCSS('position', 'relative')
+    const opacity = () =>
+      page
+        .locator('.verse-drop-word')
+        .evaluateAll(
+          (nodes) =>
+            nodes.reduce((sum, node) => sum + parseFloat(getComputedStyle(node).opacity), 0) /
+            nodes.length,
+        )
+    const partial = await opacity()
+    await seek(geometry.assembly + geometry.assemblyRange * 0.75)
+    await expect.poll(opacity).toBeGreaterThan(partial)
+    const after = await page
+      .locator('.verse-finale-stage, .final-verse-intro')
+      .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().top))
+    expect(after[0] - before[0]).toBeCloseTo(after[1] - before[1], 1)
+    expect(before[1] - after[1]).toBeGreaterThan(0.1)
+    for (const fraction of [0.01, 0.1, 0.25, 0.5, 0.75, 0.99]) {
+      await seek(geometry.assembly + geometry.assemblyRange * fraction)
+      await expect.poll(async () => (await drop.boundingBox())!.y).toBeCloseTo(anchor.y, 1)
+      const scream = (await calls.last().boundingBox())!
+      expect(anchor.y - scream.y - scream.height).toBeGreaterThan(12)
+      expect(anchor.y - scream.y - scream.height).toBeLessThan(64)
+      // Compare actual paint above the assembly boundary with its words hidden.
+      // Offscreen 3D glyph bounds alone cannot establish visible separation.
+      const top = Math.max(0, Math.floor(scream.y))
+      const clip = { x: 0, y: top, width, height: Math.floor(anchor.y) - top }
+      const visible = await page.screenshot({ clip })
+      await drop.evaluate((node) => {
+        node.style.visibility = 'hidden'
+      })
+      const hidden = await page.screenshot({ clip })
+      await drop.evaluate((node) => {
+        node.style.removeProperty('visibility')
+      })
+      expect(visible.equals(hidden)).toBe(true)
+    }
+    const verseBounds = (await page.locator('.final-verse').boundingBox())!
+    expect(anchor.y + anchor.height).toBeLessThanOrEqual(verseBounds.y + verseBounds.height + 1)
+    await seek(geometry.complete - 5)
+    const settled = (await drop.boundingBox())!.y
+    await seek(geometry.complete + 125)
+    await expect.poll(async () => (await drop.boundingBox())!.y - settled).toBeCloseTo(-125, 0)
+  })
+}
+
+test('Temple ground slows further through the drop and resumes when assembly completes', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/temple-rise')
+  await expect(page.locator('.final-pair')).toHaveAttribute('data-paced', '')
+  await page.addStyleTag({ content: '.fragment-ground-plane { animation: none !important; }' })
+  const geometry = await closingGeometry(page)
+  const seek = async (y: number) => {
+    await page.evaluate((y) => scrollTo(0, Math.round(y)), y)
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    )
+  }
+  const rate = async (at: number, distance = 120, sharedTravel = false) => {
+    await seek(at)
+    const normal = await page.locator('.fragment-ground-piece').evaluateAll((nodes) => {
+      for (const node of nodes) node.removeAttribute('data-pace-probe')
+      const node = nodes.find((node) => {
+        const rect = node.getBoundingClientRect()
+        return rect.bottom > 0 && rect.top < innerHeight && node.getAnimations().length
+      })!
+      node.setAttribute('data-pace-probe', '')
+      const frames = (node.getAnimations()[0].effect as KeyframeEffect).getKeyframes()
+      const displacement = parseFloat(String(frames[1].translate).split(' ').at(-1)!)
+      return (
+        displacement / (frames[1].offset! * (document.documentElement.scrollHeight - innerHeight))
+      )
+    })
+    const probe = page.locator('[data-pace-probe]')
+    const before = (await probe.boundingBox())!.y
+    const callBefore = (await page.locator('.rise-call').last().boundingBox())!.y
+    await seek(at + distance)
+    const groundRate = ((await probe.boundingBox())!.y - before) / distance / normal
+    if (sharedTravel)
+      expect(
+        (callBefore - (await page.locator('.rise-call').last().boundingBox())!.y) / distance,
+      ).toBeCloseTo(groundRate, 2)
+    return groundRate
+  }
+  const remaining = geometry.complete - geometry.easeEnd
+  const rates = []
+  for (const fraction of [0.15, 0.45, 0.75])
+    rates.push(await rate(geometry.easeEnd + remaining * fraction))
+  expect(rates[0]).toBeGreaterThan(rates[1])
+  expect(rates[1]).toBeGreaterThan(rates[2])
+  expect(rates[0] - rates[1]).toBeCloseTo(rates[1] - rates[2], 2)
+  await rate(
+    geometry.assembly + geometry.assemblyRange * 0.1,
+    Math.min(120, geometry.assemblyRange * 0.25),
+    true,
+  )
+  expect(
+    await rate(geometry.complete - remaining * 0.025, Math.min(20, remaining * 0.01)),
+  ).toBeCloseTo(0, 2)
+  expect(await rate(geometry.complete + 30)).toBeCloseTo(1, 2)
+})
+
+test('Temple background is still just before release, including ambient drift', async ({
+  page,
+}) => {
+  await page.goto('/temple-rise')
+  await expect(page.locator('.final-pair')).toHaveAttribute('data-paced', '')
+  const geometry = await closingGeometry(page)
+  const seek = async (at: number) => {
+    await page.evaluate((y) => scrollTo(0, Math.round(y)), at)
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    )
+  }
+  const driftRates = () =>
+    page
+      .locator('.fragment-ground-plane')
+      .evaluateAll((nodes) =>
+        nodes.flatMap((node) => node.getAnimations().map((animation) => animation.playbackRate)),
+      )
+  await seek(geometry.complete - (geometry.complete - geometry.easeEnd) * 0.025)
+  await expect.poll(driftRates).toEqual([0, 0, 0])
+  const pieces = page.locator('.fragment-ground-piece')
+  const index = await pieces.evaluateAll((nodes) =>
+    nodes.findIndex((node) => {
+      const rect = node.getBoundingClientRect()
+      return rect.bottom > 0 && rect.top < innerHeight
+    }),
+  )
+  expect(index).toBeGreaterThanOrEqual(0)
+  const before = await pieces.nth(index).boundingBox()
+  await page.waitForTimeout(150)
+  const after = await pieces.nth(index).boundingBox()
+  expect(after!.x).toBeCloseTo(before!.x, 2)
+  expect(after!.y).toBeCloseTo(before!.y, 2)
+  await seek(geometry.complete + 30)
+  await expect.poll(driftRates).toEqual([1, 1, 1])
+})
+
+test('Temple drop assembles in half its previous scroll distance', async ({ page }) => {
+  const duration = async () => {
+    await page.goto('/temple-rise')
+    await expect(page.locator('.final-pair')).toHaveAttribute('data-paced', '')
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    )
+    return page.locator('.verse-drop-word').evaluateAll((nodes) => {
+      const range = document.documentElement.scrollHeight - innerHeight
+      const times = nodes.map((node) => {
+        const animation = node.getAnimations()[0]
+        const start = (parseFloat(String(animation.startTime)) * range) / 100
+        return {
+          start,
+          end:
+            start +
+            (parseFloat(String(animation.effect!.getComputedTiming().duration)) * range) / 100,
+        }
+      })
+      return Math.max(...times.map((t) => t.end)) - Math.min(...times.map((t) => t.start))
+    })
+  }
+  const selected = await duration()
+  await page.route('**/assets/templeStyle-*.css', async (route) => {
+    const response = await route.fetch()
+    await route.fulfill({
+      response,
+      body: `${await response.text()}\n.verse-finale { --drop-speed: 1.4; --drop-hold-fraction: 1; }`,
+    })
+  })
+  const previous = await duration()
+  expect(selected / previous).toBeCloseTo(0.5, 3)
+})
+
+test('Temple closing pacing refits and restores ordinary reduced-motion flow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/temple-rise')
+  const track = page.locator('.final-pair')
+  await expect(track).toHaveAttribute('data-paced', '')
+  const travel = async () => {
+    await page.evaluate(() => scrollTo(0, 0))
+    await expect
+      .poll(() =>
+        page
+          .locator('.final-verse')
+          .evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).m42),
+      )
+      .toBeCloseTo(0, 2)
+    const target = (await closingGeometry(page)).arrivals[0]
+    await page.evaluate((y) => scrollTo(0, Math.round(y)), target)
+    await expect
+      .poll(() =>
+        page
+          .locator('.rise-call')
+          .first()
+          .evaluate((node) => {
+            const rect = node.getBoundingClientRect()
+            return Math.abs(rect.top + rect.height / 2 - innerHeight / 2)
+          }),
+      )
+      .toBeLessThan(1.2)
+  }
+  await travel()
+  await page.evaluate(() => scrollTo(0, 0))
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await expect
+    .poll(() =>
+      track.evaluate((node) => {
+        const verse = node.querySelector('.final-verse')!
+        const effect = verse.getAnimations()[0]?.effect as KeyframeEffect | undefined
+        if (!effect) return NaN
+        const frames = effect.getKeyframes()
+        const ramp =
+          (frames[17].offset! - frames[1].offset!) *
+          (document.documentElement.scrollHeight - innerHeight)
+        return ramp - innerHeight * 0.3
+      }),
+    )
+    .toBeCloseTo(0, 2)
+  await travel()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(track).not.toHaveAttribute('data-paced')
+  await expect(track).toHaveCSS('padding-bottom', '0px')
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect(track).toHaveAttribute('data-paced', '')
+  await travel()
+})
+
+test('Temple rise keeps slowing when its approach begins before the view timeline', async ({
+  page,
+}) => {
+  await unpacedClosingFixture(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/temple-rise')
+  await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+  const call = page.locator('.rise-call').first()
+  const rates: number[] = []
+  for (const divisor of [4.5, 9]) {
+    await call.evaluate((node, divisor) => {
+      node.style.setProperty('--rise-delay', `${100 * (1 - 0.128 / (0.65 / divisor))}%`)
+    }, divisor)
+    const arrival = await call.evaluate((node) => {
+      const rect = node.getBoundingClientRect()
+      return (
+        scrollY +
+        rect.top -
+        new DOMMatrix(getComputedStyle(node).transform).m42 +
+        rect.height / 2 -
+        innerHeight / 2
+      )
+    })
+    const positions: number[] = []
+    for (const offset of [80, 40]) {
+      await page.evaluate((y) => scrollTo(0, y), Math.round(arrival - offset))
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+          }),
+      )
+      positions.push((await call.boundingBox())!.y)
+    }
+    rates.push((positions[0] - positions[1]) / 40)
+  }
+  expect(rates[1]).toBeLessThan(rates[0] * 0.8)
 })
 
 for (const [width, height] of [
@@ -1965,6 +2509,7 @@ for (const [width, height] of [
   test(`Temple rise reaches centre before a shared assembly hold at ${width}x${height}`, async ({
     page,
   }) => {
+    await unpacedClosingFixture(page)
     await page.setViewportSize({ width, height })
     await page.goto('/temple-rise')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
@@ -2019,7 +2564,7 @@ for (const [width, height] of [
       column!.width,
       0,
     )
-    // Each delayed call stays below the screen until its own short approach,
+    // Each delayed call stays below the screen until its own approach,
     // reaches the same centre, then immediately travels with native scrolling.
     for (let index = 0; index < 4; index++) {
       const call = calls.nth(index)
@@ -2029,7 +2574,7 @@ for (const [width, height] of [
         return scrollY + rect.top - offset + rect.height / 2 - innerHeight / 2
       })
       if (index > 0) {
-        await page.evaluate((y) => scrollTo(0, y), arrival - height * 0.1)
+        await page.evaluate((y) => scrollTo(0, y), arrival - height * 0.4)
         await expect.poll(async () => (await call.boundingBox())!.y).toBeGreaterThan(height)
       }
       // Scroll offsets are quantised to whole pixels in some engines.
@@ -2171,6 +2716,7 @@ for (const reduced of [false, true])
       if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
       await page.goto('/temple-rise')
       await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+      if (!reduced) await expect(page.locator('.final-pair')).toHaveAttribute('data-paced', '')
       const finalVerse = page.locator('.final-verse')
       await expect(finalVerse).toHaveAttribute('data-has-refrain', '')
       await expect(finalVerse).toHaveCSS('padding-bottom', '0px')
@@ -2189,11 +2735,14 @@ for (const reduced of [false, true])
           nodes.map((node) => (node as HTMLElement).dataset.face),
         ),
       ).toEqual(['cinzel', 'cinzel', 'unbounded', 'cinzel'])
-      const gap =
+      // Compare the visible handoff after the slowed passage has travelled its
+      // extra runway, rather than its distant initial document coordinates.
+      await chorus.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top))
+      const gap = async () =>
         (await chorus.boundingBox())!.y -
         ((await finalVerse.boundingBox())!.y + (await finalVerse.boundingBox())!.height)
-      expect(gap).toBeGreaterThanOrEqual(0)
-      expect(gap).toBeLessThanOrEqual(48)
+      await expect.poll(gap).toBeGreaterThanOrEqual(0)
+      await expect.poll(gap).toBeLessThanOrEqual(48)
       for (let index = 0; index < 4; index++) {
         await chorus.evaluate((node, progress) => {
           const rect = node.getBoundingClientRect()
@@ -2251,6 +2800,7 @@ for (const viewport of [
     try {
       await page.goto('/temple-rise')
       await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+      await expect(page.locator('.final-pair')).toHaveAttribute('data-paced', '')
       const chorus = page.locator('.final-refrain .refrain-composition')
       const stage = chorus.locator('.refrain-stage')
       const ending = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
@@ -2358,51 +2908,5 @@ for (const width of [390, 1440]) {
     await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
     await expect(chorus).toHaveAttribute('data-active', '3')
     await expect.poll(visiblePieces).toBe(0)
-  })
-}
-
-for (const colorScheme of ['light', 'dark'] as const) {
-  test(`Temple logo blends to its original colours through the bridge in ${colorScheme}`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
-    await page.emulateMedia({ colorScheme })
-    await page.goto('/temple-bridge-finale')
-    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    const logo = page.locator('.temple-nav-logo-original')
-    await expect(logo).toHaveCount(1)
-    await expect
-      .poll(() => logo.evaluate((node) => (node as HTMLImageElement).naturalWidth))
-      .toBeGreaterThan(0)
-    const bounds = await page.evaluate(() => {
-      const intro = document.querySelector('.bridge-copy')!.getBoundingClientRect()
-      const body = document.querySelector('.bridge-body')!.getBoundingClientRect()
-      return { top: scrollY + intro.top, bottom: scrollY + body.bottom }
-    })
-    // The native animation must keep working without scene repaints.
-    await page.evaluate(() => {
-      window.requestAnimationFrame = () => 0
-    })
-    const seek = (y: number) => page.evaluate((y) => scrollTo(0, y), y)
-    const opacity = () => logo.evaluate((node) => parseFloat(getComputedStyle(node).opacity))
-    await seek(bounds.top - 844 * 1.7)
-    await expect.poll(opacity).toBe(0)
-    await seek(bounds.top - 844 * 1.45)
-    await expect.poll(opacity).toBeGreaterThan(0.02)
-    await expect.poll(opacity).toBeLessThan(0.15)
-    await seek(bounds.top - 844 * 0.6)
-    await expect.poll(opacity).toBeGreaterThan(0.3)
-    await expect.poll(opacity).toBeLessThan(0.7)
-    await seek(bounds.top + 844 * 0.5)
-    await expect.poll(opacity).toBe(1)
-    await seek((bounds.top + bounds.bottom) / 2)
-    await expect.poll(opacity).toBe(1)
-    await seek(bounds.bottom + 844 * 0.5)
-    await expect.poll(opacity).toBeGreaterThan(0.01)
-    await expect.poll(opacity).toBeLessThan(0.1)
-    await seek(bounds.bottom + 844 * 0.7)
-    await expect.poll(opacity).toBe(0)
-    await seek((bounds.top + bounds.bottom) / 2)
-    await expect.poll(opacity).toBe(1)
   })
 }

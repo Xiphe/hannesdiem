@@ -687,6 +687,18 @@ html[data-layout='temple'] body {
      Unlike hidden, clip does not introduce a scroll container for sticky stages. */
   overflow-x: clip;
 }
+.temple-artwork .final-pair[data-paced] .final-verse .verse-finale {
+  height: calc(var(--finale-height) + var(--drop-hold-space, 0px));
+}
+.temple-artwork .final-pair[data-paced] .final-verse .verse-finale > .verse-finale-stage {
+  /* The whole verse drifts together; assembly has no separate sticky hold. */
+  position: relative;
+  top: auto;
+}
+.temple-artwork .final-pair[data-paced] .verse-drop {
+  /* Incoming 3D words stay below the last call, including their largest poses. */
+  clip-path: inset(0 -100vw -100svh);
+}
 .final-verse {
   overflow-x: visible;
   padding-bottom: max(120px, 20svh);
@@ -764,6 +776,9 @@ html[data-layout='temple'] body {
   margin-top: calc(clamp(32px, 4.5vw, 64px) + 1rem);
   /* Match the extra horizontal travel with more scroll distance, not speed. */
   --drop-spread: 1.6;
+  --drop-speed: 2.8;
+  --drop-hold-fraction: 1;
+  --drop-gap: clamp(16px, 2svh, 24px);
 }
 .rise-entry-marker {
   position: absolute;
@@ -811,10 +826,14 @@ html[data-layout='temple'] body {
       margin-top: var(--rise-gap, 4svh);
     }
     .temple-artwork[data-state='ready'] .rise-call {
+      --rise-entry-start: calc(
+        100% - (100% - var(--rise-delay, 55%)) * var(--rise-entry-duration, 1)
+      );
       animation: verse-rise-entry linear both;
+      /* Keep stops ordered when a slower approach starts before the timeline. */
       animation-timing-function: linear(
-        0 0%,
-        0 calc(100% - (100% - var(--rise-delay, 55%)) * var(--rise-entry-duration, 1)),
+        0 min(0%, var(--rise-entry-start)),
+        0 var(--rise-entry-start),
         1 100%
       );
       animation-timeline: var(--rise-timeline, view());
