@@ -124,6 +124,7 @@
 .temple-practical-section {
   display: flow-root;
   position: relative;
+  scroll-margin-top: var(--temple-nav-clearance, 88px);
 }
 .temple-practical-section > .fact-story {
   margin-block: 4svh 12svh;
@@ -134,4 +135,13 @@
 }
 .temple-practical-section + .temple-practical-section {
   padding-top: 8svh;
+}
+
+/* Feed content leads the Watch introduction; keep their handoff compact. */
+.temple-practical-section > .temple-post-previews:first-child {
+  z-index: 4;
+  margin-bottom: 24px;
+}
+.temple-post-previews + .fact-story[data-fact-layout='watch'] .fact-pictures {
+  margin-top: 0;
 }

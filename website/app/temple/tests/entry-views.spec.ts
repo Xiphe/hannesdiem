@@ -180,3 +180,58 @@ test('verse queries select the passage within the complete poem', async ({ page 
     .toBeLessThan(180)
   expect(await page.evaluate(() => scrollY)).toBeGreaterThan(1000)
 })
+
+for (const width of [390, 1440]) {
+  for (const javaScriptEnabled of [true, false]) {
+    test(`Watch starts with manifesto return, feed, introduction and signup at ${width}px (JS ${javaScriptEnabled})`, async ({
+      browser,
+      baseURL,
+    }) => {
+      const context = await browser.newContext({
+        baseURL,
+        javaScriptEnabled,
+        viewport: { width, height: 900 },
+      })
+      try {
+        const page = await context.newPage()
+        await page.goto('/temple-of-sound/watch')
+        if (javaScriptEnabled)
+          await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+        const watch = page.locator('#watch')
+        await expect(watch).toHaveCount(1)
+        const order = await watch.evaluate((node) =>
+          [
+            ...node.querySelectorAll(
+              '.temple-intention-return,.temple-post-previews,.fact-story,.fact-followup-action',
+            ),
+          ].map((element) => element.classList[0]),
+        )
+        expect(order).toEqual([
+          'temple-intention-return',
+          'temple-post-previews',
+          'fact-story',
+          'fact-action',
+        ])
+        const back = page.locator('.temple-intention-return')
+        const feed = watch.locator('.temple-post-previews')
+        const introduction = watch.locator('.fact-story')
+        const signup = watch.locator('.fact-followup-action')
+        await expect(back.getByRole('link')).toBeVisible()
+        const boxes = await Promise.all(
+          [back, feed, introduction, signup].map((locator) => locator.boundingBox()),
+        )
+        for (let i = 1; i < boxes.length; i++)
+          expect(boxes[i]!.y).toBeGreaterThanOrEqual(boxes[i - 1]!.y + boxes[i - 1]!.height)
+        const pictures = await introduction.locator('.fact-pictures').boundingBox()
+        expect(pictures!.y).toBeGreaterThanOrEqual(boxes[1]!.y + boxes[1]!.height)
+        const header = await page.locator('.temple-top-navigation').boundingBox()
+        expect(boxes[0]!.y).toBeGreaterThanOrEqual(header!.y + header!.height)
+        expect(boxes[1]!.y).toBeLessThan(350)
+        await feed.locator('a').first().click()
+        await expect(page).toHaveURL(/\/feed\/fixture-/)
+      } finally {
+        await context.close()
+      }
+    })
+  }
+}

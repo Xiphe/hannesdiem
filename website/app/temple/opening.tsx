@@ -23,13 +23,16 @@ import { mountEntryButtons } from './entry-button/enhance.ts'
 function PracticalFact(handle: Handle<FactProps>) {
   return () => {
     const fact = handle.props
+    const feedFirst = fact.layout === 'watch' && fact.after != null
     return (
       <div class="temple-practical-section">
+        {feedFirst && fact.after}
         <Fact
           {...fact}
+          anchor={fact.layout !== 'watch'}
           action={fact.after != null ? undefined : fact.action}
         />
-        {fact.after}
+        {!feedFirst && fact.after}
         {fact.after != null && fact.action && (
           <FactAction
             id={fact.id}
@@ -111,24 +114,29 @@ export function Opening(handle: Handle<OpeningProps>) {
         >
           <TopNavigation {...handle.props} />
           <div class="temple-practical-content">
-            {facts
-              ?.filter((fact) => fact.layout === 'watch')
-              .map((fact) => (
-                <PracticalFact {...fact} />
-              ))}
-            <div class="temple-intention-return fact-action">
-              <a
-                href="/temple-of-sound"
-                data-temple-manifesto
-                data-rmx-document
-                class="temple-enter-button"
-              >
-                <ArrowLeftIcon />
-                Back to the Manifesto
-              </a>
-              <small class="temple-entry-caption">
-                Read the intention and the charge of this space
-              </small>
+            <div
+              class="temple-practical-section"
+              id="watch"
+            >
+              <div class="temple-intention-return fact-action">
+                <a
+                  href="/temple-of-sound"
+                  data-temple-manifesto
+                  data-rmx-document
+                  class="temple-enter-button"
+                >
+                  <ArrowLeftIcon />
+                  Back to the Manifesto
+                </a>
+                <small class="temple-entry-caption">
+                  Read the intention and the charge of this space
+                </small>
+              </div>
+              {facts
+                ?.filter((fact) => fact.layout === 'watch')
+                .map((fact) => (
+                  <PracticalFact {...fact} />
+                ))}
             </div>
             {location && (
               <div class="temple-practical-section">

@@ -6,7 +6,7 @@ for (const width of [390, 1440]) {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/temple-of-sound/watch')
     for (const id of ['watch', 'create', 'share']) {
-      const section = page.locator(`#${id}`)
+      const section = page.locator(`.fact-story[data-fact-layout="${id}"]`)
       await expect(section).toHaveAttribute('data-material-ready', '')
       const clipping = await section.evaluate((node) => {
         const boundary = node.querySelector('.fact-material-boundary')!.getBoundingClientRect()

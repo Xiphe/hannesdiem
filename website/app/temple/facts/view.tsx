@@ -8,7 +8,7 @@ import { TempleSignup } from '../../newsletter/temple-form.tsx'
 import { ContactLink } from '../../contact/link.tsx'
 
 /** Native CMX content; the fitted silhouette is optional enhancement. */
-export function Fact(handle: Handle<FactProps>) {
+export function Fact(handle: Handle<FactProps & { anchor?: boolean }>) {
   let section: HTMLElement | undefined
   handle.queueTask((signal) => {
     if (section) mountReadingMaterial(section, signal)
@@ -19,7 +19,7 @@ export function Fact(handle: Handle<FactProps>) {
     return (
       <section
         class="fact-story"
-        id={id}
+        id={handle.props.anchor === false ? undefined : id}
         data-fact-layout={layout}
         aria-labelledby={`${id}-heading`}
         mix={ref((node) => {

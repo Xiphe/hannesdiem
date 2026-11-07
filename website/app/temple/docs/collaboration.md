@@ -1,5 +1,28 @@
 # Temple of Sound: client–artist collaboration
 
+**Feed before the Watch introduction; manifesto return stays first — 2026-11-07.**
+The artist corrects the earlier Watch-first interpretation: the feed content
+comes before “Thoughts, Songs, …”, followed by the newsletter signup CTA. They
+also require the manifesto return to remain topmost. Use this native order:
+manifesto return, Watch feed, Watch introduction, signup CTA, Visit, Create,
+Share. Keep the supplied wording and existing CMX feed/fact/signup renderers.
+
+The Watch arrival anchor belongs to the complete opening group so Enter,
+remembered index visits and navigation show the return above the feed. Give the
+introduction its existing heading/material identity without duplicating the
+Watch anchor. Keep the raised introduction photographs below the cards and
+include the feed in navigation's measured scene. Entry-memory behavior stays
+as agreed. This supersedes the earlier assumption that Watch's internal order
+should stay unchanged. Local review only.
+
+Validation: asset build and `check:website` pass (81 fast tests). All 74 selected
+synthetic browser checks pass, covering the exact order at 390px and 1440px with
+and without JavaScript, card activation/return, section arrivals, navigation,
+reading contours and saved-entry behavior. The Chromium-only cached restoration
+case is skipped in WebKit. Operational review on 8787 shows the return above the
+cards on both widths, followed by introduction and signup, without page errors.
+Use `sand tunnel 8787`, then `/temple-of-sound/watch`. No deployment requested.
+
 **Logo stays present through the manifesto opener — 2026-11-07.** The artist
 asks for the logo to be “sticky present all through the opener”. Keep the existing
 main-menu logo fixed in the upper-left corner from arrival through forward and

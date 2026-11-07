@@ -15,6 +15,7 @@ export function TemplePosts(handle: Handle<TemplePostsProps>) {
   return () => (
     <div
       class="temple-post-previews"
+      data-nav-visual
       role="region"
       aria-label="Content"
       tabIndex={0}

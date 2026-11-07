@@ -60,14 +60,16 @@ site-menu logo; no wordmark/date. The closing action fades in beneath
 the held final phrase, centered in the space between its ink and the viewport
 bottom. The artist defers button artwork to a separate exploration.
 
-Inside: no opener or poem. Watch comes first, followed by the manifesto return,
-Visit, Create and Share; the full header appears immediately. Wordmark links to
-the poem root. Progress/scrubbing follows practical content only. Inspire/Be Held/Wish remain visible; activating them shows
-“coming soon”. Header links have section paths as their native destinations;
+Inside: no opener or poem. The manifesto return stays topmost, followed by the
+Watch feed, Watch introduction, newsletter signup CTA, Visit, Create and Share.
+The full header appears immediately. Wordmark links to the poem root.
+Progress/scrubbing follows practical content only. Inspire/Be Held/Wish remain
+visible; activating them shows “coming soon”. Header links have section paths as their native destinations;
 enhancement can scroll between existing sections without reloading the document.
-Between Watch and Visit, a native “Back to the Manifesto” link with a back arrow
-returns to the poem with the artist's explanation below it. It follows the complete
-Watch section in the native document flow.
+A native “Back to the Manifesto” link with a back arrow returns to the poem, with
+the artist's explanation below it. It precedes the feed in the native document
+flow. The Watch anchor covers this return and the complete Watch section, so
+Watch arrivals retain the topmost return above the cards.
 The return area's explanation is dimmed. Navigation progress starts at the
 native Watch arrival and mobile scrubbing stays within the practical sections.
 Reuse the poem's three-depth fragment ground across Watch through Share, retaining
