@@ -250,7 +250,7 @@ export default function Content({
             'I would love to get visited in this cocoon and share meals, music, words, touch, tears and laughter.',
           action: {
             prompt: 'Lets connect and arrange your stay.',
-            label: 'Join me in person',
+            label: 'Join us in person',
             href: 'mailto:sound@hannesdiem.de',
           },
         }}
@@ -286,7 +286,7 @@ export default function Content({
             circle: { places: 10, label: 'Take your place', reservation: 'temple-circle' },
             heading: "A recurring gathering to co-regulate what's moving us",
             paragraphs: [
-              'We hold an online circle every Thursday 19:00',
+              'We hold an online circle every other Thursday 19:00',
               'The layer of sound is also the layer of speaking honestly, expressing desires and vocalizing boundaries. We share what is in the way of honest (self-)love, and witness one another without advice or discussion.',
             ],
           },

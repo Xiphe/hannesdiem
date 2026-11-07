@@ -41,13 +41,21 @@
   align-items: center;
   gap: 10px;
 }
-.temple-entry-caption {
-  margin-top: 0.35rem;
+.temple-entry-caption,
+.fact-action > p,
+.location-prompt {
   font:
     400 12px/1.5 ui-sans-serif,
     system-ui,
     sans-serif;
   opacity: 0.6;
+}
+.temple-entry-caption {
+  margin-top: 0.35rem;
+}
+.fact-action:has(> p),
+.location-action {
+  gap: 0.35rem;
 }
 .temple-entry-more svg {
   width: 14px;

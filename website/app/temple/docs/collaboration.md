@@ -1,5 +1,24 @@
 # Temple of Sound: client–artist collaboration
 
+**Use the manifesto caption style for other button context — 2026-11-07.**
+The artist asks for all other buttons' supporting context to use the smaller,
+dimmed font and tight spacing shown beneath Back to the Manifesto. Share its
+12px type, 1.5 line height and 60% opacity with the fact-action prompts and
+visit prompt, and match the 0.35rem gap. Preserve supplied wording and order.
+
+Validation: app build and `check:website` pass (81 fast tests). Focused preview
+checks at 390px/1440px confirm all three prompts share the reference's 12px
+font, 18px line height, 60% opacity and 5.6px separation. Preview 8787 refreshed;
+review with `sand tunnel 8787`, then `/temple-of-sound/watch`.
+
+**Sharing-circle frequency and visit CTA — 2026-11-07.** The artist clarifies
+that the sharing circle meets every other Thursday. Update that frequency while
+retaining the supplied 19:00 time. Change the visit button accompanying
+“Lets connect and arrange your stay.” to the supplied “Join us in person”.
+
+Validation: formatting and content preparation pass. Preview inspection confirms
+both supplied corrections at phone and desktop widths.
+
 **Match Watch's trailing space to the other sections — 2026-11-07.** The
 artist asks to reduce the large gap after Watch's signup CTA. Give the inner
 page's follow-up action the same 12svh bottom margin as its other fact sections,
