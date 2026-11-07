@@ -45,6 +45,23 @@ video preload. The iframe loads lazily; Stream still fetches initialization
 metadata. No additional player SDK, video backend, or R2 source copy is needed.
 Publishing a video is a separate content decision from uploading it.
 
+## Select the cover with the artist
+
+For every new recording or replacement video, proactively ask the artist to
+choose a cover before declaring the content ready or publishing it. An upload
+and supplied copy do not select a cover. If a replacement keeps the same cover,
+confirm that choice with the artist. Honor an explicit instruction to use the
+default thumbnail or publish without cover review.
+
+Add the video to native CMX content, build the local Publication, and start the
+[cover picker](temple-sharing.md#cover-frame-and-focal-point-review) with only
+the recording IDs being worked on. Share its Sand tunnel command and URL with
+the artist. Wait for their frame and focal-point selection, then apply the
+saved source frame through a native CMX image import, retaining its focal
+coordinates and video-frame provenance. Rebuild and review the resulting
+cards before reporting the content ready. Cover selection does not itself
+authorize publication.
+
 ## Present a recording in Temple of Sound
 
 `TempleVideo` adds a stable `id`, a linked title, an optional posting date, and

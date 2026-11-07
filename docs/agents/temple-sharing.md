@@ -62,13 +62,19 @@ content-only builds both receive the same files.
 
 ## Cover frame and focal-point review
 
-After a local content build, run `npm run content:review-covers` and forward
-port8794 (`sand tunnel 18794:8794`). Open `http://localhost:18794`.
+After a local content build, run
+`npm run content:review-covers -- <recording-id> [another-id]` with only the
+videos being worked on. For example, `npm run content:review-covers -- fly-with-me`.
+The command requires explicit IDs and rejects unknown IDs before serving or
+fetching media. Only those recordings appear in the picker, contribute to its
+saved count, or can be previewed and saved through its API. Other recordings'
+saved choices remain intact. Forward port8794 (`sand tunnel 18794:8794`) and
+open `http://localhost:18794`.
 The tool collects recording identities from the existing Publication with CMX's
 node reducer, including nested slots. It has no separate recording catalogue.
 
 Scene search uses a cached240px-wide silent MP4, remuxed from the smallest Stream
-rendition with the machine's `ffmpeg`. The tool prepares all three on startup;
+rendition with the machine's `ffmpeg`. The tool prepares the selected videos on startup;
 native byte-range responses support quick seeking without repeated HLS segment
 loads. Final frame extraction remains full resolution. Frame stepping uses the
 rendition's frame rate and retains subsecond precision.
@@ -100,8 +106,8 @@ This review store is not a Publication input or a second media adapter.
 
 The tool is committed under `content/development/cover-review*`, with the
 `content:review-covers` package script. For later uploads, add the recording to
-native CMX content, rebuild the Publication and restart that script; new videos
-appear in the picker automatically. No standalone catalogue needs updating.
+native CMX content, rebuild the Publication and restart that script with the
+current recording IDs. No standalone catalogue needs updating.
 
 The artist's three approved covers are now imported in `_recordings.tsx`.
 Their full source JPEGs live in Git LFS under `content/media/`. Each native cover

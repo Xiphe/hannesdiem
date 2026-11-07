@@ -12,6 +12,8 @@ When starting in a folder other than `/workspace/hannesdiem`, inform the user an
 
 Use the `gopass` skill with `projects/sites/cloudflare/admin/{api-token,account-id}`.
 Stream uploads and playback origins: `docs/agents/video.md`.
+New or replacement recordings: follow its cover-selection workflow and proactively
+ask the artist to choose a cover before declaring the content ready.
 
 ## CMX
 

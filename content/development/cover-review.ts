@@ -14,6 +14,10 @@ import { renderTempleShareImage } from '../preparation/temple-share-image.ts'
 import { coverReviewStore, coverCompositionVersion } from './cover-review-store.ts'
 import { searchRendition, searchVideoCache, serveSearchVideo } from './cover-review-video.ts'
 
+const requested = new Set(process.argv.slice(2))
+if (!requested.size)
+  throw new Error('Choose the videos for this session: npm run content:review-covers -- <id> [id…]')
+
 // Local authoring aid. Read native CMX inputs; choices stay drafts until applied to content.
 const output = resolve('.generated/temple-cover-review')
 const assets = fileURLToPath(new URL('./cover-review/', import.meta.url))
@@ -74,6 +78,9 @@ for (const document of Object.values(documents)) {
   })
 }
 if (!videos.size) throw new Error('No videos found. Run npm run content:build first.')
+for (const id of requested)
+  if (!videos.has(id)) throw new Error(`Unknown video for cover review: ${id}`)
+for (const id of videos.keys()) if (!requested.has(id)) videos.delete(id)
 const choices = await coverReviewStore(output)
 const frames = new Map<string, Promise<Uint8Array>>()
 const previews = new Map<string, Promise<{ share: string; watch: string }>>()
