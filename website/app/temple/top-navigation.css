@@ -230,8 +230,12 @@
   background: none;
 }
 .temple-nav-logo img {
+  grid-area: 1 / 1;
   width: 18px;
   height: 40px;
+}
+.temple-nav-logo-original {
+  opacity: 0;
 }
 @media (width > 1050px) {
   html[data-layout='temple']:not(:has(.temple-artwork[data-temple-view='poem']))

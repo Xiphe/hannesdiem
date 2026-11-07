@@ -1,5 +1,11 @@
 # Temple of Sound palette
 
+Bridge logo update, 2026-11-07: the navigation logo blends from the existing
+Temple mark to the existing original purple-blue mark through the bridge, then
+returns as the bridge exits. Each blend spans two viewports of scroll. Each
+SVG retains its own light/dark colours. The
+favicon and other navigation states keep their existing palette.
+
 `/temple-of-sound`; system theme. Source: `content/media/IMG_6257.JPG` + glimmers.
 
 | Role                        | Light          | Dark           |

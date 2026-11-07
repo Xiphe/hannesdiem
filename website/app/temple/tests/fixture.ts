@@ -146,7 +146,7 @@ export const bridgeFinaleTempleContent = fixtureContent(
   [[{ text: 'A synthetic bridge introduction.' }]],
   ['A synthetic reading paragraph stays clear of the sculpture. '.repeat(12).trim()],
   undefined,
-  undefined,
+  [{ label: 'Fixture bridge', href: '#verse-fixture-bridge' }],
   finalVerse,
 )
 export const chorusNavigationTempleContent = fixtureContent(

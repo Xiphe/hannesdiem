@@ -1,4 +1,5 @@
 import { createBridgeLinger } from './bridge-linger.ts'
+import { createBridgeLogo } from './bridge-logo.ts'
 import { fitVerseRise } from './verse-rise.ts'
 import { fitVerseDrop } from './verse-drop.tsx'
 import { createBridgeCloud } from './bridge-cloud.ts'
@@ -92,6 +93,7 @@ export async function mountArtwork(
   const fitDrop = fitVerseDrop(poem, abort.signal)
   const bridgePages = createBridgePages(poem, abort.signal)
   const bridgeLinger = createBridgeLinger(poem, abort.signal)
+  const bridgeLogo = createBridgeLogo(host, abort.signal)
   const bridgeGround = document.createElement('div')
   bridgeGround.className = 'temple-bridge-ground'
   bridgeGround.ariaHidden = 'true'
@@ -243,6 +245,7 @@ export async function mountArtwork(
         for (const { ink } of refrains) ink!.resize()
         copyColour.resize()
         bridgeLinger.resize(reduced.matches)
+        bridgeLogo.resize()
         navigation?.resize()
       } else request()
     }
@@ -341,6 +344,7 @@ export async function mountArtwork(
       copyColour.resize()
       navigation?.resize()
       bridgeLinger.resize(reduced.matches)
+      bridgeLogo.resize()
       on(window, 'scroll', () => {
         lastScroll = performance.now()
         request()

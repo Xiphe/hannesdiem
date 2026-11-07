@@ -148,6 +148,15 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
           width={18}
           height={40}
         />
+        {handle.props.originalMark && (
+          <img
+            class="temple-nav-logo-original"
+            src={handle.props.originalMark}
+            alt=""
+            width={18}
+            height={40}
+          />
+        )}
       </button>
     </header>
   )

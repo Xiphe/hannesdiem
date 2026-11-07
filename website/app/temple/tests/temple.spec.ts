@@ -2360,3 +2360,49 @@ for (const width of [390, 1440]) {
     await expect.poll(visiblePieces).toBe(0)
   })
 }
+
+for (const colorScheme of ['light', 'dark'] as const) {
+  test(`Temple logo blends to its original colours through the bridge in ${colorScheme}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.emulateMedia({ colorScheme })
+    await page.goto('/temple-bridge-finale')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const logo = page.locator('.temple-nav-logo-original')
+    await expect(logo).toHaveCount(1)
+    await expect
+      .poll(() => logo.evaluate((node) => (node as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0)
+    const bounds = await page.evaluate(() => {
+      const intro = document.querySelector('.bridge-copy')!.getBoundingClientRect()
+      const body = document.querySelector('.bridge-body')!.getBoundingClientRect()
+      return { top: scrollY + intro.top, bottom: scrollY + body.bottom }
+    })
+    // The native animation must keep working without scene repaints.
+    await page.evaluate(() => {
+      window.requestAnimationFrame = () => 0
+    })
+    const seek = (y: number) => page.evaluate((y) => scrollTo(0, y), y)
+    const opacity = () => logo.evaluate((node) => parseFloat(getComputedStyle(node).opacity))
+    await seek(bounds.top - 844 * 1.7)
+    await expect.poll(opacity).toBe(0)
+    await seek(bounds.top - 844 * 1.45)
+    await expect.poll(opacity).toBeGreaterThan(0.02)
+    await expect.poll(opacity).toBeLessThan(0.15)
+    await seek(bounds.top - 844 * 0.6)
+    await expect.poll(opacity).toBeGreaterThan(0.3)
+    await expect.poll(opacity).toBeLessThan(0.7)
+    await seek(bounds.top + 844 * 0.5)
+    await expect.poll(opacity).toBe(1)
+    await seek((bounds.top + bounds.bottom) / 2)
+    await expect.poll(opacity).toBe(1)
+    await seek(bounds.bottom + 844 * 0.5)
+    await expect.poll(opacity).toBeGreaterThan(0.01)
+    await expect.poll(opacity).toBeLessThan(0.1)
+    await seek(bounds.bottom + 844 * 0.7)
+    await expect.poll(opacity).toBe(0)
+    await seek((bounds.top + bounds.bottom) / 2)
+    await expect.poll(opacity).toBe(1)
+  })
+}

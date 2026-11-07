@@ -61,6 +61,7 @@ export function PoemOpening(handle: Handle<PoemOpeningProps>) {
           section={section}
           welcome={view === 'poem' ? welcome : undefined}
           mark={assets.templeMark}
+          originalMark={view !== 'inside' && (bridge || bridgeBody) ? assets.mark : undefined}
           navigation={navigation}
           title={title}
           dates={dates}
