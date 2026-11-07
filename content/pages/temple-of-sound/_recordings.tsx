@@ -2,6 +2,7 @@ import { TempleRecordings } from '@hannesdiem/content-components'
 import micTechCover from '../../media/temple-recording-mic-tech-check-cover.jpg'
 import permissionsCover from '../../media/temple-recording-permission-spaces-cover.jpg'
 import kennstDuDasCover from '../../media/temple-recording-kennst-du-das-cover.jpg'
+import flyWithMeCover from '../../media/temple-recording-fly-with-me-cover.jpg'
 
 export const recordings = (
   <TempleRecordings
@@ -67,6 +68,13 @@ export const recordings = (
         postedAt: '2026-11-07T00:00:25+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: 'd3f00d4b6684635fc7c58b0b15a5c74b',
+        cover: {
+          ...flyWithMeCover,
+          alt: 'Fly With Me',
+          focalX: 50.8,
+          focalY: 50.8,
+          videoFrame: { videoId: 'd3f00d4b6684635fc7c58b0b15a5c74b', time: 1519.3714 },
+        },
         aspectRatio: 9 / 16,
         children: (
           <p>
