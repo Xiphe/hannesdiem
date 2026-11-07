@@ -1,5 +1,15 @@
 # Temple of Sound: client–artist collaboration
 
+**Move the manifesto return slightly upward — 2026-11-07.** The artist asks
+to move Back to the Manifesto a little further up. Offset its existing block
+upward by 1rem, retaining its space in document flow and the accepted Watch
+arrival that reveals it only when scrolling upward.
+
+Validation: app build, `check:website` (81 fast tests), and four focused
+phone/desktop entry checks with/without JavaScript pass. Preview confirms the
+16px upward offset while the revealed return stays below the header. Preview
+8787 refreshed; use `sand tunnel 8787`, then `/temple-of-sound/watch`.
+
 **Footer link colour and shaded background — 2026-11-07.** The artist asks
 to remove footer underlines, distinguish links through a slightly stronger
 colour, and give the footer a background similar to the parallax tiles. Reuse
