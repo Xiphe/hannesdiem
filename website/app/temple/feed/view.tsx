@@ -3,6 +3,7 @@ import type { TemplePost } from '@hannesdiem/content-components'
 import { videoFrame, postPath } from './model.ts'
 import { mountFeed } from './enhance.ts'
 import { FeedIcon } from './icon.tsx'
+import { ThemedImage } from '../../themed-image.tsx'
 
 type ResolvedCover<Post> = Post extends TemplePost
   ? Omit<Post, 'cover'> & { cover?: string }
@@ -11,6 +12,7 @@ export type FeedPost = ResolvedCover<TemplePost>
 export interface FeedProps {
   selected: string
   mark: string
+  darkMark: string
   posts: readonly (FeedPost & { dateLabel: string })[]
 }
 
@@ -278,10 +280,11 @@ export function Feed(handle: Handle<FeedProps>) {
           >
             <FeedIcon name="back" />
           </span>
-          <img
+          <ThemedImage
             class="feed-home-logo"
             data-return-home
             src={handle.props.mark}
+            darkSrc={handle.props.darkMark}
             width={18}
             height={36}
             alt=""

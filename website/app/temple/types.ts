@@ -20,7 +20,9 @@ export interface OpeningProps {
   section?: PoemOpeningProps['section']
   welcome?: PoemOpeningProps['welcome']
   mark: string
+  darkMark: string
   originalMark?: string
+  originalDarkMark?: string
   navigation?: PoemOpeningProps['navigation']
   facts?: readonly FactProps[]
   location?: LocationProps

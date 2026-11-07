@@ -5,6 +5,7 @@ import { ServiceLogo } from './icons.tsx'
 import { ChevronDownIcon, XMarkIcon } from './heroicons.tsx'
 import { NewsletterArea } from './newsletter/index.ts'
 import type { SessionState } from './identity/contract.ts'
+import { ThemedImage } from './themed-image.tsx'
 
 const quietLink = css({ opacity: 0.6, '&:hover': { opacity: 1 } })
 export function Brand(handle: Handle<{ footer?: boolean }>) {
@@ -18,8 +19,9 @@ export function Brand(handle: Handle<{ footer?: boolean }>) {
         ...(!handle.props.footer ? { height: '1.75rem', paddingRight: '1rem' } : {}),
       })}
     >
-      <img
+      <ThemedImage
         src={assets.mark}
+        darkSrc={assets.markDark}
         alt=""
         mix={css({
           height: handle.props.footer ? '4rem' : '2.5rem',

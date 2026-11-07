@@ -3,6 +3,7 @@ import type { OpeningProps } from './types.ts'
 import { generateFragments } from '../../../contracts/temple/fragments.ts'
 import { LocalDate } from '../date.tsx'
 import { PieceTooltip } from './piece-tooltip/view.tsx'
+import { ThemedImage } from '../themed-image.tsx'
 
 export function TopNavigation(handle: Handle<OpeningProps>) {
   const pieces = generateFragments('temple-navigation-separators', 6)
@@ -142,16 +143,18 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
         commandFor="site-navigation"
         data-open-navigation
       >
-        <img
+        <ThemedImage
           src={handle.props.mark}
+          darkSrc={handle.props.darkMark}
           alt=""
           width={18}
           height={40}
         />
-        {handle.props.originalMark && (
-          <img
+        {handle.props.originalMark && handle.props.originalDarkMark && (
+          <ThemedImage
             class="temple-nav-logo-original"
             src={handle.props.originalMark}
+            darkSrc={handle.props.originalDarkMark}
             alt=""
             width={18}
             height={40}

@@ -19,6 +19,7 @@ export default defineConfig({
     {
       name: 'webkit-regressions',
       testMatch: [
+        '**/tests/logo-theme.spec.ts',
         '**/tests/trace-rim.spec.ts',
         '**/tests/ground-spacing.spec.ts',
         '**/tests/ink.spec.ts',

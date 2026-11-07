@@ -95,6 +95,13 @@ for (const [key, source] of [
   entries[key] =
     `/assets/${key}-${createHash('sha256').update(mark).digest('hex').slice(0, 16)}.svg`
   await writeFile(`dist${entries[key]}`, mark)
+  if (key === 'mark' || key === 'templeMark') {
+    // Derive a fixed dark image from the same palette source for iOS WebKit.
+    const dark = mark.toString().replace('@media (prefers-color-scheme: dark)', '@media all')
+    entries[`${key}Dark`] =
+      `/assets/${key}Dark-${createHash('sha256').update(dark).digest('hex').slice(0, 16)}.svg`
+    await writeFile(`dist${entries[`${key}Dark`]}`, dark)
+  }
 }
 await mkdir('dist/font', { recursive: true })
 await cp('website/app/assets/fuggles.woff2', 'dist/font/fuggles-v12-latin-regular.woff2')

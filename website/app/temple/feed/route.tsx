@@ -12,6 +12,7 @@ import { Feed as FeedComponent } from './view.tsx'
 import { sortedPosts, postPath } from './model.ts'
 import { dateLabel } from '../../date.tsx'
 import { StreamVideo } from '../../ui-library/video.tsx'
+import { ThemedImage } from '../../themed-image.tsx'
 
 const Feed = clientEntry(`${assets.templeFeed}#Feed`, FeedComponent)
 
@@ -32,6 +33,7 @@ export async function renderFeed(page: ContentPage, id?: string) {
           <Feed
             selected={selectedId}
             mark={assets.mark}
+            darkMark={assets.markDark}
             posts={posts.map((post) => ({
               ...post,
               cover: resolvePostCover(post, site.media),
@@ -45,8 +47,9 @@ export async function renderFeed(page: ContentPage, id?: string) {
                 href="/"
                 aria-label="Home"
               >
-                <img
+                <ThemedImage
                   src={assets.mark}
+                  darkSrc={assets.markDark}
                   width={20}
                   height={40}
                   alt=""
