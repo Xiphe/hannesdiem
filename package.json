@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@cmx-tools/contracts": "0.4.0",
-    "@cmx-tools/document-host": "0.2.0",
+    "@cmx-tools/document-host": "0.3.0",
     "@cmx-tools/reduce": "0.1.1",
     "@cmx-tools/remix": "0.2.0",
     "hls.js": "1.7.4",

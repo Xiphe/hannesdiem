@@ -162,10 +162,9 @@ export class ContentState extends DurableObject<Env> {
         getDocument: async (key) => this.document(key),
         commit: async (publication) => this.commit(publication),
       }
-      const currentEntries = Object.keys(this.state().manifest)
       const host = createCmxDocumentHost({
         store,
-        async verifyPublicationUpdate(update, loadDocument) {
+        async verifyPublicationUpdate(update, publication) {
           try {
             for (const document of Object.values(update.upsert)) {
               const verification = verifyCmxDocumentEnvironment(document, environment)
@@ -173,11 +172,9 @@ export class ContentState extends DurableObject<Env> {
               // Resolve named component imports as well as dependency versions.
               cmx(document, environment)
             }
-            const entries = new Set([...currentEntries, ...Object.keys(update.upsert)])
-            for (const key of update.remove) entries.delete(key)
             const documents: PublishedDocuments = {}
-            for (const key of entries) {
-              const document = await loadDocument(key)
+            for (const key of publication.getEntryNames()) {
+              const document = await publication.loadDocument(key)
               if (document)
                 Object.defineProperty(documents, key, { value: document, enumerable: true })
             }
