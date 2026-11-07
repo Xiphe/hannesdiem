@@ -129,7 +129,7 @@ export function Opening(handle: Handle<OpeningProps>) {
                   Back to the Manifesto
                 </a>
                 <small class="temple-entry-caption">
-                  Read the intention and the charge of this space
+                  Read the intention and charge of this space
                 </small>
               </div>
               {facts

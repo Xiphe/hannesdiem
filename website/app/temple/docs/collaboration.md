@@ -1,5 +1,9 @@
 # Temple of Sound: client–artist collaboration
 
+**Manifesto return caption wording — 2026-11-07.** After discussing the
+poetic sense of “charge”, the artist chooses the exact wording “Read the
+intention and charge of this space”. Remove the second “the” from the caption.
+
 **Place the manifesto return 128px further above Watch — 2026-11-07.** The
 artist clarifies the desired upward movement as about 128px. Add that space
 below the return instead of moving it behind the persistent header. Remove
