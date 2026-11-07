@@ -23,32 +23,44 @@ export function TemplePosts(handle: Handle<TemplePostsProps>) {
       {sortedPosts(handle.props.posts).map((post) => {
         const cover = post.previewImage?.src ?? resolvePostCover(post, site.media)
         return (
-          <a
-            id={post.id}
-            class="temple-post-preview"
-            href={postPath(post.id)}
-            data-rmx-document
-            aria-label={post.title}
-          >
-            {cover && (
-              <img
-                src={cover}
-                alt=""
-                loading="lazy"
-                width={post.previewImage?.width ?? 1052}
-                height={post.previewImage?.height ?? 550}
-              />
+          <div class="temple-post-preview-item">
+            <a
+              id={post.id}
+              class="temple-post-preview"
+              href={postPath(post.id)}
+              data-rmx-document
+              aria-label={post.title}
+            >
+              {cover && (
+                <img
+                  src={cover}
+                  alt=""
+                  loading="lazy"
+                  width={post.previewImage?.width ?? 1052}
+                  height={post.previewImage?.height ?? 550}
+                />
+              )}
+              {!post.previewImage && <span class="temple-post-preview-title">{post.title}</span>}
+              {post.kind !== 'text' && (
+                <span
+                  class="temple-post-preview-play"
+                  aria-hidden="true"
+                >
+                  <FeedIcon name="play" />
+                </span>
+              )}
+            </a>
+            {(post.subheadline || post.children != null) && (
+              <div class="temple-post-preview-copy">
+                {post.subheadline && (
+                  <p class="temple-post-preview-subheadline">{post.subheadline}</p>
+                )}
+                {post.children != null && (
+                  <div class="temple-post-preview-description">{post.children}</div>
+                )}
+              </div>
             )}
-            {!post.previewImage && <span class="temple-post-preview-title">{post.title}</span>}
-            {post.kind !== 'text' && (
-              <span
-                class="temple-post-preview-play"
-                aria-hidden="true"
-              >
-                <FeedIcon name="play" />
-              </span>
-            )}
-          </a>
+          </div>
         )
       })}
     </div>

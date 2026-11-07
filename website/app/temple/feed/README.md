@@ -17,6 +17,13 @@ Watch; the entry and share-image conversations own their corresponding views.
   Playable covers show the viewer's Play icon in a prominent shaded circle
   centered over the thumbnail. It is decorative; the complete card
   retains its native link into the feed. Text cards omit this indicator.
+  Each thumbnail's native link is followed by its optional authored subheadline
+  and rich description. Keep description links outside the thumbnail anchor;
+  text-post bodies remain the post itself. Native scrolling works with the
+  overview scrollbar hidden, including the WebKit fallback. Thumbnail hover
+  brightens the image, outlines it in the primary colour and strengthens the
+  Play indicator. Keyboard focus also outlines/brightens; reduced motion removes
+  transition timing without changing the link geometry.
 - Preview links expand into the viewer over 420ms; the viewer's Back control and
   Escape return to the original entry point. Shrink back to that preview only
   while the same post is selected; after browsing other posts, return without
@@ -59,7 +66,8 @@ Watch; the entry and share-image conversations own their corresponding views.
   `og:description` and HTML description; posts without it keep the page's existing
   description. The rich-text drawer remains independent. Native no-JavaScript
   playback also shows the subheadline beneath its heading. Share-image composition
-  and Watch cards retain their existing title-only treatment.
+  and Watch thumbnail artwork retain their existing title-only treatment; the
+  optional subheadline and rich description appear as native HTML below it.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
   small, dim drag indicator above the scrubber. Center the Play/Pause
   glyph in its 44px control, restoring its position before the caption alignment.

@@ -1,5 +1,33 @@
 # Temple of Sound: client–artist collaboration
 
+**Watch row scrollbar, descriptions and thumbnail feedback — 2026-11-07.**
+The artist reports the scrollbar is still visible. Preview inspection identifies
+Watch's horizontal row still requesting `scrollbar-width: thin`; the preceding
+change applied to the full-screen viewer and its captions. Hide the row's bar
+with the standard rule and WebKit fallback, retaining native horizontal scroll.
+
+The artist additionally asks for subheadline and description below previews,
+and hover feedback on thumbnails. Reuse each post's optional `subheadline` and
+rich `children` description below its thumbnail, preserving supplied wording,
+formatting and links. Keep those links outside the native feed-entry anchor.
+Use the existing CMX slots and renderers; no content schema or generated artwork
+change is needed. This supersedes the earlier exclusion of subheadlines from
+Watch's HTML; the thumbnail artwork remains unchanged. Thumbnail hover adds a
+primary-colour outline, a small brightness increase and stronger Play indicator;
+keyboard focus gets the outline and brightness too. Reduced motion removes
+transitions, and the thumbnail's native geometry stays fixed for viewer return.
+
+Validation: asset build and `check:website` pass (81 fast tests). All 104 selected
+synthetic browser cases pass across the main run and a targeted reduced-motion
+rerun. Coverage includes rich description/link rendering without nested anchors,
+metadata below the thumbnails, native horizontal scroll with no scrollbar,
+hover/focus geometry, reduced motion, native no-JavaScript links and existing
+viewer return/navigation behavior. Both Chromium and WebKit cover the new row
+checks. Operational preview at 390px and 1440px in both browsers shows the authored
+subheadline/descriptions, hidden row scrollbar and no page errors. Preview 8787
+is refreshed; review with `sand tunnel 8787`, then `/temple-of-sound/watch`.
+No deployment requested.
+
 **Double Watch-row space on larger screens — 2026-11-07.** The artist requests
 twice the vertical spacing around the content row on bigger screens. Above the
 existing 1050px desktop breakpoint, double its top and bottom padding to

@@ -23,6 +23,7 @@ export default defineConfig({
         '**/tests/ground-spacing.spec.ts',
         '**/tests/ink.spec.ts',
         '**/tests/temple-entry.spec.ts',
+        '**/tests/preview-row.spec.ts',
       ],
       use: { browserName: 'webkit' },
     },
