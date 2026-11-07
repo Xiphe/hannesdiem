@@ -1,5 +1,19 @@
 # Temple of Sound: client–artist collaboration
 
+**Footer link colour and shaded background — 2026-11-07.** The artist asks
+to remove footer underlines, distinguish links through a slightly stronger
+colour, and give the footer a background similar to the parallax tiles. Reuse
+the reading tiles' neutral gradient in both themes, make links and the “me”
+button more prominent than the surrounding copy, and retain visible focus.
+The artist also asks for external links to open in a new tab. Apply that to
+SOULGRAPHY and the school; keep local legal links and the sidebar action native.
+
+Validation: app/content builds, formatting and `check:website` (81 fast tests)
+pass. Focused light/dark preview checks confirm tile-coloured backgrounds,
+stronger link colours without underlines, and new-tab targets only on the two
+external links. Preview 8787 refreshed; use `sand tunnel 8787`, then
+`/temple-of-sound/watch`.
+
 **Temple footer and photo credits — 2026-11-07.** The artist supplies a footer:
 “Fotos by SOULGRAPHY and me • In association with the School of Intimacy Arts
 • Imprint • Privacy”. Show photo credits only on the inner pages; the manifesto

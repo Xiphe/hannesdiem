@@ -6,6 +6,11 @@
   justify-content: center;
   gap: 0.35rem 0.6rem;
   padding: 2rem 1.5rem;
+  background: linear-gradient(
+    160deg,
+    light-dark(var(--temple-tile-start-light), rgb(21 22 21)),
+    light-dark(var(--temple-tile-end-light), rgb(17 18 17))
+  );
   color: light-dark(var(--temple-muted-light), #9f9890);
   font:
     400 12px/1.8 ui-sans-serif,
@@ -18,9 +23,8 @@
   margin-right: 0.6rem;
 }
 .temple-footer :is(a, button) {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: light-dark(var(--temple-ink-light), #c7bfb3);
+  text-decoration: none;
 }
 .temple-footer button {
   padding: 0;

@@ -376,7 +376,15 @@ and **staying with you**, my child.`,
       <footer class="temple-footer">
         {view === 'inside' && (
           <span>
-            Fotos by <a href="https://www.fanny-soulgraphy.de/">SOULGRAPHY</a> and{' '}
+            Fotos by{' '}
+            <a
+              href="https://www.fanny-soulgraphy.de/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              SOULGRAPHY
+            </a>{' '}
+            and{' '}
             <button
               type="button"
               command="show-modal"
@@ -392,7 +400,13 @@ and **staying with you**, my child.`,
         )}
         <span>
           With support from the{' '}
-          <a href="https://school-of-intimacy-arts.com/">School of Intimacy Arts</a>
+          <a
+            href="https://school-of-intimacy-arts.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            School of Intimacy Arts
+          </a>
         </span>
         <span>
           <a href="/imprint">Imprint</a> • <a href="/privacy">Privacy</a>
