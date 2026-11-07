@@ -200,19 +200,6 @@ test('signed publications persist, update the complete site and reject replay or
       assert.equal((await get('/fixture')).status, 200)
       assert.equal((await get('/missing')).status, 404)
       assert.match(await (await get('/sitemap.xml')).text(), /https:\/\/hannesdiem.de\/fixture/)
-      const missingPage = structuredClone(legacy)
-      delete missingPage.fixture
-      await assert.rejects(publish(missingPage), {
-        status: 422,
-        diagnostics: [
-          {
-            severity: 'error',
-            code: 'app/invalid-publication',
-            message: 'Missing or invalid page: fixture',
-          },
-        ],
-      })
-      assert.equal((await get('/fixture')).status, 200)
     },
   )
 
@@ -325,34 +312,8 @@ test('signed publications persist, update the complete site and reject replay or
   })
 
   await t.test(
-    'an invalid complete collection leaves the accepted publication active',
+    'incompatible incoming documents leave the accepted publication active',
     async () => {
-      const invalid = structuredClone(documents)
-      delete invalid._404
-      await assert.rejects(publish(invalid), {
-        status: 422,
-        diagnostics: [
-          {
-            severity: 'error',
-            code: 'app/invalid-publication',
-            message: 'Missing or invalid page: _404',
-          },
-        ],
-      })
-      const missingPage = structuredClone(documents)
-      delete missingPage['test-publication'].content.default
-      delete missingPage['test-publication'].interface.exports.default
-      await assert.rejects(publish(missingPage), {
-        status: 422,
-        diagnostics: [
-          {
-            severity: 'error',
-            code: 'app/invalid-publication',
-            message: 'Missing or invalid page: test-publication',
-          },
-        ],
-      })
-      assert.match((await readPage()).html, /First publication/)
       const missingComponent = structuredClone(documents)
       missingComponent['test-publication'].content.default = {
         type: 'component',
@@ -369,18 +330,6 @@ test('signed publications persist, update the complete site and reject replay or
       const incompatible = structuredClone(documents)
       incompatible.fixture.interface.imports['@hannesdiem/content-components'].version = '999.0.0'
       await assert.rejects(publish(incompatible), { status: 422 })
-      const invalidSite = structuredClone(documents)
-      invalidSite['fixture/index'] = structuredClone(invalidSite.fixture)
-      await assert.rejects(publish(invalidSite), {
-        status: 422,
-        diagnostics: [
-          {
-            severity: 'error',
-            code: 'app/invalid-publication',
-            message: 'Invalid or duplicate content route',
-          },
-        ],
-      })
       assert.match((await readPage()).html, /First publication/)
       assert.equal(
         (await readPage()).hash,
@@ -446,4 +395,17 @@ test('signed publications persist, update the complete site and reject replay or
     assert.equal((await get('/test-publication')).status, 404)
     assert.doesNotMatch(await (await get('/sitemap.xml')).text(), /\/test-publication/)
   })
+
+  await t.test(
+    'the host trusts the signed publisher for complete-collection validation',
+    async () => {
+      const unchecked = structuredClone(documents)
+      delete unchecked._404
+      const expected = await createCmxPublicationState(unchecked)
+      const published = await publish(unchecked)
+      assert.equal(published.contentHash, expected.contentHash)
+      await publish(documents)
+      assert.equal((await get('/missing')).status, 404)
+    },
+  )
 })

@@ -289,7 +289,7 @@ export function validatePage(key: string, document: CmxDocument | undefined): vo
     throw new Error(`Missing or invalid page: ${key}`)
 }
 
-// Validate the complete collection before publishing and before accepting it.
+// Validate the complete collection during content preparation and when building its read index.
 export function validatePublication(documents: PublishedDocuments): PublicationIndex {
   const rawSite = documents[siteEntry]?.content.site
   const publication: PublicationIndex =

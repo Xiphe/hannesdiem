@@ -107,4 +107,50 @@ test('discovered CMX entries retain metadata and can import excluded supporting 
     }),
     /Invalid or duplicate content route/,
   )
+
+  await t.test('preparation rejects a missing fallback', async () => {
+    const { _404, ...entries } = options.entries
+    await assert.rejects(
+      buildPublication({ ...options, entries, outDir: join(directory, 'missing-fallback-bundle') }),
+      /Missing or invalid page: _404/,
+    )
+  })
+
+  await t.test('preparation rejects a page without a default export', async () => {
+    await writeFile(join(directory, 'index.tsx'), `export const title = 'Synthetic home'`)
+    await assert.rejects(
+      buildPublication({ ...options, outDir: join(directory, 'missing-default-bundle') }),
+      /Missing or invalid page: index/,
+    )
+  })
+
+  await writeFile(
+    join(directory, 'index.tsx'),
+    `export const title = 'Synthetic home'; export default <h1>Home</h1>`,
+  )
+  await t.test('preparation rejects conflicting page URLs', async () => {
+    await assert.rejects(
+      buildPublication({
+        ...options,
+        outDir: join(directory, 'conflicting-routes-bundle'),
+        entries: {
+          ...options.entries,
+          example: options.entries.index,
+          'example/index': options.entries.index,
+        },
+      }),
+      /Invalid or duplicate content route/,
+    )
+  })
+
+  await t.test('preparation rejects page images missing from site media', async () => {
+    await writeFile(
+      join(directory, 'index.tsx'),
+      `export const title = 'Synthetic home'; export const metadata = { image: 'missing' }; export default <h1>Home</h1>`,
+    )
+    await assert.rejects(
+      buildPublication({ ...options, outDir: join(directory, 'missing-image-bundle') }),
+      /Invalid or duplicate content route/,
+    )
+  })
 })

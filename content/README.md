@@ -20,6 +20,9 @@ The Worker reads v1 publications during rollout; new builds emit only v2.
 `preparation/prepare.ts`: discover → CMX Bundle → CMX Documents → publication file.
 Globals are ordinary CMX entries: `site.ts`, `redirects.ts`. Complete rendering and
 publication validation precede output. No page/route/OG intermediate JSON files.
+The signed publisher is trusted to supply a valid collection. The host checks
+incoming documents against its deployed environment without loading unchanged
+documents for collection validation.
 
 Temporary exception: `preparation/share-images.ts` consumes evaluated metadata and
 attaches generated image URLs before output. It remains outside CMX; moving its

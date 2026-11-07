@@ -164,7 +164,8 @@ export class ContentState extends DurableObject<Env> {
       }
       const host = createCmxDocumentHost({
         store,
-        async verifyPublicationUpdate(update, publication) {
+        // Content preparation validates the collection; check only changed documents here.
+        verifyPublicationUpdate(update) {
           try {
             for (const document of Object.values(update.upsert)) {
               const verification = verifyCmxDocumentEnvironment(document, environment)
@@ -172,13 +173,6 @@ export class ContentState extends DurableObject<Env> {
               // Resolve named component imports as well as dependency versions.
               cmx(document, environment)
             }
-            const documents: PublishedDocuments = {}
-            for (const key of publication.getEntryNames()) {
-              const document = await publication.loadDocument(key)
-              if (document)
-                Object.defineProperty(documents, key, { value: document, enumerable: true })
-            }
-            validatePublication(documents)
             return { valid: true }
           } catch (error) {
             return {

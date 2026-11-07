@@ -84,12 +84,9 @@ test('the released CMX CLI loads the signed config and publishes directly to the
   assert.equal(published.contentHash, expected.contentHash)
   assert.equal((await get('/fixture')).headers.get('X-Content-Revision'), expected.contentHash)
   const invalid = structuredClone(fixture)
-  delete invalid._404
-  await assert.rejects(
-    publish(invalid),
-    (error: { stderr?: string }) =>
-      /app\/invalid-publication/.test(error.stderr ?? '') &&
-      /Missing or invalid page: _404/.test(error.stderr ?? ''),
+  invalid.fixture.interface.imports['@hannesdiem/content-components'].version = '999.0.0'
+  await assert.rejects(publish(invalid), (error: { stderr?: string }) =>
+    /999\.0\.0/.test(error.stderr ?? ''),
   )
   assert.equal((await get('/fixture')).headers.get('X-Content-Revision'), expected.contentHash)
   const preflight = await promisify(execFile)(
