@@ -1,5 +1,15 @@
 # Temple of Sound: client–artist collaboration
 
+**Match Watch's trailing space to the other sections — 2026-11-07.** The
+artist asks to reduce the large gap after Watch's signup CTA. Give the inner
+page's follow-up action the same 12svh bottom margin as its other fact sections,
+replacing the inherited 24svh. Preserve the accepted spacing within Watch.
+
+Validation: asset build and `check:website` pass (81 fast tests). Targeted
+preview inspection at 390px and 1440px in Chromium/WebKit confirms Watch and
+the other fact sections now share the same bottom margin. Preview 8787 is
+refreshed; review with `sand tunnel 8787`, then `/temple-of-sound/watch`.
+
 **Darken the light-mode preview panel on hover — 2026-11-07.** The artist asks
 for the card below each thumbnail to darken slightly on hover in light mode.
 Use the existing darker neutral tile colour for its active surface, applying

@@ -131,6 +131,9 @@
   margin-block: 4svh 12svh;
   scroll-margin-top: var(--temple-nav-clearance, 88px);
 }
+.temple-practical-section > .fact-followup-action {
+  margin-bottom: 12svh;
+}
 .temple-practical-section:has(.facts-grid) {
   padding-top: 4svh;
 }
