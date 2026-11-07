@@ -17,13 +17,16 @@ Watch; the entry and share-image conversations own their corresponding views.
   Playable covers show the viewer's Play icon in a prominent shaded circle
   centered over the thumbnail. It is decorative; the complete card
   retains its native link into the feed. Text cards omit this indicator.
-  Each thumbnail's native link is followed by its optional authored subheadline
-  and rich description. Keep description links outside the thumbnail anchor;
-  text-post bodies remain the post itself. Native scrolling works with the
-  overview scrollbar hidden, including the WebKit fallback. Thumbnail hover
-  brightens the image, outlines it in the primary colour and strengthens the
-  Play indicator. Keyboard focus also outlines/brightens; reduced motion removes
-  transition timing without changing the link geometry.
+  Each thumbnail is attached to a padded metadata panel with its optional
+  subheadline, rich description and localized posting date. A stretched native
+  feed link covers the complete combined card; description links retain their
+  own targets above it, without nested anchors or a JavaScript click handler.
+  Text-post bodies remain the post itself. Native scrolling works with the
+  overview scrollbar hidden, including the WebKit fallback. Whole-card hover
+  gently zooms/brightens the clipped thumbnail and strengthens the Play indicator,
+  with no hover outline, border or shadow. Keyboard focus retains a visible ring.
+  Reduced motion disables zoom and transitions. Thumbnail geometry stays fixed
+  for the existing viewer transition and return.
 - Preview links expand into the viewer over 420ms; the viewer's Back control and
   Escape return to the original entry point. Shrink back to that preview only
   while the same post is selected; after browsing other posts, return without

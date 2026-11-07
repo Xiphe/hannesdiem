@@ -1,5 +1,30 @@
 # Temple of Sound: client–artist collaboration
 
+**Date and whole-card entry; border-free hover — 2026-11-07.** The artist asks
+for the date on the attached preview cards, the entire combined component to
+open the feed, and hover feedback without a border or similar framing. Add the
+posting date at the bottom of each panel through the existing localized date
+component, using the visitor's locale/timezone and the normal native fallback.
+
+Stretch the existing native feed link across the whole card using CSS, retaining
+the thumbnail's anchor identity and bounds for the current viewer transition.
+Keep rich description links above that surface and independently usable; no
+nested anchors or delegated JavaScript clicks. The complete card reacts on hover
+with a gentle clipped image zoom/brightness increase and Play emphasis. Remove
+hover outlines, borders and shadows; retain the keyboard focus indicator. Reduced
+motion removes zoom and transitions. Keep the attached surface, 16px padding,
+matching rounded corners and supplied wording.
+
+Validation: asset build and `check:website` pass (81 fast tests). All 86 selected
+browser checks pass, including localized dates across a timezone day boundary,
+English no-JavaScript fallback, opening from the date/text panel, independent
+rich-description links, border-free hover, reduced motion and existing viewer
+return/navigation. Chromium and WebKit cover the new card behavior. Operational
+checks at 390px/1440px in both browsers confirm the date points to the feed link,
+no hover outline and a fixed thumbnail frame around the slight image zoom.
+Preview 8787 is refreshed; review via `sand tunnel 8787`, then
+`/temple-of-sound/watch`. No deployment requested.
+
 **Attach preview descriptions as a card — 2026-11-07.** The artist asks for the
 subheadline and description in a padded card directly attached behind the
 thumbnail. Keep the thumbnail's rounded bottom corners, with matching rounded
