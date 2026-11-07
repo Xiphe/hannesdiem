@@ -21,10 +21,10 @@ export default function Content() {
         portrait={portrait}
         links={[
           {
-            title: 'Twitch',
-            href: 'https://www.twitch.tv/hannes_diem',
-            description: 'join me transforming emotions to sounds, usually Thursdays',
-            icon: 'Twitch',
+            title: 'Instagram',
+            href: 'https://www.instagram.com/hannes.diem/',
+            description: 'shiny feelings for shiny people',
+            icon: 'Instagram',
           },
           {
             title: 'YouTube',
@@ -33,16 +33,10 @@ export default function Content() {
             icon: 'YouTube',
           },
           {
-            title: 'Instagram',
-            href: 'https://www.instagram.com/hannes.diem/',
-            description: 'shiny feelings for shiny people',
-            icon: 'Instagram',
-          },
-          {
-            title: 'TikTok',
-            href: 'https://www.tiktok.com/@hannes.diem',
-            description: "let's duet!",
-            icon: 'TikTok',
+            title: 'Twitch',
+            href: 'https://www.twitch.tv/hannes_diem',
+            description: 'join me transforming emotions to sounds, usually Thursdays',
+            icon: 'Twitch',
           },
         ]}
         music={[

@@ -1,10 +1,9 @@
 import type { SiteMetadata } from '../contracts/content.ts'
 
 export const socialLinks = [
-  { title: 'Twitch', href: 'https://www.twitch.tv/hannes_diem', name: 'twitch' },
-  { title: 'YouTube', href: 'https://www.youtube.com/@hannes_diem', name: 'youtube' },
   { title: 'Instagram', href: 'https://www.instagram.com/hannes.diem/', name: 'instagram' },
-  { title: 'TikTok', href: 'https://www.tiktok.com/@hannes.diem', name: 'tiktok' },
+  { title: 'YouTube', href: 'https://www.youtube.com/@hannes_diem', name: 'youtube' },
+  { title: 'Twitch', href: 'https://www.twitch.tv/hannes_diem', name: 'twitch' },
 ]
 export const listenLinks = [
   {
