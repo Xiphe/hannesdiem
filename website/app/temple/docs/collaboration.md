@@ -1,5 +1,30 @@
 # Temple of Sound: client–artist collaboration
 
+**Watch arrives below the manifesto return; tighter signup and hidden feed bars — 2026-11-07.**
+The artist clarifies that the topmost manifesto return should keep its previous
+upscroll-only discovery. Leave it first in native document order, but place the
+Watch arrival anchor on the feed/introduction/signup group below it. Normal
+Enter, remembered-index and Watch navigation arrivals show the feed beneath
+the header; scrolling upward reveals the return. Preserve native fallback
+accessibility and browser history restoration.
+
+The artist also asks to hide the vertical feed's scrollbar and bring the
+“Get notified” CTA closer to the Watch text, supplying a screenshot of the gap.
+Keep native viewer and caption scrolling/swiping; hide their scrollbar chrome,
+including the WebKit fallback. Reduce only Watch's bottom padding/margin before
+its existing signup CTA. Preserve wording, feed-first content order and the
+agreed saved-entry/reset behavior. This supersedes the preceding instruction
+to include the manifesto return in the normal Watch arrival.
+
+Validation: asset build and `check:website` pass (81 fast tests). All 72 selected
+browser checks pass, including upscroll reveal and navigation concealment at
+390px and 1440px, native fallback, saved entry, cached history return, viewer
+return, caption scrolling and wheel navigation. The Chromium-only cached-page
+case is skipped in WebKit. Operational preview confirms the return is behind
+the header at arrival and revealed at scroll top; the signup prompt is now
+64px from the final Watch paragraph on mobile and 88px on desktop. Review via
+`sand tunnel 8787`, then `/temple-of-sound/watch`. No deployment requested.
+
 **Feed before the Watch introduction; manifesto return stays first — 2026-11-07.**
 The artist corrects the earlier Watch-first interpretation: the feed content
 comes before “Thoughts, Songs, …”, followed by the newsletter signup CTA. They

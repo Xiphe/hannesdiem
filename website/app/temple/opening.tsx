@@ -25,7 +25,10 @@ function PracticalFact(handle: Handle<FactProps>) {
     const fact = handle.props
     const feedFirst = fact.layout === 'watch' && fact.after != null
     return (
-      <div class="temple-practical-section">
+      <div
+        class="temple-practical-section"
+        id={fact.layout === 'watch' ? fact.id : undefined}
+      >
         {feedFirst && fact.after}
         <Fact
           {...fact}
@@ -114,10 +117,7 @@ export function Opening(handle: Handle<OpeningProps>) {
         >
           <TopNavigation {...handle.props} />
           <div class="temple-practical-content">
-            <div
-              class="temple-practical-section"
-              id="watch"
-            >
+            <div class="temple-practical-section">
               <div class="temple-intention-return fact-action">
                 <a
                   href="/temple-of-sound"

@@ -183,7 +183,7 @@ test('verse queries select the passage within the complete poem', async ({ page 
 
 for (const width of [390, 1440]) {
   for (const javaScriptEnabled of [true, false]) {
-    test(`Watch starts with manifesto return, feed, introduction and signup at ${width}px (JS ${javaScriptEnabled})`, async ({
+    test(`Watch reveals the topmost manifesto return on upscroll before feed, introduction and signup at ${width}px (JS ${javaScriptEnabled})`, async ({
       browser,
       baseURL,
     }) => {
@@ -199,13 +199,15 @@ for (const width of [390, 1440]) {
           await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
         const watch = page.locator('#watch')
         await expect(watch).toHaveCount(1)
-        const order = await watch.evaluate((node) =>
-          [
-            ...node.querySelectorAll(
-              '.temple-intention-return,.temple-post-previews,.fact-story,.fact-followup-action',
-            ),
-          ].map((element) => element.classList[0]),
-        )
+        const order = await watch
+          .locator('..')
+          .evaluate((node) =>
+            [
+              ...node.querySelectorAll(
+                '.temple-intention-return,.temple-post-previews,.fact-story,.fact-followup-action',
+              ),
+            ].map((element) => element.classList[0]),
+          )
         expect(order).toEqual([
           'temple-intention-return',
           'temple-post-previews',
@@ -225,8 +227,25 @@ for (const width of [390, 1440]) {
         const pictures = await introduction.locator('.fact-pictures').boundingBox()
         expect(pictures!.y).toBeGreaterThanOrEqual(boxes[1]!.y + boxes[1]!.height)
         const header = await page.locator('.temple-top-navigation').boundingBox()
-        expect(boxes[0]!.y).toBeGreaterThanOrEqual(header!.y + header!.height)
-        expect(boxes[1]!.y).toBeLessThan(350)
+        if (javaScriptEnabled) {
+          expect(boxes[0]!.y + boxes[0]!.height).toBeLessThanOrEqual(header!.y + header!.height)
+          expect(boxes[1]!.y).toBeGreaterThanOrEqual(header!.y + header!.height)
+          expect(boxes[1]!.y).toBeLessThan(header!.y + header!.height + 40)
+          await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }))
+          await expect(back.getByRole('link')).toBeInViewport()
+          const revealed = await back.boundingBox()
+          expect(revealed!.y).toBeGreaterThanOrEqual(header!.y + header!.height)
+          // Returning via the Watch navigation must hide the return again too.
+          await page.locator('.temple-nav-items a[data-nav-target="watch"]').click()
+          await expect
+            .poll(async () => {
+              const box = await back.boundingBox()
+              return box!.y + box!.height
+            })
+            .toBeLessThanOrEqual(header!.y + header!.height)
+        } else {
+          expect(boxes[0]!.y).toBeGreaterThanOrEqual(header!.y + header!.height)
+        }
         await feed.locator('a').first().click()
         await expect(page).toHaveURL(/\/feed\/fixture-/)
       } finally {

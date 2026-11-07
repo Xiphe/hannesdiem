@@ -68,8 +68,9 @@ visible; activating them shows “coming soon”. Header links have section path
 enhancement can scroll between existing sections without reloading the document.
 A native “Back to the Manifesto” link with a back arrow returns to the poem, with
 the artist's explanation below it. It precedes the feed in the native document
-flow. The Watch anchor covers this return and the complete Watch section, so
-Watch arrivals retain the topmost return above the cards.
+flow, just above the Watch arrival. The Watch anchor starts at the feed and
+includes its introduction and signup. Normal Watch arrivals keep the return
+behind the header; ordinary upward scrolling reveals it, as before.
 The return area's explanation is dimmed. Navigation progress starts at the
 native Watch arrival and mobile scrubbing stays within the practical sections.
 Reuse the poem's three-depth fragment ground across Watch through Share, retaining
