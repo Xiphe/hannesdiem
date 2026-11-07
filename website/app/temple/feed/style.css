@@ -185,12 +185,12 @@
 }
 .temple-post-preview-date {
   display: block;
-  margin-top: 12px;
+  margin: 0 0 8px;
   font-size: 12px;
-  opacity: 0.85;
+  opacity: 0.6;
 }
-.temple-post-preview-date:first-child {
-  margin-top: 0;
+.temple-post-preview-date:last-child {
+  margin-bottom: 0;
 }
 .temple-post-preview-description a {
   position: relative;

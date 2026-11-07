@@ -1,5 +1,16 @@
 # Temple of Sound: client–artist collaboration
 
+**Dim preview dates above the subheadline — 2026-11-07.** The artist asks to dim
+the dates and move them above the subheadline, below the thumbnail. Put each
+existing localized date first in its text panel, set its opacity to 60%, and
+leave 8px before the remaining copy. Keep the combined card's feed link and
+existing rich-description links.
+
+Validation: asset build, `check:website` (81 fast tests) and all 12 preview browser
+checks pass. Preview inspection confirms date → subheadline → description and
+60% date opacity. Preview 8787 is refreshed; use `sand tunnel 8787`, then
+`/temple-of-sound/watch`. No deployment requested.
+
 **Date and whole-card entry; border-free hover — 2026-11-07.** The artist asks
 for the date on the attached preview cards, the entire combined component to
 open the feed, and hover feedback without a border or similar framing. Add the

@@ -57,15 +57,15 @@ export function TemplePosts(handle: Handle<TemplePostsProps>) {
               </span>
             </a>
             <div class="temple-post-preview-copy">
+              <small class="temple-post-preview-date">
+                <LocalDate value={post.postedAt} />
+              </small>
               {post.subheadline && (
                 <p class="temple-post-preview-subheadline">{post.subheadline}</p>
               )}
               {post.children != null && (
                 <div class="temple-post-preview-description">{post.children}</div>
               )}
-              <small class="temple-post-preview-date">
-                <LocalDate value={post.postedAt} />
-              </small>
             </div>
           </div>
         )

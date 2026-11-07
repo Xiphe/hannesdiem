@@ -56,7 +56,7 @@ for (const width of [390, 1440]) {
         await expect(page).toHaveURL('https://example.org/recording')
         await page.goBack()
         await expect(date).toHaveText(javaScriptEnabled ? '9. April 2025' : 'April 8, 2025')
-        // Click the bottom of the text panel, outside the thumbnail's own bounds.
+        // Click the date in the text panel, outside the thumbnail's own bounds.
         const itemBounds = await item.boundingBox()
         const dateBounds = await date.boundingBox()
         await item.click({
