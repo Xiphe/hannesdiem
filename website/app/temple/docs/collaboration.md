@@ -1,5 +1,19 @@
 # Temple of Sound: client–artist collaboration
 
+**Quarter assembly time on small portrait screens — 2026-11-08.** The
+artist asks for assembly to take one quarter of its current time in the small
+vertical layout. Use the existing portrait breakpoint (at most 640px wide) to
+raise drop speed from 2.8× to 11.2×, reducing its scroll range to 25%. Preserve
+the centred hold, immediate start after the scream's entrance and shared
+call/background travel. Other viewport layouts keep the selected timing.
+
+Validation: app build and `check:website` pass (82 fast tests). Existing
+Chromium/WebKit checks cover assembly placement, separation, background sync,
+duration, resize, reduced motion and the final chorus. Synthetic measurements
+compare the selected duration with the previous speed on both sides of the
+portrait breakpoint and in landscape. Preview 8787 refreshed; review with
+`sand tunnel 8787`, then `/temple-of-sound`.
+
 **Scroll the calls with the ground; hold only the assembly — 2026-11-07.**
 The artist corrects the whole-foreground hold: the scream must continue scrolling
 in sync with the slowed background. Finishing its entrance does not mean

@@ -810,6 +810,9 @@ html[data-layout='temple'] body {
   white-space: nowrap;
 }
 @media (max-width: 640px) and (orientation: portrait) {
+  .verse-finale {
+    --drop-speed: 11.2;
+  }
   .temple-artwork:is([data-state='loading'], [data-state='ready']) .verse-rise > .rise-call {
     width: var(--rise-width, 101vw);
     margin-inline: calc((100% - var(--rise-width, 101vw)) / 2);
