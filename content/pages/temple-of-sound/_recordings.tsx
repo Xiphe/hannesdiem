@@ -79,7 +79,7 @@ export const recordings = (
         children: (
           <p>
             Join me for this slightly trippy, meditative moment. Lie back, let go... Maybe set an
-            alarm if you have something to do afterward.
+            alarm ;)
           </p>
         ),
       },
