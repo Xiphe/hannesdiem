@@ -84,17 +84,30 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     const before = await thumbnail.boundingBox()
     const item = thumbnail.locator('..')
     const copy = item.locator('.temple-post-preview-copy')
+    const play = thumbnail.locator('.temple-post-preview-play')
+    const icon = play.locator('svg')
+    await expect(item).toHaveCSS('filter', 'contrast(1)')
+    await expect
+      .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
+      .toBe('matrix(1, 0, 0, 1, 0, 0)')
+    const iconBefore = await icon.boundingBox()
     const panel = await copy.boundingBox()
     await page.mouse.move(panel!.x + 24, panel!.y + 24)
-    await expect(thumbnail.locator('img')).toHaveCSS('filter', 'brightness(1.1)')
+    await expect(item).toHaveCSS('filter', 'contrast(1.08)')
+    await expect
+      .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
+      .toBe('matrix(7, 0, 0, 7, 0, 0)')
+    expect(await icon.boundingBox()).toEqual(iconBefore)
+    await expect(thumbnail.locator('img')).toHaveCSS('transform', 'none')
     await expect(thumbnail).toHaveCSS('outline-style', 'none')
     await expect(item).toHaveCSS('border-top-width', '0px')
     await expect(item).toHaveCSS('box-shadow', 'none')
     expect(await thumbnail.boundingBox()).toEqual(before)
     if (reducedMotion === 'reduce') {
-      await expect(thumbnail.locator('img')).toHaveCSS('transform', 'none')
-      await expect(thumbnail).toHaveCSS('transition-property', 'none')
-      await expect(thumbnail.locator('img')).toHaveCSS('transition-property', 'none')
+      await expect(item).toHaveCSS('transition-property', 'none')
+      expect(
+        await play.evaluate((node) => getComputedStyle(node, '::before').transitionProperty),
+      ).toBe('none')
     }
     await page.mouse.move(0, 0)
     await thumbnail.focus()
@@ -102,6 +115,10 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     await page.keyboard.press('Shift+Tab')
     await expect(thumbnail).toBeFocused()
     await expect(thumbnail).toHaveCSS('outline-width', '3px')
-    await expect(thumbnail.locator('img')).toHaveCSS('filter', 'brightness(1.1)')
+    await expect(item).toHaveCSS('filter', 'contrast(1.08)')
+    await expect
+      .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
+      .toBe('matrix(7, 0, 0, 7, 0, 0)')
+    await expect(thumbnail.locator('img')).toHaveCSS('transform', 'none')
   })
 }

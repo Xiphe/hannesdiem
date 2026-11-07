@@ -50,10 +50,13 @@
 }
 .temple-post-preview-item {
   --preview-radius: 5px;
+  --preview-active: 0;
   position: relative;
   flex: 0 0 var(--preview-width);
   min-width: 0;
   direction: ltr;
+  filter: contrast(calc(1 + var(--preview-active) * 0.08));
+  transition: filter 180ms ease;
 }
 .temple-post-preview-item:has(.temple-post-preview-copy) {
   border-radius: var(--preview-radius);
@@ -96,9 +99,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition:
-    filter 180ms ease,
-    transform 180ms ease;
 }
 .temple-post-preview-title {
   position: relative;
@@ -122,13 +122,22 @@
   height: 72px;
   border-radius: 50%;
   color: #fff;
-  background: rgb(0 0 0 / 70%);
   pointer-events: none;
+}
+.temple-post-preview-play::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(0 0 0 / calc(70% - var(--preview-active) * 30%));
+  /* Seven diameters cover the largest thumbnail, clipped by its rounded frame. */
+  transform: scale(calc(1 + var(--preview-active) * 6));
   transition:
-    background-color 180ms ease,
-    transform 180ms ease;
+    background-color 320ms ease,
+    transform 320ms ease;
 }
 .temple-post-preview-play svg {
+  position: relative;
   width: 44px;
   height: 44px;
 }
@@ -136,30 +145,18 @@
   outline: 3px solid light-dark(#32608b, #60cbcd);
   outline-offset: 3px;
 }
-.temple-post-preview:focus-visible img {
-  filter: brightness(1.1);
+.temple-post-preview-item:has(:focus-visible) {
+  --preview-active: 1;
 }
 @media (hover: hover) and (pointer: fine) {
-  .temple-post-preview-item:hover img {
-    filter: brightness(1.1);
-    transform: scale(1.025);
-  }
-  .temple-post-preview-item:hover .temple-post-preview-play {
-    background: rgb(0 0 0 / 85%);
-    transform: translate(-50%, -50%) scale(1.06);
+  .temple-post-preview-item:hover {
+    --preview-active: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .temple-post-preview,
-  .temple-post-preview img,
-  .temple-post-preview-play {
+  .temple-post-preview-item,
+  .temple-post-preview-play::before {
     transition: none;
-  }
-  .temple-post-preview-item:hover img {
-    transform: none;
-  }
-  .temple-post-preview-item:hover .temple-post-preview-play {
-    transform: translate(-50%, -50%);
   }
 }
 .temple-post-preview-copy {

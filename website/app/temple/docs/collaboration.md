@@ -1,5 +1,19 @@
 # Temple of Sound: client–artist collaboration
 
+**Expand the Play backdrop on hover and focus — 2026-11-07.** The artist asks
+for the Play button's backdrop to animate outward until it covers the thumbnail,
+with slightly stronger card contrast. Replace the image zoom with a clipped,
+expanding circular backdrop; keep the Play glyph stationary and preserve the
+visible keyboard focus outline. Apply the same feedback when keyboard focus is
+inside the card. Reduced motion shows the final state without transitions.
+
+Validation: asset build, `check:website` (81 fast tests), all 12 preview browser
+checks across Chromium and WebKit, and five viewer navigation checks pass.
+Operational light/dark preview inspection confirms the covering backdrop,
+stationary image and glyph, and subtle contrast increase. Preview 8787 is
+refreshed; review with `sand tunnel 8787`, then `/temple-of-sound/watch`.
+No deployment requested.
+
 **Dim preview dates above the subheadline — 2026-11-07.** The artist asks to dim
 the dates and move them above the subheadline, below the thumbnail. Put each
 existing localized date first in its text panel, set its opacity to 60%, and

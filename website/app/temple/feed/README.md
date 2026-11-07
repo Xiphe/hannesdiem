@@ -23,9 +23,10 @@ Watch; the entry and share-image conversations own their corresponding views.
   own targets above it, without nested anchors or a JavaScript click handler.
   Text-post bodies remain the post itself. Native scrolling works with the
   overview scrollbar hidden, including the WebKit fallback. Whole-card hover
-  gently zooms/brightens the clipped thumbnail and strengthens the Play indicator,
-  with no hover outline, border or shadow. Keyboard focus retains a visible ring.
-  Reduced motion disables zoom and transitions. Thumbnail geometry stays fixed
+  expands the Play backdrop to cover the thumbnail and slightly raises the card's
+  contrast, with no image zoom, hover outline, border or shadow. Keyboard focus
+  gets the same effect and retains a visible ring. Reduced motion disables the
+  transitions. Thumbnail and Play glyph geometry stay fixed
   for the existing viewer transition and return.
 - Preview links expand into the viewer over 420ms; the viewer's Back control and
   Escape return to the original entry point. Shrink back to that preview only
