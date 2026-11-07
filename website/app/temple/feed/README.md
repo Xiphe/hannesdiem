@@ -24,7 +24,8 @@ Watch; the entry and share-image conversations own their corresponding views.
   Text-post bodies remain the post itself. Native scrolling works with the
   overview scrollbar hidden, including the WebKit fallback. Whole-card hover
   expands the Play backdrop to cover the thumbnail and slightly raises the card's
-  contrast, with no image zoom, hover outline, border or shadow. Keyboard focus
+  contrast (darkening the text panel in light mode), with no image zoom, hover
+  outline, border or shadow. Keyboard focus
   gets the same effect and retains a visible ring. Reduced motion disables the
   transitions. Thumbnail and Play glyph geometry stay fixed
   for the existing viewer transition and return.

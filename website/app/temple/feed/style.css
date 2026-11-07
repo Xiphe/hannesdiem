@@ -56,7 +56,9 @@
   min-width: 0;
   direction: ltr;
   filter: contrast(calc(1 + var(--preview-active) * 0.08));
-  transition: filter 180ms ease;
+  transition:
+    filter 180ms ease,
+    background-color 180ms ease;
 }
 .temple-post-preview-item:has(.temple-post-preview-copy) {
   border-radius: var(--preview-radius);
@@ -151,6 +153,18 @@
 @media (hover: hover) and (pointer: fine) {
   .temple-post-preview-item:hover {
     --preview-active: 1;
+  }
+}
+@media (prefers-color-scheme: light) {
+  .temple-post-preview-item {
+    filter: none;
+  }
+  .temple-post-preview-item:has(.temple-post-preview-copy) {
+    background: color-mix(
+      in srgb,
+      var(--temple-tile-end-light),
+      var(--temple-tile-start-light) calc(var(--preview-active) * 100%)
+    );
   }
 }
 @media (prefers-reduced-motion: reduce) {

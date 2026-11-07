@@ -70,55 +70,71 @@ for (const width of [390, 1440]) {
   }
 }
 
-for (const reducedMotion of ['no-preference', 'reduce'] as const) {
-  test(`card hover stays border-free and keyboard feedback preserves geometry with motion ${reducedMotion}`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.emulateMedia({ reducedMotion })
-    await page.goto('/temple-of-sound/watch')
-    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
-    const thumbnail = page.locator('.temple-post-preview').first()
-    await thumbnail.scrollIntoViewIfNeeded()
-    await page.mouse.move(0, 0)
-    const before = await thumbnail.boundingBox()
-    const item = thumbnail.locator('..')
-    const copy = item.locator('.temple-post-preview-copy')
-    const play = thumbnail.locator('.temple-post-preview-play')
-    const icon = play.locator('svg')
-    await expect(item).toHaveCSS('filter', 'contrast(1)')
-    await expect
-      .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
-      .toBe('matrix(1, 0, 0, 1, 0, 0)')
-    const iconBefore = await icon.boundingBox()
-    const panel = await copy.boundingBox()
-    await page.mouse.move(panel!.x + 24, panel!.y + 24)
-    await expect(item).toHaveCSS('filter', 'contrast(1.08)')
-    await expect
-      .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
-      .toBe('matrix(7, 0, 0, 7, 0, 0)')
-    expect(await icon.boundingBox()).toEqual(iconBefore)
-    await expect(thumbnail.locator('img')).toHaveCSS('transform', 'none')
-    await expect(thumbnail).toHaveCSS('outline-style', 'none')
-    await expect(item).toHaveCSS('border-top-width', '0px')
-    await expect(item).toHaveCSS('box-shadow', 'none')
-    expect(await thumbnail.boundingBox()).toEqual(before)
-    if (reducedMotion === 'reduce') {
-      await expect(item).toHaveCSS('transition-property', 'none')
-      expect(
-        await play.evaluate((node) => getComputedStyle(node, '::before').transitionProperty),
-      ).toBe('none')
-    }
-    await page.mouse.move(0, 0)
-    await thumbnail.focus()
-    await page.keyboard.press('Tab')
-    await page.keyboard.press('Shift+Tab')
-    await expect(thumbnail).toBeFocused()
-    await expect(thumbnail).toHaveCSS('outline-width', '3px')
-    await expect(item).toHaveCSS('filter', 'contrast(1.08)')
-    await expect
-      .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
-      .toBe('matrix(7, 0, 0, 7, 0, 0)')
-    await expect(thumbnail.locator('img')).toHaveCSS('transform', 'none')
-  })
+for (const colorScheme of ['light', 'dark'] as const) {
+  for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+    test(`card hover stays border-free and keyboard feedback preserves geometry in ${colorScheme} with motion ${reducedMotion}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 })
+      await page.emulateMedia({ reducedMotion, colorScheme })
+      await page.goto('/temple-of-sound/watch')
+      await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+      const thumbnail = page.locator('.temple-post-preview').first()
+      await thumbnail.scrollIntoViewIfNeeded()
+      await page.mouse.move(0, 0)
+      const before = await thumbnail.boundingBox()
+      const item = thumbnail.locator('..')
+      const copy = item.locator('.temple-post-preview-copy')
+      const play = thumbnail.locator('.temple-post-preview-play')
+      const icon = play.locator('svg')
+      await expect(item).toHaveCSS('filter', colorScheme === 'light' ? 'none' : 'contrast(1)')
+      const backgroundTone = () =>
+        item.evaluate((node) =>
+          getComputedStyle(node)
+            .backgroundColor.match(/[\d.]+/g)!
+            .slice(0, 3)
+            .reduce((sum, channel) => sum + Number(channel), 0),
+        )
+      const restingTone = await backgroundTone()
+      await expect
+        .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
+        .toBe('matrix(1, 0, 0, 1, 0, 0)')
+      const iconBefore = await icon.boundingBox()
+      const panel = await copy.boundingBox()
+      await page.mouse.move(panel!.x + 24, panel!.y + 24)
+      if (colorScheme === 'light') {
+        await expect(item).toHaveCSS('filter', 'none')
+        await expect.poll(backgroundTone).toBeLessThan(restingTone)
+      } else await expect(item).toHaveCSS('filter', 'contrast(1.08)')
+      await expect
+        .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
+        .toBe('matrix(7, 0, 0, 7, 0, 0)')
+      expect(await icon.boundingBox()).toEqual(iconBefore)
+      await expect(thumbnail.locator('img')).toHaveCSS('transform', 'none')
+      await expect(thumbnail).toHaveCSS('outline-style', 'none')
+      await expect(item).toHaveCSS('border-top-width', '0px')
+      await expect(item).toHaveCSS('box-shadow', 'none')
+      expect(await thumbnail.boundingBox()).toEqual(before)
+      if (reducedMotion === 'reduce') {
+        await expect(item).toHaveCSS('transition-property', 'none')
+        expect(
+          await play.evaluate((node) => getComputedStyle(node, '::before').transitionProperty),
+        ).toBe('none')
+      }
+      await page.mouse.move(0, 0)
+      await thumbnail.focus()
+      await page.keyboard.press('Tab')
+      await page.keyboard.press('Shift+Tab')
+      await expect(thumbnail).toBeFocused()
+      await expect(thumbnail).toHaveCSS('outline-width', '3px')
+      if (colorScheme === 'light') {
+        await expect(item).toHaveCSS('filter', 'none')
+        await expect.poll(backgroundTone).toBeLessThan(restingTone)
+      } else await expect(item).toHaveCSS('filter', 'contrast(1.08)')
+      await expect
+        .poll(() => play.evaluate((node) => getComputedStyle(node, '::before').transform))
+        .toBe('matrix(7, 0, 0, 7, 0, 0)')
+      await expect(thumbnail.locator('img')).toHaveCSS('transform', 'none')
+    })
+  }
 }

@@ -1,5 +1,18 @@
 # Temple of Sound: client–artist collaboration
 
+**Darken the light-mode preview panel on hover — 2026-11-07.** The artist asks
+for the card below each thumbnail to darken slightly on hover in light mode.
+Use the existing darker neutral tile colour for its active surface, applying
+the same feedback on keyboard focus. Keep the expanding Play backdrop and
+visible focus outline. Dark mode retains its accepted contrast increase.
+
+Validation: asset build, `check:website` (81 fast tests), and all 16 preview
+browser checks pass across Chromium/WebKit, both themes and motion preferences.
+Light preview inspection confirms the text surface darkens from the existing
+end tile colour to the start tile colour. Preview 8787 is refreshed; use
+`sand tunnel 8787`, then `/temple-of-sound/watch`. Included in the artist's
+requested deployment batch.
+
 **Expand the Play backdrop on hover and focus — 2026-11-07.** The artist asks
 for the Play button's backdrop to animate outward until it covers the thumbnail,
 with slightly stronger card contrast. Replace the image zoom with a clipped,
