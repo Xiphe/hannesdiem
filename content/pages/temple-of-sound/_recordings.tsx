@@ -78,8 +78,8 @@ export const recordings = (
         aspectRatio: 9 / 16,
         children: (
           <p>
-            Join me in this slightly trippy, meditative moment. Lay back, let go. Maybe put yourself
-            an alarm when you have something to do after this.
+            Join me for this slightly trippy, meditative moment. Lie back, let go... Maybe set an
+            alarm if you have something to do afterward.
           </p>
         ),
       },
