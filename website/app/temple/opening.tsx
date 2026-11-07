@@ -328,7 +328,7 @@ export function Opening(handle: Handle<OpeningProps>) {
                                 class="rise-call"
                                 style={{
                                   '--rise-index': index,
-                                  '--rise-delay': `${100 * (1 - 0.128 / (0.65 * 1.6 ** index))}%`,
+                                  '--rise-delay': `${100 * (1 - 0.128 / (0.55 * 1.6 ** index))}%`,
                                 }}
                               >
                                 <span class="rise-call-ink">{line}</span>

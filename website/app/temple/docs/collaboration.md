@@ -1,5 +1,14 @@
 # Temple of Sound: client–artist collaboration
 
+**Slightly slower crescendo entrances — 2026-11-07.** The artist asks for the
+four calls from whisper through scream to come in a little slower. Reduce the
+shared rise speed from 0.65× to 0.55×, about 15%, retaining the 1.60× progression,
+portrait duration multiplier and centred arrivals.
+
+Validation: app build, `check:website` (81 fast tests), and the three synthetic
+rise/drop browser checks pass at phone, desktop and landscape sizes. Local preview
+on 8787 refreshed; review with `sand tunnel 8787`, then `/temple-of-sound`.
+
 **Keep the school support credit on inner pages only — 2026-11-07.** The
 artist asks to remove “With support from the School of Intimacy Arts” from
 the manifesto. Restrict that credit to the inner view, leaving Imprint and
