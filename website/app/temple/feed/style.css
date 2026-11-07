@@ -130,6 +130,9 @@
   color: #e1d9ce;
   font-family: Bricolage, sans-serif;
 }
+:is(.temple-feed, .feed-caption)::-webkit-scrollbar {
+  display: none;
+}
 .temple-feed:focus-visible {
   outline: none;
 }
@@ -464,7 +467,7 @@
     max(20px, env(safe-area-inset-left));
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
+  scrollbar-width: none;
   line-height: 1.5;
 }
 .feed-caption time {
