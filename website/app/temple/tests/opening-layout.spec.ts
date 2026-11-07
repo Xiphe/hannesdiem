@@ -4,7 +4,7 @@ test('Temple reserves breathing room below the date across opener faces and wind
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/temple-of-sound')
+  await page.goto('/temple-basic')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
 
   // Resize the same mounted scene, including changes between orientations.

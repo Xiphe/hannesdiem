@@ -4,7 +4,7 @@ import { ArrowDownIcon, ArrowLeftIcon } from '../heroicons.tsx'
 import { mountArtwork } from './artwork.ts'
 import { FirstPair, Phrase, Refrain } from './first-pair.tsx'
 import { VerseDrop } from './verse-drop.tsx'
-import type { OpeningProps } from './types.ts'
+import type { FactProps, OpeningProps } from './types.ts'
 import { Fact, FactAction } from './facts/view.tsx'
 import { Location } from './location/view.tsx'
 import { mountLocation } from './location/enhance.ts'
@@ -19,6 +19,28 @@ import { mountInsideArtwork } from './inside-artwork.ts'
 import { mountSectionArrival } from './section-navigation.ts'
 import { mountLegacyEntry } from './legacy-entry.ts'
 import { mountEntryButtons } from './entry-button/enhance.ts'
+
+function PracticalFact(handle: Handle<FactProps>) {
+  return () => {
+    const fact = handle.props
+    return (
+      <div class="temple-practical-section">
+        <Fact
+          {...fact}
+          action={fact.after != null ? undefined : fact.action}
+        />
+        {fact.after}
+        {fact.after != null && fact.action && (
+          <FactAction
+            id={fact.id}
+            action={fact.action}
+            afterContent
+          />
+        )}
+      </div>
+    )
+  }
+}
 
 export function Opening(handle: Handle<OpeningProps>) {
   let root: HTMLElement | undefined
@@ -89,9 +111,15 @@ export function Opening(handle: Handle<OpeningProps>) {
         >
           <TopNavigation {...handle.props} />
           <div class="temple-practical-content">
+            {facts
+              ?.filter((fact) => fact.layout === 'watch')
+              .map((fact) => (
+                <PracticalFact {...fact} />
+              ))}
             <div class="temple-intention-return fact-action">
               <a
                 href="/temple-of-sound"
+                data-temple-manifesto
                 data-rmx-document
                 class="temple-enter-button"
               >
@@ -107,22 +135,11 @@ export function Opening(handle: Handle<OpeningProps>) {
                 <Location {...location} />
               </div>
             )}
-            {facts?.map((fact) => (
-              <div class="temple-practical-section">
-                <Fact
-                  {...fact}
-                  action={fact.after != null ? undefined : fact.action}
-                />
-                {fact.after}
-                {fact.after != null && fact.action && (
-                  <FactAction
-                    id={fact.id}
-                    action={fact.action}
-                    afterContent
-                  />
-                )}
-              </div>
-            ))}
+            {facts
+              ?.filter((fact) => fact.layout !== 'watch')
+              .map((fact) => (
+                <PracticalFact {...fact} />
+              ))}
           </div>
         </div>
       )
@@ -190,7 +207,8 @@ export function Opening(handle: Handle<OpeningProps>) {
                 ))}
                 <div class="fact-action">
                   <a
-                    href="/temple-of-sound/visit"
+                    href="/temple-of-sound/watch"
+                    data-temple-enter
                     data-rmx-document
                     aria-label="Enter the Temple of Sound"
                     class="temple-enter-button"
@@ -330,7 +348,8 @@ export function Opening(handle: Handle<OpeningProps>) {
               <div class="temple-entry-closing fact-action">
                 <a
                   class="temple-enter-button"
-                  href="/temple-of-sound/visit"
+                  href="/temple-of-sound/watch"
+                  data-temple-enter
                   data-rmx-document
                 >
                   Enter

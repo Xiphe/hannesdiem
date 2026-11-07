@@ -1,5 +1,45 @@
 # Temple of Sound: client–artist collaboration
 
+**Remember explicit entry; reset on manifesto return — 2026-11-07.** The artist
+confirms reuse of `hannesdiem.temple.entered`, including its existing values.
+From now on, only manual Enter activation sets it; direct inner/feed links leave
+it unchanged so new visitors still encounter the manifesto on an index visit.
+Enter and remembered bare-index visits lead to Watch. Preserve explicit verse,
+fragment, section and recording destinations and query notices. Keep the flag
+indefinitely in localStorage and tolerate unavailable storage.
+
+Both the named manifesto return and inside wordmark clear the preference.
+The artist further chooses browser Back and Forward to the manifesto as reset
+operations, so reloading afterward stays there until Enter is activated again.
+Cover both rebuilt history documents and cached restoration, using the existing
+Remix lifecycle and browser events. Automatic redirects replace the index history
+entry; ordinary document navigation retains native history. Cross-tab changes
+refresh sidebar links without redirecting already open pages. Shared CMX content
+remains public; no server-owned visitor preference or new content renderer.
+
+Validation: full content/asset build and `check:website` pass (81 fast tests).
+All 153 selected synthetic browser checks pass across Chromium and WebKit;
+the Chromium-only cache-restoration case is skipped in WebKit. This includes
+real cached-document restoration, history traversal, fresh tabs, legacy flags,
+explicit destinations, blocked storage, native links and existing artwork.
+Operational preview checks at 390px and 1440px show Watch immediately beneath
+the header without page errors; the actual index/Enter/fresh-tab/Back/reload
+sequence follows the agreed preference. Local review: `sand tunnel 8787`, then
+`http://localhost:8787/temple-of-sound`. No deployment requested.
+
+**Watch first inside — 2026-11-07.** The artist asks to move Watch to the
+first inner navigation position and make its content the topmost content on
+the inner page. Keep the complete Watch section's existing internal order,
+then the manifesto return, Visit, Create and Share. Reuse the existing native
+CMX fact and post renderers; supplied wording stays intact. The saved-entry follow-up is recorded above.
+
+Validation: asset build, website typechecking and all 11 synthetic entry-view
+browser checks pass, including mobile/desktop arrival, navigation and native
+fallback. Synthetic geometry QA at 390px and 1440px confirms Watch is the first
+navigation destination and content section, arriving immediately below the
+header. Local review uses `sand tunnel 8787`, then `/temple-of-sound/watch`.
+No deployment requested.
+
 **Feed subheadlines — 2026-11-07.** The artist supplies “Fly With Me” with
 “40min piano improvisation, no vocals” and accepts an optional subheadline
 beneath the feed title, smaller and quieter, fading with the title during

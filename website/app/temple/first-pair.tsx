@@ -159,7 +159,8 @@ export function Refrain(
           <div class="temple-entry-closing fact-action">
             <a
               class="temple-enter-button"
-              href="/temple-of-sound/visit"
+              href="/temple-of-sound/watch"
+              data-temple-enter
               data-rmx-document
             >
               Enter

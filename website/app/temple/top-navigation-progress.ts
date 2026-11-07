@@ -159,8 +159,7 @@ export function mountNavigationProgress(host: HTMLElement, signal: AbortSignal) 
     const clamp = (n: number) => Math.max(0, Math.min(range, n))
     const inside = host.dataset.templeView === 'inside'
     const first = known[0]?.anchor
-    // The return to the poem sits before Visit and belongs to no practical
-    // section. Hold progress at its start until the normal first arrival.
+    // Start at the first navigation destination, following the content order.
     const contentStart =
       inside && first
         ? Math.ceil(

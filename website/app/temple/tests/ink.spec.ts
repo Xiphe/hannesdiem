@@ -58,7 +58,7 @@ async function equalMasks(page: Page, mode: 'unchanged' | 'refit' | 'displaced')
 test.use(inkViewport)
 
 test('cached glyph baselines agree with settled native text', async ({ page, baseURL }) => {
-  await checkInkBaselines(page, new URL('/temple-of-sound', baseURL).href)
+  await checkInkBaselines(page, new URL('/temple-basic', baseURL).href)
 })
 
 test('equal masks and repeated rows retain their actual canvas association', async ({ page }) => {
@@ -98,5 +98,5 @@ test('reduced-motion transition duration cannot defer fitted copy geometry', asy
       `,
     })
   })
-  await checkInkBaselines(page, new URL('/temple-of-sound', baseURL).href)
+  await checkInkBaselines(page, new URL('/temple-basic', baseURL).href)
 })

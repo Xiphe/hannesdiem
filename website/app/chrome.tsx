@@ -1,10 +1,7 @@
 import { Frame, css, on, ref, type Handle } from 'remix/component'
 import { Bars3Icon } from './heroicons.tsx'
-import {
-  hasEnteredTemple,
-  rememberTempleEntry,
-  templeEntryStorageKey,
-} from './temple/entry-state.ts'
+import { hasEnteredTemple, templeEntryStorageKey } from './temple/entry-state.ts'
+import { mountTempleEntryPreference } from './temple/entry-navigation.ts'
 
 const menuStyle = css({
   position: 'fixed',
@@ -57,13 +54,8 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
     navigationDialog()
       ?.querySelectorAll<HTMLAnchorElement>('[data-temple-entry-link]')
       .forEach((link) => {
-        link.href = entered ? '/temple-of-sound/visit' : '/temple-of-sound'
+        link.href = entered ? '/temple-of-sound/watch' : '/temple-of-sound'
       })
-  }
-  function rememberCurrentTempleEntry() {
-    if (/^\/temple-of-sound\/(visit|watch|create|share)\/?$/.test(location.pathname))
-      rememberTempleEntry()
-    updateTempleEntryLink()
   }
   function closeNavigation() {
     if (closingNavigation) return closingNavigation
@@ -116,7 +108,8 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
       handle.signal.addEventListener('abort', () => clearTimeout(timeout), { once: true })
     }
     navigationOpen = navigationDialog()?.open ?? false
-    rememberCurrentTempleEntry()
+    mountTempleEntryPreference(handle.signal, updateTempleEntryLink)
+    updateTempleEntryLink()
     window.addEventListener(
       'storage',
       (event) => {
@@ -193,7 +186,7 @@ export function Chrome(handle: Handle<{ path: string; hideMenu?: boolean }>) {
     handle.frames.top.addEventListener(
       'reloadComplete',
       () => {
-        rememberCurrentTempleEntry()
+        updateTempleEntryLink()
         dialog?.close()
         contactTrigger = undefined
         navigationOpen = false

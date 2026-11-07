@@ -449,8 +449,8 @@ export function entryTempleContent(view: 'poem' | 'inside', section?: PoemOpenin
       scrollLabel: 'Continue through the synthetic intention',
     },
     navigation: [
-      { label: 'Visit fixture', href: '#facts' },
       { label: 'Watch fixture', href: '#watch' },
+      { label: 'Visit fixture', href: '#facts' },
       { label: 'Create fixture', href: '#create' },
       { label: 'Share fixture', href: '#share' },
       { label: 'Pending fixture A' },

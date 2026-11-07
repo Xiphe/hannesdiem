@@ -25,7 +25,7 @@ test('the intention is a continuous poem with entry invitations and a minimal he
   await expect(header).toBeVisible()
   await expect(
     header.getByRole('link', { name: 'Enter the Temple of Sound', exact: true }),
-  ).toHaveAttribute('href', '/temple-of-sound/visit')
+  ).toHaveAttribute('href', '/temple-of-sound/watch')
   await header.getByRole('button', { name: 'Open menu' }).click()
   await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Close navigation' }).click()
@@ -34,7 +34,7 @@ test('the intention is a continuous poem with entry invitations and a minimal he
     .locator('.temple-entry-closing')
     .getByRole('link', { name: 'Enter', exact: true })
     .click()
-  await expect(page).toHaveURL(/\/temple-of-sound\/visit$/)
+  await expect(page).toHaveURL(/\/temple-of-sound\/watch$/)
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-temple-view', 'inside')
 })
 

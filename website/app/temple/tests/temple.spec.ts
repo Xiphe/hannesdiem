@@ -7,7 +7,7 @@ test('Temple leaves room after the opening and scrolls its title independently o
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/temple-of-sound')
+  await page.goto('/temple-basic')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   const first = await page.locator('.verse-copy').first().boundingBox()
   expect(first!.y).toBeGreaterThanOrEqual(844 + 32)
@@ -25,7 +25,7 @@ test('Temple leaves room after the opening and scrolls its title independently o
 test('Temple paints the chorus in its native scrolling canvas', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/temple-of-sound')
+  await page.goto('/temple-basic')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   const chorus = page.locator('.refrain-composition')
   await chorus.evaluate((node) => scrollTo(0, scrollY + node.getBoundingClientRect().top - 600))
@@ -441,7 +441,7 @@ test('Temple opening enhances only its island and leaves static verse unchanged'
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/temple-of-sound')
+  await page.goto('/temple-basic')
   const opening = page.locator('.temple-opening')
   await expect(opening).toHaveAttribute('data-ready', 'true')
   await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
@@ -486,12 +486,12 @@ test('Temple keeps the title and static verse readable without JavaScript', asyn
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
   try {
     const page = await context.newPage()
-    expect((await page.goto('/temple-of-sound'))?.status()).toBe(200)
+    expect((await page.goto('/temple-basic'))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Temple of Sound' })).toBeVisible()
     await expect(page.locator('[data-poem-text]')).toContainText('Static verse fixture')
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
-      'https://hannesdiem.de/temple-of-sound',
+      'https://hannesdiem.de/temple-basic',
     )
   } finally {
     await context.close()
@@ -509,7 +509,7 @@ test('Temple fits mobile and its animation stops when navigated away', async ({ 
     }
   })
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/temple-of-sound')
+  await page.goto('/temple-basic')
   await expect(page.locator('.temple-opening')).toHaveAttribute('data-ready', 'true')
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390)
   await page.setViewportSize({ width: 844, height: 390 })
@@ -548,7 +548,7 @@ for (const scheme of ['light', 'dark'] as const) {
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
-    await page.goto('/temple-of-sound')
+    await page.goto('/temple-basic')
     const artwork = page.locator('.temple-artwork')
     await expect(artwork).toHaveAttribute('data-state', 'ready')
     await expect(page.locator('html')).not.toHaveAttribute('data-temple-loading')
@@ -615,7 +615,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await ready
       await route.continue()
     })
-    await page.goto('/temple-of-sound', { waitUntil: 'commit' })
+    await page.goto('/temple-basic', { waitUntil: 'commit' })
     await expect(page.locator('html')).toHaveAttribute('data-temple-loading', '')
     await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'hidden')
     const ground = scheme === 'light' ? 'rgb(255, 254, 253)' : 'rgb(0, 0, 0)'
@@ -660,7 +660,7 @@ for (const failure of ['font', 'image'] as const) {
     await page.route('**/*', (route) =>
       route.request().resourceType() === failure ? route.abort() : route.continue(),
     )
-    await page.goto('/temple-of-sound')
+    await page.goto('/temple-basic')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'fallback')
     await expect(page.locator('html')).not.toHaveAttribute('data-temple-loading')
     await expect(page.getByRole('heading', { name: 'Temple of Sound' })).toBeVisible()
@@ -677,7 +677,7 @@ test('Temple loading watchdog also recovers when the browser entry cannot load',
   page,
 }) => {
   await page.route('**/*.js', (route) => route.abort())
-  await page.goto('/temple-of-sound')
+  await page.goto('/temple-basic')
   await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'hidden')
   await expect(page.locator('.temple-page')).toHaveCSS('visibility', 'visible', { timeout: 10_000 })
   expect(await page.evaluate(() => getComputedStyle(document.body, '::before').opacity)).toBe('0')
@@ -686,7 +686,7 @@ test('Temple loading watchdog also recovers when the browser entry cannot load',
 
 test('Temple releases every old cloud surface across repeated navigation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/temple-of-sound')
+  await page.goto('/temple-basic')
   for (let visit = 0; visit < 2; visit++) {
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
     await page.evaluate(() =>
@@ -745,7 +745,7 @@ test('Temple shares one cloud clock, freezes reduced motion and resumes a cached
     }
   })
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/temple-of-sound')
+  await page.goto('/temple-basic')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   const counts = () => page.evaluate(() => ({ ...(window as any).templeRendering }))
   await page.waitForTimeout(200)

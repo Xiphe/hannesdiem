@@ -22,6 +22,7 @@ export default defineConfig({
         '**/tests/trace-rim.spec.ts',
         '**/tests/ground-spacing.spec.ts',
         '**/tests/ink.spec.ts',
+        '**/tests/temple-entry.spec.ts',
       ],
       use: { browserName: 'webkit' },
     },

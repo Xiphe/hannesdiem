@@ -69,7 +69,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await expect(button).toBeFocused()
     await expect(button).toHaveCSS('outline-style', 'solid')
     await expect.poll(() => button.evaluate(exteriorPixels)).toBeGreaterThan(0)
-    await expect(button).toHaveAttribute('href', '/temple-of-sound/visit')
+    await expect(button).toHaveAttribute('href', '/temple-of-sound/watch')
   })
 
   test(`reduced motion freezes ${colorScheme} button artwork and switches appearance live`, async ({
@@ -162,7 +162,7 @@ test('entry actions keep the selected base and native navigation without JavaScr
     await expect(button).toHaveCSS('border-top-color', 'rgb(240, 238, 241)')
     await expect(button.locator('canvas')).toHaveCount(0)
     await button.click()
-    await expect(page).toHaveURL(/\/temple-of-sound\/visit$/)
+    await expect(page).toHaveURL(/\/temple-of-sound\/watch$/)
   } finally {
     await context.close()
   }

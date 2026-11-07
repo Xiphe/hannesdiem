@@ -12,7 +12,8 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
         <div class="temple-nav-enter fact-action">
           <a
             class="temple-enter-button"
-            href="/temple-of-sound/visit"
+            href="/temple-of-sound/watch"
+            data-temple-enter
             data-rmx-document
           >
             <span>Enter</span>
@@ -23,6 +24,7 @@ export function TopNavigation(handle: Handle<OpeningProps>) {
         <>
           <a
             class="temple-nav-brand"
+            data-temple-manifesto={handle.props.view === 'inside' ? '' : undefined}
             data-rmx-document
             href={
               handle.props.view === 'inside' ? '/temple-of-sound' : `#temple-top-${handle.props.id}`

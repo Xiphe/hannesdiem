@@ -1,39 +1,39 @@
 import { expect, test } from '@playwright/test'
 import sharp from 'sharp'
 
-test('entering from the end of the poem arrives at Visit rather than retaining the old scroll', async ({
+test('entering from the end of the poem arrives at Watch rather than retaining the old scroll', async ({
   page,
 }) => {
   await page.goto('/temple-entry-poem')
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
   await page.locator('.temple-entry-closing a').click()
-  await expect(page).toHaveURL(/\/temple-of-sound\/visit$/)
+  await expect(page).toHaveURL(/\/temple-of-sound\/watch$/)
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   await page.waitForTimeout(500)
   await expect
     .poll(() =>
-      page.locator('#facts').evaluate((node) => Math.round(node.getBoundingClientRect().top)),
+      page.locator('#watch').evaluate((node) => Math.round(node.getBoundingClientRect().top)),
     )
     .toBeGreaterThan(0)
   expect(
-    await page.locator('#facts').evaluate((node) => node.getBoundingClientRect().top),
+    await page.locator('#watch').evaluate((node) => node.getBoundingClientRect().top),
   ).toBeLessThan(200)
   await page.locator('#share').scrollIntoViewIfNeeded()
   await page.goBack()
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
   await page.locator('.temple-entry-closing a').click()
-  await expect(page).toHaveURL(/\/temple-of-sound\/visit$/)
+  await expect(page).toHaveURL(/\/temple-of-sound\/watch$/)
   await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
   await page.waitForTimeout(500)
   await expect
     .poll(() =>
-      page.locator('#facts').evaluate((node) => Math.round(node.getBoundingClientRect().top)),
+      page.locator('#watch').evaluate((node) => Math.round(node.getBoundingClientRect().top)),
     )
     .toBeGreaterThan(0)
   expect(
-    await page.locator('#facts').evaluate((node) => node.getBoundingClientRect().top),
+    await page.locator('#watch').evaluate((node) => node.getBoundingClientRect().top),
   ).toBeLessThan(200)
 })
 
@@ -381,7 +381,7 @@ for (const width of [390, 1440]) {
     })
     await expect(fixed.locator('.temple-enter-label-extra')).toHaveCSS('opacity', '1')
     expect((await fixed.boundingBox())!.width).toBeCloseTo(full, 0)
-    await expect(fixed).toHaveAttribute('href', '/temple-of-sound/visit')
+    await expect(fixed).toHaveAttribute('href', '/temple-of-sound/watch')
   })
 }
 
@@ -490,7 +490,7 @@ test('desktop practical progress flows through the decorative gaps without jumps
 })
 
 for (const nativeTimeline of [true, false]) {
-  test(`practical progress starts at Visit, excluding the manifesto return (${nativeTimeline ? 'native' : 'fallback'})`, async ({
+  test(`practical progress starts at Watch (${nativeTimeline ? 'native' : 'fallback'})`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -498,17 +498,17 @@ for (const nativeTimeline of [true, false]) {
       await page.addInitScript(() => {
         Object.defineProperty(window, 'ScrollTimeline', { value: undefined })
       })
-    await page.goto('/temple-of-sound/visit')
+    await page.goto('/temple-of-sound/watch')
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
     const arrival = await page
-      .locator('#facts')
+      .locator('#watch')
       .evaluate(
         (node) =>
           scrollY +
           node.getBoundingClientRect().top -
           parseFloat(getComputedStyle(node).scrollMarginTop),
       )
-    expect(arrival).toBeGreaterThan(100)
+    expect(arrival).toBeGreaterThanOrEqual(0)
     const fill = page.locator('.temple-nav-progress span')
     const progress = () =>
       fill.evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).a)

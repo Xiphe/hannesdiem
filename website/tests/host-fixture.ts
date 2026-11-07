@@ -54,6 +54,10 @@ export const documents: PublishedDocuments = {
   fixture: structuredClone(page),
   'temple-of-sound': {
     ...structuredClone(page),
+    content: { ...entryTempleContent('poem'), metadata: { kind: 'temple' } },
+  },
+  'temple-basic': {
+    ...structuredClone(page),
     content: { ...templeContent, metadata: { kind: 'temple' } },
   },
   'temple-multiple': {

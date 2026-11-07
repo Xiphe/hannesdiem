@@ -1,6 +1,7 @@
 # Temple entry split — shared implementation contract
 
-Approved 2026-11-05 in **Reshape Temple of Sound entry**. Local review only.
+Approved 2026-11-05 in **Reshape Temple of Sound entry**; entry preference and
+Watch-first order refined by the artist on 2026-11-07. Local review only.
 
 ## Ownership
 
@@ -23,17 +24,28 @@ There is no inside index or feed index.
 
 ## Destinations and memory
 
-- Bare `/temple-of-sound` always shows the continuous poem, existing artwork intact.
-- Enter links go to `/temple-of-sound/visit`, the first practical subsection.
-- Practical sections: `/temple-of-sound/{visit,watch,create,share}`.
-- Content: `/temple-of-sound/watch/{slug}`; poem: `?verse=…` (sharing owns lookup).
-- `website/app/temple/entry-state.ts` exports `templeEntryStorageKey`
-  (`hannesdiem.temple.entered`), `hasEnteredTemple()`, `rememberTempleEntry()` and
-  `watchReturnHref()` (remembered -> Watch; otherwise poem). Storage value is `true`.
-- Only practical-section arrivals/Enter count as entered. Feed deep links leave the
-  state unchanged. Returning to the poem preserves the state.
-- Sidebar keeps “Temple of Sound”; remembered visitors get Visit as its destination.
-- Feed back: unentered -> poem; entered -> Watch centered on the current post.
+- First-time `/temple-of-sound` visits show the continuous manifesto. Existing
+  `hannesdiem.temple.entered = 'true'` values are retained. A remembered bare index
+  visit, including a fresh tab, uses `location.replace` to reach Watch, preserving
+  query notices without leaving a throwaway index history entry.
+- Enter links go to `/temple-of-sound/watch`, the first practical subsection.
+  Activating Enter sets the flag; direct practical/feed arrivals never set it.
+- Practical sections: `/temple-of-sound/{watch,visit,create,share}`.
+- Explicit poem `?verse=…`, fragment, section and recording links always win over
+  the remembered index destination. The existing legacy fragment resolver remains.
+- `website/app/temple/entry-state.ts` exports `templeEntryStorageKey`,
+  `hasEnteredTemple()`, `rememberTempleEntry()` and `forgetTempleEntry()`.
+  The browser-local preference has no expiry and unavailable storage is harmless.
+- Both “Back to the Manifesto” and the inside header wordmark clear the flag before
+  navigating. Browser Back **and Forward** to the manifesto also clear it: rebuilt
+  documents use navigation timing's `back_forward`, and cached documents use
+  `pageshow.persisted`. Reload then stays on the manifesto until Enter is activated.
+- `entry-navigation.ts` owns this preference through Chrome's existing Remix
+  lifecycle, with signal-owned handlers. Shared CMX documents remain public and
+  independent of browser storage. Sidebar links refresh after changes and storage
+  events; already open pages do not jump when another tab changes the flag.
+- Sidebar keeps “Temple of Sound”; remembered visitors get Watch as its destination.
+- Feed retains its separate same-tab overview return; direct post arrivals use Home.
 
 ## Rendering
 
@@ -48,19 +60,17 @@ site-menu logo; no wordmark/date. The closing action fades in beneath
 the held final phrase, centered in the space between its ink and the viewport
 bottom. The artist defers button artwork to a separate exploration.
 
-Inside: no opener or poem. Existing practical content order and full header appear
-immediately. Wordmark links to the poem root. Progress/scrubbing follows practical
-content only. Inspire/Be Held/Wish remain visible; activating them shows
+Inside: no opener or poem. Watch comes first, followed by the manifesto return,
+Visit, Create and Share; the full header appears immediately. Wordmark links to
+the poem root. Progress/scrubbing follows practical content only. Inspire/Be Held/Wish remain visible; activating them shows
 “coming soon”. Header links have section paths as their native destinations;
 enhancement can scroll between existing sections without reloading the document.
-Above Visit, a native “Back to the Manifesto” link with a back arrow returns to
-the poem with the artist's explanation below it. Compact spacing puts it just
-above the normal arrival position, revealed by scrolling upward beyond the first
-section, rather than another header item.
+Between Watch and Visit, a native “Back to the Manifesto” link with a back arrow
+returns to the poem with the artist's explanation below it. It follows the complete
+Watch section in the native document flow.
 The return area's explanation is dimmed. Navigation progress starts at the
-native Visit arrival and mobile scrubbing stays within the practical sections;
-the return area is reached through ordinary upward scrolling.
-Reuse the poem's three-depth fragment ground across Visit through Share, retaining
+native Watch arrival and mobile scrubbing stays within the practical sections.
+Reuse the poem's three-depth fragment ground across Watch through Share, retaining
 viewport-bounded rendering and motion fallbacks. Practical reading boundaries
 contain the complete fitted contours; only the interleaved poem bounds them to
 protect neighbouring verses. Feed rendering and static share-card patterns keep

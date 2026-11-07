@@ -206,12 +206,12 @@ export default function Content({
         image={forest}
         lightSource={{ x: 53.24, y: 54.07 }}
         navigation={[
-          { label: 'Visit', href: '#facts' },
           {
             label: 'Watch',
             href: '#watch',
             verseBefore: { label: 'First verse and refrain', href: '#verse-1-pair-1' },
           },
+          { label: 'Visit', href: '#facts' },
           {
             label: 'Create',
             href: '#create',
