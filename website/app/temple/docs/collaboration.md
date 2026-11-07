@@ -1,5 +1,16 @@
 # Temple of Sound: client–artist collaboration
 
+**More vertical space around the Watch row — 2026-11-07.** The artist asks for
+more vertical spacing around the content row. Increase the inner Watch card
+row's top and bottom padding from 12px to `clamp(32px, 6svh, 64px)`. Keep the
+upscroll-only manifesto return, feed-first order and closer signup CTA. Reuse
+the existing native row and its CSS; supplied wording remains intact.
+
+Validation: asset build, `check:website` (81 fast tests), and all four targeted
+phone/desktop browser checks with and without JavaScript pass. Preview 8787
+is refreshed; review with `sand tunnel 8787`, then `/temple-of-sound/watch`.
+No deployment requested.
+
 **Watch arrives below the manifesto return; tighter signup and hidden feed bars — 2026-11-07.**
 The artist clarifies that the topmost manifesto return should keep its previous
 upscroll-only discovery. Leave it first in native document order, but place the

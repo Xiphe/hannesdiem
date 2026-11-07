@@ -138,8 +138,9 @@
   padding-top: 8svh;
 }
 
-/* Feed content leads the Watch introduction; keep their handoff compact. */
+/* Give the leading content row room above and below its cards. */
 .temple-practical-section > .temple-post-previews:first-child {
+  padding-block: clamp(32px, 6svh, 64px);
   z-index: 4;
   margin-bottom: 24px;
 }
