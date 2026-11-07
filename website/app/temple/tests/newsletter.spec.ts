@@ -253,7 +253,7 @@ test('a verified subscriber can unsubscribe even when their older contact has no
 })
 
 for (const width of [390, 1440]) {
-  test(`the practical signup paints above the next section's images at ${width}px`, async ({
+  test(`the practical signup paints above a later section's images at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
@@ -279,6 +279,15 @@ for (const width of [390, 1440]) {
     const dialog = signup.getByRole('dialog')
     await expect(dialog).toBeVisible()
     await dialog.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    // Make overlap deliberate, independent of section order and artistic spacing.
+    // Relative offsets preserve the section's existing stacking behavior.
+    await dialog.evaluate((node) => {
+      const box = node.getBoundingClientRect()
+      const section = document.querySelector<HTMLElement>('.temple-practical-section:has(#create)')!
+      const image = section.querySelector('.fact-pictures img')!.getBoundingClientRect()
+      section.style.left = `${box.left + box.width / 2 - image.left - image.width / 2}px`
+      section.style.top = `${box.top + box.height / 2 - image.top - image.height / 2}px`
+    })
     const overlaps = await dialog.evaluate((node) => {
       const box = node.getBoundingClientRect()
       return [...document.querySelectorAll('#create .fact-pictures img')].flatMap((image) => {

@@ -174,17 +174,22 @@ for (const width of [390, 900, 1440]) {
     await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
     const band = page.getByRole('region', { name: 'Content', exact: true })
     await band.scrollIntoViewIfNeeded()
-    await expect(band.locator('a')).toHaveText([
+    await expect(band.locator('.temple-post-preview')).toHaveText([
       'Synthetic latest',
       'Synthetic middle',
       'Synthetic oldest',
     ])
     await expect(band.locator('iframe, video, audio')).toHaveCount(0)
     await expect(band.locator('img')).toHaveCount(3)
-    await expect(band.locator('a').first()).toHaveAttribute('href', '/feed/fixture-latest')
+    await expect(band.locator('.temple-post-preview').first()).toHaveAttribute(
+      'href',
+      '/feed/fixture-latest',
+    )
     const geometry = await band.evaluate((node) => ({
       width: node.clientWidth,
-      cards: [...node.querySelectorAll('a')].map((card) => card.getBoundingClientRect().toJSON()),
+      cards: [...node.querySelectorAll('.temple-post-preview')].map((card) =>
+        card.getBoundingClientRect().toJSON(),
+      ),
     }))
     const fits = geometry.cards.reduce((sum, card) => sum + card.width, 0) + 32 <= width
     const center = fits
@@ -223,7 +228,7 @@ test('Watch covers retain ordinary content links without JavaScript', async ({
     const page = await context.newPage()
     await page.goto('/temple-recordings#fixture-middle')
     const band = page.getByRole('region', { name: 'Content', exact: true })
-    await expect(band.locator('a')).toHaveText([
+    await expect(band.locator('.temple-post-preview')).toHaveText([
       'Synthetic latest',
       'Synthetic middle',
       'Synthetic oldest',

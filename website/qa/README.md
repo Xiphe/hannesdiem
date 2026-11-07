@@ -83,7 +83,7 @@ browser on the same machine.
 ## Synthetic regression suite
 
 ```sh
-npx playwright install --with-deps --only-shell chromium webkit
+npx playwright install --with-deps chromium webkit
 npm run build:app
 npm run test:synthetic
 ```
@@ -91,6 +91,8 @@ npm run test:synthetic
 This runs content tests, every website Node test, and the complete fixture browser
 suite. It covers controlled content, errors, edge states, timings, subscriptions,
 and reservations independently of authored content.
+Full Chromium is required alongside the headless shell to exercise restoration
+from the browser's back/forward cache.
 Its server uses port **8790**, leaving shared dev port 8787 alone; override with
 `PLAYWRIGHT_PORT` if necessary. Browser concurrency is capped at two workers to
 limit contention in the shared workspace. The website suite alone remains runnable with
