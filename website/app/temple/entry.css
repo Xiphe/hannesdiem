@@ -144,6 +144,11 @@
   z-index: 4;
   margin-bottom: 24px;
 }
+@media (width > 1050px) {
+  .temple-practical-section > .temple-post-previews:first-child {
+    padding-block: clamp(64px, 12svh, 128px);
+  }
+}
 .temple-post-previews + .fact-story[data-fact-layout='watch'] .fact-pictures {
   margin-top: 0;
 }

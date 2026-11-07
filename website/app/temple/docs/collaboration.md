@@ -1,5 +1,15 @@
 # Temple of Sound: client–artist collaboration
 
+**Double Watch-row space on larger screens — 2026-11-07.** The artist requests
+twice the vertical spacing around the content row on bigger screens. Above the
+existing 1050px desktop breakpoint, double its top and bottom padding to
+`clamp(64px, 12svh, 128px)`. Smaller screens keep the accepted spacing.
+
+Validation: asset build and `check:website` (81 fast tests) pass. Preview checks
+at 390/1050/1051/1440px confirm 54px per side through 1050px and 108px above it
+at a 900px viewport height. Preview 8787 is refreshed; use `sand tunnel 8787`,
+then `/temple-of-sound/watch`. No deployment requested.
+
 **More vertical space around the Watch row — 2026-11-07.** The artist asks for
 more vertical spacing around the content row. Increase the inner Watch card
 row's top and bottom padding from 12px to `clamp(32px, 6svh, 64px)`. Keep the
