@@ -373,6 +373,31 @@ and **staying with you**, my child.`,
           ],
         }}
       />
+      <footer class="temple-footer">
+        {view === 'inside' && (
+          <span>
+            Fotos by <a href="https://www.fanny-soulgraphy.de/">SOULGRAPHY</a> and{' '}
+            <button
+              type="button"
+              command="show-modal"
+              commandFor="site-navigation"
+              data-open-navigation
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-controls="site-navigation"
+            >
+              me
+            </button>
+          </span>
+        )}
+        <span>
+          With support from the{' '}
+          <a href="https://school-of-intimacy-arts.com/">School of Intimacy Arts</a>
+        </span>
+        <span>
+          <a href="/imprint">Imprint</a> • <a href="/privacy">Privacy</a>
+        </span>
+      </footer>
     </PoemCanvas>
   )
 }

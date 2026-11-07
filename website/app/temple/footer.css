@@ -1,0 +1,39 @@
+.temple-footer {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.6rem;
+  padding: 2rem 1.5rem;
+  color: light-dark(var(--temple-muted-light), #9f9890);
+  font:
+    400 12px/1.8 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  text-align: center;
+}
+.temple-footer > span:not(:first-child)::before {
+  content: '•';
+  margin-right: 0.6rem;
+}
+.temple-footer :is(a, button) {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.temple-footer button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.temple-footer :is(a, button):hover {
+  color: light-dark(var(--temple-ink-light), #e1d9ce);
+}
+.temple-footer :is(a, button):focus-visible {
+  outline: 2px solid light-dark(#32608b, #60cbcd);
+  outline-offset: 3px;
+  border-radius: 2px;
+}

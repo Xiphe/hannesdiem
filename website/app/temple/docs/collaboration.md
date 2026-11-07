@@ -1,5 +1,22 @@
 # Temple of Sound: client–artist collaboration
 
+**Temple footer and photo credits — 2026-11-07.** The artist supplies a footer:
+“Fotos by SOULGRAPHY and me • In association with the School of Intimacy Arts
+• Imprint • Privacy”. Show photo credits only on the inner pages; the manifesto
+starts with the association credit. Preserve the supplied wording and external
+URLs, link the existing legal pages, and make “me” open the existing sidebar.
+Keep the footer small, muted and wrapping naturally on narrow screens.
+
+The artist clarifies that the school provides loose support and supplied the
+photos, rather than collaborating closely. Use “With support from the School
+of Intimacy Arts” for that credit, retaining the photographers' attribution.
+
+Validation: app/content builds, formatting and `check:website` (81 fast tests)
+pass. Focused Chromium/WebKit checks at 390px/1440px verify both footer variants,
+the external/legal destinations and sidebar opening; the native “me” action also
+works without JavaScript. Preview 8787 refreshed; review with `sand tunnel 8787`,
+then `/temple-of-sound/watch` or `/temple-of-sound`.
+
 **Use the manifesto caption style for other button context — 2026-11-07.**
 The artist asks for all other buttons' supporting context to use the smaller,
 dimmed font and tight spacing shown beneath Back to the Manifesto. Share its
