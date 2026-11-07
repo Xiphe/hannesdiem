@@ -1,5 +1,19 @@
 # Temple of Sound: client–artist collaboration
 
+**Attach preview descriptions as a card — 2026-11-07.** The artist asks for the
+subheadline and description in a padded card directly attached behind the
+thumbnail. Keep the thumbnail's rounded bottom corners, with matching rounded
+bottom corners on the card. Use the existing preview item as the backing surface
+and share its 5px radius with the thumbnail. Add 16px text padding on all sides
+and reuse the existing neutral reading surface in both themes. Keep the native
+thumbnail/link and rich description as separate children; no content changes.
+
+Validation: asset build, `check:website` (81 fast tests) and all 12 preview browser
+checks pass across Chromium and WebKit. Operational light/dark checks at 390px
+and 1440px confirm zero gap, 16px text padding and matching 5px bottom radii.
+Preview 8787 is refreshed; review with `sand tunnel 8787`, then
+`/temple-of-sound/watch`. No deployment requested.
+
 **Watch row scrollbar, descriptions and thumbnail feedback — 2026-11-07.**
 The artist reports the scrollbar is still visible. Preview inspection identifies
 Watch's horizontal row still requesting `scrollbar-width: thin`; the preceding
