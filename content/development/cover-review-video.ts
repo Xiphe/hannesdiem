@@ -62,7 +62,8 @@ export function searchVideoCache(directory: string) {
             '+faststart',
             `${path}.tmp.mp4`,
           ],
-          { timeout: 180000 },
+          // Long recordings can take several minutes to remux over Stream's segment requests.
+          { timeout: 15 * 60 * 1000 },
         )
         await rename(`${path}.tmp.mp4`, path)
         return path
