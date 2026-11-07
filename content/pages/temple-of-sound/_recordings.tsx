@@ -63,20 +63,16 @@ export const recordings = (
       {
         id: 'fly-with-me',
         title: 'Fly With Me',
+        subheadline: '40min piano improvisation, no vocals',
         postedAt: '2026-11-07T00:00:25+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: 'd3f00d4b6684635fc7c58b0b15a5c74b',
         aspectRatio: 9 / 16,
         children: (
-          <>
-            <p>
-              <strong>40min piano improvisation, no vocals</strong>
-            </p>
-            <p>
-              Join me in this slightly trippy, meditative moment. Lay back, let go. Maybe put
-              yourself an alarm when you have something to do after this.
-            </p>
-          </>
+          <p>
+            Join me in this slightly trippy, meditative moment. Lay back, let go. Maybe put yourself
+            an alarm when you have something to do after this.
+          </p>
         ),
       },
     ]}

@@ -84,6 +84,8 @@ export interface PoemFact {
 }
 export interface TempleVideoProps extends StreamVideoProps {
   id: string
+  /** Secondary line beneath the feed title and the link-preview description. */
+  subheadline?: string
   /** Optional authored title used for share cards and metadata. */
   shareTitle?: string
   /** Generated during publication, or an imported custom card. */
@@ -103,6 +105,8 @@ export interface TempleRecordingsProps {
 interface TemplePostBase {
   id: string
   title: string
+  /** Secondary line beneath the feed title and the link-preview description. */
+  subheadline?: string
   shareTitle?: string
   shareImage?: import('./index.d.ts').MediaImage
   previewImage?: import('./index.d.ts').MediaImage

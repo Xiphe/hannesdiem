@@ -53,6 +53,7 @@ export async function renderFeed(page: ContentPage, id?: string) {
                 />
               </a>
               <h1>{selected.title}</h1>
+              {selected.subheadline && <p>{selected.subheadline}</p>}
               {selected.kind === 'video' ? (
                 <StreamVideo {...selected} />
               ) : selected.kind === 'audio' ? (
@@ -98,5 +99,6 @@ export async function renderFeed(page: ContentPage, id?: string) {
     shareImage: selected.shareImage as
       import('../../../../contracts/content.ts').MediaImage | undefined,
     shareTitle: typeof selected.shareTitle === 'string' ? selected.shareTitle : selected.title,
+    shareDescription: typeof selected.subheadline === 'string' ? selected.subheadline : undefined,
   }
 }

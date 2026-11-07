@@ -85,6 +85,39 @@ async function move(page: Page, id: string) {
 }
 
 for (const width of [390, 1440]) {
+  test(`subheadline sits below the title and shares its playback visibility at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await arrive(page, 'latest')
+    const item = post(page, 'latest')
+    await expect(item).toHaveAttribute('data-playing', '')
+    const subheadline = item.locator('.feed-subheadline')
+    await expect(subheadline).toHaveText('A quiet synthetic session, without vocals')
+    await expect(subheadline).not.toBeVisible()
+    await item.locator('.feed-tap').click({ position: { x: 100, y: 180 } })
+    await expect(subheadline).toBeVisible()
+    const titleBox = (await item.locator('.feed-title').boundingBox())!
+    const subheadlineBox = (await subheadline.boundingBox())!
+    expect(subheadlineBox.y).toBeGreaterThanOrEqual(titleBox.y + titleBox.height)
+    expect(subheadlineBox.x + subheadlineBox.width / 2).toBeCloseTo(width / 2, 0)
+    expect(subheadlineBox.x).toBeGreaterThanOrEqual(0)
+    expect(subheadlineBox.x + subheadlineBox.width).toBeLessThanOrEqual(width)
+    expect(
+      await subheadline.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)),
+    ).toBeLessThan(
+      await item
+        .locator('.feed-title')
+        .evaluate((node) => parseFloat(getComputedStyle(node).fontSize)),
+    )
+    await page.clock.install()
+    await item.locator('.feed-start').click()
+    await expect(item).toHaveAttribute('data-playing', '')
+    await page.clock.fastForward(7_100)
+    await expect(subheadline).not.toBeVisible()
+    await expect(post(page, 'oldest').locator('.feed-subheadline')).toHaveCount(0)
+  })
+
   test(`video is full screen, controls follow playback, and description scrolls at ${width}px`, async ({
     page,
   }) => {
@@ -747,6 +780,9 @@ test('a shared post retains its native player and rich description without JavaS
     const page = await context.newPage()
     expect((await page.goto(path('middle')))!.status()).toBe(200)
     await expect(page.locator('.feed-fallback h1')).toHaveText('Synthetic middle')
+    await expect(page.locator('.feed-fallback h1 + p')).toHaveText(
+      'A quiet synthetic session, without vocals',
+    )
     await expect(page.locator('.feed-fallback iframe')).toBeVisible()
     await expect(page.locator('.feed-fallback strong')).toHaveText('independent')
     await expect(page.locator('.temple-feed')).not.toBeVisible()

@@ -120,12 +120,15 @@ export function Feed(handle: Handle<FeedProps>) {
             </div>
           )}
           <div class="feed-heading">
-            <h2
-              class="feed-title"
-              id={`feed-title-${post.id}`}
-            >
-              {post.title}
-            </h2>
+            <div class="feed-title-group">
+              <h2
+                class="feed-title"
+                id={`feed-title-${post.id}`}
+              >
+                {post.title}
+              </h2>
+              {post.subheadline && <p class="feed-subheadline">{post.subheadline}</p>}
+            </div>
           </div>
           {post.kind === 'video' && (
             <div

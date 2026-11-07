@@ -11,6 +11,7 @@ collection.import = 'TemplePosts'
 const posts: Record<string, unknown>[] = [
   ...videos.map((post, index) => ({
     ...post,
+    ...(index < 2 ? { subheadline: 'A quiet synthetic session, without vocals' } : {}),
     kind: 'video',
     cover: { src: '/fixture-media/cover.svg', width: 640, height: 640 },
     ...(index === 0 ? { aspectRatio: 16 / 9, videoId: '11111111111111111111111111111111' } : {}),

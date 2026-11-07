@@ -54,6 +54,12 @@ Watch; the entry and share-image conversations own their corresponding views.
   seek has decoded the matching frame, then hand over without an opening-frame flash
   ([thumbnail API](https://developers.cloudflare.com/stream/viewing-videos/displaying-thumbnails/)).
   Selected covers remain on Watch thumbnails and audio posts. Tap surface toggles playback. Both orientations center the smaller title at the top between Back and Share.
+  An optional authored `subheadline` sits beneath that title in smaller, dimmer
+  text and shares its playback fade. The same plain string supplies the post's
+  `og:description` and HTML description; posts without it keep the page's existing
+  description. The rich-text drawer remains independent. Native no-JavaScript
+  playback also shows the subheadline beneath its heading. Share-image composition
+  and Watch cards retain their existing title-only treatment.
   The bottom summary has Play/Pause, a scrubber with an icon-only speaker, and a
   small, dim drag indicator above the scrubber. Center the Play/Pause
   glyph in its 44px control, restoring its position before the caption alignment.

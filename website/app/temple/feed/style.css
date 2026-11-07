@@ -248,11 +248,13 @@
   transition: opacity 3s ease;
   pointer-events: none;
 }
-.feed-title {
+.feed-title-group {
   grid-column: 2;
-  flex: 1 1 auto;
   align-self: center;
   min-width: 0;
+  text-align: center;
+}
+.feed-title {
   margin: 0;
   padding: 6px 0;
   text-align: center;
@@ -260,6 +262,16 @@
   font:
     700 clamp(18px, 2vw, 26px)/1.2 CinzelDecorative,
     serif;
+  text-shadow: 0 1px 12px rgb(0 0 0 / 85%);
+}
+.feed-subheadline {
+  margin: 0;
+  padding-bottom: 6px;
+  font:
+    400 clamp(12px, 1.25vw, 15px)/1.5 Bricolage,
+    sans-serif;
+  text-wrap: balance;
+  opacity: 0.8;
   text-shadow: 0 1px 12px rgb(0 0 0 / 85%);
 }
 .feed-transport {

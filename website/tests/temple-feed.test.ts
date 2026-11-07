@@ -66,3 +66,21 @@ test('global feed URLs select the latest post and preserve legacy shared links',
   for (const invalid of ['/feed/missing', '/feed/%E0%A4%A', '/feed/one%2Ftwo'])
     assert.equal((await app.fetch(`https://example.com${invalid}`)).status, 404)
 })
+
+test('post subheadlines supply selected-page metadata while older posts retain the page description', async () => {
+  const fixtures = structuredClone(documents)
+  fixtures['temple-of-sound/watch'].content.metadata = {
+    kind: 'temple',
+    description: 'Synthetic Watch fallback',
+  }
+  const app = createApp(createContentSource(fixtures))
+  for (const [id, description] of [
+    ['fixture-latest', 'A quiet synthetic session, without vocals'],
+    ['fixture-oldest', 'Synthetic Watch fallback'],
+  ]) {
+    const response = await app.fetch(`https://example.com/feed/${id}`)
+    assert.equal(response.status, 200)
+    const html = await response.text()
+    assert.ok(html.includes(`property="og:description" content="${description}"`))
+  }
+})

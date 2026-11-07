@@ -214,6 +214,7 @@ export function createApp(content: ContentLoader) {
                   title: feed.title,
                   ogTitle: feed.shareTitle,
                   ogImage: feed.shareImage,
+                  description: feed.shareDescription ?? page.route!.description,
                 }}
                 path={path}
                 plain

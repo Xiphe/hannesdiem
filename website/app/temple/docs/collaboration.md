@@ -1,5 +1,14 @@
 # Temple of Sound: client–artist collaboration
 
+**Feed subheadlines — 2026-11-07.** The artist supplies “Fly With Me” with
+“40min piano improvisation, no vocals” and accepts an optional subheadline
+beneath the feed title, smaller and quieter, fading with the title during
+playback. Use that same line for link-preview description metadata, keeping the
+longer invitation in the details panel. Do not draw the subheadline into the
+share image or add it to Watch cards. Native CMX post props carry the optional
+string; older posts retain their existing description fallback. Local review
+on8787 through `sand tunnel 8787`; this acceptance requests implementation.
+
 **Email first across shared signup and login — 2026-11-06.** The artist asks
 for a consistent flow: collect email, check Resend for an existing name, send the
 login link immediately when named, and request a name only when missing. This
