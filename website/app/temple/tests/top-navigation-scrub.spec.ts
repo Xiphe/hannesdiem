@@ -389,7 +389,7 @@ for (const path of ['/temple-navigation', '/temple-entry-poem', '/temple-of-soun
   }
 }
 
-test('the normal menu opens from the left without automatically outlining its brand', async ({
+test('the normal menu opens from the right without automatically outlining its brand', async ({
   page,
 }) => {
   await page.goto('/fixture-release')
@@ -399,8 +399,11 @@ test('the normal menu opens from the left without automatically outlining its br
   await expect(dialog.locator('.navigation-menu')).toBeFocused()
   await expect(dialog.getByRole('link', { name: 'Hannes Diem', exact: true })).not.toBeFocused()
   await expect
-    .poll(async () => (await dialog.locator('[data-navigation-panel]').boundingBox())!.x)
-    .toBeCloseTo(0, 0)
+    .poll(async () => {
+      const panel = (await dialog.locator('[data-navigation-panel]').boundingBox())!
+      return panel.x + panel.width
+    })
+    .toBeCloseTo(page.viewportSize()!.width, 0)
   await page.keyboard.press('Tab')
   await expect(dialog.getByRole('link', { name: 'Hannes Diem', exact: true })).toBeFocused()
 })
