@@ -206,8 +206,13 @@
 .temple-post-preview-description a {
   position: relative;
   z-index: 3;
-  color: inherit;
+  color: light-dark(var(--temple-primary-light), #b5d6ee);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
   text-underline-offset: 3px;
+}
+.temple-post-preview-description a:is(:hover, :focus-visible) {
+  text-decoration-color: currentColor;
 }
 .fact-story:has(+ .temple-post-previews) {
   margin-bottom: 24px;

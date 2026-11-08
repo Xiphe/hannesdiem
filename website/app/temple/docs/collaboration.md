@@ -1,5 +1,16 @@
 # Temple of Sound: client–artist collaboration
 
+**Subtly highlight links in Watch cards — 2026-11-08.** The artist asks for
+links in the cards to stand out slightly. Use the existing primary blue in
+light mode and cool pale-blue ink in dark mode, with a faint underline that
+becomes solid on hover or keyboard focus. Keep description links above the
+whole-card link so their own destinations remain independently usable.
+
+Validation: app/content builds and formatting pass; all 16 synthetic preview
+checks pass in Chromium/WebKit. Phone/desktop review in both themes confirms
+the link colour, underline feedback and bounded card layout. Preview 8787
+refreshed; review with `sand tunnel 8787`, then `/temple-of-sound/watch`.
+
 **Open the sidebar from the footer name — 2026-11-08.** The artist asks
 for “Hannes Diem” in the manifesto footer to open the sidebar at every size.
 Use the existing navigation button command and accessibility attributes around
