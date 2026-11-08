@@ -209,7 +209,10 @@
 }
 .temple-post-preview-description a,
 .feed-description a {
-  color: inherit;
+  color: light-dark(
+    color-mix(in srgb, currentColor 80%, #000),
+    color-mix(in srgb, currentColor 80%, #fff)
+  );
   font-weight: 500;
   text-decoration: none;
 }

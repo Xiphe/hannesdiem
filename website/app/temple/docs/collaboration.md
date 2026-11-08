@@ -1,14 +1,16 @@
 # Temple of Sound: client–artist collaboration
 
 **Subtly highlight description links without extra colour — 2026-11-08.**
-The artist rejects the initial blue tint and underline. Keep links in Watch
-cards and viewer descriptions in their inherited text colour with no underline;
-use a medium font weight for subtle emphasis. Preserve keyboard focus indicators
-and keep card description links above the whole-card link so their destinations
+The artist rejects the initial blue tint and underline, then clarifies that
+links should be slightly lighter in dark mode with a corresponding effect in
+light mode. Keep the inherited text hue, mixing it 20% towards white in dark
+mode or black in light mode, with medium weight and no underline. Apply this
+to Watch cards and viewer descriptions. Preserve keyboard focus indicators and
+keep card description links above the whole-card link so their destinations
 remain independently usable.
 
 Validation: app build, formatting and 19 focused synthetic browser checks pass.
-Chromium/WebKit review in both themes confirms inherited link colours, medium
+Chromium/WebKit review in both themes confirms neutral link emphasis, medium
 weight and no underlines in cards and viewer descriptions. Preview 8787 refreshed;
 review with `sand tunnel 8787`, then `/temple-of-sound/watch`.
 
