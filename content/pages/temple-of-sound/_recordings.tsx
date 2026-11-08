@@ -3,6 +3,7 @@ import micTechCover from '../../media/temple-recording-mic-tech-check-cover.jpg'
 import permissionsCover from '../../media/temple-recording-permission-spaces-cover.jpg'
 import kennstDuDasCover from '../../media/temple-recording-kennst-du-das-cover.jpg'
 import flyWithMeCover from '../../media/temple-recording-fly-with-me-cover.jpg'
+import waitingBandCover from '../../media/temple-recording-waiting-band-cover.jpg'
 
 export const recordings = (
   <TempleRecordings
@@ -82,6 +83,22 @@ export const recordings = (
             alarm ;)
           </p>
         ),
+      },
+      {
+        id: 'waiting-band',
+        title: 'All my musical aspects while I show this website',
+        subheadline: 'accurate representation',
+        postedAt: '2026-11-08T20:07:18+01:00',
+        customerCode: 'ku6r49ei7df9hym2',
+        videoId: 'f673f901a50a1604e409103836e19e2b',
+        cover: {
+          ...waitingBandCover,
+          alt: 'All my musical aspects while I show this website',
+          focalX: 50.4,
+          focalY: 42,
+          videoFrame: { videoId: 'f673f901a50a1604e409103836e19e2b', time: 148.927562 },
+        },
+        children: <p>I like recursions</p>,
       },
     ]}
   />
