@@ -86,14 +86,14 @@ export const recordings = (
       },
       {
         id: 'waiting-band',
-        title: 'All my aspects right now',
+        title: 'All my parts right now',
         subheadline: 'accurate representation',
         postedAt: '2026-11-08T20:07:18+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: 'f673f901a50a1604e409103836e19e2b',
         cover: {
           ...waitingBandCover,
-          alt: 'All my aspects right now',
+          alt: 'All my parts right now',
           focalX: 50.4,
           focalY: 42,
           videoFrame: { videoId: 'f673f901a50a1604e409103836e19e2b', time: 148.927562 },
