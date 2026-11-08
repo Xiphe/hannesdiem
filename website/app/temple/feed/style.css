@@ -206,13 +206,12 @@
 .temple-post-preview-description a {
   position: relative;
   z-index: 3;
-  color: light-dark(var(--temple-primary-light), #b5d6ee);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
-  text-underline-offset: 3px;
 }
-.temple-post-preview-description a:is(:hover, :focus-visible) {
-  text-decoration-color: currentColor;
+.temple-post-preview-description a,
+.feed-description a {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
 }
 .fact-story:has(+ .temple-post-previews) {
   margin-bottom: 24px;
@@ -592,7 +591,6 @@
 .feed-description > :first-child {
   margin-top: 6px;
 }
-.feed-description a,
 .feed-text a {
   color: inherit;
   text-decoration: underline;
