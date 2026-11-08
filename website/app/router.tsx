@@ -113,7 +113,7 @@ export function createApp(content: ContentLoader) {
                 height={24}
               />
             </button>
-            {renderContent(page.document).body}
+            {(await renderContent(page.document)).body}
             <button
               type="button"
               data-close-overlay
@@ -267,7 +267,7 @@ export function createApp(content: ContentLoader) {
         routes={page.routes}
       >
         <Page
-          {...renderContent(page.document)}
+          {...await renderContent(page.document)}
           route={route}
           path={canonicalPath}
           noindex={page.status === 404}

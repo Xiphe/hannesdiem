@@ -6,6 +6,7 @@ import { ChevronDownIcon, XMarkIcon } from './heroicons.tsx'
 import { NewsletterArea } from './newsletter/index.ts'
 import type { SessionState } from './identity/contract.ts'
 import { ThemedImage } from './themed-image.tsx'
+import { externalLinkProps } from './external-links.ts'
 
 const quietLink = css({ opacity: 0.6, '&:hover': { opacity: 1 } })
 export function Brand(handle: Handle<{ footer?: boolean }>) {
@@ -203,6 +204,7 @@ export function Navigation(
               <a
                 class="nav-item nav-primary"
                 href={item.href}
+                {...externalLinkProps(item.href)}
                 data-temple-entry-link={item.href === '/temple-of-sound' ? '' : undefined}
                 data-rmx-document=""
                 aria-current={handle.props.pathname === item.href ? 'page' : undefined}
@@ -227,6 +229,7 @@ export function Navigation(
                       <a
                         class="nav-item"
                         href={item.href}
+                        {...externalLinkProps(item.href)}
                         data-temple-entry-link={item.href === '/temple-of-sound' ? '' : undefined}
                         data-rmx-document=""
                         aria-current={handle.props.pathname === item.href ? 'page' : undefined}
@@ -322,6 +325,7 @@ export function Footer(handle: Handle) {
                     <li>
                       <a
                         href={item.href}
+                        {...externalLinkProps(item.href)}
                         mix={[quietLink, css({ fontSize: '.875rem', borderRadius: 4 })]}
                       >
                         {item.name}

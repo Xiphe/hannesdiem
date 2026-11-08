@@ -29,6 +29,10 @@ Operational QA may check a running site's health, UI behavior, and the dedicated
 
 Never invent prose for the user unless explicitly instructed. Preserve supplied wording and order; edit only as requested, including spelling corrections when authorized.
 
+## Links
+
+All external links open in a new tab.
+
 ## Agent skills
 
 - Deploy or take over deployment QA: read `.agents/skills/deploy/SKILL.md`; use the terse, gitignored `.deploy-qa.json` for routine coordination. Direct chat is reserved for unresolved blockers or ownership conflicts.

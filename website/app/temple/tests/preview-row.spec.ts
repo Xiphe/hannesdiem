@@ -52,9 +52,12 @@ for (const width of [390, 1440]) {
             body: '<p>Synthetic external destination</p>',
           }),
         )
+        const popupReady = context.waitForEvent('page')
         await description.getByRole('link', { name: 'Fixture reference' }).click()
-        await expect(page).toHaveURL('https://example.org/recording')
-        await page.goBack()
+        const popup = await popupReady
+        await expect(popup).toHaveURL('https://example.org/recording')
+        await expect(page).toHaveURL('/temple-of-sound/watch')
+        await popup.close()
         await expect(date).toHaveText(javaScriptEnabled ? '9. April 2025' : 'April 8, 2025')
         // Click the date in the text panel, outside the thumbnail's own bounds.
         const itemBounds = await item.boundingBox()

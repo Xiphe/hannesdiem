@@ -599,6 +599,7 @@ test('Amazon Music logos preserve the open letter shapes with sizing styles', as
     await page.goto(path)
     const logo = page.locator('main svg[aria-label="Amazon Music"]')
     await expect(logo).toBeVisible()
+    await expect(logo.locator('xpath=ancestor::a[1]')).toHaveAttribute('target', '_blank')
     const filled = await logo
       .locator('path')
       .nth(5)

@@ -1,5 +1,6 @@
 import type { Handle, RemixNode } from 'remix/component'
 import { routes } from '../routes.ts'
+import { externalLinkProps } from '../external-links.ts'
 
 export function contactHref(email: string) {
   if (!email.startsWith('mailto:')) return email
@@ -12,6 +13,7 @@ export function ContactLink(
   return () => (
     <a
       href={contactHref(handle.props.href)}
+      {...externalLinkProps(handle.props.href)}
       class={handle.props.class}
       data-contact-modal={handle.props.href.startsWith('mailto:') ? '' : undefined}
       data-rmx-document={handle.props.href.startsWith('mailto:') ? '' : undefined}

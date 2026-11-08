@@ -4,9 +4,13 @@ import { environment } from '../../../.cmx/environment.ts'
 import type { ContentRoute, SiteMetadata } from '../../../contracts/content.ts'
 import { getMedia } from '../media.ts'
 import { beachTheme, defaultTheme, paletteToTheme, type Theme } from '../theme.ts'
+import { externalLinksDocument } from './document-links.ts'
 
-export function renderContent(document: CmxDocument) {
-  const page = cmx<{ title: CmxNode; default: CmxNode }>(document, environment)
+export async function renderContent(document: CmxDocument) {
+  const page = cmx<{ title: CmxNode; default: CmxNode }>(
+    await externalLinksDocument(document),
+    environment,
+  )
   if (typeof page.title !== 'string') throw new Error('CMX page title must be a string')
   return { title: page.title, body: page.default }
 }
@@ -17,4 +21,4 @@ export function contentTheme(site: SiteMetadata, route?: ContentRoute): Theme {
   if (image?.palette?.length) return paletteToTheme(image.palette)
   return route?.path.startsWith('/one-week-album') ? beachTheme : defaultTheme
 }
-export type PageContent = ReturnType<typeof renderContent>
+export type PageContent = Awaited<ReturnType<typeof renderContent>>

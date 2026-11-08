@@ -6,6 +6,7 @@ import { Icon } from './icons.tsx'
 import { ServiceLogo } from '../icons.tsx'
 import { md, dark, focus, buttonBase } from './styles.ts'
 import { contactHref } from '../contact/link.tsx'
+import { externalLinkProps } from '../external-links.ts'
 export function Button(handle: Handle<ButtonProps>) {
   return () => (
     <a
@@ -13,7 +14,7 @@ export function Button(handle: Handle<ButtonProps>) {
       data-contact-modal={handle.props.contact ? '' : undefined}
       data-rmx-document={handle.props.contact ? '' : undefined}
       aria-haspopup={handle.props.contact ? 'dialog' : undefined}
-      target={handle.props.blank ? '_blank' : undefined}
+      target={handle.props.blank ? '_blank' : externalLinkProps(handle.props.href).target}
       rel="noopener noreferrer"
       mix={css({
         ...buttonBase,
@@ -118,6 +119,7 @@ export function LinkTree(handle: Handle<LinkTreeProps>) {
                 <li>
                   <a
                     href={link.href}
+                    {...externalLinkProps(link.href)}
                     mix={[linkTreeButton, linkTreeRow]}
                   >
                     <ServiceLogo
@@ -156,6 +158,7 @@ export function LinkTree(handle: Handle<LinkTreeProps>) {
                   <li>
                     <a
                       href={link.href}
+                      {...externalLinkProps(link.href)}
                       mix={[
                         linkTreeButton,
                         css({
@@ -189,6 +192,7 @@ export function LinkTree(handle: Handle<LinkTreeProps>) {
         {handle.props.otherLinks.map((link, index) => (
           <a
             href={link.href}
+            {...externalLinkProps(link.href)}
             mix={[linkTreeButton, linkTreeRow, index === 0 && css({ marginTop: 0 })]}
           >
             <ServiceLogo

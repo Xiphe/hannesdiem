@@ -13,11 +13,12 @@ import { sortedPosts, postPath } from './model.ts'
 import { dateLabel } from '../../date.tsx'
 import { StreamVideo } from '../../ui-library/video.tsx'
 import { ThemedImage } from '../../themed-image.tsx'
+import { externalLinksDocument } from '../../ui-library/document-links.ts'
 
 const Feed = clientEntry(`${assets.templeFeed}#Feed`, FeedComponent)
 
 export async function renderFeed(page: ContentPage, id?: string) {
-  const { posts, document } = await feedDocument(page.document)
+  const { posts, document } = await feedDocument(await externalLinksDocument(page.document))
   const selected = id
     ? posts.find((post) => post.id === id)
     : sortedPosts(posts as (Record<string, unknown> & { id: string; postedAt: string })[])[0]
