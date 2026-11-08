@@ -98,7 +98,14 @@ export const recordings = (
           focalY: 42,
           videoFrame: { videoId: 'f673f901a50a1604e409103836e19e2b', time: 148.927562 },
         },
-        children: <p>I like recursions</p>,
+        children: (
+          <p>
+            Check out{' '}
+            <a href="https://www.instagram.com/heisse_naegel_heisse_klaenge">
+              @heisse_naegel_heisse_klaenge on insta
+            </a>
+          </p>
+        ),
       },
     ]}
   />
