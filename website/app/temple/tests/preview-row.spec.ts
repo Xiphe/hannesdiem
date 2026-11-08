@@ -74,6 +74,28 @@ for (const width of [390, 1440]) {
 }
 
 for (const colorScheme of ['light', 'dark'] as const) {
+  test(`description links gain neutral emphasis on hover and keyboard focus in ${colorScheme}`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' })
+    await page.goto('/temple-of-sound/watch')
+    await expect(page.locator('.temple-artwork')).toHaveAttribute('data-state', 'ready')
+    const link = page.locator('.temple-post-preview-description a').first()
+    await link.scrollIntoViewIfNeeded()
+    await page.mouse.move(0, 0)
+    const colour = () => link.evaluate((node) => getComputedStyle(node).color)
+    const resting = await colour()
+    await link.hover()
+    await expect.poll(colour).not.toBe(resting)
+    await expect(link).toHaveCSS('text-decoration-line', 'none')
+    await page.mouse.move(0, 0)
+    await link.focus()
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Shift+Tab')
+    await expect(link).toBeFocused()
+    await expect.poll(colour).not.toBe(resting)
+  })
+
   for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     test(`card hover stays border-free and keyboard feedback preserves geometry in ${colorScheme} with motion ${reducedMotion}`, async ({
       page,

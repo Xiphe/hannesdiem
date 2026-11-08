@@ -209,12 +209,17 @@
 }
 .temple-post-preview-description a,
 .feed-description a {
+  --description-link-highlight: 20%;
   color: light-dark(
-    color-mix(in srgb, currentColor 80%, #000),
-    color-mix(in srgb, currentColor 80%, #fff)
+    color-mix(in srgb, currentColor, #000 var(--description-link-highlight)),
+    color-mix(in srgb, currentColor, #fff var(--description-link-highlight))
   );
   font-weight: 500;
   text-decoration: none;
+}
+.temple-post-preview-description a:is(:hover, :focus-visible),
+.feed-description a:is(:hover, :focus-visible) {
+  --description-link-highlight: 40%;
 }
 .fact-story:has(+ .temple-post-previews) {
   margin-bottom: 24px;
