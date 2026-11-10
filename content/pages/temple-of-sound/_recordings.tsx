@@ -111,7 +111,7 @@ export const recordings = (
       {
         id: 'the-fall',
         title: 'The Fall (cover)',
-        subheadline: 'Netherwilds',
+        subheadline: 'by Netherwilds',
         postedAt: '2026-11-10T01:28:04+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: 'e6b3bc09768d7ff58429e6bfc02971c4',
@@ -124,7 +124,19 @@ export const recordings = (
         },
         aspectRatio: 9 / 16,
         children: (
-          <p>Wanted to have a version that is easier to the ears and harder to the eyes 👉👈</p>
+          <>
+            <p>Wanted to have a version that is easier to the ears and harder to the eyes 👉👈</p>
+            <p>
+              Check out their{' '}
+              <a
+                href="https://netherwilds.bandcamp.com/album/peasant-rising"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                album Peasant Rising
+              </a>
+            </p>
+          </>
         ),
       },
     ]}
