@@ -4,6 +4,7 @@ import permissionsCover from '../../media/temple-recording-permission-spaces-cov
 import kennstDuDasCover from '../../media/temple-recording-kennst-du-das-cover.jpg'
 import flyWithMeCover from '../../media/temple-recording-fly-with-me-cover.jpg'
 import waitingBandCover from '../../media/temple-recording-waiting-band-cover.jpg'
+import theFallCover from '../../media/temple-recording-the-fall-cover.jpg'
 
 export const recordings = (
   <TempleRecordings
@@ -105,6 +106,25 @@ export const recordings = (
               @heisse_naegel_heisse_klaenge on insta
             </a>
           </p>
+        ),
+      },
+      {
+        id: 'the-fall',
+        title: 'The Fall (cover)',
+        subheadline: 'Netherwilds',
+        postedAt: '2026-11-10T01:28:04+01:00',
+        customerCode: 'ku6r49ei7df9hym2',
+        videoId: 'e6b3bc09768d7ff58429e6bfc02971c4',
+        cover: {
+          ...theFallCover,
+          alt: 'The Fall (cover)',
+          focalX: 67.4,
+          focalY: 36.7,
+          videoFrame: { videoId: 'e6b3bc09768d7ff58429e6bfc02971c4', time: 53.233333 },
+        },
+        aspectRatio: 9 / 16,
+        children: (
+          <p>Wanted to have a version that is easier to the ears and harder to the eyes 👉👈</p>
         ),
       },
     ]}
