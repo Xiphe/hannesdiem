@@ -5,6 +5,7 @@ import kennstDuDasCover from '../../media/temple-recording-kennst-du-das-cover.j
 import flyWithMeCover from '../../media/temple-recording-fly-with-me-cover.jpg'
 import waitingBandCover from '../../media/temple-recording-waiting-band-cover.jpg'
 import theFallCover from '../../media/temple-recording-the-fall-cover.jpg'
+import feuerUndVergessenCover from '../../media/temple-recording-feuer-und-vergessen-cover.jpg'
 
 export const recordings = (
   <TempleRecordings
@@ -137,6 +138,29 @@ export const recordings = (
               </a>
             </p>
           </>
+        ),
+      },
+      {
+        id: 'feuer-und-vergessen',
+        title: 'Feuer und Vergessen',
+        subheadline: 'Live am Klavier',
+        postedAt: '2026-11-12T14:14:05+01:00',
+        customerCode: 'ku6r49ei7df9hym2',
+        videoId: 'd6815fb4db34effcfe4419bf10e02fe1',
+        cover: {
+          ...feuerUndVergessenCover,
+          alt: 'Feuer und Vergessen',
+          focalX: 51.1,
+          focalY: 33.5,
+          videoFrame: { videoId: 'd6815fb4db34effcfe4419bf10e02fe1', time: 87.566666 },
+        },
+        aspectRatio: 9 / 16,
+        children: (
+          <p>
+            {
+              'The german word "Weltschmerz" describes the pain when one gets overwhelmed by "The News" about the state of the world. This song is my vessel to hold that feeling so that I don\'t have to carry it myself all along. May it serve you to feel what needs to be felt and then let go and move on with love.'
+            }
+          </p>
         ),
       },
     ]}
