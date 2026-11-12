@@ -144,7 +144,7 @@ export const recordings = (
         id: 'feuer-und-vergessen',
         title: 'Feuer und Vergessen',
         subheadline: 'Live am Klavier',
-        postedAt: '2026-11-12T14:14:05+01:00',
+        postedAt: '2026-11-11T14:14:05+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: 'd6815fb4db34effcfe4419bf10e02fe1',
         cover: {
