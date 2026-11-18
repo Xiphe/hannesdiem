@@ -118,6 +118,7 @@ export const archiveStyle = css({
   },
   '& .ec-highlight-actions': {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '.4rem',
     marginTop: '.4rem',
     '& button, & a': { fontSize: '.8rem', padding: '.3rem .6rem' },
@@ -170,6 +171,7 @@ export const archiveStyle = css({
     gap: '1rem',
     marginTop: '1rem',
   },
+  '& fieldset': { border: 0, padding: 0, minWidth: 0 },
   '& label': { display: 'grid', gap: '.4rem', fontSize: '.85rem', minWidth: 0 },
   '& .ec-range-field': { display: 'grid', gap: '.4rem', minWidth: 0 },
   '& .ec-field-wide': { gridColumn: '1 / -1' },

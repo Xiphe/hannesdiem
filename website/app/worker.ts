@@ -4,6 +4,8 @@ import { createDocumentHost, type DocumentHostOptions } from './document-host/cl
 import { handleCircleWebhook } from './circle/webhook.ts'
 export { CircleState } from './circle/cloudflare.ts'
 import { handleNewsletter } from './newsletter/index.ts'
+import { handleHighlights } from './electrocute/http.ts'
+export { ElectroCuteState } from './electrocute/cloudflare.ts'
 
 export { ContentState } from './document-host/cloudflare.ts'
 
@@ -16,6 +18,7 @@ export function createWorker(options: DocumentHostOptions = {}): ExportedHandler
         const documentHost = createDocumentHost(env, ctx, options)
         return (
           (await documentHost.handle(request)) ??
+          (await handleHighlights(request, env, documentHost.load)) ??
           (await handleCircleWebhook(request, env)) ??
           (await handleNewsletter(request, env)) ??
           (await createApp(documentHost.load).fetch(request))

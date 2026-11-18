@@ -12,13 +12,19 @@
     "NewsletterState": { "type": "durable-object", "storage": "sqlite" },
     "CircleState": { "type": "durable-object", "storage": "sqlite" },
     "ContentState": { "type": "durable-object", "storage": "sqlite" },
+    "ElectroCuteState": { "type": "durable-object", "storage": "sqlite" },
   },
-  "vars": { "CMX_PUBLISH_PUBLIC_KEYS": "{}" },
+  "vars": {
+    "CMX_PUBLISH_PUBLIC_KEYS": "{}",
+    "ELECTROCUTE_ARTIST_EMAIL": "ich@hannesdiem.de",
+  },
+  "ai": { "binding": "AI" },
   "durable_objects": {
     "bindings": [
       { "name": "NEWSLETTER_STATE", "class_name": "NewsletterState" },
       { "name": "CIRCLE_STATE", "class_name": "CircleState" },
       { "name": "CONTENT_STATE", "class_name": "ContentState" },
+      { "name": "ELECTROCUTE_STATE", "class_name": "ElectroCuteState" },
     ],
   },
   "preview_urls": false,
@@ -27,5 +33,23 @@
   "observability": {
     "enabled": true,
     "traces": { "enabled": true, "head_sampling_rate": 0.01 },
+  },
+  // AI has no local runtime. This environment deliberately omits that binding:
+  // visitor text stays pending; all storage and identity behavior still runs.
+  "env": {
+    "local": {
+      "vars": {
+        "CMX_PUBLISH_PUBLIC_KEYS": "{}",
+        "ELECTROCUTE_ARTIST_EMAIL": "ich@hannesdiem.de",
+      },
+      "durable_objects": {
+        "bindings": [
+          { "name": "NEWSLETTER_STATE", "class_name": "NewsletterState" },
+          { "name": "CIRCLE_STATE", "class_name": "CircleState" },
+          { "name": "CONTENT_STATE", "class_name": "ContentState" },
+          { "name": "ELECTROCUTE_STATE", "class_name": "ElectroCuteState" },
+        ],
+      },
+    },
   },
 }

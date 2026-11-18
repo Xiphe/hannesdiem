@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
+import type { HighlightState, RuntimeHighlight } from '../app/electrocute/contract.ts'
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/fixture-media/electrocute.mp4', async (route) => {
@@ -161,6 +162,142 @@ test('failed device storage keeps the unsaved form available', async ({ page }) 
   await page.getByRole('button', { name: 'Save draft', exact: true }).click()
   await expect(page.getByRole('form', { name: 'Highlight editor' })).toBeVisible()
   await expect(page.getByRole('status')).toContainText('Could not save')
+})
+
+test('public editor confirms a Circle alias, handles pending text, and supports withdrawal and restoration', async ({
+  page,
+}) => {
+  let state: HighlightState = {
+    ready: true,
+    artist: false,
+    email: 'visitor@example.org',
+    csrfToken: 'synthetic-csrf',
+    suggestedAlias: 'Circle fixture alias',
+    highlights: [],
+  }
+  let approved = false
+  const savedIds: string[] = []
+  await page.route('**/login', (route) => route.fulfill({ json: state }))
+  await page.route('**/electrocute-api/test-session-1', async (route) => {
+    if (route.request().method() === 'POST') {
+      const form = await new Response(route.request().postData(), {
+        headers: route.request().headers(),
+      }).formData()
+      expect(form.get('_csrf')).toBe('synthetic-csrf')
+      const input = JSON.parse(String(form.get('payload')))
+      expect(input).not.toHaveProperty('email')
+      expect(input).not.toHaveProperty('artist')
+      expect(input).not.toHaveProperty('duration')
+      const previous = state.highlights[0]
+      const intent = form.get('intent')
+      const highlight: RuntimeHighlight =
+        intent === 'save'
+          ? {
+              ...previous,
+              id: input.id,
+              title: input.title,
+              person: input.alias,
+              start: input.start,
+              end: input.end,
+              revision: (previous?.revision ?? 0) + 1,
+              status: approved ? 'approved' : 'pending',
+              withdrawn: false,
+              hidden: false,
+              own: true,
+              canEdit: true,
+            }
+          : { ...previous, revision: previous.revision + 1, withdrawn: intent === 'withdraw' }
+      savedIds.push(input.id)
+      state = {
+        ...state,
+        highlights: [highlight],
+        alias: approved ? (input.alias ?? state.alias) : undefined,
+      }
+    }
+    await route.fulfill({ json: state, headers: { 'Cache-Control': 'no-store' } })
+  })
+  await page.goto('/fixture-public-highlights')
+  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
+  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Name or alias (public)' })).toHaveValue(
+    'Circle fixture alias',
+  )
+  expect(savedIds, 'suggestion alone never publishes a profile or highlight').toHaveLength(0)
+  await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Synthetic public passage')
+  await page.getByRole('textbox', { name: 'End time' }).fill('0:40')
+  await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
+  const privateList = page.getByRole('region', { name: 'Unpublished highlights' })
+  await expect(privateList).toContainText('Text check pending')
+  await expect(privateList.getByRole('button', { name: 'Share' })).toHaveCount(0)
+  await expect(page.getByRole('status')).toContainText('Saved privately')
+  await privateList.getByRole('button', { name: 'Edit highlight' }).click()
+  await page.getByRole('textbox', { name: 'Name or alias (public)' }).fill('Confirmed fixture')
+  approved = true
+  await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
+  await expect(privateList).toHaveCount(0)
+  const clip = page.locator('.ec-highlight').filter({ hasText: 'Synthetic public passage' })
+  await expect(clip).toContainText('Confirmed fixture')
+  await expect(clip.getByRole('button', { name: 'Share' })).toBeVisible()
+  expect(savedIds[0], 'edits preserve the stable link').toBe(savedIds[1])
+  await clip.getByRole('button', { name: 'Withdraw', exact: true }).click()
+  await expect(privateList).toContainText('Withdrawn')
+  await privateList.getByRole('button', { name: 'Restore', exact: true }).click()
+  await expect(privateList).toHaveCount(0)
+  await expect(clip).toBeVisible()
+})
+
+test('a public runtime highlight link overrides saved progress after its asynchronous load', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'hannesdiem.electrocute.progress.v1',
+      JSON.stringify({ positions: { 'test-session-1': 70 } }),
+    ),
+  )
+  const state = {
+    ready: true,
+    artist: false,
+    csrfToken: 'synthetic-csrf',
+    highlights: [
+      {
+        id: 'runtime-fixture',
+        title: 'Runtime fixture',
+        person: 'Public fixture',
+        start: 20,
+        end: 40,
+        revision: 1,
+        status: 'approved',
+        own: false,
+        canEdit: false,
+        hidden: false,
+        withdrawn: false,
+      },
+    ],
+  }
+  await page.route('**/login', (route) =>
+    route.fulfill({ json: { ready: true, csrfToken: 'synthetic-csrf' } }),
+  )
+  await page.route('**/electrocute-api/test-session-1', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await route.fulfill({ json: state })
+  })
+  await page.goto('/fixture-public-highlights?highlight=runtime-fixture')
+  await expect(page.getByRole('link', { name: 'Log in to set highlights' })).toBeVisible()
+  await expect
+    .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeCloseTo(20, 0)
+  await expect(page.getByRole('status')).toBeEmpty()
+  await expect(page.getByRole('button', { name: 'Edit highlight' })).toHaveCount(0)
+  await page.locator('video').evaluate((video) => {
+    ;(video as HTMLVideoElement).currentTime = 35
+  })
+  const refreshed = page.waitForResponse('**/electrocute-api/test-session-1')
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await refreshed
+  await expect
+    .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeCloseTo(35, 0)
 })
 
 test.describe('mobile player', () => {

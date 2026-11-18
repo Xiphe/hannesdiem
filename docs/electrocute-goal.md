@@ -95,7 +95,9 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 - Eine dedizierte Profilverwaltung und Avatare gehören nicht zur ersten
   Ausbaustufe.
 - Mitwirkende können ihre eigenen Highlights bearbeiten und zurückziehen.
-  Der Künstler kann sämtliche Highlights bearbeiten oder ausblenden.
+  Der Künstler kann sämtliche Highlights bearbeiten oder ausblenden. Sein
+  bestätigter Login ist serverseitig zugeordnet; seine Adresse erscheint nicht
+  in öffentlichen Highlight-Daten.
 
 ### Kleiner Agentic Check
 
@@ -168,10 +170,14 @@ bestätigen.
 
 Ein erster lokaler UI-Stand ist umgesetzt: Archivsortierung, Sessionplayer,
 Highlight-Auswahl, Bereichseditor und gespeicherter Hörfortschritt. Die Vorschau
-verwendet jetzt die bereitgestellte echte Aufnahme und speichert Highlight-Entwürfe
-auf dem jeweiligen Gerät. Die synthetische Vorschau bleibt separat verfügbar.
-Öffentliche Beiträge, gemeinsamer Alias, Künstlerrechte und Agentic Check sind
-noch anzubinden. Start und Grenzen des Stands:
+verwendet jetzt die bereitgestellte echte Aufnahme. Öffentliche Beiträge sind an
+Login, serverseitige Speicherung, bestätigten Alias und Künstlerrechte angebunden.
+Der Agentic Check ist über Workers AI angeschlossen und mit acht synthetischen
+Textbeispielen am echten Modell geprüft: neutrale Texte und begeisterte Flüche
+werden angenommen, gezielte Beleidigungen, Drohungen, illegale Angebote und ein
+Umgehungsversuch werden abgelehnt. Lokal werden keine
+Modellanfragen versendet, fremde Beiträge bleiben deshalb ausstehend. Die
+synthetische Vorschau mit gerätelokalen Entwürfen bleibt separat verfügbar. Start und Grenzen des Stands:
 [ElectroCute Player](../website/app/electrocute/README.md).
 
 Die Linktree-Seite verwendet bereits `theme: 'electrocute'`. Dieses Theme wird
@@ -181,8 +187,9 @@ Farbvarianten abgebildet. Es ist die Grundlage für den festen ElectroCute-Berei
 Der vorhandene Feedplayer verwendet bereits ein HTML-Videoelement; sein aktueller
 Inhaltsvertrag ist jedoch an Cloudflare Stream gebunden. Direkte MP4-Quellen und
 Highlight-Bereiche brauchen eine entsprechende Erweiterung. Der Circle-Alias ist
-heute Teil der Reservierungsdaten, noch kein gemeinsames Profilmerkmal. Ein Dienst
-für den Agentic Check ist ebenfalls noch nicht vorhanden.
+weiterhin Teil der Reservierungsdaten und wird nur zur bestätigten Übernahme
+vorgeschlagen. Der neue öffentliche Alias-Baustein ist von Circle-Mitgliedschaft
+und privatem Kontaktnamen unabhängig. Eine Profilverwaltung folgt später.
 
 Bei der Umsetzung sind zuerst vorhandene CMX-Primitiven zu prüfen. Fehlende
 Primitiven werden als CMX-Lücke sichtbar gemacht, bevor eigene Implementierungen

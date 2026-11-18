@@ -31,7 +31,7 @@ export default defineConfig({
   ],
   webServer: {
     cwd: '..',
-    command: `npx wrangler dev website/tests/worker.ts --config website/wrangler.jsonc --ip 127.0.0.1 --port ${port}`,
+    command: `npx wrangler dev website/tests/worker.ts --env local --local --config website/wrangler.jsonc --ip 127.0.0.1 --port ${port}`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     timeout: 120_000,

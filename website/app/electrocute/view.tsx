@@ -1,6 +1,16 @@
 import { on, ref, type Handle } from 'remix/component'
 import type { ElectroCuteArchiveProps, ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { archiveStyle } from './styles.ts'
+import { readSessionState, submitSessionForm } from '../identity/client.ts'
+import {
+  highlightsPath,
+  highlightMessages,
+  isPublic,
+  type HighlightState,
+  type RuntimeHighlight,
+  type HighlightInput,
+  type HighlightIntent,
+} from './contract.ts'
 import {
   archivePath,
   clock,
@@ -64,8 +74,17 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let lastSave = -1
   let previewEnd: number | undefined
   let initialPosition: number | undefined
+  let runtime: HighlightState = { ready: false, artist: false, highlights: [] }
+  let alias = ''
+  let busy = false
+  let runtimeFailed = false
+  let newId = ''
+  let editingRevision: number | undefined
+  let editingPerson = false
+  let runtimeRequest = 0
+  let runtimeLinkResolved = false
   const highlights = () =>
-    [...(session?.highlights ?? []), ...drafts].sort(
+    [...(session?.highlights ?? []), ...drafts, ...runtime.highlights.filter(isPublic)].sort(
       (a, b) => a.start - b.start || a.end - b.end || a.id.localeCompare(b.id),
     )
   const bounds = () => ({ start: parseClock(startText), end: parseClock(endText) })
@@ -109,7 +128,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   }
 
   async function openEditor(highlight?: ElectroCuteHighlight) {
-    if (!video || !preview || !ready) return
+    if (!video || (!preview && !runtime.email) || !ready || busy) return
     previewEnd = undefined
     video.pause()
     const range = highlight ?? defaultRange(Math.floor(video.currentTime), duration)
@@ -117,6 +136,11 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     endText = clock(range.end)
     title = highlight?.title ?? ''
     editingId = highlight?.id
+    newId = crypto.randomUUID()
+    const existing = runtime.highlights.find((item) => item.id === highlight?.id)
+    editingRevision = existing?.revision
+    editingPerson = Boolean(existing && !existing.own)
+    alias = existing?.person ?? runtime.alias ?? runtime.suggestedAlias ?? ''
     editing = true
     feedback = ''
     await handle.update()
@@ -124,7 +148,140 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     titleInput?.focus({ preventScroll: true })
   }
 
-  handle.queueTask((signal) => {
+  async function loadRuntime() {
+    if (!session || preview || busy) return
+    const request = ++runtimeRequest
+    try {
+      const response = await readSessionState(highlightsPath(session.id), handle.signal)
+      if (!response.ok) throw new Error('Highlights unavailable')
+      const value = (await response.json()) as HighlightState
+      if (handle.signal.aborted || request !== runtimeRequest || busy) return
+      if (typeof value.ready !== 'boolean' || !Array.isArray(value.highlights))
+        throw new Error('Invalid highlight state')
+      const previousEmail = runtime.email
+      runtime = value
+      runtimeFailed = false
+      if (previousEmail && previousEmail !== runtime.email) editing = false
+      const requested = new URL(location.href).searchParams.get('highlight')
+      const found = highlights().find((item) => item.id === requested)
+      if (requested && !runtimeLinkResolved) {
+        runtimeLinkResolved = true
+        if (found) {
+          if (!heard) {
+            initialPosition = found.start
+            if (video?.readyState) metadata()
+          }
+          feedback = ''
+        } else
+          feedback = 'This highlight is no longer available. You can still play the full session.'
+      }
+    } catch {
+      if (handle.signal.aborted || request !== runtimeRequest || busy) return
+      runtimeFailed = true
+    }
+    handle.update()
+  }
+
+  async function mutate(intent: HighlightIntent, input: HighlightInput) {
+    if (!session || busy || !runtime.email || !runtime.csrfToken) return false
+    busy = true
+    ++runtimeRequest
+    feedback = ''
+    handle.update()
+    const body = new FormData()
+    body.set('_csrf', runtime.csrfToken)
+    body.set('intent', intent)
+    body.set('payload', JSON.stringify(input))
+    try {
+      const response = await submitSessionForm(
+        highlightsPath(session.id),
+        body,
+        handle.signal,
+        runtime.email,
+      )
+      const result = (await response.json()) as HighlightState & { message?: string }
+      if (!response.ok) {
+        feedback = result.message ?? highlightMessages.failure
+        if (response.status === 409 || response.status === 401) {
+          busy = false
+          await loadRuntime()
+          if (editing && (editingId ?? newId) === input.id)
+            editingRevision = runtime.highlights.find((item) => item.id === input.id)?.revision
+        }
+        return false
+      }
+      runtime = result
+      const saved = runtime.highlights.find((item) => item.id === input.id)
+      feedback =
+        saved?.status === 'rejected'
+          ? highlightMessages.rejected
+          : saved?.status === 'pending'
+            ? highlightMessages.pending
+            : intent === 'save'
+              ? 'Highlight saved.'
+              : 'Highlight updated.'
+      return true
+    } catch {
+      feedback = highlightMessages.failure
+      return false
+    } finally {
+      busy = false
+      if (!handle.signal.aborted) handle.update()
+    }
+  }
+
+  async function saveHighlight() {
+    if (!session || !valid() || !title.trim() || busy) return
+    const { start, end } = bounds()
+    if (!preview) {
+      const saved = await mutate('save', {
+        id: editingId ?? newId,
+        revision: editingRevision,
+        title,
+        alias,
+        start,
+        end,
+      })
+      if (saved) {
+        editing = false
+        previewEnd = undefined
+      }
+      handle.update()
+      return
+    }
+    const next = [
+      ...drafts.filter((item) => item.id !== editingId),
+      {
+        id: editingId ?? newId,
+        title: title.trim(),
+        person: 'You',
+        start: start!,
+        end: end!,
+      },
+    ]
+    if (!store(draftKey(session.id), next)) {
+      feedback = 'Could not save on this device. Keep this form open and try again.'
+    } else {
+      drafts = next
+      previewEnd = undefined
+      editing = false
+      feedback = 'Draft saved on this device.'
+    }
+    handle.update()
+  }
+
+  handle.queueTask(() => {
+    // These listeners belong to the mounted player, not one render. A queued
+    // task's signal is aborted by the very first state update.
+    const signal = handle.signal
+    void loadRuntime()
+    window.addEventListener(
+      'focus',
+      () => {
+        if (!busy) void loadRuntime()
+      },
+      { signal },
+    )
     progress = readProgress(stored(progressKey), sessions)
     if (preview && session) drafts = readDrafts(stored(draftKey(session.id)), session.duration)
     const requested = new URL(location.href).searchParams.get('highlight')
@@ -132,7 +289,9 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     if (highlight) initialPosition = highlight.start
     else if (!requested && session) initialPosition = progress.positions[session.id]
     else if (requested)
-      feedback = 'This highlight is no longer available. You can still play the full session.'
+      feedback = preview
+        ? 'This highlight is no longer available. You can still play the full session.'
+        : 'Loading highlight…'
     window.addEventListener('pagehide', () => savePosition(true), { signal })
     document.addEventListener(
       'visibilitychange',
@@ -191,6 +350,59 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         ))}
       </div>
     ))
+  }
+
+  function runtimeActions(item?: RuntimeHighlight) {
+    if (!item?.canEdit) return null
+    const action = (intent: HighlightIntent) =>
+      void mutate(intent, { id: item.id, revision: item.revision })
+    return (
+      <>
+        <button
+          type="button"
+          disabled={busy || !ready}
+          mix={on('click', () => void openEditor(item))}
+        >
+          Edit highlight
+        </button>
+        {item.own && !item.withdrawn && (
+          <button
+            type="button"
+            disabled={busy}
+            mix={on('click', () => action('withdraw'))}
+          >
+            Withdraw
+          </button>
+        )}
+        {runtime.artist && !item.hidden && (
+          <button
+            type="button"
+            disabled={busy}
+            mix={on('click', () => action('hide'))}
+          >
+            Hide
+          </button>
+        )}
+        {((runtime.artist && item.hidden) || (item.own && item.withdrawn)) && (
+          <button
+            type="button"
+            disabled={busy}
+            mix={on('click', () => action('restore'))}
+          >
+            Restore
+          </button>
+        )}
+        {item.status !== 'approved' && !item.hidden && !item.withdrawn && (
+          <button
+            type="button"
+            disabled={busy}
+            mix={on('click', () => action('retry'))}
+          >
+            Retry text check
+          </button>
+        )}
+      </>
+    )
   }
 
   return () => {
@@ -293,17 +505,38 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                   <span class="ec-clock ec-muted">
                     {clock(position)} / {clock(duration)}
                   </span>
-                  {preview && (
+                  {(preview || runtime.email) && (
                     <button
                       type="button"
                       class="ec-primary"
-                      disabled={!ready}
+                      disabled={!ready || busy}
                       mix={on('click', () => void openEditor())}
                     >
                       Set highlight
                     </button>
                   )}
+                  {!preview && runtime.ready && !runtime.email && (
+                    <a
+                      class="ec-button"
+                      href="/login"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Log in to set highlights
+                    </a>
+                  )}
                 </div>
+                {!preview && runtimeFailed && (
+                  <div class="ec-error">
+                    <p>{highlightMessages.failure}</p>
+                    <button
+                      type="button"
+                      mix={on('click', () => void loadRuntime())}
+                    >
+                      Reload highlights
+                    </button>
+                  </div>
+                )}
                 {editing && (
                   <form
                     class="ec-editor"
@@ -314,155 +547,154 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                       }),
                       on('submit', (event) => {
                         event.preventDefault()
-                        if (!valid() || !title.trim()) return
-                        const next = [
-                          ...drafts.filter((item) => item.id !== editingId),
-                          {
-                            id: editingId ?? crypto.randomUUID(),
-                            title: title.trim(),
-                            person: 'You',
-                            start: start!,
-                            end: end!,
-                          },
-                        ]
-                        if (!store(draftKey(session.id), next)) {
-                          feedback =
-                            'Could not save on this device. Keep this form open and try again.'
-                        } else {
-                          drafts = next
-                          previewEnd = undefined
-                          editing = false
-                          feedback = 'Draft saved on this device.'
-                        }
-                        handle.update()
+                        void saveHighlight()
                       }),
                     ]}
                   >
                     <h2>{editingId ? 'Edit highlight' : 'New highlight'}</h2>
-                    <div class="ec-fields">
-                      <label class="ec-field-wide">
-                        Title
-                        <input
-                          required
-                          maxLength={120}
-                          value={title}
-                          mix={[
-                            ref((node) => {
-                              titleInput = node
-                            }),
-                            on('input', (event) => {
-                              title = (event.currentTarget as HTMLInputElement).value
-                              handle.update()
-                            }),
-                          ]}
-                        />
-                      </label>
-                      <div class="ec-range-field">
-                        <label>
-                          Start
+                    <fieldset disabled={busy}>
+                      <div class="ec-fields">
+                        {!preview && (
+                          <label class="ec-field-wide">
+                            {editingPerson ? 'Creator name (public)' : 'Name or alias (public)'}
+                            <input
+                              required
+                              maxLength={20}
+                              value={alias}
+                              mix={on('input', (event) => {
+                                alias = (event.currentTarget as HTMLInputElement).value
+                                handle.update()
+                              })}
+                            />
+                            <span class="ec-muted">This name appears with the highlight.</span>
+                          </label>
+                        )}
+                        <label class="ec-field-wide">
+                          Title
                           <input
-                            aria-label="Start time"
-                            value={startText}
+                            required
+                            maxLength={120}
+                            value={title}
+                            mix={[
+                              ref((node) => {
+                                titleInput = node
+                              }),
+                              on('input', (event) => {
+                                title = (event.currentTarget as HTMLInputElement).value
+                                handle.update()
+                              }),
+                            ]}
+                          />
+                        </label>
+                        <div class="ec-range-field">
+                          <label>
+                            Start
+                            <input
+                              aria-label="Start time"
+                              value={startText}
+                              mix={on('input', (event) => {
+                                startText = (event.currentTarget as HTMLInputElement).value
+                                handle.update()
+                              })}
+                            />
+                          </label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={Math.floor(duration)}
+                            step={1}
+                            value={start ?? 0}
+                            aria-label="Adjust start"
                             mix={on('input', (event) => {
-                              startText = (event.currentTarget as HTMLInputElement).value
+                              startText = clock(
+                                Number((event.currentTarget as HTMLInputElement).value),
+                              )
                               handle.update()
                             })}
                           />
-                        </label>
-                        <input
-                          type="range"
-                          min={0}
-                          max={Math.floor(duration)}
-                          step={1}
-                          value={start ?? 0}
-                          aria-label="Adjust start"
-                          mix={on('input', (event) => {
-                            startText = clock(
-                              Number((event.currentTarget as HTMLInputElement).value),
-                            )
-                            handle.update()
-                          })}
-                        />
-                        <button
-                          type="button"
-                          mix={on('click', () => {
-                            startText = clock(video?.currentTime ?? 0)
-                            handle.update()
-                          })}
-                        >
-                          Use current position
-                        </button>
-                      </div>
-                      <div class="ec-range-field">
-                        <label>
-                          End
+                          <button
+                            type="button"
+                            mix={on('click', () => {
+                              startText = clock(video?.currentTime ?? 0)
+                              handle.update()
+                            })}
+                          >
+                            Use current position
+                          </button>
+                        </div>
+                        <div class="ec-range-field">
+                          <label>
+                            End
+                            <input
+                              aria-label="End time"
+                              value={endText}
+                              mix={on('input', (event) => {
+                                endText = (event.currentTarget as HTMLInputElement).value
+                                handle.update()
+                              })}
+                            />
+                          </label>
                           <input
-                            aria-label="End time"
-                            value={endText}
+                            type="range"
+                            min={0}
+                            max={Math.floor(duration)}
+                            step={1}
+                            value={end ?? duration}
+                            aria-label="Adjust end"
                             mix={on('input', (event) => {
-                              endText = (event.currentTarget as HTMLInputElement).value
+                              endText = clock(
+                                Number((event.currentTarget as HTMLInputElement).value),
+                              )
                               handle.update()
                             })}
                           />
-                        </label>
-                        <input
-                          type="range"
-                          min={0}
-                          max={Math.floor(duration)}
-                          step={1}
-                          value={end ?? duration}
-                          aria-label="Adjust end"
-                          mix={on('input', (event) => {
-                            endText = clock(Number((event.currentTarget as HTMLInputElement).value))
-                            handle.update()
-                          })}
-                        />
+                          <button
+                            type="button"
+                            mix={on('click', () => {
+                              endText = clock(video?.currentTime ?? 0)
+                              handle.update()
+                            })}
+                          >
+                            Use current position
+                          </button>
+                        </div>
+                      </div>
+                      {!valid() && (
+                        <p
+                          class="ec-status"
+                          role="alert"
+                        >
+                          Choose a start before the end, within this session. Use m:ss or h:mm:ss.
+                        </p>
+                      )}
+                      <div class="ec-editor-actions">
+                        <button
+                          type="button"
+                          disabled={!valid()}
+                          mix={on('click', () => void playAt(start!, end!))}
+                        >
+                          Preview passage
+                        </button>
+                        <button
+                          type="submit"
+                          class="ec-primary"
+                          disabled={!valid() || !title.trim() || (!preview && !alias.trim())}
+                        >
+                          {busy ? 'Saving…' : preview ? 'Save draft' : 'Save highlight'}
+                        </button>
                         <button
                           type="button"
                           mix={on('click', () => {
-                            endText = clock(video?.currentTime ?? 0)
+                            if (previewEnd !== undefined) video?.pause()
+                            previewEnd = undefined
+                            editing = false
                             handle.update()
                           })}
                         >
-                          Use current position
+                          Cancel
                         </button>
                       </div>
-                    </div>
-                    {!valid() && (
-                      <p
-                        class="ec-status"
-                        role="alert"
-                      >
-                        Choose a start before the end, within this session. Use m:ss or h:mm:ss.
-                      </p>
-                    )}
-                    <div class="ec-editor-actions">
-                      <button
-                        type="button"
-                        disabled={!valid()}
-                        mix={on('click', () => void playAt(start!, end!))}
-                      >
-                        Preview passage
-                      </button>
-                      <button
-                        type="submit"
-                        class="ec-primary"
-                        disabled={!valid() || !title.trim()}
-                      >
-                        Save draft
-                      </button>
-                      <button
-                        type="button"
-                        mix={on('click', () => {
-                          if (previewEnd !== undefined) video?.pause()
-                          previewEnd = undefined
-                          editing = false
-                          handle.update()
-                        })}
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                    </fieldset>
                   </form>
                 )}
                 <p
@@ -519,6 +751,9 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                         </span>
                       </a>
                       <div class="ec-highlight-actions">
+                        {runtimeActions(
+                          runtime.highlights.find((item) => item.id === highlight.id),
+                        )}
                         {!drafts.some((item) => item.id === highlight.id) && (
                           <button
                             type="button"
@@ -568,6 +803,39 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                   ))}
                 </ol>
                 {!highlights().length && <p class="ec-muted">No highlights yet.</p>}
+                {runtime.highlights.some((item) => !isPublic(item)) && (
+                  <section aria-label="Unpublished highlights">
+                    <h2>Unpublished</h2>
+                    <ol class="ec-highlight-list">
+                      {runtime.highlights
+                        .filter((item) => !isPublic(item))
+                        .map((item) => (
+                          <li
+                            class="ec-highlight"
+                            key={item.id}
+                          >
+                            <strong class="ec-highlight-title">{item.title}</strong>
+                            <p class="ec-highlight-meta">
+                              <span class="ec-clock">
+                                {clock(item.start)}–{clock(item.end)}
+                              </span>
+                              <span>{item.person}</span>
+                            </p>
+                            <p class="ec-muted">
+                              {item.hidden
+                                ? 'Hidden by artist'
+                                : item.withdrawn
+                                  ? 'Withdrawn'
+                                  : item.status === 'rejected'
+                                    ? 'Revise title or public name'
+                                    : 'Text check pending'}
+                            </p>
+                            <div class="ec-highlight-actions">{runtimeActions(item)}</div>
+                          </li>
+                        ))}
+                    </ol>
+                  </section>
+                )}
               </aside>
             </div>
           </>

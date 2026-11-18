@@ -9,11 +9,9 @@ import { tmpdir } from 'node:os'
 const port = Number(process.env.PREVIEW_PORT ?? 8787)
 const compiled = await build({
   entryPoints: [
-    process.env.ELECTROCUTE_PREVIEW === 'authored'
-      ? 'content/development/electrocute-worker.ts'
-      : process.env.WEBSITE_TEST === 'true'
-        ? 'website/tests/worker.ts'
-        : 'content/development/worker.ts',
+    process.env.WEBSITE_TEST === 'true'
+      ? 'website/tests/worker.ts'
+      : 'content/development/worker.ts',
   ],
   bundle: true,
   write: false,
@@ -55,9 +53,14 @@ const mf = new Miniflare(
       NEWSLETTER_STATE: { className: 'NewsletterState', useSQLite: true },
       CIRCLE_STATE: { className: 'CircleState', useSQLite: true },
       CONTENT_STATE: { className: 'ContentState', useSQLite: true },
+      ELECTROCUTE_STATE: { className: 'ElectroCuteState', useSQLite: true },
     },
+    ...(process.env.ELECTROCUTE_PREVIEW === 'authored'
+      ? { durableObjectsPersist: resolve('.wrangler/state/electrocute-preview') }
+      : {}),
     bindings: {
       CMX_PUBLISH_PUBLIC_KEYS: '{}',
+      ELECTROCUTE_ARTIST_EMAIL: 'ich@hannesdiem.de',
       NEWSLETTER_SESSION_SECRET: 'local-preview-only-session-secret-for-this-process',
       RESEND_HANNESDIEM_DE_API_KEY: 'local-preview-only',
       RESEND_HANNESDIEM_DE_SEGMENT_ID: '38f5bf95-30c9-4aac-aeb3-db79f71baf03',

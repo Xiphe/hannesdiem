@@ -4,7 +4,7 @@ import { documents, image, imageSvg } from './browser-fixture.ts'
 import { renderToString } from 'remix/component/server'
 import { NewsletterPage } from '../app/newsletter/view.tsx'
 
-export { ContentState, NewsletterState, CircleState } from '../app/worker.ts'
+export { ContentState, NewsletterState, CircleState, ElectroCuteState } from '../app/worker.ts'
 const worker = createWorker({ source: createContentSource(documents, 'fixture') })
 export default {
   ...worker,

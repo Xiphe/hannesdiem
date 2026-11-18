@@ -21,7 +21,7 @@ export interface ElectroCuteSession {
 export interface ElectroCuteArchiveProps {
   sessions: readonly ElectroCuteSession[]
   selectedId?: string
-  /** Enables device-local draft editing for the synthetic development preview. */
+  /** Enables device-local draft editing instead of public contributions in test previews. */
   preview?: boolean
   children?: RemixNode
 }

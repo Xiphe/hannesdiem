@@ -1,6 +1,7 @@
 # Shared browser identity
 
-Login, Temple Watch, Circle and the navigation island share one browser session.
+Login, Temple Watch, Circle, ElectroCute highlights and the navigation island share
+one browser session.
 `contract.ts` defines its private state and CSRF rejection marker. `client.ts`
 coordinates the first state read and permits one token-rejection replay only when
 the verified email is unchanged. Public CMX HTML remains anonymous.
@@ -22,3 +23,9 @@ The synthetic session/startup/replay checks remain in
 login adapter they exercise. Circle's runtime checks exercise the same session
 through its own private routes. See [ADR 0005](../../../docs/adr/0005-newsletter-state-on-workers.md)
 and [ADR 0006](../../../docs/adr/0006-local-navigation-and-private-islands.md).
+
+ElectroCute's runtime adapter composes the same identity router and session storage.
+It authorizes mutations against the verified session email; the server-configured
+artist identity can correct and hide all highlights. Its confirmed public aliases
+are separate from Resend's private contact names. An existing Circle alias is only
+a suggestion until explicitly saved. See [the player notes](../electrocute/README.md).

@@ -47,6 +47,14 @@ const pages: Record<string, { kind: string; title: string; body: CmxNode }> = {
     title: 'ElectroCute',
     body: component('ElectroCuteArchive', { sessions: electroCuteSessions, preview: true }),
   },
+  'fixture-public-highlights': {
+    kind: 'page',
+    title: 'Public highlight fixture',
+    body: component('ElectroCuteArchive', {
+      sessions: electroCuteSessions,
+      selectedId: 'test-session-1',
+    }),
+  },
   'fixture-contact': {
     kind: 'page',
     title: 'Fixture contact',
