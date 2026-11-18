@@ -63,15 +63,16 @@ test('discovered CMX entries retain metadata and can import excluded supporting 
   }
   for (const [file, source] of Object.entries(files)) await writeFile(join(directory, file), source)
   const pages = discoverPages(Object.keys(files))
+  const entries: Record<string, string> = {
+    ...Object.fromEntries(pages.map(({ document, file }) => [document, join(directory, file)])),
+    _404: join(directory, '_404.tsx'),
+    _site: join(directory, '_site.ts'),
+    _redirects: join(directory, '_redirects.ts'),
+  }
   const options = {
     ...config,
     cwd: process.cwd(),
-    entries: {
-      ...Object.fromEntries(pages.map(({ document, file }) => [document, join(directory, file)])),
-      _404: join(directory, '_404.tsx'),
-      _site: join(directory, '_site.ts'),
-      _redirects: join(directory, '_redirects.ts'),
-    },
+    entries,
     outDir: join(directory, 'bundle'),
   }
   const documents = await buildPublication(options)
