@@ -167,7 +167,7 @@ export const recordings = (
       {
         id: 'let-us-show-you-this-website',
         title: 'Let us show you this website.',
-        postedAt: '2026-11-18T12:34:32+01:00',
+        postedAt: '2026-11-16T12:34:32+01:00',
         customerCode: 'ku6r49ei7df9hym2',
         videoId: '4f2b9169b352e6c4022ab10c1178c4c3',
         cover: {
