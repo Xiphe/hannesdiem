@@ -1,6 +1,8 @@
 import { on, ref, type Handle } from 'remix/component'
 import type { ElectroCuteArchiveProps, ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { archiveStyle } from './styles.ts'
+import { FeedIcon } from '../temple/feed/icon.tsx'
+import { TrimTimeline } from './trim.tsx'
 import { readSessionState, submitSessionForm } from '../identity/client.ts'
 import {
   highlightsPath,
@@ -57,8 +59,10 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let newest = false
   let drafts: ElectroCuteHighlight[] = []
   let video: HTMLVideoElement | undefined
-  let editorNode: HTMLElement | undefined
-  let titleInput: HTMLInputElement | undefined
+  let player: HTMLDivElement | undefined
+  let clipButton: HTMLButtonElement | undefined
+  let enhanced = false
+  let fullscreen = false
   let position = 0
   let duration = session?.duration ?? 0
   let ready = false
@@ -127,6 +131,50 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     void playAt(highlight.start)
   }
 
+  function seekTo(time: number) {
+    if (!video || !ready) return
+    previewEnd = undefined
+    if (editing) video.pause()
+    video.currentTime = Math.max(0, Math.min(time, duration))
+    position = video.currentTime
+    handle.update()
+  }
+
+  async function togglePlayback() {
+    if (!video || !ready) return
+    if (!video.paused) video.pause()
+    else if (editing && valid()) {
+      const { start, end } = bounds()
+      await playAt(start!, end!)
+    } else {
+      try {
+        await video.play()
+      } catch {
+        feedback = 'Press play to listen.'
+        handle.update()
+      }
+    }
+  }
+
+  function closeEditor() {
+    if (busy) return
+    if (previewEnd !== undefined) video?.pause()
+    previewEnd = undefined
+    editing = false
+    handle.update()
+    clipButton?.focus({ preventScroll: true })
+  }
+
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement === player) await document.exitFullscreen()
+      else await player?.requestFullscreen()
+    } catch {
+      feedback = 'Fullscreen is unavailable in this browser.'
+      handle.update()
+    }
+  }
+
   async function openEditor(highlight?: ElectroCuteHighlight) {
     if (!video || (!preview && !runtime.email) || !ready || busy) return
     previewEnd = undefined
@@ -144,8 +192,10 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     editing = true
     feedback = ''
     await handle.update()
-    editorNode?.scrollIntoView({ block: 'nearest', behavior: 'instant' })
-    titleInput?.focus({ preventScroll: true })
+    player?.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+    player
+      ?.querySelector<HTMLElement>('[aria-label="Highlight start"]')
+      ?.focus({ preventScroll: true })
   }
 
   async function loadRuntime() {
@@ -274,6 +324,16 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     // These listeners belong to the mounted player, not one render. A queued
     // task's signal is aborted by the very first state update.
     const signal = handle.signal
+    enhanced = true
+    if (video) video.controls = false
+    document.addEventListener(
+      'fullscreenchange',
+      () => {
+        fullscreen = document.fullscreenElement === player
+        handle.update()
+      },
+      { signal },
+    )
     void loadRuntime()
     window.addEventListener(
       'focus',
@@ -412,6 +472,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       <section
         mix={archiveStyle}
         aria-label="ElectroCute archive"
+        data-session={session ? '' : undefined}
       >
         {preview && <p class="ec-preview">Local preview. Highlight drafts stay on this device.</p>}
         {session ? (
@@ -431,101 +492,361 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             </time>
             <div class="ec-layout">
               <div>
-                <video
-                  class="ec-video"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  src={session.src}
-                  poster={session.poster}
-                  aria-label={session.title}
+                <div
+                  class="ec-player"
+                  data-enhanced={enhanced ? '' : undefined}
+                  data-editing={editing ? '' : undefined}
                   mix={[
                     ref((node) => {
-                      video = node
+                      player = node
                     }),
-                    on('loadedmetadata', metadata),
-                    on('play', () => {
-                      heard = true
-                    }),
-                    on('pause', () => savePosition(true)),
-                    on('ended', () => {
-                      savePosition(true)
-                      handle.update()
-                    }),
-                    on('error', () => {
-                      ready = false
-                      failed = true
-                      handle.update()
-                    }),
-                    on('timeupdate', () => {
-                      if (!video) return
-                      if (previewEnd !== undefined && video.currentTime >= previewEnd) {
-                        const stop = previewEnd
-                        previewEnd = undefined
-                        video.pause()
-                        video.currentTime = stop
+                    on('keydown', (event) => {
+                      if (event.key === 'Escape' && editing && !busy) {
+                        event.preventDefault()
+                        closeEditor()
                       }
-                      position = video.currentTime
-                      savePosition()
-                      handle.update()
                     }),
                   ]}
-                />
+                >
+                  <div class="ec-stage">
+                    <video
+                      class="ec-video"
+                      controls
+                      playsInline
+                      preload="metadata"
+                      src={session.src}
+                      poster={session.poster}
+                      aria-label={session.title}
+                      mix={[
+                        ref((node) => {
+                          video = node
+                        }),
+                        on('loadedmetadata', metadata),
+                        on('play', () => {
+                          heard = true
+                          handle.update()
+                        }),
+                        on('pause', () => {
+                          savePosition(true)
+                          handle.update()
+                        }),
+                        on('volumechange', () => {
+                          handle.update()
+                        }),
+                        on('seeked', () => {
+                          position = video?.currentTime ?? position
+                          handle.update()
+                        }),
+                        on('ended', () => {
+                          savePosition(true)
+                          handle.update()
+                        }),
+                        on('error', () => {
+                          ready = false
+                          failed = true
+                          handle.update()
+                        }),
+                        on('timeupdate', () => {
+                          if (!video) return
+                          if (previewEnd !== undefined && video.currentTime >= previewEnd) {
+                            const stop = previewEnd
+                            previewEnd = undefined
+                            video.pause()
+                            video.currentTime = stop
+                          }
+                          position = video.currentTime
+                          savePosition()
+                          handle.update()
+                        }),
+                      ]}
+                    />
+
+                    <button
+                      class="ec-video-tap"
+                      type="button"
+                      aria-label={video?.paused !== false ? 'Play video' : 'Pause video'}
+                      disabled={!ready}
+                      mix={on('click', () => void togglePlayback())}
+                    >
+                      {video?.paused !== false && (
+                        <span class="ec-play-badge">
+                          <FeedIcon name="play" />
+                        </span>
+                      )}
+                    </button>
+                    <div class="ec-transport">
+                      <div class="ec-seek-wrap">
+                        <input
+                          type="range"
+                          class="ec-seek"
+                          min={0}
+                          max={duration}
+                          step={0.1}
+                          value={position}
+                          aria-label="Playback position"
+                          aria-valuetext={clock(position)}
+                          disabled={!ready}
+                          style={{ '--progress': `${duration ? (position / duration) * 100 : 0}%` }}
+                          mix={on('input', (event) =>
+                            seekTo(Number((event.currentTarget as HTMLInputElement).value)),
+                          )}
+                        />
+                        <div
+                          class="ec-timeline"
+                          aria-label="Highlight timeline"
+                        >
+                          {timeline()}
+                        </div>
+                      </div>
+                      <div class="ec-transport-row">
+                        <button
+                          type="button"
+                          class="ec-icon-button"
+                          aria-label={video?.paused !== false ? 'Play' : 'Pause'}
+                          disabled={!ready}
+                          mix={on('click', () => void togglePlayback())}
+                        >
+                          <FeedIcon name={video?.paused !== false ? 'play' : 'pause'} />
+                        </button>
+                        <span class="ec-clock ec-player-clock">
+                          {clock(position)} <span>/ {clock(duration)}</span>
+                        </span>
+                        <div class="ec-transport-space" />
+                        {(preview || runtime.email) && (
+                          <button
+                            type="button"
+                            class="ec-clip-button"
+                            aria-pressed={editing}
+                            disabled={!ready || busy}
+                            mix={[
+                              ref((node) => {
+                                clipButton = node
+                              }),
+                              on('click', () => (editing ? closeEditor() : void openEditor())),
+                            ]}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              aria-hidden="true"
+                            >
+                              <circle
+                                cx="5"
+                                cy="5"
+                                r="3"
+                              />
+                              <circle
+                                cx="5"
+                                cy="19"
+                                r="3"
+                              />
+                              <path d="m7 7 14 14M7 17 21 3M14 10l3-3" />
+                            </svg>
+                            <span>Set highlight</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          class="ec-icon-button"
+                          aria-label={
+                            video?.muted || video?.volume === 0 ? 'Unmute sound' : 'Mute sound'
+                          }
+                          disabled={!ready}
+                          mix={on('click', () => {
+                            if (video) {
+                              video.muted = !video.muted
+                              if (!video.muted && video.volume === 0) video.volume = 1
+                            }
+                          })}
+                        >
+                          <FeedIcon
+                            name={video?.muted || video?.volume === 0 ? 'muted' : 'sound'}
+                          />
+                        </button>
+                        <input
+                          type="range"
+                          class="ec-volume ec-seek"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={video?.volume ?? 1}
+                          aria-label="Volume"
+                          style={{ '--progress': `${(video?.volume ?? 1) * 100}%` }}
+                          mix={on('input', (event) => {
+                            if (video) {
+                              video.volume = Number((event.currentTarget as HTMLInputElement).value)
+                              video.muted = video.volume === 0
+                            }
+                          })}
+                        />
+                        <button
+                          type="button"
+                          class="ec-icon-button ec-fullscreen"
+                          aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                          disabled={!ready}
+                          mix={on('click', () => void toggleFullscreen())}
+                        >
+                          <FeedIcon name={fullscreen ? 'exit-fullscreen' : 'fullscreen'} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  {editing && (
+                    <div
+                      class="ec-clip-dock"
+                      role="region"
+                      aria-label="Highlight editor"
+                    >
+                      <div class="ec-trim-readout">
+                        <label>
+                          Start{' '}
+                          <input
+                            aria-label="Start time"
+                            value={startText}
+                            disabled={busy}
+                            mix={on('input', (event) => {
+                              startText = (event.currentTarget as HTMLInputElement).value
+                              previewEnd = undefined
+                              handle.update()
+                            })}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          class="ec-preview-passage"
+                          disabled={!valid() || busy}
+                          mix={on('click', () => void playAt(start!, end!))}
+                        >
+                          <FeedIcon name="play" /> Preview passage
+                        </button>
+                        <label>
+                          End{' '}
+                          <input
+                            aria-label="End time"
+                            value={endText}
+                            disabled={busy}
+                            mix={on('input', (event) => {
+                              endText = (event.currentTarget as HTMLInputElement).value
+                              previewEnd = undefined
+                              handle.update()
+                            })}
+                          />
+                        </label>
+                      </div>
+                      <TrimTimeline
+                        start={start ?? 0}
+                        end={end ?? duration}
+                        position={position}
+                        duration={duration}
+                        disabled={busy}
+                        change={(from, to, seek) => {
+                          startText = clock(from)
+                          endText = clock(to)
+                          seekTo(seek)
+                          handle.update()
+                        }}
+                        seek={seekTo}
+                      />
+                      {!valid() && (
+                        <p
+                          class="ec-clip-error"
+                          role="alert"
+                        >
+                          Choose a start before the end, within this session.
+                        </p>
+                      )}
+                      <form
+                        class="ec-clip-save"
+                        aria-label="Save highlight"
+                        mix={on('submit', (event) => {
+                          event.preventDefault()
+                          void saveHighlight()
+                        })}
+                      >
+                        <input
+                          aria-label="Title"
+                          placeholder="Name this highlight"
+                          required
+                          maxLength={120}
+                          disabled={busy}
+                          value={title}
+                          mix={on('input', (event) => {
+                            title = (event.currentTarget as HTMLInputElement).value
+                            handle.update()
+                          })}
+                        />
+                        {!preview && (
+                          <input
+                            class="ec-alias"
+                            aria-label={
+                              editingPerson ? 'Creator name (public)' : 'Name or alias (public)'
+                            }
+                            title="This name appears publicly with the highlight"
+                            placeholder="Public name"
+                            required
+                            maxLength={20}
+                            disabled={busy}
+                            value={alias}
+                            mix={on('input', (event) => {
+                              alias = (event.currentTarget as HTMLInputElement).value
+                              handle.update()
+                            })}
+                          />
+                        )}
+                        <button
+                          type="submit"
+                          class="ec-save-clip"
+                          disabled={
+                            busy || !valid() || !title.trim() || (!preview && !alias.trim())
+                          }
+                        >
+                          {busy ? 'Saving…' : preview ? 'Save draft' : 'Save highlight'}
+                        </button>
+                        <button
+                          type="button"
+                          class="ec-cancel-clip"
+                          disabled={busy}
+                          mix={on('click', closeEditor)}
+                        >
+                          Cancel
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
                 {failed && (
                   <div
                     class="ec-error"
                     role="alert"
                   >
                     <p>This video could not be loaded.</p>
-                    <div class="ec-player-actions">
-                      <button
-                        type="button"
-                        mix={on('click', () => video?.load())}
-                      >
-                        Retry
-                      </button>
-                      <a
-                        class="ec-button"
-                        href={session.src}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Open video
-                      </a>
-                    </div>
-                  </div>
-                )}
-                <div
-                  class="ec-timeline"
-                  aria-label="Highlight timeline"
-                >
-                  {timeline()}
-                </div>
-                <div class="ec-player-actions">
-                  <span class="ec-clock ec-muted">
-                    {clock(position)} / {clock(duration)}
-                  </span>
-                  {(preview || runtime.email) && (
                     <button
                       type="button"
-                      class="ec-primary"
-                      disabled={!ready || busy}
-                      mix={on('click', () => void openEditor())}
+                      mix={on('click', () => video?.load())}
                     >
-                      Set highlight
-                    </button>
-                  )}
-                  {!preview && runtime.ready && !runtime.email && (
+                      Retry
+                    </button>{' '}
                     <a
-                      class="ec-button"
-                      href="/login"
+                      href={session.src}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Log in to set highlights
+                      Open video
                     </a>
-                  )}
-                </div>
+                  </div>
+                )}
+                {!preview && runtime.ready && !runtime.email && (
+                  <a
+                    class="ec-login-link"
+                    href="/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Log in to set highlights
+                  </a>
+                )}
                 {!preview && runtimeFailed && (
                   <div class="ec-error">
                     <p>{highlightMessages.failure}</p>
@@ -536,166 +857,6 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                       Reload highlights
                     </button>
                   </div>
-                )}
-                {editing && (
-                  <form
-                    class="ec-editor"
-                    aria-label="Highlight editor"
-                    mix={[
-                      ref((node) => {
-                        editorNode = node
-                      }),
-                      on('submit', (event) => {
-                        event.preventDefault()
-                        void saveHighlight()
-                      }),
-                    ]}
-                  >
-                    <h2>{editingId ? 'Edit highlight' : 'New highlight'}</h2>
-                    <fieldset disabled={busy}>
-                      <div class="ec-fields">
-                        {!preview && (
-                          <label class="ec-field-wide">
-                            {editingPerson ? 'Creator name (public)' : 'Name or alias (public)'}
-                            <input
-                              required
-                              maxLength={20}
-                              value={alias}
-                              mix={on('input', (event) => {
-                                alias = (event.currentTarget as HTMLInputElement).value
-                                handle.update()
-                              })}
-                            />
-                            <span class="ec-muted">This name appears with the highlight.</span>
-                          </label>
-                        )}
-                        <label class="ec-field-wide">
-                          Title
-                          <input
-                            required
-                            maxLength={120}
-                            value={title}
-                            mix={[
-                              ref((node) => {
-                                titleInput = node
-                              }),
-                              on('input', (event) => {
-                                title = (event.currentTarget as HTMLInputElement).value
-                                handle.update()
-                              }),
-                            ]}
-                          />
-                        </label>
-                        <div class="ec-range-field">
-                          <label>
-                            Start
-                            <input
-                              aria-label="Start time"
-                              value={startText}
-                              mix={on('input', (event) => {
-                                startText = (event.currentTarget as HTMLInputElement).value
-                                handle.update()
-                              })}
-                            />
-                          </label>
-                          <input
-                            type="range"
-                            min={0}
-                            max={Math.floor(duration)}
-                            step={1}
-                            value={start ?? 0}
-                            aria-label="Adjust start"
-                            mix={on('input', (event) => {
-                              startText = clock(
-                                Number((event.currentTarget as HTMLInputElement).value),
-                              )
-                              handle.update()
-                            })}
-                          />
-                          <button
-                            type="button"
-                            mix={on('click', () => {
-                              startText = clock(video?.currentTime ?? 0)
-                              handle.update()
-                            })}
-                          >
-                            Use current position
-                          </button>
-                        </div>
-                        <div class="ec-range-field">
-                          <label>
-                            End
-                            <input
-                              aria-label="End time"
-                              value={endText}
-                              mix={on('input', (event) => {
-                                endText = (event.currentTarget as HTMLInputElement).value
-                                handle.update()
-                              })}
-                            />
-                          </label>
-                          <input
-                            type="range"
-                            min={0}
-                            max={Math.floor(duration)}
-                            step={1}
-                            value={end ?? duration}
-                            aria-label="Adjust end"
-                            mix={on('input', (event) => {
-                              endText = clock(
-                                Number((event.currentTarget as HTMLInputElement).value),
-                              )
-                              handle.update()
-                            })}
-                          />
-                          <button
-                            type="button"
-                            mix={on('click', () => {
-                              endText = clock(video?.currentTime ?? 0)
-                              handle.update()
-                            })}
-                          >
-                            Use current position
-                          </button>
-                        </div>
-                      </div>
-                      {!valid() && (
-                        <p
-                          class="ec-status"
-                          role="alert"
-                        >
-                          Choose a start before the end, within this session. Use m:ss or h:mm:ss.
-                        </p>
-                      )}
-                      <div class="ec-editor-actions">
-                        <button
-                          type="button"
-                          disabled={!valid()}
-                          mix={on('click', () => void playAt(start!, end!))}
-                        >
-                          Preview passage
-                        </button>
-                        <button
-                          type="submit"
-                          class="ec-primary"
-                          disabled={!valid() || !title.trim() || (!preview && !alias.trim())}
-                        >
-                          {busy ? 'Saving…' : preview ? 'Save draft' : 'Save highlight'}
-                        </button>
-                        <button
-                          type="button"
-                          mix={on('click', () => {
-                            if (previewEnd !== undefined) video?.pause()
-                            previewEnd = undefined
-                            editing = false
-                            handle.update()
-                          })}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </fieldset>
-                  </form>
                 )}
                 <p
                   class="ec-status"

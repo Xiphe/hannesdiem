@@ -68,6 +68,10 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
   Titel und öffentlicher Zuordnung zur Person, die es gesetzt hat.
 - „Highlight setzen“ übernimmt die aktuelle Abspielposition als Anfang und
   schlägt eine Minute Dauer vor, begrenzt durch das Sessionende.
+- Die Auswahl erfolgt direkt unten im Player auf einer Zeitleiste, angelehnt
+  an Twitch-Clips. Anfang und Ende lassen sich an Griffen ziehen; der gesamte
+  Ausschnitt ist verschiebbar. Eine vergrößerte Zeitskala ermöglicht genaue
+  Auswahl auch in langen Sessions. Titel und Speichern bleiben im Player.
 - Anfang und Ende sind vor dem Speichern veränderbar. Die ausgewählte Passage
   kann probegehört werden; diese Vorschau stoppt am gesetzten Ende.
 - Highlights dürfen sich überschneiden und bleiben eigenständige Beiträge.

@@ -149,6 +149,41 @@ test('range editing validates bounds, previews the passage and persists only a l
   await expect.poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused)).toBe(false)
 })
 
+test('the inline transport plays, seeks, controls sound and opens timeline highlights', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeEnabled()
+  await page.getByRole('button', { name: 'Mute sound', exact: true }).click()
+  await expect
+    .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).muted))
+    .toBe(true)
+  await page.getByRole('button', { name: 'Play', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: /Test highlight C, 1:10 to 1:30/ }).click()
+  await expect
+    .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeGreaterThanOrEqual(70)
+  await page.getByRole('button', { name: 'Pause', exact: true }).click()
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  await seek.focus()
+  await seek.press('Home')
+  await expect
+    .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeLessThan(1)
+  await page.getByRole('button', { name: 'Enter fullscreen', exact: true }).click()
+  await expect
+    .poll(() =>
+      page.locator('.ec-player').evaluate((player) => document.fullscreenElement === player),
+    )
+    .toBe(true)
+  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect(
+    page.locator('.ec-player').getByRole('region', { name: 'Highlight editor' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click()
+})
+
 test('failed device storage keeps the unsaved form available', async ({ page }) => {
   await page.addInitScript(() => {
     Storage.prototype.setItem = () => {
@@ -160,8 +195,61 @@ test('failed device storage keeps the unsaved form available', async ({ page }) 
   await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Unsaved test passage')
   await page.getByRole('button', { name: 'Save draft', exact: true }).click()
-  await expect(page.getByRole('form', { name: 'Highlight editor' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Highlight editor' })).toBeVisible()
   await expect(page.getByRole('status')).toContainText('Could not save')
+})
+
+test('trimming happens inside the player with draggable edges, a movable passage and keyboard precision', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
+  await page.locator('video').evaluate((video) => {
+    ;(video as HTMLVideoElement).currentTime = 20
+  })
+  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  const player = page.locator('.ec-player')
+  await expect(player.getByRole('region', { name: 'Highlight editor' })).toBeVisible()
+  await expect(player.locator('video')).not.toHaveAttribute('controls')
+  const rail = await player.locator('.ec-trim-rail').boundingBox()
+  if (!rail) throw new Error('Missing trim timeline')
+  const start = player.getByRole('slider', { name: 'Highlight start', exact: true })
+  const end = player.getByRole('slider', { name: 'Highlight end', exact: true })
+  const move = player.getByRole('slider', { name: 'Move highlight', exact: true })
+  async function drag(target: typeof start, seconds: number) {
+    await target.scrollIntoViewIfNeeded()
+    const box = await target.boundingBox()
+    if (!box) throw new Error('Missing trim handle')
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(
+      box.x + box.width / 2 + (seconds / 96) * rail!.width,
+      box.y + box.height / 2,
+      { steps: 6 },
+    )
+    await page.mouse.up()
+  }
+  await drag(start, 10)
+  await expect(start).toHaveAttribute('aria-valuenow', '30')
+  await expect(end).toHaveAttribute('aria-valuenow', '80')
+  await drag(end, -10)
+  await expect(end).toHaveAttribute('aria-valuenow', '70')
+  await drag(move, 10)
+  await expect(start).toHaveAttribute('aria-valuenow', '40')
+  await expect(end).toHaveAttribute('aria-valuenow', '80')
+  await start.focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(start).toHaveAttribute('aria-valuenow', '41')
+  await page.keyboard.press('Shift+ArrowLeft')
+  await expect(start).toHaveAttribute('aria-valuenow', '31')
+  await page.keyboard.press('End')
+  await expect(start).toHaveAttribute('aria-valuenow', '79')
+  await expect(end).toHaveAttribute('aria-valuenow', '80')
+  await page.getByRole('button', { name: 'Zoom in timeline' }).click()
+  await expect(player.locator('.ec-trim-selection')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(player.getByRole('region', { name: 'Highlight editor' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeFocused()
 })
 
 test('public editor confirms a Circle alias, handles pending text, and supports withdrawal and restoration', async ({
@@ -315,7 +403,24 @@ test.describe('mobile player', () => {
       )
       .toBeGreaterThanOrEqual(70)
     await page.getByRole('button', { name: 'Set highlight', exact: true }).tap()
-    await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toBeFocused()
+    await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toBeFocused()
+    const end = page.getByRole('slider', { name: 'Highlight end', exact: true })
+    const box = await end.boundingBox()
+    const rail = await page.locator('.ec-trim-rail').boundingBox()
+    if (!box || !rail) throw new Error('Missing touch trim controls')
+    const touch = await page.context().newCDPSession(page)
+    const x = box.x + box.width / 2,
+      y = box.y + box.height / 2
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+    for (let step = 1; step <= 6; step++) {
+      await touch.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: x - ((10 / 96) * rail.width * step) / 6, y }],
+      })
+    }
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await expect(end).toHaveAttribute('aria-valuenow', '86')
+    await expect(page.getByRole('textbox', { name: 'End time' })).toHaveValue('1:26')
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
       .toBe(true)

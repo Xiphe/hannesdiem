@@ -38,9 +38,21 @@ logo stay in place. New controls have small corner radii, and time values use
 tabular numerals.
 
 The archive is a chronological list with a separate Continue entry. On desktop,
-the player sits beside the highlight list; on mobile they stack. Start and end
-have independent text and slider inputs, and the preview plays exactly that
-range. There are no highlight thumbnails or decorative introductory text.
+the player sits beside the highlight list; on mobile they stack. Session headings
+and the media stage are compact, with transport controls over the image using the
+existing feed icons. The artist rejected the detached range form and requested
+clipping directly inside the player, following the Twitch-style trimming interaction.
+
+Set highlight opens an integrated trim timeline at the bottom of the player. Drag
+either edge to trim or drag the selected passage to move it. The scale initially
+shows three minutes around the passage instead of compressing a minute into the
+full recording's timeline. Zoom controls let longer and shorter ranges remain
+editable; compact timecodes allow exact input. Arrow keys adjust by one second,
+Shift by ten. Preview plays the selected bounds and stops at the end. Escape
+closes the editor and restores focus to its trigger. Opening the editor focuses
+a trim handle, avoiding an immediate mobile keyboard over the video. Title,
+public name and save are a single compact row inside that same player surface.
+There are no highlight thumbnails or decorative introductory text.
 
 ## Data and navigation
 
@@ -56,7 +68,9 @@ and each session. This disposes the outgoing player and flushes progress when a
 link changes the session. A key inside the client entry cannot replace that
 outer lifecycle boundary.
 
-Playback loads only the selected MP4, with native controls, sound and fullscreen.
+Playback loads only the selected MP4. The hydrated player supplies inline playback,
+seek, sound, volume and fullscreen controls; native controls remain the fallback
+without JavaScript. Fullscreen includes the trim UI.
 Each device stores per-session positions and the most recently heard unfinished
 session. A direct highlight link takes precedence over stored progress. Missing
 or unavailable device storage does not prevent playback, and an unsuccessful
@@ -131,7 +145,8 @@ Physical mobile playback, Safari, subjective audio quality and endurance remain
 to be checked. Cover selection remains part of the separate image work.
 
 The synthetic suite tests Range-capable MP4 delivery, session navigation, local
-progress, range editing, preview stopping, optional-storage failures, alias
+progress, range editing (mouse, real browser touch events and keyboard), preview stopping,
+optional-storage failures, alias
 confirmation, publication states and stable links. Service and Workers runtime
 checks cover authorization, CSRF/origin rejection, server-resolved duration,
 concurrent moderation, retries and reversible hiding. The existing Circle and
