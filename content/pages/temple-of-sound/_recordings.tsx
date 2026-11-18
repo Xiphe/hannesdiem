@@ -6,6 +6,7 @@ import flyWithMeCover from '../../media/temple-recording-fly-with-me-cover.jpg'
 import waitingBandCover from '../../media/temple-recording-waiting-band-cover.jpg'
 import theFallCover from '../../media/temple-recording-the-fall-cover.jpg'
 import feuerUndVergessenCover from '../../media/temple-recording-feuer-und-vergessen-cover.jpg'
+import letUsShowYouThisWebsiteCover from '../../media/temple-recording-let-us-show-you-this-website-cover.jpg'
 
 export const recordings = (
   <TempleRecordings
@@ -159,6 +160,28 @@ export const recordings = (
           <p>
             {
               'The german word "Weltschmerz" describes the pain when one gets overwhelmed by "The News" about the state of the world. This song is my vessel to hold that feeling so that I don\'t have to carry it myself all along. May it serve you to feel what needs to be felt and then let go and move on with love.'
+            }
+          </p>
+        ),
+      },
+      {
+        id: 'let-us-show-you-this-website',
+        title: 'Let us show you this website.',
+        postedAt: '2026-11-18T12:34:32+01:00',
+        customerCode: 'ku6r49ei7df9hym2',
+        videoId: '4f2b9169b352e6c4022ab10c1178c4c3',
+        cover: {
+          ...letUsShowYouThisWebsiteCover,
+          alt: 'Let us show you this website.',
+          focalX: 54.5,
+          focalY: 26.2,
+          videoFrame: { videoId: '4f2b9169b352e6c4022ab10c1178c4c3', time: 123.466983 },
+        },
+        aspectRatio: 9 / 16,
+        children: (
+          <p>
+            {
+              "For orientation, you are on my website, seeing a video where Nerd-Hannes shows you this website while Front-Singer-Hannes makes sure you watch this. I know it can be confusing but you can do it. We believe in y'all!"
             }
           </p>
         ),
