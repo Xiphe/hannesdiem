@@ -69,7 +69,7 @@ export interface SiteMetadata {
   contact?: ContactDetails
   navigation: {
     primary?: NavigationLink[]
-    sections: { name: string; items: NavigationLink[]; collection?: 'release' }[]
+    sections: { name: string; items: NavigationLink[]; collection?: 'release' | 'work' }[]
     legal: { name: string; items: NavigationLink[] }
     social: SocialLink[]
     listen: SocialLink[]
@@ -189,7 +189,9 @@ export function readSite(document: CmxDocument | undefined): SiteMetadata {
         record(section) &&
         typeof section.name === 'string' &&
         links(section.items, 'name') &&
-        (section.collection === undefined || section.collection === 'release'),
+        (section.collection === undefined ||
+          section.collection === 'release' ||
+          section.collection === 'work'),
     ) ||
     !record(navigation.legal) ||
     typeof navigation.legal.name !== 'string' ||

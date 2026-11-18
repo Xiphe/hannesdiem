@@ -15,6 +15,7 @@ export async function renderContent(document: CmxDocument) {
   return { title: page.title, body: page.default }
 }
 export function contentTheme(site: SiteMetadata, route?: ContentRoute): Theme {
+  if (route?.path === '/electrocute' || route?.path.startsWith('/electrocute/')) return defaultTheme
   if (route?.theme === 'beach') return beachTheme
   if (route?.theme === 'electrocute') return defaultTheme
   const image = route?.image ? getMedia(site.media, route.image) : undefined

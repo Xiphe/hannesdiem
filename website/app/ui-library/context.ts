@@ -15,11 +15,15 @@ export function SiteContent(
     navigation: {
       ...site.navigation,
       sections: site.navigation.sections.map((section) =>
-        section.collection === 'release'
+        section.collection === 'release' || section.collection === 'work'
           ? {
               ...section,
               items: routes
-                .filter((route) => route.kind === 'release')
+                .filter(
+                  (route) =>
+                    route.kind === 'release' ||
+                    (section.collection === 'work' && route.kind === 'project'),
+                )
                 .sort((a, b) => (b.releaseDate ?? '').localeCompare(a.releaseDate ?? ''))
                 .map((route) => ({ name: route.title, href: route.path })),
             }

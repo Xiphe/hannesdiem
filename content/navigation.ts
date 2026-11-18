@@ -24,7 +24,7 @@ export const listenLinks = [
 export const navigation = {
   primary: [{ name: 'Temple of Sound', href: '/temple-of-sound' }],
   sections: [
-    { name: 'Work', collection: 'release', items: [] },
+    { name: 'Work', collection: 'work', items: [] },
     {
       name: 'One Week Album',
       items: [

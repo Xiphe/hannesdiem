@@ -162,6 +162,13 @@ export declare const Release: Component<ReleaseProps>
 export declare const Song: Component<SongProps>
 export declare const LinkTree: Component<LinkTreeProps>
 
+export { ElectroCuteArchive } from './electrocute.d.ts'
+export type {
+  ElectroCuteArchiveProps,
+  ElectroCuteSession,
+  ElectroCuteHighlight,
+} from './electrocute.d.ts'
+
 export {
   PoemCanvas,
   PoemOpening,

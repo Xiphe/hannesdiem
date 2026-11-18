@@ -1,6 +1,7 @@
 import type { CmxNode } from '@cmx-tools/contracts'
 import type { MediaImage, SiteMetadata } from '../../contracts/content.ts'
 import { documents as minimal } from './host-fixture.ts'
+import { electroCuteSessions } from './electrocute-fixture.ts'
 
 // CMS-shaped input owned by the website tests; no authored content or build output.
 export const image: MediaImage = {
@@ -41,6 +42,11 @@ const release = (title: string, count: number) =>
     })),
   })
 const pages: Record<string, { kind: string; title: string; body: CmxNode }> = {
+  electrocute: {
+    kind: 'project',
+    title: 'ElectroCute',
+    body: component('ElectroCuteArchive', { sessions: electroCuteSessions, preview: true }),
+  },
   'fixture-contact': {
     kind: 'page',
     title: 'Fixture contact',
@@ -136,6 +142,7 @@ site.navigation = {
     { name: 'Temple entry fixture', href: '/temple-of-sound' },
   ],
   sections: [
+    { name: 'Work', collection: 'work', items: [] },
     {
       name: 'Fixture',
       items: [
@@ -158,7 +165,11 @@ for (const [key, page] of Object.entries(pages)) {
     content: {
       title: page.title,
       default: page.body,
-      metadata: { kind: page.kind, ...(page.kind === 'release' ? { image } : {}) },
+      metadata: {
+        kind: page.kind,
+        ...(page.kind === 'release' ? { image } : {}),
+        ...(key === 'electrocute' ? { theme: 'electrocute', noindex: true } : {}),
+      },
     },
   }
 }

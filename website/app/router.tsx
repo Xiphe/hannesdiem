@@ -11,6 +11,8 @@ import { contentCacheTag } from './document-host/index.ts'
 import { ContactCard } from './contact/card.tsx'
 import { renderFeed } from './temple/feed/route.tsx'
 import { feedPath, isFeedPath, templePath, watchPath } from './temple/feed/model.ts'
+import { archivePath, sessionPath } from './electrocute/model.ts'
+import { sessionDocument } from './electrocute/document.ts'
 
 const privateHeaders = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
 function contactMailto(request: Request) {
@@ -180,6 +182,48 @@ export function createApp(content: ContentLoader) {
   )
   router.get(routes.content, async ({ request, render }) => {
     const path = new URL(request.url).pathname
+    if (path.startsWith(`${archivePath}/`) && !path.endsWith('/')) {
+      let id = ''
+      try {
+        id = decodeURIComponent(path.slice(archivePath.length + 1))
+      } catch {
+        /* 404 below. */
+      }
+      if (id && !id.includes('/')) {
+        const page = await content(new Request(new URL(archivePath, request.url), request))
+        const selected = page.status === 200 ? await sessionDocument(page.document, id) : undefined
+        if (selected) {
+          const canonical = sessionPath(id)
+          if (path !== canonical) return redirect(canonical + new URL(request.url).search, 308)
+          return render(
+            <SiteContent
+              site={page.site}
+              routes={page.routes}
+            >
+              <Page
+                {...await renderContent(selected.document)}
+                route={{
+                  ...page.route!,
+                  path,
+                  title: selected.session.title,
+                  theme: 'electrocute',
+                  ogTitle: selected.session.title,
+                }}
+                path={path}
+              />
+            </SiteContent>,
+            {
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Cloudflare-CDN-Cache-Control': 'public, max-age=60, stale-if-error=0',
+                'Cache-Tag': `content,page:${page.key}`,
+                'X-Content-Revision': page.contentHash,
+              },
+            },
+          )
+        }
+      }
+    }
     const legacyPost = path.startsWith(`${watchPath}/`)
     if ((isFeedPath(path) || legacyPost) && !path.endsWith('/')) {
       const prefix = legacyPost ? watchPath : feedPath
