@@ -201,11 +201,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         mix={archiveStyle}
         aria-label="ElectroCute archive"
       >
-        {preview && (
-          <p class="ec-preview">
-            Local preview with test recordings. Highlight drafts stay on this device.
-          </p>
-        )}
+        {preview && <p class="ec-preview">Local preview. Highlight drafts stay on this device.</p>}
         {session ? (
           <>
             <a

@@ -9,9 +9,11 @@ import { tmpdir } from 'node:os'
 const port = Number(process.env.PREVIEW_PORT ?? 8787)
 const compiled = await build({
   entryPoints: [
-    process.env.WEBSITE_TEST === 'true'
-      ? 'website/tests/worker.ts'
-      : 'content/development/worker.ts',
+    process.env.ELECTROCUTE_PREVIEW === 'authored'
+      ? 'content/development/electrocute-worker.ts'
+      : process.env.WEBSITE_TEST === 'true'
+        ? 'website/tests/worker.ts'
+        : 'content/development/worker.ts',
   ],
   bundle: true,
   write: false,

@@ -128,8 +128,19 @@ Der funktionale Rahmen und die UI-Richtung stehen. Die weitere Arbeit kann auf
 dem vorhandenen ElectroCute-Design aufbauen. Inhaltliches Opening, Sprache und
 Bildarbeit bleiben für die gesonderte Session offen.
 
-Die technische Integration beginnt mit einer echten Aufnahme. Nach Prüfung der
-Wiedergabe und Zeitsprünge auf Desktop und Mobilgeräten werden weitere
+Die technische Integration beginnt mit der vom Künstler bereitgestellten Session
+XLV vom 23. April 2023, „outside to ovations“. Ihr Dateiname folgt dem Schema
+`{yymmdd}_electrocute_{session_number_roman}_{session_name}`. Der native CMX-Eintrag
+liegt in [Sessions](../content/pages/electrocute/_sessions.ts). Die MP4 ist
+47:51,1 Minuten lang und enthält H.264-Video mit 1280×720 sowie Stereo-AAC-Audio
+mit 48 kHz. Der direkte pCloud-Link unterstützt HTTP-Teilabrufe.
+
+Die operative Chromium-Prüfung der echten Quelle hat Wiedergabe mit dekodiertem
+Bild und Audio, Zeitsprünge bis Minute 45 und den Stopp am Ende der ausgewählten
+Passage bestätigt, auch in der Touch-Vorschau. Physische Mobilgeräte, Safari,
+eine längere Hörprobe und die Bildauswahl bleiben offen.
+
+Nach Prüfung der Wiedergabe und Zeitsprünge auf Desktop und Mobilgeräten werden weitere
 veröffentlichbare Sessions angebunden. Vorschaubilder für neue oder ersetzte
 Aufnahmen wählt der Künstler gemäß [Video-Workflow](agents/video.md).
 
@@ -148,18 +159,19 @@ liegen auf dieser Agent-Maschine nicht vor:
 - `work/video-duration-inventory.json`: Dateiliste, Laufzeiten und Ausschlüsse.
 - Ursprünglicher Videoordner: `/Volumes/Video/Electrocute`.
 
-Für die Integration einer echten Aufnahme werden der erprobte Direktlink und die
-Session-Metadaten auf dieser Maschine benötigt. Das persönliche
-pCloud-Traffic-Limit bleibt bei Bedarf anhand des Vertrags oder beim Support zu
+Für diese erste Aufnahme liegen Direktlink und Session-Metadaten nun vor. Für
+weitere Aufnahmen fehlt noch das vollständige Inventar aus dem Handoff. Das
+persönliche pCloud-Traffic-Limit bleibt bei Bedarf anhand des Vertrags oder beim Support zu
 bestätigen.
 
 ## Technischer Anschluss
 
 Ein erster lokaler UI-Stand ist umgesetzt: Archivsortierung, Sessionplayer,
 Highlight-Auswahl, Bereichseditor und gespeicherter Hörfortschritt. Die Vorschau
-verwendet ausschließlich synthetische Sessions und speichert Highlight-Entwürfe
-auf dem jeweiligen Gerät. Öffentliche Beiträge, gemeinsamer Alias, Künstlerrechte
-und Agentic Check sind noch anzubinden. Start und Grenzen des Stands:
+verwendet jetzt die bereitgestellte echte Aufnahme und speichert Highlight-Entwürfe
+auf dem jeweiligen Gerät. Die synthetische Vorschau bleibt separat verfügbar.
+Öffentliche Beiträge, gemeinsamer Alias, Künstlerrechte und Agentic Check sind
+noch anzubinden. Start und Grenzen des Stands:
 [ElectroCute Player](../website/app/electrocute/README.md).
 
 Die Linktree-Seite verwendet bereits `theme: 'electrocute'`. Dieses Theme wird
