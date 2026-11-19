@@ -627,7 +627,7 @@ test('releasing an outward passage drag eases into its new zoom over about one s
   expect(Math.abs(markAfter!.x - markBefore!.x)).toBeGreaterThan(1)
 })
 
-test('passage fill meets the playhead and shows elapsed playback beyond the selection', async ({
+test('passage playback follows the visible window including context outside the selection', async ({
   page,
 }) => {
   await page.goto('/electrocute/test-session-1')
@@ -635,7 +635,7 @@ test('passage fill meets the playhead and shows elapsed playback beyond the sele
   await setRange(page, 20, 21)
   const video = page.locator('video')
   const passage = page.getByRole('slider', { name: 'Passage position', exact: true })
-  for (const position of [20, 20.49, 21]) {
+  for (const position of [19.9, 20, 20.49, 21, 21.1]) {
     await video.evaluate((el, time) => {
       ;(el as HTMLVideoElement).currentTime = time
       el.dispatchEvent(new Event('timeupdate'))
@@ -643,6 +643,7 @@ test('passage fill meets the playhead and shows elapsed playback beyond the sele
     await expect
       .poll(() => passage.evaluate((el) => (el as HTMLInputElement).valueAsNumber))
       .toBeCloseTo(position, 6)
+    await expect(passage).not.toHaveAttribute('data-outside')
     const alignment = await passage.evaluate((el) => {
       const input = el as HTMLInputElement
       const width = input.getBoundingClientRect().width
@@ -661,8 +662,8 @@ test('passage fill meets the playhead and shows elapsed playback beyond the sele
     expect(Math.abs(alignment.fill - alignment.thumb)).toBeLessThan(0.1)
   }
   for (const [position, state] of [
-    [19.9, 'before'],
-    [21.1, 'after'],
+    [17.9, 'before'],
+    [23.1, 'after'],
   ] as const) {
     await video.evaluate((el, time) => {
       ;(el as HTMLVideoElement).currentTime = time

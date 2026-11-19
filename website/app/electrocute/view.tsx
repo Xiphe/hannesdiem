@@ -588,7 +588,11 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             value={Math.max(passageWindow.start, Math.min(passageWindow.end, position))}
             aria-label="Passage position"
             data-outside={
-              position < clipStart ? 'before' : position > clipEnd ? 'after' : undefined
+              position < passageWindow.start
+                ? 'before'
+                : position > passageWindow.end
+                  ? 'after'
+                  : undefined
             }
             aria-valuetext={preciseClock(
               Math.max(passageWindow.start, Math.min(passageWindow.end, position)),
@@ -596,9 +600,9 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             disabled={busy}
             style={{
               '--progress':
-                position < clipStart
+                position < passageWindow.start
                   ? '0%'
-                  : position > clipEnd
+                  : position > passageWindow.end
                     ? '100%'
                     : playedProgress(position, passageWindow.start, passageWindow.end),
             }}
