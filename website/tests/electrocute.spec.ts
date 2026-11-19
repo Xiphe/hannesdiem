@@ -641,7 +641,7 @@ test('trim focus follows the grip and clears keyboard styling on pointer input',
     await expect(start).toBeFocused()
     expect(await start.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none')
     expect(await grip.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none')
-    expect(await grip.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe('none')
+    expect(await grip.evaluate((el) => getComputedStyle(el).boxShadow)).toBe('none')
     const hit = await start.boundingBox()
     const visible = await grip.boundingBox()
     expect(hit!.width).toBeGreaterThan(visible!.width + 20)
@@ -649,8 +649,12 @@ test('trim focus follows the grip and clears keyboard styling on pointer input',
     await page.mouse.down()
     expect(await grip.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe('none')
     await page.mouse.up()
+    expect(await grip.evaluate((el) => getComputedStyle(el).boxShadow)).toBe('none')
     await start.press('Tab')
     await expect(end).toBeFocused()
+    expect(await end.locator('span').evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe(
+      'none',
+    )
     expect(await end.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none')
     expect(await end.locator('span').evaluate((el) => getComputedStyle(el).outlineColor)).toBe(
       'rgb(253, 94, 224)',

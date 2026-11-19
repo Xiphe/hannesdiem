@@ -290,7 +290,7 @@ export const archiveStyle = css({
     minHeight: 44,
     padding: 11,
   },
-  '& .ec-player .ec-icon-button[data-icon=play] > svg': { transform: 'translateX(-2px)' },
+  '& .ec-player .ec-icon-button[data-icon=play] > svg': { transform: 'translateX(-1px)' },
   '& .ec-seek-wrap': {
     position: 'relative',
     flex: '1 1 auto',
@@ -641,11 +641,12 @@ export const archiveStyle = css({
     '&[data-edge=start] span': { left: 'calc(24px - var(--grip-width) / 2)', right: 'auto' },
     '&[data-selected] span': { background: '#fd5ee0' },
     '&:hover span': { background: '#fff8fb' },
-    '&:focus span, &:active span': { boxShadow: '0 0 0 2px rgb(255 248 251 / 30%)' },
+    '&:active span': { boxShadow: '0 0 0 2px rgb(255 248 251 / 30%)' },
   },
   '& .ec-player .ec-trim-edge:focus-visible, & .ec-player[data-keyboard-focus] .ec-trim-edge:focus-visible':
     { outline: 'none' },
   '& .ec-player[data-keyboard-focus] .ec-trim-edge:focus-visible span': {
+    boxShadow: '0 0 0 2px rgb(255 248 251 / 30%)',
     outline: '2px solid #fd5ee0',
     outlineOffset: 3,
   },

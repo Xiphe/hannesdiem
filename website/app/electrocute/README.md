@@ -97,7 +97,8 @@ connection lines are removed. Both trackers use exactly the same selection and
 grip styling. The selected boundary is pink, and handles use grab/grabbing cursors
 without a hover fill around the handle. Idle grips use a solid gray that occludes
 the transport and selection borders; hovering either grip turns it white.
-Focus and pointer-down add a subtle translucent ring around the visible grip.
+Keyboard focus and pointer-down add a subtle translucent ring around the visible
+grip. In pointer mode it disappears on release, even if the grip retains focus.
 The pink keyboard ring follows that grip too, leaving its larger hit area
 invisible. Captured keyboard/pointer input tracks the current interaction mode
 so clicking a previously keyboard-focused control clears its pink ring.
