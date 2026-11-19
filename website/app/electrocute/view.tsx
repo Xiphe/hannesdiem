@@ -532,6 +532,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             step={session?.frameRate ? 1 / session.frameRate : 0.001}
             value={Math.max(passageWindow.start, Math.min(passageWindow.end, position))}
             aria-label="Passage position"
+            data-outside={position < clipStart || position > clipEnd ? 'true' : undefined}
             aria-valuetext={preciseClock(
               Math.max(passageWindow.start, Math.min(passageWindow.end, position)),
             )}

@@ -63,7 +63,9 @@ interrupting playback. The same popover expands to the transport row's width;
 main Play, seek and sound retain their positions. Both the full-session bar and
 the upper passage bar show the same two draggable boundaries. The upper bar
 zooms into the selection with a small amount of context on either side so the
-ends can be extended as well as shortened. Its scale stays fixed during a drag
+ends can be extended as well as shortened. Its playhead and progress fill are
+hidden when playback is outside the selected bounds, including the context area.
+Its scale stays fixed during a drag
 and reframes after release. Lower-bar changes also reframe the upper view.
 
 Both surfaces share the same trim component and range state. Select a boundary

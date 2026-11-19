@@ -331,6 +331,12 @@ export const archiveStyle = css({
       borderRadius: '50%',
     },
   },
+  '& .ec-player .ec-passage-track .ec-seek[data-outside]': {
+    '&::-webkit-slider-thumb': { opacity: 0 },
+    '&::-moz-range-thumb': { opacity: 0 },
+    '&::-webkit-slider-runnable-track': { background: 'rgb(255 248 251 / 35%)' },
+    '&::-moz-range-progress': { background: 'transparent' },
+  },
   '& .ec-time-tooltip': {
     position: 'absolute',
     bottom: 'calc(50% + 14px)',
