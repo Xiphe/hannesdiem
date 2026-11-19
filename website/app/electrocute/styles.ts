@@ -197,7 +197,8 @@ export const archiveStyle = css({
       padding: '.4rem .65rem',
     },
     '& button:hover': { background: 'rgb(255 248 251 / 12%)' },
-    '& button:focus-visible, & input:focus-visible': {
+    '& button:focus-visible, & input:focus-visible': { outline: 'none' },
+    '&[data-keyboard-focus] button:focus-visible, &[data-keyboard-focus] input:focus-visible': {
       outline: '2px solid #fd5ee0',
       outlineOffset: 2,
     },
@@ -289,6 +290,7 @@ export const archiveStyle = css({
     minHeight: 44,
     padding: 11,
   },
+  '& .ec-player .ec-icon-button[data-icon=play] > svg': { transform: 'translateX(-2px)' },
   '& .ec-seek-wrap': {
     position: 'relative',
     flex: '1 1 auto',
@@ -639,7 +641,13 @@ export const archiveStyle = css({
     '&[data-edge=start] span': { left: 'calc(24px - var(--grip-width) / 2)', right: 'auto' },
     '&[data-selected] span': { background: '#fd5ee0' },
     '&:hover span': { background: '#fff8fb' },
-    '&:focus-visible span': { boxShadow: '0 0 0 2px rgb(255 248 251 / 30%)' },
+    '&:focus span, &:active span': { boxShadow: '0 0 0 2px rgb(255 248 251 / 30%)' },
+  },
+  '& .ec-player .ec-trim-edge:focus-visible, & .ec-player[data-keyboard-focus] .ec-trim-edge:focus-visible':
+    { outline: 'none' },
+  '& .ec-player[data-keyboard-focus] .ec-trim-edge:focus-visible span': {
+    outline: '2px solid #fd5ee0',
+    outlineOffset: 3,
   },
   '& .ec-clip-dock': {
     display: 'flex',

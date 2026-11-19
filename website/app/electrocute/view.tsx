@@ -63,6 +63,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let player: HTMLDivElement | undefined
   let enhanced = false
   let fullscreen = false
+  let keyboardFocus = false
   let position = 0
   let duration = session?.duration ?? 0
   let ready = false
@@ -389,10 +390,23 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       },
       { signal },
     )
-    if (session)
+    if (session) {
+      window.addEventListener(
+        'pointerdown',
+        () => {
+          if (!keyboardFocus) return
+          keyboardFocus = false
+          handle.update()
+        },
+        { capture: true, signal },
+      )
       window.addEventListener(
         'keydown',
         (event) => {
+          if (!keyboardFocus && !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
+            keyboardFocus = true
+            handle.update()
+          }
           if (
             (event.code !== 'Space' && event.key !== ' ') ||
             event.altKey ||
@@ -413,6 +427,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         },
         { capture: true, signal },
       )
+    }
     void loadRuntime()
     window.addEventListener(
       'focus',
@@ -556,6 +571,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         <button
           type="button"
           class="ec-icon-button"
+          data-icon={video?.paused === false ? 'replay' : 'play'}
           aria-label={video?.paused === false ? 'Restart passage' : 'Preview passage'}
           disabled={!valid() || busy}
           mix={on('click', () => void playPassage())}
@@ -641,6 +657,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             type="button"
             key={highlight.id}
             class="ec-marker"
+            tabIndex={-1}
             style={{
               left: `${(highlight.start / duration) * 100}%`,
               width: `${((highlight.end - highlight.start) / duration) * 100}%`,
@@ -741,6 +758,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                   class="ec-player"
                   data-enhanced={enhanced ? '' : undefined}
                   data-editing={editing ? '' : undefined}
+                  data-keyboard-focus={keyboardFocus ? '' : undefined}
                   mix={[
                     ref((node) => {
                       player = node
@@ -833,6 +851,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                         <button
                           type="button"
                           class="ec-icon-button"
+                          data-icon={video?.paused !== false ? 'play' : 'pause'}
                           aria-label={video?.paused !== false ? 'Play' : 'Pause'}
                           disabled={!ready}
                           mix={on('click', () => void togglePlayback())}

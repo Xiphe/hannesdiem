@@ -53,6 +53,10 @@ time even when the popover is clamped near an edge. The full range hit area abov
 the visible line continues tracking the pointer and accepts seek clicks right up
 to the popover. Entering the popover keeps the chosen time; delayed dismissal
 keeps the action reachable. Focus also opens it for keyboard and touch use.
+The tooltip's star is pointer-accessible but outside the Tab order; Tab from the
+main seek bar goes directly to the separate playhead star beside volume.
+The timeline's duplicate highlight markers are outside that Tab sequence too;
+the accompanying ordered highlight list supplies keyboard-accessible links.
 As it contains a button, its accessible role is a non-modal dialog, rather than a
 text-only tooltip. Escape dismisses it
 and restores seek focus. Sound keeps the feed's expanding volume capsule without
@@ -93,6 +97,10 @@ connection lines are removed. Both trackers use exactly the same selection and
 grip styling. The selected boundary is pink, and handles use grab/grabbing cursors
 without a hover fill around the handle. Idle grips use a solid gray that occludes
 the transport and selection borders; hovering either grip turns it white.
+Focus and pointer-down add a subtle translucent ring around the visible grip.
+The pink keyboard ring follows that grip too, leaving its larger hit area
+invisible. Captured keyboard/pointer input tracks the current interaction mode
+so clicking a previously keyboard-focused control clears its pink ring.
 Hit areas extend 24px outward and up to 24px inward, capped
 at the selection midpoint so close boundaries do not overlap. A low trapezoid
 replaces the editor's tooltip arrow: its bottom matches the lower selection's

@@ -416,7 +416,7 @@ test('the star popover keeps the whole seek hit area interactive up to its body'
     .toBeLessThan(1)
   await page.keyboard.press('Escape')
   await seek.press('Tab')
-  const keyboardAction = popup.getByRole('button', { name: 'Set highlight', exact: true })
+  const keyboardAction = page.getByRole('button', { name: 'Highlight at playhead', exact: true })
   await expect(keyboardAction).toBeFocused()
   await keyboardAction.press('Enter')
   await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
@@ -624,6 +624,41 @@ test('releasing an outward passage drag eases into its new zoom over about one s
   // A fixed timestamp reframes with the ruler, while the edit stays put.
   const markAfter = await timeMark.boundingBox()
   expect(Math.abs(markAfter!.x - markBefore!.x)).toBeGreaterThan(1)
+})
+
+test('trim focus follows the grip and clears keyboard styling on pointer input', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await openHighlight(page)
+  await setRange(page, 20, 60)
+  for (const surface of ['Passage', 'Highlight']) {
+    const start = page.getByRole('slider', { name: `${surface} start`, exact: true })
+    const end = page.getByRole('slider', { name: `${surface} end`, exact: true })
+    const grip = start.locator('span')
+    await start.press('ArrowRight')
+    await start.click()
+    await expect(start).toBeFocused()
+    expect(await start.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none')
+    expect(await grip.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none')
+    expect(await grip.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe('none')
+    const hit = await start.boundingBox()
+    const visible = await grip.boundingBox()
+    expect(hit!.width).toBeGreaterThan(visible!.width + 20)
+    await page.mouse.move(visible!.x - 12, visible!.y + visible!.height / 2)
+    await page.mouse.down()
+    expect(await grip.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe('none')
+    await page.mouse.up()
+    await start.press('Tab')
+    await expect(end).toBeFocused()
+    expect(await end.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none')
+    expect(await end.locator('span').evaluate((el) => getComputedStyle(el).outlineColor)).toBe(
+      'rgb(253, 94, 224)',
+    )
+    expect(await end.locator('span').evaluate((el) => getComputedStyle(el).outlineStyle)).toBe(
+      'solid',
+    )
+  }
 })
 
 test('a fast outward drag past the passage rail keeps its zoom until release', async ({ page }) => {

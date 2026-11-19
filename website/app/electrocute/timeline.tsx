@@ -178,6 +178,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
                   type="button"
                   class="ec-highlight-star"
                   aria-label="Set highlight"
+                  tabIndex={-1}
                   mix={on('click', () => {
                     // Dismiss the hover state before the parent opens its editor.
                     close()
