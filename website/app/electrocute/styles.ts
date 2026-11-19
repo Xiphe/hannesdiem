@@ -582,8 +582,6 @@ export const archiveStyle = css({
     height: 24,
     borderBlock: '1px solid rgb(255 248 251 / 55%)',
     background: 'rgb(255 248 251 / 5%)',
-    // Stop at the inner edge of the 4px grips, including translucent idle grips.
-    clipPath: 'inset(0 2px)',
   },
   '& .ec-player .ec-trim-edge': {
     position: 'absolute',
@@ -610,11 +608,11 @@ export const archiveStyle = css({
       width: 'var(--grip-width)',
       height: 32,
       borderRadius: 2,
-      background: 'rgb(255 248 251 / 65%)',
+      background: '#aaa6a8',
     },
     '&[data-edge=start] span': { left: 'calc(24px - var(--grip-width) / 2)', right: 'auto' },
     '&[data-selected] span': { background: '#fd5ee0' },
-    '&:not([data-selected]):hover span': { background: '#fff8fb' },
+    '&:hover span': { background: '#fff8fb' },
     '&:focus-visible span': { boxShadow: '0 0 0 2px rgb(255 248 251 / 30%)' },
   },
   '& .ec-clip-dock': {
