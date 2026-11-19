@@ -71,6 +71,14 @@ Its scale stays fixed during a drag and reframes over approximately one second
 after release. A new interaction interrupts that animation; reduced-motion
 preferences use an immediate reframe. Lower-bar changes also reframe the upper view.
 
+Current visual experiment, awaiting artist feedback: both trimming surfaces show
+a quiet time ruler and a grid inside the selection. Ticks and grid columns share
+absolute recording timestamps, so reframing moves the ruler and changes grid
+spacing while the chosen bounds stay fixed. Tick spacing uses hysteresis to keep
+the same time marks through ordinary zoom adjustments; labels are sparse and
+noninteractive. This investigates whether the reframe reads as a change of scale
+rather than rejection of the drag. It adds no extra controls or saved data.
+
 Both surfaces share the same trim component and range state. Select a boundary
 and use arrows for one-second changes; Shift plus arrows adjusts one source frame
 when explicit metadata provides its frame rate. Source frame rates are never
@@ -78,7 +86,9 @@ inferred from browser rendering speed. The first pCloud recording is 60 fps.
 The rejected minus/plus/bracket controls, their repeat timers and decorative
 connection lines are removed. Both trackers use exactly the same selection and
 grip styling. The selected boundary is pink, and handles use grab/grabbing cursors
-without a hover fill. Hit areas extend 24px outward and up to 24px inward, capped
+without a hover fill around the handle. Idle grips use a solid gray that occludes
+the transport and selection borders; hovering either grip turns it white.
+Hit areas extend 24px outward and up to 24px inward, capped
 at the selection midpoint so close boundaries do not overlap. A low trapezoid
 replaces the editor's tooltip arrow: its bottom matches the lower selection's
 width and its sides retain the previous 45-degree angle and 5px height.

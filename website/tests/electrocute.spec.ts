@@ -582,6 +582,16 @@ test('releasing an outward passage drag eases into its new zoom over about one s
   const seek = page.getByRole('slider', { name: 'Passage position', exact: true })
   const before = Number(await seek.getAttribute('max'))
   const span = before - Number(await seek.getAttribute('min'))
+  const ruler = page.locator('.ec-passage-trim .ec-time-ruler')
+  await expect(ruler.locator('.ec-time-tick').first()).toBeAttached()
+  const ticks = ruler.locator('.ec-time-tick')
+  const timestamp = await ticks.nth(Math.floor((await ticks.count()) / 2)).getAttribute('data-time')
+  const timeMark = ruler.locator(`[data-time="${timestamp}"]`)
+  const markBefore = await timeMark.boundingBox()
+  const selection = page.locator('.ec-passage-trim .ec-trim-selection')
+  const gridBefore = await selection.evaluate((el) =>
+    parseFloat(getComputedStyle(el).getPropertyValue('--grid-step')),
+  )
   const rail = await page.locator('.ec-passage-trim .ec-trim-rail').boundingBox()
   const end = page.getByRole('slider', { name: 'Passage end', exact: true })
   const grip = await end.locator('span').boundingBox()
@@ -602,6 +612,14 @@ test('releasing an outward passage drag eases into its new zoom over about one s
     .poll(async () => Number(await seek.getAttribute('max')), { timeout: 2000 })
     .toBeCloseTo(68.16, 3)
   await expect(end).toHaveAttribute('aria-valuenow', '63')
+  // A fixed timestamp and the time-based grid reframe together, while the edit stays put.
+  const markAfter = await timeMark.boundingBox()
+  expect(Math.abs(markAfter!.x - markBefore!.x)).toBeGreaterThan(1)
+  expect(
+    await selection.evaluate((el) =>
+      parseFloat(getComputedStyle(el).getPropertyValue('--grid-step')),
+    ),
+  ).toBeLessThan(gridBefore)
 })
 
 test('the transport star uses the current playhead instead of the hovered time', async ({

@@ -49,6 +49,8 @@ function key(p: TrimProps, event: KeyboardEvent, kind: 'start' | 'end') {
 /** Shared boundary interaction for the recording and its zoomed passage. */
 export function TrimTimeline(handle: Handle<TrimProps>) {
   let rail: HTMLDivElement | undefined
+  let width = 0
+  let step = 0
   let lastTap: { kind: TrimEdge; time: number; x: number; y: number } | undefined
   let drag:
     | {
@@ -132,6 +134,28 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
     const p = handle.props
     const from = p.viewport?.start ?? 0
     const span = (p.viewport?.end ?? p.duration) - from
+    if (width > 0 && span > 0) {
+      // Hysteresis keeps the same time marks through ordinary drag/reframe zooms.
+      const spacing = (step / span) * width
+      if (!step || spacing < 12 || spacing > 60) {
+        const desired = (span / width) * 24
+        const unit = desired >= 3600 ? 3600 : desired >= 60 ? 60 : 1
+        const power = unit * 10 ** Math.floor(Math.log10(desired / unit))
+        step = [1, 2, 3, 5, 10].find((n) => n * power >= desired)! * power
+      }
+    }
+    const marks: { time: number; major: boolean; label: boolean }[] = []
+    if (width > 0 && span > 0 && step > 0) {
+      const first = Math.ceil(from / step)
+      const last = Math.floor((from + span) / step)
+      for (let i = first; i <= last; i++) {
+        const time = Number((i * step).toPrecision(12))
+        const x = ((time - from) / span) * width
+        const major = width < 240 ? i === Math.round((from + span / 2) / step) : i % 5 === 0
+        marks.push({ time, major, label: major && x >= 24 && x <= width - 24 })
+      }
+    }
+    const gridWidth = span > 0 ? (step / span) * width : 0
     const helpId = p.surface ? 'ec-passage-trim-help' : 'ec-trim-help'
     return (
       <div
@@ -140,15 +164,44 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
       >
         <div
           class="ec-trim-rail"
-          mix={ref((node) => {
+          mix={ref((node, signal) => {
             rail = node
+            const measure = () => {
+              width = node.clientWidth
+              handle.update()
+            }
+            const observer = new ResizeObserver(measure)
+            observer.observe(node)
+            measure()
+            signal.addEventListener('abort', () => observer.disconnect(), { once: true })
           })}
         >
+          <div
+            class="ec-time-ruler"
+            aria-hidden="true"
+            data-step={step}
+          >
+            {marks.map(({ time, major, label }) => (
+              <span
+                key={time}
+                class="ec-time-tick"
+                data-time={time}
+                data-major={major ? '' : undefined}
+                style={{ left: `${((time - from) / span) * 100}%` }}
+              >
+                {label && (
+                  <span>{step < 1 ? preciseClock(time).replace(/\.?0+$/, '') : clock(time)}</span>
+                )}
+              </span>
+            ))}
+          </div>
           <span
             class="ec-trim-selection"
             style={{
               left: `${((p.start - from) / span) * 100}%`,
               width: `${((p.end - p.start) / span) * 100}%`,
+              '--grid-step': `${gridWidth}px`,
+              '--grid-offset': `${step ? -((((p.start / step) % 1) + 1) % 1) * gridWidth : 0}px`,
             }}
           />
           {(['start', 'end'] as const).map((kind) => (
