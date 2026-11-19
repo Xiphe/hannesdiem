@@ -282,7 +282,15 @@ export const archiveStyle = css({
     background: 'linear-gradient(transparent,rgb(0 0 0 / 72%))',
     zIndex: 2,
   },
-  '& .ec-transport-row': { display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 },
+  '& .ec-transport-row': {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    minWidth: 0,
+    // Match the editor's padding plus border so both rows share icon centers.
+    '--control-inset': '13px',
+    paddingInline: 'var(--control-inset)',
+  },
   '& .ec-player .ec-icon-button': {
     width: 44,
     minWidth: 44,
@@ -437,9 +445,9 @@ export const archiveStyle = css({
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    left: 'calc(0px - var(--editor-inset))',
+    left: 'calc(0px - var(--editor-inset) - var(--control-inset))',
     bottom: 'calc(50% + 24px)',
-    width: 'calc(100% + var(--editor-inset) * 2 + var(--editor-tail))',
+    width: 'calc(100% + var(--editor-inset) * 2 + var(--editor-tail) + var(--control-inset) * 2)',
     maxWidth: 'none',
     transform: 'none',
     padding: 12,
@@ -454,7 +462,7 @@ export const archiveStyle = css({
     '& path': { fill: '#111', stroke: 'rgb(255 248 251 / 16%)', strokeWidth: 1 },
   },
   // Match the feed's vertical hover/focus volume control; touch uses system volume.
-  '& .ec-volume-control': { position: 'relative', flex: '0 0 44px' },
+  '& .ec-volume-control': { position: 'relative', flex: '0 0 44px', zIndex: 5 },
   '& .ec-player .ec-volume-control > button': {
     borderRadius: '50%',
     '&:hover': { background: 'transparent' },
@@ -751,7 +759,7 @@ export const archiveStyle = css({
         flex: '0 0 32px',
         padding: 6,
       },
-    '& .ec-transport-row': { gap: 8 },
+    '& .ec-transport-row': { gap: 8, '--control-inset': '9px' },
     '& .ec-seek-wrap': { '--editor-inset': '40px' },
     '& .ec-transport-row:has(.ec-playhead-highlight) .ec-seek-wrap': { '--editor-tail': '40px' },
     '& .ec-volume-control': { flex: '0 0 32px' },

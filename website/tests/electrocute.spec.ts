@@ -302,6 +302,30 @@ test('the seek popover expands into trimming, then replaces its controls with th
     .boundingBox()
   expect(popup!.x + popup!.width - cancel!.x - cancel!.width).toBeGreaterThanOrEqual(8)
   expect(cancel!.x - save!.x - save!.width).toBeGreaterThanOrEqual(8)
+  const mainPlay = await page.getByRole('button', { name: 'Play', exact: true }).boundingBox()
+  const passagePlay = await editor
+    .getByRole('button', { name: 'Preview passage', exact: true })
+    .boundingBox()
+  const sound = page.locator('.ec-volume-control > button')
+  const speaker = await sound.boundingBox()
+  expect(passagePlay!.x + passagePlay!.width / 2).toBeCloseTo(mainPlay!.x + mainPlay!.width / 2, 1)
+  expect(cancel!.x + cancel!.width / 2).toBeCloseTo(speaker!.x + speaker!.width / 2, 1)
+  await sound.hover()
+  const volume = page.getByRole('slider', { name: 'Volume', exact: true })
+  await expect(volume).toBeVisible()
+  // The popup overlaps the editor; hit testing must reach Volume, not the editor beneath it.
+  expect(
+    await volume.evaluate((node) => {
+      const volume = node.getBoundingClientRect()
+      const editor = document
+        .querySelector('.ec-time-tooltip[data-editing]')!
+        .getBoundingClientRect()
+      const x = volume.x + volume.width / 2
+      const top = Math.max(volume.top, editor.top)
+      const bottom = Math.min(volume.bottom, editor.bottom)
+      return bottom > top && document.elementFromPoint(x, (top + bottom) / 2) === node
+    }),
+  ).toBe(true)
   const closeIcon = await editor
     .getByRole('button', { name: 'Cancel', exact: true })
     .locator('svg')

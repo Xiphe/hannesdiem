@@ -254,7 +254,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
               height={5}
               viewBox={`0 0 ${rangeWidth + 10} 5`}
               style={{
-                left: `calc(var(--editor-inset) + ${rangeLeft - 6}px)`,
+                left: `calc(var(--editor-inset) + var(--control-inset) + ${rangeLeft - 6}px)`,
                 width: `${rangeWidth + 10}px`,
               }}
             >
