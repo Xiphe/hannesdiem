@@ -34,9 +34,8 @@ Linktree-Seite stammen gestalterisch aus der ElectroCute-Zeit und sind die
 Referenzen für diesen Projektbereich. Das vorhandene ElectroCute-Theme bleibt
 für die Projektübersicht und die Sessionseiten fest eingestellt.
 
-Neue Bedienelemente dürfen technisch wirken und werden tendenziell kantiger
-gestaltet. Runde, organische Formen treten zurück. Die Gestaltung bleibt
-zurückhaltend und wird nicht überladen.
+Die Bedienelemente übernehmen die bestehende Formsprache der Website, insbesondere
+Feed und Formulare. Die Gestaltung bleibt zurückhaltend und wird nicht überladen.
 
 Inhaltliches Opening, Sprache und Bildarbeit werden in einer gesonderten Session
 bearbeitet. Für die UI ist die vorhandene Gestaltung bereits die Grundlage.
@@ -81,6 +80,9 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 - Der Set-Highlight-Button wird beim Bearbeiten durch Titel, Speichern und ein
   kleines X zum Abbrechen ersetzt. Diese bilden ein gemeinsames Element im freien
   Platz zwischen Wiedergabe und Lautstärke. Der öffentliche Name wird hier nicht abgefragt.
+- Abspielzeit und Sessionlänge sind nicht dauerhaft sichtbar. Ein Tooltip an der
+  Suchleiste zeigt die Zeitinformation beim Überfahren oder Tastaturfokus. Er hält
+  Abstand zu den Highlight-Griffen und ihren Bedienelementen.
 - Die Feed-Steuerung dient als Vorlage: runder zentraler Play-Button, Vollbild oben
   rechts und der vertikale Lautstärkeregler im Hover/Fokus-Popover.
 - Highlights dürfen sich überschneiden und bleiben eigenständige Beiträge.

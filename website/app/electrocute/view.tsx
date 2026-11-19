@@ -3,6 +3,7 @@ import type { ElectroCuteArchiveProps, ElectroCuteHighlight } from '@hannesdiem/
 import { archiveStyle } from './styles.ts'
 import { FeedIcon } from '../temple/feed/icon.tsx'
 import { preciseClock, TrimTimeline } from './trim.tsx'
+import { PlaybackTimeline } from './timeline.tsx'
 import { readSessionState, submitSessionForm } from '../identity/client.ts'
 import {
   highlightsPath,
@@ -398,7 +399,6 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             aria-current={
               position >= highlight.start && position < highlight.end ? 'true' : undefined
             }
-            title={highlight.title}
             disabled={!ready}
             mix={on('click', () => choose(highlight))}
           />
@@ -579,22 +579,12 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                       <FeedIcon name={fullscreen ? 'exit-fullscreen' : 'fullscreen'} />
                     </button>
                     <div class="ec-transport">
-                      <div class="ec-seek-wrap">
-                        <input
-                          type="range"
-                          class="ec-seek"
-                          min={0}
-                          max={duration}
-                          step={0.1}
-                          value={position}
-                          aria-label="Playback position"
-                          aria-valuetext={clock(position)}
-                          disabled={!ready}
-                          style={{ '--progress': `${duration ? (position / duration) * 100 : 0}%` }}
-                          mix={on('input', (event) =>
-                            seekTo(Number((event.currentTarget as HTMLInputElement).value)),
-                          )}
-                        />
+                      <PlaybackTimeline
+                        position={position}
+                        duration={duration}
+                        disabled={!ready}
+                        seek={seekTo}
+                      >
                         {editing && (
                           <TrimTimeline
                             start={clipStart}
@@ -616,7 +606,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                         >
                           {timeline()}
                         </div>
-                      </div>
+                      </PlaybackTimeline>
                       <div class="ec-transport-row">
                         <button
                           type="button"
@@ -627,9 +617,6 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                         >
                           <FeedIcon name={video?.paused !== false ? 'play' : 'pause'} />
                         </button>
-                        <span class="ec-clock ec-player-clock">
-                          {clock(position)} <span>/ {clock(duration)}</span>
-                        </span>
                         {(preview || runtime.email) && (
                           <div class="ec-highlight-action">
                             {editing ? (

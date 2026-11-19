@@ -219,6 +219,37 @@ test('the inline transport plays, seeks, controls sound and opens timeline highl
   await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click()
 })
 
+test('playback time is transient and stays clear of clipping tools and fullscreen', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  const time = page.getByRole('tooltip')
+  await expect(seek).toBeEnabled()
+  await expect(time).toBeHidden()
+  await expect(page.locator('.ec-player-clock')).toHaveCount(0)
+  await page.locator('.ec-seek-wrap').hover()
+  await expect(time).toBeVisible()
+  await expect(time).toContainText('/ 1:36')
+  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await seek.press('Home')
+  await expect(time).toBeVisible()
+  const tip = await time.boundingBox()
+  const nudges = await page.locator('.ec-trim-adjust').boundingBox()
+  const fullscreen = await page
+    .getByRole('button', { name: 'Enter fullscreen', exact: true })
+    .boundingBox()
+  if (!tip || !nudges || !fullscreen) throw Error('Missing playback tools')
+  const intersects = (a: typeof tip, b: typeof tip) =>
+    a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
+  expect(intersects(tip, nudges)).toBe(false)
+  expect(intersects(tip, fullscreen)).toBe(false)
+  await seek.press('Home')
+  await expect(time).toHaveText('0:00 / 1:36')
+  await page.getByRole('textbox', { name: 'Title', exact: true }).focus()
+  await expect(time).toBeHidden()
+})
+
 test('failed device storage keeps the unsaved form available', async ({ page }) => {
   await page.addInitScript(() => {
     Storage.prototype.setItem = () => {

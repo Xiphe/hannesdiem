@@ -37,8 +37,9 @@ content leaves it unset.
 The existing system type and ElectroCute theme are the reference. The dark
 palette uses `#020024`, `#022456`, `#ae1ee4` and `#fff8fb`; the light palette uses
 `#fff8fb`, `#ffb8e4`, `#fd5ee0` and `#020024`. The site's existing gradient and
-logo stay in place. New controls have small corner radii, and time values use
-tabular numerals.
+logo stay in place. Controls follow the existing feed and form language, including
+rounded grouped inputs and quiet overlay surfaces. The seek bar shows tabular time
+values on hover or keyboard focus, on a separate vertical level from trim controls.
 
 The archive is a chronological list with a separate Continue entry. On desktop,
 the player sits beside the highlight list; on mobile they stack. Session headings
