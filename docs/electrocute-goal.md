@@ -83,10 +83,17 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
   um eine Sekunde; Shift und Pfeiltaste ändern bei bekannter Quellbildrate um
   ein Bild. Der Playhead läuft beim Setzen und Trimmen normal weiter.
 - Im breiten Tooltip stehen Passage-Play, die kleine Passage-Suchleiste,
-  Gesamtlänge sowie Save und X. Die gut treffbaren `< | >`-Tasten ändern den
-  gewählten Marker um eine Sekunde: beim linken Marker links, beim rechten
+  Gesamtlänge sowie Save und X. Im aktuellen Entwurf zur Erprobung bilden
+  Minus, die passende Klammer `[` / `]` und Plus eine Gruppe. Die gut treffbaren
+  Tasten ändern den gewählten Marker um eine Sekunde; Gedrückthalten wiederholt
+  die Änderung. Die Gruppe steht beim linken Marker links, beim rechten
   Marker rechts neben der Passage-Suchleiste. Play startet die Passage von vorne;
   Sprünge darin verändern keine Grenzen. Die Vorschau stoppt am gesetzten Ende.
+- Ebenfalls zur Erprobung: Zwei feine pinke Verbindungslinien verbinden die
+  Auswahl unten mit den Enden der Passage-Leiste oben. Die gewählte Kante ist
+  stärker hervorgehoben, beide Leisten teilen eine dezente pinke Färbung. Dauer,
+  Save und X bekommen mehr Abstand und stehen auf schmalen Displays in einer
+  zweiten Zeile desselben Tooltips. Die visuelle Wirkung bleibt zur Sichtung offen.
 - Save öffnet erst die Benennung und speichert noch kein Highlight. Die bisherige
   Tooltip-Bedienung wird dort durch Titel, Speichern und X als gemeinsames Element
   ersetzt. Erst dieser zweite Save speichert. Der öffentliche Name wird hier

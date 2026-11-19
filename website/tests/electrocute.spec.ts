@@ -267,6 +267,28 @@ test('the seek popover expands into trimming, then replaces its controls with th
   expect(popup!.y + popup!.height).toBeLessThan(original!.y)
   await expect(editor.getByRole('slider', { name: 'Passage position' })).toBeVisible()
   await expect(editor.locator('.ec-passage-duration')).toHaveText('1:00')
+  const cancel = await editor.getByRole('button', { name: 'Cancel', exact: true }).boundingBox()
+  const save = await editor
+    .getByRole('button', { name: 'Name highlight', exact: true })
+    .boundingBox()
+  expect(popup!.x + popup!.width - cancel!.x - cancel!.width).toBeGreaterThanOrEqual(12)
+  expect(cancel!.x - save!.x - save!.width).toBeGreaterThanOrEqual(12)
+  const links = page.locator('.ec-range-link path[data-edge]')
+  await expect(links).toHaveCount(2)
+  const endpoints = await links.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const path = node as SVGPathElement
+      const point = path.getPointAtLength(path.getTotalLength())
+      return new DOMPoint(point.x, point.y).matrixTransform(path.getScreenCTM()!)
+    }),
+  )
+  const selection = await page.locator('.ec-trim-selection').boundingBox()
+  expect(Math.abs(endpoints[0].x - selection!.x)).toBeLessThan(1)
+  expect(Math.abs(endpoints[1].x - selection!.x - selection!.width)).toBeLessThan(1)
+  expect(Math.abs(endpoints[0].y - selection!.y)).toBeLessThan(1)
+  expect(
+    await page.locator('.ec-range-link').evaluate((node) => getComputedStyle(node).pointerEvents),
+  ).toBe('none')
   await editor.getByRole('button', { name: 'Name highlight', exact: true }).click()
   const title = editor.getByRole('textbox', { name: 'Title', exact: true })
   await expect(title).toBeFocused()
@@ -440,7 +462,7 @@ test('main playback bar owns trimming with selected edges, second and frame cont
     Math.abs(selection!.y + selection!.height / 2 - playback!.y - playback!.height / 2),
   ).toBeLessThan(1)
   const controls = player.locator('.ec-trim-adjust')
-  await expect(controls.getByRole('button')).toHaveText(['<', '>'])
+  await expect(controls.getByRole('button')).toHaveText(['−', '+'])
   const popup = await controls.boundingBox()
   const passage = await player
     .getByRole('slider', { name: 'Passage position', exact: true })
@@ -468,6 +490,43 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   await page.keyboard.press('Escape')
   await expect(player.getByRole('dialog', { name: 'Highlight editor' })).toHaveCount(0)
   await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeFocused()
+})
+
+test('minus and plus repeat while held, stop on release, and retain keyboard precision', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await openHighlight(page)
+  const start = page.getByRole('slider', { name: 'Highlight start', exact: true })
+  const plus = page.getByRole('button', { name: 'Increase highlight start by one second' })
+  await expect(page.locator('.ec-trim-bracket')).toHaveText('[')
+  const box = await plus.boundingBox()
+  if (!box) throw Error('Missing plus button')
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await expect
+    .poll(async () => Number(await start.getAttribute('aria-valuenow')))
+    .toBeGreaterThanOrEqual(3)
+  await page.mouse.up()
+  const released = Number(await start.getAttribute('aria-valuenow'))
+  await page.waitForTimeout(350)
+  await expect(start).toHaveAttribute('aria-valuenow', String(released))
+  await plus.click()
+  await expect(start).toHaveAttribute('aria-valuenow', String(released + 1))
+  await plus.press('Shift+ArrowRight')
+  await expect(start).toHaveAttribute('aria-valuenow', String(released + 1.2))
+  await page.getByRole('slider', { name: 'Highlight end', exact: true }).focus()
+  await expect(page.locator('.ec-trim-bracket')).toHaveText(']')
+  const minus = page.getByRole('button', { name: 'Decrease highlight end by one second' })
+  const minusBox = await minus.boundingBox()
+  if (!minusBox) throw Error('Missing minus button')
+  await page.mouse.move(minusBox.x + minusBox.width / 2, minusBox.y + minusBox.height / 2)
+  await page.mouse.down()
+  await page.keyboard.press('Escape')
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+  await openHighlight(page)
+  await expect(start).toHaveAttribute('aria-valuenow', '0')
 })
 
 test('main playback keeps running while trimming; passage preview starts over and seeks within its bounds', async ({
@@ -700,6 +759,17 @@ test.describe('mobile player', () => {
     expect(target!.height).toBeGreaterThanOrEqual(44)
     await minus.tap()
     await expect(end).toHaveAttribute('aria-valuenow', '85')
+    await touch.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: target!.x + target!.width / 2, y: target!.y + target!.height / 2 }],
+    })
+    await expect
+      .poll(async () => Number(await end.getAttribute('aria-valuenow')))
+      .toBeLessThanOrEqual(82)
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    const released = await end.getAttribute('aria-valuenow')
+    await page.waitForTimeout(300)
+    await expect(end).toHaveAttribute('aria-valuenow', released!)
     await page.keyboard.press('Escape')
     await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toHaveCount(0)

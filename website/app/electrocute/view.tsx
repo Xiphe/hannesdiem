@@ -484,31 +484,33 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
           />
         </div>
         {selectedEdge === 'end' && <TrimControls {...trimProps()} />}
-        <span class="ec-clock ec-passage-duration">{clock(Math.round(clipEnd - clipStart))}</span>
-        <button
-          type="button"
-          class="ec-save-clip"
-          aria-label="Name highlight"
-          disabled={!valid() || busy}
-          mix={on('click', async () => {
-            editorStep = 'name'
-            await handle.update()
-            player
-              ?.querySelector<HTMLInputElement>('[aria-label="Title"]')
-              ?.focus({ preventScroll: true })
-          })}
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          class="ec-cancel-clip"
-          aria-label="Cancel"
-          disabled={busy}
-          mix={on('click', closeEditor)}
-        >
-          ×
-        </button>
+        <div class="ec-clip-actions">
+          <span class="ec-clock ec-passage-duration">{clock(Math.round(clipEnd - clipStart))}</span>
+          <button
+            type="button"
+            class="ec-save-clip"
+            aria-label="Name highlight"
+            disabled={!valid() || busy}
+            mix={on('click', async () => {
+              editorStep = 'name'
+              await handle.update()
+              player
+                ?.querySelector<HTMLInputElement>('[aria-label="Title"]')
+                ?.focus({ preventScroll: true })
+            })}
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            class="ec-cancel-clip"
+            aria-label="Cancel"
+            disabled={busy}
+            mix={on('click', closeEditor)}
+          >
+            ×
+          </button>
+        </div>
       </div>
     )
   }

@@ -386,12 +386,27 @@ export const archiveStyle = css({
   },
   '& .ec-time-tooltip[data-editing]': {
     left: 'calc(0px - var(--editor-inset))',
-    bottom: 'calc(50% + 24px)',
+    bottom: 'calc(50% + 32px)',
     width: 'calc(100% + var(--editor-inset) * 2)',
     maxWidth: 'none',
     transform: 'none',
-    padding: 4,
+    padding: 12,
+    '&[data-connected]::before': { display: 'none' },
   },
+  '& .ec-player .ec-range-link': {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: 44,
+    overflow: 'visible',
+    pointerEvents: 'none',
+    '& path': { fill: 'none', stroke: '#fd5ee0', strokeWidth: 1, opacity: 0.45 },
+    '& .ec-range-wash': { fill: '#fd5ee0', stroke: 'none', opacity: 0.035 },
+  },
+  '& .ec-seek-wrap:has(.ec-trim-adjust[data-edge=start]) .ec-range-link [data-edge=start], & .ec-seek-wrap:has(.ec-trim-adjust[data-edge=end]) .ec-range-link [data-edge=end]':
+    {
+      opacity: 0.85,
+    },
   // Match the feed's vertical hover/focus volume control; touch uses system volume.
   '& .ec-volume-control': { position: 'relative', flex: '0 0 44px' },
   '& .ec-player .ec-volume-control > button': {
@@ -534,13 +549,12 @@ export const archiveStyle = css({
     display: 'flex',
     flex: '0 0 auto',
     alignItems: 'center',
-    '& button + button': {
-      backgroundImage: 'linear-gradient(rgb(255 248 251 / 20%),rgb(255 248 251 / 20%))',
-      backgroundSize: '1px 14px',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'left center',
-    },
+    borderRadius: 6,
+    background: 'rgb(253 94 224 / 8%)',
+    touchAction: 'none',
+    userSelect: 'none',
   },
+  '& .ec-trim-bracket': { width: 12, textAlign: 'center', color: '#fd5ee0', fontSize: 20 },
   '& .ec-player .ec-trim-adjust button': {
     width: 44,
     height: 44,
@@ -578,11 +592,25 @@ export const archiveStyle = css({
   '& .ec-clip-dock': {
     display: 'flex',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
     minWidth: 0,
-    '& > .ec-save-clip': { paddingInline: 10 },
   },
-  '& .ec-passage-track': { flex: 1, minWidth: 0 },
+  '& .ec-clip-actions': { display: 'flex', alignItems: 'center', gap: 12, marginLeft: 4 },
+  '& .ec-player .ec-clip-actions .ec-save-clip': {
+    paddingInline: 12,
+    border: '1px solid rgb(253 94 224 / 30%)',
+    borderRadius: 6,
+    background: 'rgb(253 94 224 / 14%)',
+    color: '#fff8fb',
+    fontWeight: 500,
+    '&:hover': { background: 'rgb(253 94 224 / 24%)' },
+  },
+  '& .ec-passage-track': {
+    flex: 1,
+    minWidth: 48,
+    borderRadius: 4,
+    background: 'rgb(253 94 224 / 6%)',
+  },
   '& .ec-passage-duration': { fontSize: 12, opacity: 0.7 },
   '& .ec-sr-only': {
     position: 'absolute',
@@ -616,6 +644,10 @@ export const archiveStyle = css({
     '& .ec-transport': { paddingInline: 8, paddingBottom: 8 },
     '& .ec-transport-row': { gap: 4 },
     '& .ec-seek-wrap': { '--editor-inset': '48px' },
+    '& .ec-time-tooltip[data-editing]': { padding: '4px 12px', bottom: 'calc(50% + 24px)' },
+    '& .ec-clip-dock': { flexWrap: 'wrap', rowGap: 0 },
+    '& .ec-clip-actions': { flexBasis: '100%', marginLeft: 0 },
+    '& .ec-clip-actions .ec-passage-duration': { marginRight: 'auto' },
   },
   '@media (prefers-reduced-motion: reduce)': {
     '& .ec-volume-control::before, & .ec-volume-popover': { transition: 'none' },

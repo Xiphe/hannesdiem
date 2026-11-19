@@ -68,11 +68,24 @@ when explicit session metadata provides its frame rate; it is never inferred
 from browser rendering speed. The first pCloud recording was probed at 60 fps.
 
 The expanded popover has passage Play first, a seek bar spanning the selection,
-total passage length, Save and X. Its 44px `< | >` buttons sit before the passage
-bar for the start marker and after it for the end marker; tab order follows that
-placement. Passage Play starts at the selection's beginning, and passage seeking
+total passage length, Save and X. In the current review version, a 44px minus/plus
+button pair surrounds a pink `[` or `]` matching the selected boundary. It sits
+before the passage bar for the start marker and after it for the end marker;
+tab order follows that placement. Holding a button repeats after 450ms, at 120ms
+intervals. Release, pointer cancellation, focus/window changes and unmount stop
+the timer; release adds no extra step. Passage Play starts at the selection's beginning, and passage seeking
 activates its end stop. Main-bar seeking returns to full-session playback. There
 are no additional trim handles in the passage bar.
+
+This interaction experiment also connects the bottom selection's two corners to
+the passage bar's endpoints with fine pink lines and a faint wash. The selected
+edge's line is stronger. Connections follow measured DOM bounds after trimming,
+side changes and resizing; they never intercept pointer events. They replace the
+popover arrow while the passage controls are present. The passage track repeats
+the selection tint. Extra inset and spacing separate duration, a quieter Save
+button and X. On narrow screens those actions occupy a second row in the same
+popover, keeping the passage bar usable. The artist requested this version to
+try; bracket affordance and visual weighting remain open for review.
 
 Save advances to naming without persisting a highlight. The range controls are
 replaced with the joined title/save/cancel form in the same popover. The title
