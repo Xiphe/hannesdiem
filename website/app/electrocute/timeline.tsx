@@ -28,6 +28,7 @@ export function playedProgress(position: number, start: number, end: number) {
 export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   let hoverTime: number | undefined
   let open = false
+  let dismissed = false
   let width = 0
   let tooltipWidth = 184
   let inputMode: 'mouse' | 'touch' | 'keyboard' = 'keyboard'
@@ -36,6 +37,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   let tooltip: HTMLDivElement | undefined
   let currentPanel: HTMLDivElement | undefined
   let outgoingPanel: HTMLDivElement | undefined
+  let morphOrigin: ReturnType<typeof captureTooltip>
   let previousStage: TooltipStage | undefined
   let previousContent: RemixNode
   let outgoingContent: RemixNode
@@ -48,42 +50,41 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
         started: boolean
       }
     | undefined
-  let closeTimer: ReturnType<typeof setTimeout> | undefined
-  const cancelClose = () => {
-    clearTimeout(closeTimer)
-    closeTimer = undefined
+  function setInputMode(mode: typeof inputMode) {
+    if (inputMode === mode) return
+    inputMode = mode
+    handle.update()
   }
   function show() {
-    cancelClose()
     if (handle.props.disabled) return
+    dismissed = false
     open = true
     handle.update()
   }
   function close() {
-    cancelClose()
     if (handle.props.editing || (!open && hoverTime === undefined)) return
     open = false
     hoverTime = undefined
     handle.update()
-  }
-  function leave() {
-    if (closeTimer !== undefined) return
-    closeTimer = setTimeout(close, 180)
   }
   handle.queueTask(() => {
     const signal = handle.signal
     window.addEventListener(
       'keydown',
       () => {
-        inputMode = 'keyboard'
+        setInputMode('keyboard')
       },
       { capture: true, signal },
     )
     window.addEventListener(
       'pointerdown',
       (event) => {
-        inputMode = event.pointerType === 'mouse' ? 'mouse' : 'touch'
-        if (!wrap?.contains(event.target as Node)) leave()
+        // Preserve a visible clock before the separate star takes focus.
+        morphOrigin = (event.target as Element).closest('.ec-playhead-highlight')
+          ? captureTooltip(tooltip, currentPanel)
+          : undefined
+        setInputMode(event.pointerType === 'mouse' ? 'mouse' : 'touch')
+        if (!wrap?.contains(event.target as Node)) close()
       },
       { capture: true, signal },
     )
@@ -91,13 +92,12 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
       'pointermove',
       (event) => {
         if (event.pointerType !== 'mouse') return
-        inputMode = 'mouse'
-        if (open && !wrap?.contains(event.target as Node)) leave()
+        setInputMode('mouse')
+        if (open && !wrap?.contains(event.target as Node)) close()
       },
       { signal },
     )
   })
-  handle.signal.addEventListener('abort', cancelClose, { once: true })
   handle.signal.addEventListener('abort', () => motion?.controller.abort(), { once: true })
   return () => {
     const p = handle.props
@@ -131,7 +131,8 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
         open = false
         hoverTime = undefined
       }
-      const before = captureTooltip(tooltip, currentPanel)
+      const before = captureTooltip(tooltip, currentPanel) ?? morphOrigin
+      morphOrigin = undefined
       motion?.controller.abort()
       outgoingPanel = undefined
       outgoingContent = undefined
@@ -181,6 +182,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
     return (
       <div
         class="ec-seek-wrap"
+        data-input-mode={inputMode}
         mix={[
           ref((node, signal) => {
             wrap = node
@@ -210,19 +212,21 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
             )
             show()
           }),
-          on('pointerenter', cancelClose),
-          on<HTMLDivElement, 'pointerleave'>('pointerleave', (event) => {
-            if (event.pointerType === 'mouse') leave()
+          on<HTMLDivElement, 'pointerenter'>('pointerenter', (event) => {
+            if (event.pointerType === 'mouse' && !p.editing) show()
           }),
-          on('focusin', cancelClose),
+          on<HTMLDivElement, 'pointerleave'>('pointerleave', (event) => {
+            if (event.pointerType === 'mouse') close()
+          }),
           on<HTMLDivElement, 'focusout'>('focusout', (event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) leave()
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close()
           }),
           on('keydown', (event) => {
             if (p.editing || event.key !== 'Escape' || !open) return
             event.preventDefault()
             event.stopPropagation()
             input?.focus({ preventScroll: true })
+            dismissed = true
             close()
           }),
         ]}
@@ -276,6 +280,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           })}
           data-open={p.editing || open ? 'true' : undefined}
           data-editing={p.editing ? 'true' : undefined}
+          data-dismissed={dismissed ? '' : undefined}
           data-action={!p.editing && p.canHighlight ? '' : undefined}
           data-motion={motion ? `${motion.from}-${motion.to}` : undefined}
           style={

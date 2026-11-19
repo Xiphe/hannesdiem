@@ -470,7 +470,12 @@ test('tooltip motion expands the clock and slides naming forward and back withou
   await page.keyboard.press('Escape')
   await expect(editor).toHaveCount(0)
   await expect(seek).toBeFocused()
-  await page.getByRole('button', { name: 'Highlight at playhead', exact: true }).click()
+  await seek.press('ArrowRight')
+  await expect(page.getByRole('dialog', { name: 'Playback tools' })).toBeVisible()
+  // Activate the separate star while the clock is visible, without moving the pointer away first.
+  const playheadStar = page.getByRole('button', { name: 'Highlight at playhead', exact: true })
+  await playheadStar.dispatchEvent('pointerdown', { pointerType: 'mouse' })
+  await playheadStar.dispatchEvent('click')
   await expect(editor).toHaveAttribute('data-motion', 'clock-range')
   await expect.poll(() => editor.evaluate((node) => node.getAnimations().length)).toBeGreaterThan(0)
   await finish()
@@ -515,6 +520,9 @@ test('the compact tooltip closes when the mouse leaves a focused transport or di
   await page.mouse.click(box.x + box.width / 2, box.y + 9)
   await expect(popup).toBeVisible()
   await page.mouse.move(0, 0)
+  expect(
+    await page.locator('.ec-time-tooltip').evaluate((node) => getComputedStyle(node).visibility),
+  ).toBe('hidden')
   await expect(popup).toBeHidden()
   await expect(seek).toBeFocused()
   await openHighlight(page)

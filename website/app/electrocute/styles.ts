@@ -396,6 +396,12 @@ export const archiveStyle = css({
       pointerEvents: 'none',
     },
   },
+  // Mouse visibility follows native hover immediately, independently of retained focus.
+  '& .ec-seek-wrap[data-input-mode=mouse] > .ec-time-tooltip:not([data-editing])': {
+    opacity: 0,
+    visibility: 'hidden',
+    pointerEvents: 'none',
+  },
   '& .ec-time-label': {
     display: 'block',
     flex: '1 1 auto',
@@ -468,6 +474,12 @@ export const archiveStyle = css({
   },
   '& .ec-volume-popover': { display: 'none' },
   '@media (hover: hover) and (pointer: fine)': {
+    '& .ec-seek-wrap:not([data-input-mode=touch]):hover:has(> .ec-seek:not(:disabled)) > .ec-time-tooltip:not([data-editing]):not([data-dismissed])':
+      {
+        opacity: 1,
+        visibility: 'visible',
+        pointerEvents: 'auto',
+      },
     '& .ec-volume-control::before': {
       content: "''",
       position: 'absolute',
