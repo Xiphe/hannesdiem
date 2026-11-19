@@ -55,6 +55,11 @@ export function validateSessions(sessions: readonly ElectroCuteSession[]) {
       throw new Error('ElectroCute sessions need a title and recording date')
     if (!Number.isFinite(session.duration) || session.duration <= 0)
       throw new Error('ElectroCute sessions need a positive duration')
+    if (
+      session.frameRate !== undefined &&
+      (!Number.isFinite(session.frameRate) || session.frameRate <= 0)
+    )
+      throw new Error('ElectroCute frame rates must be positive')
     const source = new URL(session.src, 'https://hannesdiem.de')
     if (source.protocol !== 'https:' || source.username || source.password)
       throw new Error('ElectroCute sources must use HTTPS or a local absolute path')

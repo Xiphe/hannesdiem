@@ -72,6 +72,8 @@ test('optional local storage rejects damaged, unknown and completed progress', (
 
 test('unsafe media URLs and duplicate identities cannot enter a publication', () => {
   assert.doesNotThrow(() => validateSessions(sessions))
+  for (const frameRate of [0, -1, Infinity, NaN])
+    assert.throws(() => validateSessions([{ ...sessions[0], frameRate }]))
   assert.throws(() => validateSessions([...sessions, sessions[0]]))
   assert.throws(() => validateSessions([{ ...sessions[0], src: 'javascript:alert(1)' }]))
   assert.throws(() => validateSessions([{ ...sessions[0], src: 'http://example.org/video.mp4' }]))

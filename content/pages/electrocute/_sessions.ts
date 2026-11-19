@@ -8,5 +8,6 @@ export const sessions = [
     recordedAt: '2023-04-23',
     src: 'https://filedn.eu/l1O78TfifnP421oU4WVEgW8/Electrocute/230423_electrocute_XLV_outside_to_ovations.mp4',
     duration: 2871.1,
+    frameRate: 60,
   },
 ] satisfies readonly ElectroCuteSession[]

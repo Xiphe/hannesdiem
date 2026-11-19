@@ -43,16 +43,20 @@ and the media stage are compact, with transport controls over the image using th
 existing feed icons. The artist rejected the detached range form and requested
 clipping directly inside the player, following the Twitch-style trimming interaction.
 
-Set highlight opens an integrated trim timeline at the bottom of the player. Drag
-either edge to trim or drag the selected passage to move it. The scale initially
-shows three minutes around the passage instead of compressing a minute into the
-full recording's timeline. Zoom controls let longer and shorter ranges remain
-editable; compact timecodes allow exact input. Arrow keys adjust by one second,
-Shift by ten. Preview plays the selected bounds and stops at the end. Escape
-closes the editor and restores focus to its trigger. Opening the editor focuses
-a trim handle, avoiding an immediate mobile keyboard over the video. Title,
-public name and save are a single compact row inside that same player surface.
-There are no highlight thumbnails or decorative introductory text.
+Set highlight places a default one-minute selection above the video's existing
+full-session progress bar. This is the only trim surface: drag either edge, or
+select one and adjust it with adjacent 44px plus/minus buttons or arrow keys
+(one second). Shift plus an arrow adjusts one source frame when session metadata
+provides its frame rate. Source frame rates are explicit, never inferred from
+browser rendering speed. The first pCloud recording was probed at 60 fps.
+The playhead and full-session playback continue independently while editing.
+
+The lower dock contains only Play from the passage start and a seek bar spanning
+the selected bounds. Seeking there activates the passage end stop; seeking on the
+main bar returns to full-session playback. It has no trim handles. Title, save and
+an X replace the Set highlight action. Escape cancels and restores focus to the
+trigger. The public name is never requested in the clipping UI. There are no
+highlight thumbnails or decorative introductory text.
 
 ## Data and navigation
 
@@ -95,12 +99,17 @@ revision checks prevent silent overwrites from stale editors. Text-check results
 also compare that revision, so an old inference cannot undo a correction or hide.
 
 The public-name record is independent of Circle membership and private Resend
-contact names. The first editor suggests an existing active Circle alias and asks
-for explicit confirmation through saving. It never claims a Circle place or changes
-subscriptions. An accepted name is reused across this person's sessions. Highlights
-retain the public-name snapshot chosen when saved; changing the next contribution's
-alias does not retroactively rename earlier contributions. There is no dedicated
-profile management or avatar UI yet.
+contact names. A separate collapsed Public profile section outside the player
+allows explicit confirmation or update of the name, suggesting an active Circle
+alias without claiming a place or changing subscriptions. New profiles without a
+chosen name display as Listener. All highlights resolve their owner's current
+profile at read time: name changes apply across sessions without rewriting ranges,
+titles, IDs or revisions. No public-name snapshot is written to a new highlight;
+submitted names on highlight writes are ignored, including artist corrections.
+Approved legacy snapshots seed a missing profile once and are removed on access;
+an existing profile always wins over an old snapshot. Profile updates pass the
+text check independently and retain the previous name on rejection or outage.
+A dedicated account page and avatars remain outside this change.
 
 The small agentic check uses Workers AI with
 [`llama-3.3-70b-instruct-fp8-fast`](https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/).

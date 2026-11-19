@@ -45,7 +45,6 @@ const artist = 'artist@example.org',
 const input = (extra: Partial<HighlightInput> = {}): HighlightInput => ({
   id: crypto.randomUUID(),
   title: 'Synthetic passage',
-  alias: 'Synthetic alias',
   start: 10,
   end: 70,
   ...extra,
@@ -67,7 +66,8 @@ test('visitor text is checked before publication, rechecked after edits, and pub
   const data = input()
   const saved = await service.mutate(session, owner, 'save', data)
   assert.equal(saved.highlights[0].status, 'approved')
-  assert.equal(saved.alias, 'Synthetic alias')
+  assert.equal(saved.alias, undefined)
+  assert.equal(saved.highlights[0].person, 'Listener')
   assert.equal(saved.highlights[0].own, true)
   const publicState = await service.view(session)
   assert.equal(publicState.highlights.length, 1)
@@ -80,8 +80,7 @@ test('visitor text is checked before publication, rechecked after edits, and pub
   await service.mutate(session, owner, 'save', { ...data, revision: 2, title: 'Reject fixture' })
   assert.equal((await service.view(session)).highlights.length, 0)
   assert.equal((await service.view(session, owner)).highlights[0].status, 'rejected')
-  await service.mutate(session, owner, 'save', { ...data, revision: 3, alias: 'New alias' })
-  assert.equal((await service.view(session, owner)).alias, 'New alias')
+  await service.mutate(session, owner, 'save', { ...data, revision: 3, title: 'Accepted fixture' })
   assert.equal(checks.length, 3)
   const overlap = input({ start: 30, end: 80 })
   await service.mutate(session, owner, 'save', overlap)
@@ -128,7 +127,7 @@ test('owners and artist have separate reversible visibility controls; strangers 
   })
   const corrected = (await service.view(session, owner)).highlights[0]
   assert.equal(corrected.own, true)
-  assert.equal(corrected.person, 'Synthetic alias')
+  assert.equal(corrected.person, 'Listener')
   assert.equal(calls, 1, 'artist corrections bypass moderation')
   const own = await service.mutate(session, artist, 'save', input())
   assert.equal(own.artist, true)
@@ -185,7 +184,6 @@ test('duration, text bounds, revision and client IDs are enforced before writes'
     { end: 181 },
     { start: 70, end: 10 },
     { title: ' ' },
-    { alias: 'x'.repeat(21) },
     { title: 'bad\nfixture' },
     { id: '../../fixture' },
   ])
@@ -240,4 +238,102 @@ test('the model adapter sends only title and public alias, and fails closed on m
   assert.equal(requests[0].model, moderationModel)
   assert.match(JSON.stringify(requests[0].inputs), /untrusted/)
   assert.ok(!JSON.stringify(requests).includes(owner))
+})
+
+test('highlights reference the current public profile across sessions; edits cannot rename their creator', async () => {
+  const storage = new Storage()
+  const service = new HighlightService(
+    storage,
+    async (_title, alias) =>
+      alias === 'Rejected fixture'
+        ? 'rejected'
+        : alias === 'Pending fixture'
+          ? 'pending'
+          : 'approved',
+    artist,
+  )
+  const profile = (alias: string, email = owner) =>
+    service.mutate(session, email, 'profile', { id: crypto.randomUUID(), alias })
+  await profile('First fixture')
+  const one = input(),
+    two = input()
+  await service.mutate(session, owner, 'save', { ...one, alias: 'Ignored snapshot' })
+  const other = { ...session, id: 'other-synthetic-session' }
+  await service.mutate(other, owner, 'save', two)
+  assert.equal((await service.view(session)).highlights[0].person, 'First fixture')
+  await profile('Renamed fixture')
+  assert.equal((await service.view(session)).highlights[0].person, 'Renamed fixture')
+  assert.equal((await service.view(other)).highlights[0].person, 'Renamed fixture')
+  await service.mutate(session, artist, 'save', {
+    ...one,
+    revision: 1,
+    alias: 'Artist cannot rename creator',
+  })
+  assert.equal((await service.view(session)).highlights[0].person, 'Renamed fixture')
+  for (const [key, value] of storage.data)
+    if (key.startsWith('h:')) {
+      assert.ok(!Object.hasOwn(value as object, 'person'))
+      assert.ok(!Object.hasOwn(value as object, 'alias'))
+      assert.equal((value as { owner: string }).owner, owner)
+    }
+  await assert.rejects(profile('Rejected fixture'), rejectedWith(422))
+  await assert.rejects(profile('Pending fixture'), rejectedWith(503))
+  await assert.rejects(profile('x'.repeat(21)), rejectedWith(400))
+  assert.equal((await service.view(other)).highlights[0].person, 'Renamed fixture')
+})
+
+test('accepted legacy snapshots upgrade to a profile reference without overwriting an existing profile', async () => {
+  const storage = new Storage()
+  const service = new HighlightService(storage, async () => 'approved', artist)
+  const one = input(),
+    two = input()
+  await service.mutate(session, owner, 'save', one)
+  await service.mutate(session, owner, 'save', two)
+  for (const [key, value] of storage.data)
+    if (key.startsWith('h:'))
+      storage.data.set(key, { ...(value as object), person: 'Legacy fixture' })
+  assert.equal((await service.view(session)).highlights[0].person, 'Legacy fixture')
+  await service.mutate(session, owner, 'profile', {
+    id: crypto.randomUUID(),
+    alias: 'Current fixture',
+  })
+  const entry = [...storage.data].find(([key]) => key.endsWith(two.id))!
+  storage.data.set(entry[0], { ...(entry[1] as object), person: 'Stale snapshot' })
+  assert.ok(
+    (await service.view(session)).highlights.every((item) => item.person === 'Current fixture'),
+  )
+  for (const [key, value] of storage.data)
+    if (key.startsWith('h:')) assert.ok(!Object.hasOwn(value as object, 'person'))
+})
+
+test('a delayed profile check cannot replace a newer accepted public name', async () => {
+  let release!: (value: CheckResult) => void
+  let started!: () => void
+  const waiting = new Promise<void>((resolve) => {
+    started = resolve
+  })
+  const service = new HighlightService(
+    new Storage(),
+    async (_title, alias) => {
+      if (alias === 'Slow fixture')
+        return new Promise<CheckResult>((resolve) => {
+          release = resolve
+          started()
+        })
+      return 'approved'
+    },
+    artist,
+  )
+  const slow = service.mutate(session, owner, 'profile', {
+    id: crypto.randomUUID(),
+    alias: 'Slow fixture',
+  })
+  await waiting
+  await service.mutate(session, owner, 'profile', {
+    id: crypto.randomUUID(),
+    alias: 'Current fixture',
+  })
+  release('approved')
+  await assert.rejects(slow, rejectedWith(409))
+  assert.equal((await service.view(session, owner)).alias, 'Current fixture')
 })

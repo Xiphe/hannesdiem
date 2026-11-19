@@ -7,6 +7,7 @@ export const electroCuteSessions: readonly ElectroCuteSession[] = [1, 2, 3, 4].m
   recordedAt: `2023-01-${String(number * 7).padStart(2, '0')}`,
   src: '/fixture-media/electrocute.mp4',
   duration: 96,
+  frameRate: 5,
   highlights:
     number === 1
       ? [

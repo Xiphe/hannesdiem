@@ -111,7 +111,6 @@ async function harness() {
 const data = () => ({
   id: crypto.randomUUID(),
   title: 'Runtime synthetic passage',
-  alias: 'Public fixture',
   start: 10,
   end: 40,
 })
@@ -197,6 +196,7 @@ test('missing model binding persists private contributions and confirmed aliases
     assert.equal((await h.identity()).state.highlights.length, 0)
     assert.equal((await h.identity('visitor@example.org')).state.highlights[0].id, clip.id)
     const artist = await h.identity('artist@example.org')
+    await h.submit(artist, { id: crypto.randomUUID(), alias: 'Public fixture' }, 'profile')
     await h.submit(artist, data())
     assert.equal((await h.identity('artist@example.org')).state.alias, 'Public fixture')
     assert.equal(

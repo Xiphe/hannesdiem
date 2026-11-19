@@ -14,6 +14,8 @@ export interface ElectroCuteSession {
   recordedAt: string
   src: string
   duration: number
+  /** Source frame rate, required for frame-accurate keyboard trimming. */
+  frameRate?: number
   poster?: string
   highlights?: readonly ElectroCuteHighlight[]
 }

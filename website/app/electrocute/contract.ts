@@ -21,11 +21,12 @@ export interface HighlightInput {
   id: string
   revision?: number
   title?: string
+  /** Only accepted by the separate profile intent; never stored on a highlight. */
   alias?: string
   start?: number
   end?: number
 }
-export type HighlightIntent = 'save' | 'withdraw' | 'hide' | 'restore' | 'retry'
+export type HighlightIntent = 'save' | 'withdraw' | 'hide' | 'restore' | 'retry' | 'profile'
 export const isPublic = (item: Pick<RuntimeHighlight, 'status' | 'withdrawn' | 'hidden'>) =>
   item.status === 'approved' && !item.withdrawn && !item.hidden
 

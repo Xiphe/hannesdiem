@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import type { HighlightState, RuntimeHighlight } from '../app/electrocute/contract.ts'
 
@@ -106,7 +106,19 @@ test('progress stays separate for each session and the last heard session is pin
     .toBeGreaterThanOrEqual(20)
 })
 
-test('range editing validates bounds, previews the passage and persists only a local draft', async ({
+async function setRange(page: Page, start: number, end: number) {
+  const left = page.getByRole('slider', { name: 'Highlight start', exact: true })
+  const right = page.getByRole('slider', { name: 'Highlight end', exact: true })
+  await right.press('End')
+  await left.press('Home')
+  for (let second = 0; second < start; second++) await left.press('ArrowRight')
+  await right.press('Home')
+  // The synthetic source is 5 fps: Home leaves a one-frame minimum.
+  for (let frame = 0; frame < 4; frame++) await right.press('Shift+ArrowRight')
+  for (let second = start + 1; second < end; second++) await right.press('ArrowRight')
+}
+
+test('range editing clamps bounds, previews the passage and persists only a local draft', async ({
   page,
 }) => {
   await page.goto('/electrocute/test-session-1')
@@ -116,13 +128,15 @@ test('range editing validates bounds, previews the passage and persists only a l
     ;(video as HTMLVideoElement).currentTime = 20
   })
   await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
-  await expect(page.getByRole('textbox', { name: 'Start time' })).toHaveValue('0:20')
-  await expect(page.getByRole('textbox', { name: 'End time' })).toHaveValue('1:20')
+  const start = page.getByRole('slider', { name: 'Highlight start', exact: true })
+  const end = page.getByRole('slider', { name: 'Highlight end', exact: true })
+  await expect(start).toHaveAttribute('aria-valuenow', '20')
+  await expect(end).toHaveAttribute('aria-valuenow', '80')
+  await start.press('End')
+  await start.press('ArrowRight')
+  expect(Number(await start.getAttribute('aria-valuenow'))).toBeLessThan(80)
+  await setRange(page, 10, 12)
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Synthetic saved passage')
-  await page.getByRole('textbox', { name: 'End time' }).fill('0:10')
-  await expect(page.getByRole('button', { name: 'Save draft', exact: true })).toBeDisabled()
-  await page.getByRole('textbox', { name: 'Start time' }).fill('0:10')
-  await page.getByRole('textbox', { name: 'End time' }).fill('0:12')
   await page.getByRole('button', { name: 'Preview passage', exact: true }).click()
   await expect
     .poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused), { timeout: 8000 })
@@ -139,6 +153,8 @@ test('range editing validates bounds, previews the passage and persists only a l
   await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
     'Synthetic saved passage',
   )
+  await expect(start).toHaveAttribute('aria-valuenow', '10')
+  await expect(end).toHaveAttribute('aria-valuenow', '12')
   await page.getByRole('button', { name: 'Cancel', exact: true }).click()
   await draft.getByRole('button', { name: 'Remove draft' }).click()
   await expect(draft).toHaveCount(0)
@@ -199,7 +215,7 @@ test('failed device storage keeps the unsaved form available', async ({ page }) 
   await expect(page.getByRole('status')).toContainText('Could not save')
 })
 
-test('trimming happens inside the player with draggable edges, a movable passage and keyboard precision', async ({
+test('main playback bar owns trimming with selected edges, second and frame controls', async ({
   page,
 }) => {
   await page.goto('/electrocute/test-session-1')
@@ -209,13 +225,18 @@ test('trimming happens inside the player with draggable edges, a movable passage
   })
   await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
   const player = page.locator('.ec-player')
-  await expect(player.getByRole('region', { name: 'Highlight editor' })).toBeVisible()
-  await expect(player.locator('video')).not.toHaveAttribute('controls')
+  await expect(player.locator('.ec-seek-wrap .ec-trim-rail')).toHaveCount(1)
+  await expect(
+    player.getByRole('region', { name: 'Highlight editor' }).getByRole('slider'),
+  ).toHaveCount(1)
+  await expect(
+    player.getByRole('region', { name: 'Highlight editor' }).locator('.ec-trim-edge'),
+  ).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toHaveCount(0)
   const rail = await player.locator('.ec-trim-rail').boundingBox()
   if (!rail) throw new Error('Missing trim timeline')
   const start = player.getByRole('slider', { name: 'Highlight start', exact: true })
   const end = player.getByRole('slider', { name: 'Highlight end', exact: true })
-  const move = player.getByRole('slider', { name: 'Move highlight', exact: true })
   async function drag(target: typeof start, seconds: number) {
     await target.scrollIntoViewIfNeeded()
     const box = await target.boundingBox()
@@ -231,28 +252,65 @@ test('trimming happens inside the player with draggable edges, a movable passage
   }
   await drag(start, 10)
   await expect(start).toHaveAttribute('aria-valuenow', '30')
-  await expect(end).toHaveAttribute('aria-valuenow', '80')
   await drag(end, -10)
   await expect(end).toHaveAttribute('aria-valuenow', '70')
-  await drag(move, 10)
-  await expect(start).toHaveAttribute('aria-valuenow', '40')
-  await expect(end).toHaveAttribute('aria-valuenow', '80')
-  await start.focus()
-  await page.keyboard.press('ArrowRight')
-  await expect(start).toHaveAttribute('aria-valuenow', '41')
-  await page.keyboard.press('Shift+ArrowLeft')
+  await start.click()
+  await page.getByRole('button', { name: 'Increase highlight start by one second' }).click()
   await expect(start).toHaveAttribute('aria-valuenow', '31')
-  await page.keyboard.press('End')
-  await expect(start).toHaveAttribute('aria-valuenow', '79')
-  await expect(end).toHaveAttribute('aria-valuenow', '80')
-  await page.getByRole('button', { name: 'Zoom in timeline' }).click()
-  await expect(player.locator('.ec-trim-selection')).toBeVisible()
+  await start.press('ArrowRight')
+  await expect(start).toHaveAttribute('aria-valuenow', '32')
+  await start.press('Shift+ArrowLeft')
+  await expect(start).toHaveAttribute('aria-valuenow', '31.8')
+  await end.click()
+  await page.getByRole('button', { name: 'Decrease highlight end by one second' }).click()
+  await expect(end).toHaveAttribute('aria-valuenow', '69')
+  await expect
+    .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeCloseTo(20, 0)
   await page.keyboard.press('Escape')
   await expect(player.getByRole('region', { name: 'Highlight editor' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeFocused()
 })
 
-test('public editor confirms a Circle alias, handles pending text, and supports withdrawal and restoration', async ({
+test('main playback keeps running while trimming; passage preview starts over and seeks within its bounds', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  const video = page.locator('video')
+  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
+  await video.evaluate(async (video) => {
+    const v = video as HTMLVideoElement
+    v.muted = true
+    v.currentTime = 20
+    await v.play()
+  })
+  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect.poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused)).toBe(false)
+  await expect
+    .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeGreaterThan(20.2)
+  const end = page.getByRole('slider', { name: 'Highlight end', exact: true })
+  await end.press('ArrowLeft')
+  await expect.poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused)).toBe(false)
+  await page.getByRole('button', { name: 'Pause', exact: true }).click()
+  await setRange(page, 10, 12)
+  await page.getByRole('button', { name: 'Preview passage', exact: true }).click()
+  await expect
+    .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeLessThan(11)
+  const passage = page.getByRole('slider', { name: 'Passage position', exact: true })
+  await passage.press('End')
+  await expect.poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused)).toBe(true)
+  await expect
+    .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeCloseTo(12, 1)
+  await page.getByRole('button', { name: 'Preview passage', exact: true }).click()
+  await expect
+    .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeLessThan(11)
+})
+
+test('public editor uses a separate profile, handles pending text, withdrawal and restoration', async ({
   page,
 }) => {
   let state: HighlightState = {
@@ -276,6 +334,16 @@ test('public editor confirms a Circle alias, handles pending text, and supports 
       expect(input).not.toHaveProperty('email')
       expect(input).not.toHaveProperty('artist')
       expect(input).not.toHaveProperty('duration')
+      if (form.get('intent') === 'profile') {
+        state = {
+          ...state,
+          alias: input.alias,
+          highlights: state.highlights.map((item) => ({ ...item, person: input.alias })),
+        }
+        await route.fulfill({ json: state })
+        return
+      }
+      expect(input).not.toHaveProperty('alias')
       const previous = state.highlights[0]
       const intent = form.get('intent')
       const highlight: RuntimeHighlight =
@@ -284,7 +352,7 @@ test('public editor confirms a Circle alias, handles pending text, and supports 
               ...previous,
               id: input.id,
               title: input.title,
-              person: input.alias,
+              person: state.alias ?? 'Listener',
               start: input.start,
               end: input.end,
               revision: (previous?.revision ?? 0) + 1,
@@ -299,7 +367,6 @@ test('public editor confirms a Circle alias, handles pending text, and supports 
       state = {
         ...state,
         highlights: [highlight],
-        alias: approved ? (input.alias ?? state.alias) : undefined,
       }
     }
     await route.fulfill({ json: state, headers: { 'Cache-Control': 'no-store' } })
@@ -307,23 +374,28 @@ test('public editor confirms a Circle alias, handles pending text, and supports 
   await page.goto('/fixture-public-highlights')
   await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
   await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
-  await expect(page.getByRole('textbox', { name: 'Name or alias (public)' })).toHaveValue(
-    'Circle fixture alias',
-  )
-  expect(savedIds, 'suggestion alone never publishes a profile or highlight').toHaveLength(0)
+  await expect(
+    page.locator('.ec-player').getByRole('textbox', { name: /public|alias/i }),
+  ).toHaveCount(0)
+  expect(savedIds).toHaveLength(0)
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Synthetic public passage')
-  await page.getByRole('textbox', { name: 'End time' }).fill('0:40')
   await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
   const privateList = page.getByRole('region', { name: 'Unpublished highlights' })
   await expect(privateList).toContainText('Text check pending')
   await expect(privateList.getByRole('button', { name: 'Share' })).toHaveCount(0)
   await expect(page.getByRole('status')).toContainText('Saved privately')
   await privateList.getByRole('button', { name: 'Edit highlight' }).click()
-  await page.getByRole('textbox', { name: 'Name or alias (public)' }).fill('Confirmed fixture')
   approved = true
   await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
   await expect(privateList).toHaveCount(0)
   const clip = page.locator('.ec-highlight').filter({ hasText: 'Synthetic public passage' })
+  await expect(clip).toContainText('Listener')
+  await page.getByText('Public profile', { exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Public name', exact: true })).toHaveValue(
+    'Circle fixture alias',
+  )
+  await page.getByRole('textbox', { name: 'Public name', exact: true }).fill('Confirmed fixture')
+  await page.getByRole('button', { name: 'Update public name', exact: true }).click()
   await expect(clip).toContainText('Confirmed fixture')
   await expect(clip.getByRole('button', { name: 'Share' })).toBeVisible()
   expect(savedIds[0], 'edits preserve the stable link').toBe(savedIds[1])
@@ -420,7 +492,13 @@ test.describe('mobile player', () => {
     }
     await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
     await expect(end).toHaveAttribute('aria-valuenow', '86')
-    await expect(page.getByRole('textbox', { name: 'End time' })).toHaveValue('1:26')
+    await end.tap()
+    const minus = page.getByRole('button', { name: 'Decrease highlight end by one second' })
+    const target = await minus.boundingBox()
+    expect(target!.width).toBeGreaterThanOrEqual(44)
+    expect(target!.height).toBeGreaterThanOrEqual(44)
+    await minus.tap()
+    await expect(end).toHaveAttribute('aria-valuenow', '85')
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
       .toBe(true)

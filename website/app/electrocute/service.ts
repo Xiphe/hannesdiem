@@ -14,7 +14,8 @@ interface RecordHighlight {
   session: string
   owner: string
   title: string
-  person: string
+  /** Read only during migration from the former per-highlight name snapshot. */
+  person?: string
   start: number
   end: number
   revision: number
@@ -25,6 +26,7 @@ interface RecordHighlight {
   updated: number
 }
 interface ProfileAlias {
+  revision?: number
   alias: string
   updated: number
 }
@@ -78,7 +80,7 @@ export class HighlightService {
       highlights.push({
         id: record.id,
         title: record.title,
-        person: record.person,
+        person: await this.person(record),
         start: record.start,
         end: record.end,
         revision: record.revision,
@@ -102,6 +104,34 @@ export class HighlightService {
     input: HighlightInput,
   ) {
     email = email.toLowerCase()
+    if (intent === 'profile') {
+      if (!text(input.alias, 20)) throw new HighlightError(400)
+      const alias = input.alias.trim()
+      const profileKey = `p:${await digest(email)}`
+      const previous = await this.storage.get<ProfileAlias>(profileKey)
+      let result: CheckResult = 'pending'
+      try {
+        result = this.artist(email) ? 'approved' : await this.check('', alias)
+      } catch {
+        /* Keep the old name on an unavailable check. */
+      }
+      if (result !== 'approved') throw new HighlightError(result === 'rejected' ? 422 : 503)
+      await this.storage.transaction(async (tx) => {
+        const current = await tx.get<ProfileAlias>(profileKey)
+        if (
+          current?.revision !== previous?.revision ||
+          current?.updated !== previous?.updated ||
+          current?.alias !== previous?.alias
+        )
+          throw new HighlightError(409)
+        await tx.put(profileKey, {
+          alias,
+          updated: this.now(),
+          revision: (previous?.revision ?? 0) + 1,
+        })
+      })
+      return this.view(session, email)
+    }
     if (!uuid.test(input.id)) throw new HighlightError(400)
     const artist = this.artist(email)
     const recordKey = key(session.id, input.id)
@@ -116,21 +146,18 @@ export class HighlightService {
       if (intent === 'save') {
         if (
           !text(input.title, 120) ||
-          !text(input.alias, 20) ||
           typeof input.start !== 'number' ||
           typeof input.end !== 'number' ||
           !validRange(input.start, input.end, session.duration)
         )
           throw new HighlightError(400)
-        const title = input.title.trim(),
-          person = input.alias.trim()
-        const changed = old?.title !== title || old.person !== person
+        const title = input.title.trim()
+        const changed = old?.title !== title
         next = {
           id: input.id,
           session: session.id,
           owner: old?.owner ?? email,
           title,
-          person,
           start: input.start,
           end: input.end,
           revision: (old?.revision ?? 0) + 1,
@@ -165,23 +192,34 @@ export class HighlightService {
     // Schedule before inference: a crash or disconnected client cannot lose retries.
     if (record.status === 'pending') {
       if (!record.hidden && !record.withdrawn) await this.review(record)
-    } else if (record.status === 'approved' && intent === 'save' && record.owner === email) {
-      await this.profile(record)
     }
     return this.view(session, email)
   }
-  private async profile(record: RecordHighlight) {
+  private async person(record: RecordHighlight) {
     const profileKey = `p:${await digest(record.owner)}`
-    await this.storage.transaction(async (tx) => {
-      const old = await tx.get<ProfileAlias>(profileKey)
-      if (!old || old.updated <= record.updated)
-        await tx.put(profileKey, { alias: record.person, updated: record.updated })
+    // Upgrade old accepted snapshots once. A profile change always wins over
+    // an old highlight, including highlights from another session.
+    return this.storage.transaction(async (tx) => {
+      let profile = await tx.get<ProfileAlias>(profileKey)
+      if (record.person && record.status === 'approved') {
+        if (!profile) {
+          profile = { alias: record.person, updated: record.updated }
+          await tx.put(profileKey, profile)
+        }
+        const recordKey = key(record.session, record.id)
+        const current = await tx.get<RecordHighlight>(recordKey)
+        if (current?.revision === record.revision) {
+          const { person: _legacyName, ...linked } = current
+          await tx.put(recordKey, linked)
+        }
+      }
+      return profile?.alias ?? 'Listener'
     })
   }
   private async review(record: RecordHighlight) {
     let status: CheckResult = 'pending'
     try {
-      status = await this.check(record.title, record.person)
+      status = await this.check(record.title, record.person ?? (await this.person(record)))
     } catch {
       /* retry durably */
     }
@@ -193,7 +231,7 @@ export class HighlightService {
       await tx.put(key(record.session, record.id), next)
       return next
     })
-    if (reviewed?.status === 'approved') await this.profile(reviewed)
+    if (reviewed?.status === 'approved') await this.person(reviewed)
   }
   async maintain() {
     const records = await this.storage.list<RecordHighlight>({ prefix: 'h:' })

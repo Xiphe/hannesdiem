@@ -5,51 +5,37 @@ interface TrimProps {
   start: number
   end: number
   duration: number
-  position: number
+  frameRate?: number
   disabled: boolean
-  change(start: number, end: number, seek: number): void
-  seek(time: number): void
+  change(start: number, end: number): void
 }
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
+export const preciseClock = (seconds: number) => {
+  const milliseconds = Math.max(0, Math.round(seconds * 1000))
+  return `${clock(milliseconds / 1000)}.${String(milliseconds % 1000).padStart(3, '0')}`
+}
 
-/** A local time scale keeps a minute selectable even inside a two-hour session. */
+/** The full recording's playback bar is also the only trimming surface. */
 export function TrimTimeline(handle: Handle<TrimProps>) {
   let rail: HTMLDivElement | undefined
-  const initial = handle.props
-  let span = Math.min(initial.duration, Math.max(180, initial.end - initial.start + 120))
-  let offset = clamp((initial.start + initial.end - span) / 2, 0, initial.duration - span)
+  let selected: 'start' | 'end' = 'start'
   let drag:
-    | {
-        id: number
-        kind: 'start' | 'end' | 'move'
-        x: number
-        start: number
-        end: number
-        width: number
-      }
-    | undefined
-  const percent = (time: number) => clamp(((time - offset) / span) * 100, 0, 100)
-
-  function change(
-    kind: 'start' | 'end' | 'move',
-    delta: number,
-    start = handle.props.start,
-    end = handle.props.end,
-  ) {
-    const duration = Math.floor(handle.props.duration)
-    if (kind === 'start') start = clamp(Math.round(start + delta), 0, end - 1)
-    else if (kind === 'end') end = clamp(Math.round(end + delta), start + 1, duration)
-    else {
-      const shift = clamp(Math.round(delta), -start, duration - end)
-      start += shift
-      end += shift
-    }
-    handle.props.change(start, end, kind === 'end' ? Math.max(start, end - 0.1) : start)
+    { id: number; kind: 'start' | 'end'; x: number; value: number; width: number } | undefined
+  function change(kind: 'start' | 'end', value: number) {
+    const p = handle.props
+    const gap = p.frameRate ? 1 / p.frameRate : 0.001
+    if (p.frameRate) value = Math.round(value * p.frameRate) / p.frameRate
+    else value = Math.round(value * 1000) / 1000
+    p.change(
+      kind === 'start' ? clamp(value, 0, p.end - gap) : p.start,
+      kind === 'end' ? clamp(value, p.start + gap, p.duration) : p.end,
+    )
   }
-  function begin(event: PointerEvent, kind: 'start' | 'end' | 'move') {
+  function begin(event: PointerEvent, kind: 'start' | 'end') {
     if (handle.props.disabled || event.button !== 0 || !rail) return
     event.preventDefault()
     event.stopPropagation()
+    selected = kind
     const target = event.currentTarget as HTMLButtonElement
     target.focus({ preventScroll: true })
     target.setPointerCapture(event.pointerId)
@@ -57,87 +43,78 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
       id: event.pointerId,
       kind,
       x: event.clientX,
-      start: handle.props.start,
-      end: handle.props.end,
+      value: handle.props[kind],
       width: rail.getBoundingClientRect().width,
     }
+    handle.update()
   }
   function move(event: PointerEvent) {
     if (!drag || event.pointerId !== drag.id) return
     event.preventDefault()
-    change(drag.kind, ((event.clientX - drag.x) / drag.width) * span, drag.start, drag.end)
+    // Clicking selects an edge without quantizing or moving it.
+    if (Math.abs(event.clientX - drag.x) < 2) return
+    change(
+      drag.kind,
+      Math.round(drag.value + ((event.clientX - drag.x) / drag.width) * handle.props.duration),
+    )
   }
   function finish(event: PointerEvent) {
     if (!drag || event.pointerId !== drag.id) return
     const target = event.currentTarget as HTMLButtonElement
     if (target.hasPointerCapture(event.pointerId)) target.releasePointerCapture(event.pointerId)
     drag = undefined
-    handle.update()
   }
-  function key(event: KeyboardEvent, kind: 'start' | 'end' | 'move') {
+  function key(event: KeyboardEvent, kind: 'start' | 'end') {
     const p = handle.props
-    const step = event.shiftKey ? 10 : 1
-    let delta: number
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') delta = -step
-    else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') delta = step
-    else if (event.key === 'Home') delta = -(kind === 'end' ? p.end - p.start - 1 : p.start)
-    else if (event.key === 'End')
-      delta = kind === 'start' ? p.end - p.start - 1 : Math.floor(p.duration) - p.end
+    let value: number
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      if (event.shiftKey && !p.frameRate) return
+      const step = event.shiftKey ? 1 / p.frameRate! : 1
+      value = p[kind] + (event.key === 'ArrowLeft' ? -step : step)
+    } else if (event.key === 'Home') value = kind === 'start' ? 0 : p.start
+    else if (event.key === 'End') value = kind === 'start' ? p.end : p.duration
     else return
     event.preventDefault()
-    change(kind, delta)
+    change(kind, value)
   }
-  function zoom(factor: number) {
-    const p = handle.props
-    span = Math.min(p.duration, Math.max(15, p.end - p.start + 10, span * factor))
-    offset = clamp((p.start + p.end - span) / 2, 0, p.duration - span)
-    handle.update()
-  }
-  const gesture = (kind: 'start' | 'end' | 'move') => [
-    on<HTMLButtonElement, 'pointerdown'>('pointerdown', (event: PointerEvent) =>
-      begin(event, kind),
-    ),
-    on<HTMLButtonElement, 'pointermove'>('pointermove', move),
-    on<HTMLButtonElement, 'pointerup'>('pointerup', finish),
-    on<HTMLButtonElement, 'pointercancel'>('pointercancel', finish),
-    on<HTMLButtonElement, 'keydown'>('keydown', (event: KeyboardEvent) => key(event, kind)),
-  ]
-
   return () => {
     const p = handle.props
-    if (!drag && (p.start < offset || p.end > offset + span)) {
-      span = Math.min(p.duration, Math.max(span, p.end - p.start + 30))
-      offset = clamp((p.start + p.end - span) / 2, 0, p.duration - span)
-    }
-    const start = percent(p.start),
-      end = percent(p.end)
     return (
       <div
-        class="ec-trimmer"
+        class="ec-main-trim"
         aria-label="Trim highlight"
       >
-        <div class="ec-trim-scale">
-          <span class="ec-clock">{clock(offset)}</span>
-          <span>Drag the edges to trim</span>
-          <div class="ec-zoom">
-            <button
-              type="button"
-              aria-label="Zoom out timeline"
-              disabled={p.disabled || span >= p.duration}
-              mix={on('click', () => zoom(2))}
-            >
-              −
-            </button>
-            <button
-              type="button"
-              aria-label="Zoom in timeline"
-              disabled={p.disabled || span <= Math.max(15, p.end - p.start + 10)}
-              mix={on('click', () => zoom(0.5))}
-            >
-              +
-            </button>
-          </div>
-          <span class="ec-clock">{clock(offset + span)}</span>
+        <div class="ec-trim-adjust">
+          <span
+            class="ec-clock"
+            aria-live="polite"
+          >
+            {selected === 'start' ? 'Start' : 'End'} {preciseClock(p[selected])}
+          </span>
+          <button
+            type="button"
+            aria-label={`Decrease highlight ${selected} by one second`}
+            disabled={
+              p.disabled ||
+              (selected === 'start' ? p.start <= 0 : p.end <= p.start + 1 / (p.frameRate ?? 1000))
+            }
+            mix={on('click', () => change(selected, p[selected] - 1))}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label={`Increase highlight ${selected} by one second`}
+            disabled={
+              p.disabled ||
+              (selected === 'end'
+                ? p.end >= p.duration
+                : p.start >= p.end - 1 / (p.frameRate ?? 1000))
+            }
+            mix={on('click', () => change(selected, p[selected] + 1))}
+          >
+            +
+          </button>
         </div>
         <div
           class="ec-trim-rail"
@@ -145,57 +122,52 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
             rail = node
           })}
         >
-          <button
-            type="button"
-            class="ec-trim-scrub"
-            aria-label="Seek within highlight timeline"
-            disabled={p.disabled}
-            mix={on('click', (event) => {
-              if (!rail) return
-              const box = rail.getBoundingClientRect()
-              p.seek(offset + clamp((event.clientX - box.left) / box.width, 0, 1) * span)
-            })}
-          />
-          <button
-            type="button"
-            role="slider"
+          <span
             class="ec-trim-selection"
-            aria-label="Move highlight"
-            aria-valuemin={0}
-            aria-valuemax={Math.max(0, Math.floor(p.duration - (p.end - p.start)))}
-            aria-valuenow={p.start}
-            aria-valuetext={`${clock(p.start)} to ${clock(p.end)}`}
-            disabled={p.disabled}
-            style={{ left: `${start}%`, width: `${Math.max(0, end - start)}%` }}
-            mix={gesture('move')}
-          >
-            <span class="ec-clock">{clock(Math.max(0, p.end - p.start))}</span>
-          </button>
+            style={{
+              left: `${(p.start / p.duration) * 100}%`,
+              width: `${((p.end - p.start) / p.duration) * 100}%`,
+            }}
+          />
           {(['start', 'end'] as const).map((kind) => (
             <button
               type="button"
+              key={kind}
               role="slider"
               class="ec-trim-edge"
-              key={kind}
+              data-edge={kind}
               aria-label={`Highlight ${kind}`}
-              aria-valuemin={kind === 'start' ? 0 : p.start + 1}
-              aria-valuemax={kind === 'start' ? p.end - 1 : Math.floor(p.duration)}
+              aria-valuemin={kind === 'start' ? 0 : p.start}
+              aria-valuemax={kind === 'start' ? p.end : p.duration}
               aria-valuenow={p[kind]}
-              aria-valuetext={clock(p[kind])}
+              aria-valuetext={preciseClock(p[kind])}
+              aria-describedby="ec-trim-help"
+              data-selected={selected === kind ? '' : undefined}
               disabled={p.disabled}
-              style={{ left: `${kind === 'start' ? start : end}%` }}
-              mix={gesture(kind)}
+              style={{ left: `${(p[kind] / p.duration) * 100}%` }}
+              mix={[
+                on<HTMLButtonElement, 'focus'>('focus', () => {
+                  selected = kind
+                  handle.update()
+                }),
+                on<HTMLButtonElement, 'pointerdown'>('pointerdown', (event) => begin(event, kind)),
+                on<HTMLButtonElement, 'pointermove'>('pointermove', move),
+                on<HTMLButtonElement, 'pointerup'>('pointerup', finish),
+                on<HTMLButtonElement, 'pointercancel'>('pointercancel', finish),
+                on<HTMLButtonElement, 'keydown'>('keydown', (event) => key(event, kind)),
+              ]}
             >
               <span />
             </button>
           ))}
-          {p.position >= offset && p.position <= offset + span && (
-            <span
-              class="ec-trim-cursor"
-              style={{ left: `${percent(p.position)}%` }}
-            />
-          )}
         </div>
+        <span
+          id="ec-trim-help"
+          class="ec-sr-only"
+        >
+          Drag either edge. Select an edge, then use plus or minus, or arrow keys for seconds.
+          {p.frameRate ? ' Shift and arrow keys adjust one frame.' : ''}
+        </span>
       </div>
     )
   }

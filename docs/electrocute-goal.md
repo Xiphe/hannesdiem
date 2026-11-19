@@ -68,12 +68,18 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
   Titel und öffentlicher Zuordnung zur Person, die es gesetzt hat.
 - „Highlight setzen“ übernimmt die aktuelle Abspielposition als Anfang und
   schlägt eine Minute Dauer vor, begrenzt durch das Sessionende.
-- Die Auswahl erfolgt direkt unten im Player auf einer Zeitleiste, angelehnt
-  an Twitch-Clips. Anfang und Ende lassen sich an Griffen ziehen; der gesamte
-  Ausschnitt ist verschiebbar. Eine vergrößerte Zeitskala ermöglicht genaue
-  Auswahl auch in langen Sessions. Titel und Speichern bleiben im Player.
-- Anfang und Ende sind vor dem Speichern veränderbar. Die ausgewählte Passage
-  kann probegehört werden; diese Vorschau stoppt am gesetzten Ende.
+- Die bestehende Video-Progressbar ist die einzige Oberfläche zum Trimmen.
+  Beim Setzen erscheint darüber eine Auswahl für eine Minute. Beide Kanten
+  lassen sich über die gesamte Aufnahmedauer verschieben und einzeln auswählen.
+  Plus/Minus neben der ausgewählten Kante sind auf Touchgeräten gut treffbar
+  und ändern um eine Sekunde. Pfeiltasten ändern ebenfalls um eine Sekunde;
+  Shift und Pfeiltaste ändern bei bekannter Quellbildrate um ein Bild.
+- Der Playhead läuft beim Setzen und Trimmen normal weiter. Unter dem Video
+  zeigt eine zweite Leiste ausschließlich die ausgewählte Passage: Play startet
+  sie von vorne, ihre Suchleiste erlaubt Sprünge darin, ohne weitere Trim-Griffe.
+  Die Vorschau stoppt am gesetzten Ende.
+- Der Set-Highlight-Button wird beim Bearbeiten durch Titel, Speichern und ein
+  kleines X zum Abbrechen ersetzt. Der öffentliche Name wird hier nicht abgefragt.
 - Highlights dürfen sich überschneiden und bleiben eigenständige Beiträge.
   Lange unmarkierte Strecken sind erlaubt. Es gibt keine zusätzlichen Kapitel,
   Freitextkommentare oder automatische Musikerkennung.
@@ -92,8 +98,10 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 - Der bestehende Website-Login wird verwendet. Das Erstellen von Highlights setzt
   einen angemeldeten Nutzer voraus, keinen Platz im Sharing Circle.
 - Der öffentliche Anzeigename wird als gemeinsamer Baustein eines künftigen
-  Website-Profils angelegt. Ein vorhandener Circle-Alias wird beim ersten
-  Highlight zur bestätigten Übernahme vorgeschlagen.
+  Website-Profils angelegt. Ein vorhandener Circle-Alias wird an einer separaten
+  Profilstelle zur bestätigten Übernahme vorgeschlagen. Highlights referenzieren
+  ihre Person statt einen Namen zu kopieren: spätere Änderungen des öffentlichen
+  Profilnamens gelten für alle ihre Highlights.
 - Menschen ohne Circle-Alias können einen öffentlichen Anzeigenamen wählen. Die
   private Login-Adresse wird nicht veröffentlicht.
 - Eine dedizierte Profilverwaltung und Avatare gehören nicht zur ersten
