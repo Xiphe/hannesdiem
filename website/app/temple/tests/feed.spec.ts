@@ -132,6 +132,13 @@ for (const width of [390, 1440]) {
     await item.locator('.feed-tap').click({ position: { x: 100, y: 180 } })
     await expect(item).not.toHaveAttribute('data-playing', '')
     await expect(item.locator('.feed-start')).toBeVisible()
+    await item.locator('.feed-start').hover()
+    await expect(item.locator('.feed-start')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0.55)')
+    await expect(item.locator('.feed-start svg')).toHaveCSS(
+      'transform',
+      'matrix(1, 0, 0, 1, -2, 0)',
+    )
+
     await expect(page.locator('[data-back]')).toBeVisible()
     await expect(page.locator('[data-share]')).toBeVisible()
     await expect(item.locator('.feed-caption')).toBeVisible()
