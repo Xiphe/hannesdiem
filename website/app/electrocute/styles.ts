@@ -589,7 +589,7 @@ export const archiveStyle = css({
     height: 35,
     overflow: 'hidden',
     pointerEvents: 'none',
-    color: 'rgb(255 248 251 / 48%)',
+    color: 'rgb(255 248 251 / 30%)',
     fontVariantNumeric: 'tabular-nums',
     fontSize: 9,
     lineHeight: '9px',
