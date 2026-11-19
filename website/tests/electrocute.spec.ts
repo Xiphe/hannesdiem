@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
+import sharp from 'sharp'
 import type { HighlightState, RuntimeHighlight } from '../app/electrocute/contract.ts'
 
 async function openHighlight(page: Page, touch = false) {
@@ -624,6 +625,61 @@ test('releasing an outward passage drag eases into its new zoom over about one s
   // A fixed timestamp reframes with the ruler, while the edit stays put.
   const markAfter = await timeMark.boundingBox()
   expect(Math.abs(markAfter!.x - markBefore!.x)).toBeGreaterThan(1)
+})
+
+test('passage fill meets the playhead and shows elapsed playback beyond the selection', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await openHighlight(page)
+  await setRange(page, 20, 21)
+  const video = page.locator('video')
+  const passage = page.getByRole('slider', { name: 'Passage position', exact: true })
+  for (const position of [20, 20.49, 21]) {
+    await video.evaluate((el, time) => {
+      ;(el as HTMLVideoElement).currentTime = time
+      el.dispatchEvent(new Event('timeupdate'))
+    }, position)
+    await expect
+      .poll(() => passage.evaluate((el) => (el as HTMLInputElement).valueAsNumber))
+      .toBeCloseTo(position, 6)
+    const alignment = await passage.evaluate((el) => {
+      const input = el as HTMLInputElement
+      const width = input.getBoundingClientRect().width
+      const parent = document.createElement('div')
+      parent.style.cssText = `position:fixed;width:${width}px;pointer-events:none`
+      const probe = document.createElement('div')
+      probe.style.width = getComputedStyle(input).getPropertyValue('--progress')
+      parent.appendChild(probe)
+      document.body.appendChild(parent)
+      const fill = probe.getBoundingClientRect().width
+      parent.remove()
+      const fraction =
+        (input.valueAsNumber - Number(input.min)) / (Number(input.max) - Number(input.min))
+      return { fill, thumb: 5 + fraction * (width - 10) }
+    })
+    expect(Math.abs(alignment.fill - alignment.thumb)).toBeLessThan(0.1)
+  }
+  for (const [position, state] of [
+    [19.9, 'before'],
+    [21.1, 'after'],
+  ] as const) {
+    await video.evaluate((el, time) => {
+      ;(el as HTMLVideoElement).currentTime = time
+      el.dispatchEvent(new Event('timeupdate'))
+    }, position)
+    await expect(passage).toHaveAttribute('data-outside', state)
+    const { data, info } = await sharp(await passage.screenshot())
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    for (const fraction of [0.1, 0.5, 0.9]) {
+      const i =
+        (Math.floor(info.height / 2) * info.width + Math.floor(info.width * fraction)) *
+        info.channels
+      if (state === 'after') expect(data[i]).toBeGreaterThan(230)
+      else expect(data[i]).toBeLessThan(180)
+    }
+  }
 })
 
 test('trim focus follows the grip and clears keyboard styling on pointer input', async ({

@@ -4,7 +4,7 @@ import { archiveStyle } from './styles.ts'
 import { XMarkIcon } from '../heroicons.tsx'
 import { FeedIcon } from '../temple/feed/icon.tsx'
 import { preciseClock, TrimTimeline, type TrimEdge } from './trim.tsx'
-import { HighlightStar, PlaybackTimeline } from './timeline.tsx'
+import { HighlightStar, playedProgress, PlaybackTimeline } from './timeline.tsx'
 import { readSessionState, submitSessionForm } from '../identity/client.ts'
 import {
   highlightsPath,
@@ -584,16 +584,23 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             class="ec-seek"
             min={passageWindow.start}
             max={passageWindow.end}
-            step={session?.frameRate ? 1 / session.frameRate : 0.001}
+            step="any"
             value={Math.max(passageWindow.start, Math.min(passageWindow.end, position))}
             aria-label="Passage position"
-            data-outside={position < clipStart || position > clipEnd ? 'true' : undefined}
+            data-outside={
+              position < clipStart ? 'before' : position > clipEnd ? 'after' : undefined
+            }
             aria-valuetext={preciseClock(
               Math.max(passageWindow.start, Math.min(passageWindow.end, position)),
             )}
             disabled={busy}
             style={{
-              '--progress': `${((Math.max(passageWindow.start, Math.min(passageWindow.end, position)) - passageWindow.start) / (passageWindow.end - passageWindow.start)) * 100}%`,
+              '--progress':
+                position < clipStart
+                  ? '0%'
+                  : position > clipEnd
+                    ? '100%'
+                    : playedProgress(position, passageWindow.start, passageWindow.end),
             }}
             mix={on('input', (event) => {
               if (!video) return

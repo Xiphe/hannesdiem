@@ -15,6 +15,12 @@ interface TimelineProps {
 }
 const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(high, value))
 
+/** The 10px thumb travels between inset endpoints, rather than across the full track. */
+export function playedProgress(position: number, start: number, end: number) {
+  const fraction = end > start ? clamp((position - start) / (end - start), 0, 1) : 0
+  return `calc(${fraction * 100}% + ${5 - fraction * 10}px)`
+}
+
 /** Track the whole range hit area; entering the popover keeps the chosen time. */
 export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   let hoverTime: number | undefined
@@ -115,7 +121,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           aria-expanded={p.editing || open}
           aria-haspopup="dialog"
           disabled={p.disabled}
-          style={{ '--progress': `${p.duration ? (p.position / p.duration) * 100 : 0}%` }}
+          style={{ '--progress': playedProgress(p.position, 0, p.duration) }}
           mix={[
             ref((node) => {
               input = node

@@ -69,8 +69,12 @@ interrupting playback. The same popover expands to the transport row's width;
 main Play, seek and sound retain their positions. Both the full-session bar and
 the upper passage bar show the same two draggable boundaries. The upper bar
 zooms into the selection with a small amount of context on either side so the
-ends can be extended as well as shortened. Its playhead and progress fill are
-hidden when playback is outside the selected bounds, including the context area.
+ends can be extended as well as shortened. Its playhead is hidden outside the
+selected bounds, including the context area. The track is gray before the
+selection and fully white after it. Within the selection, the fill ends at the
+thumb's centre, accounting for its inset travel. Passage seeking uses continuous
+values so the thumb cannot round to steps anchored to the changing zoom window;
+the separate trim handles retain source-frame keyboard steps.
 Its scale stays fixed during a drag and reframes over approximately one second
 after release. A new interaction interrupts that animation; reduced-motion
 preferences use an immediate reframe. Lower-bar changes also reframe the upper view.

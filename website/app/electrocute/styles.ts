@@ -339,8 +339,12 @@ export const archiveStyle = css({
   '& .ec-player .ec-passage-track .ec-seek[data-outside]': {
     '&::-webkit-slider-thumb': { opacity: 0 },
     '&::-moz-range-thumb': { opacity: 0 },
-    '&::-webkit-slider-runnable-track': { background: 'rgb(255 248 251 / 35%)' },
+  },
+  '& .ec-player .ec-passage-track .ec-seek[data-outside=before]': {
     '&::-moz-range-progress': { background: 'transparent' },
+  },
+  '& .ec-player .ec-passage-track .ec-seek[data-outside=after]': {
+    '&::-moz-range-track': { background: '#fff8fb' },
   },
   '& .ec-time-tooltip': {
     position: 'absolute',
