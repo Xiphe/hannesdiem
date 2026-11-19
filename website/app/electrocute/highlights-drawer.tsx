@@ -88,19 +88,14 @@ export function HighlightsDrawer(
           ]}
         >
           <div class="ec-highlights-drawer-inner">
-            <div class="ec-highlights-header">
-              <h2>
-                Highlights <span class="ec-drawer-count">{handle.props.highlights.length}</span>
-              </h2>
-              <button
-                type="button"
-                class="ec-icon-button"
-                aria-label="Close highlights"
-                mix={on('click', () => void close())}
-              >
-                <XMarkIcon />
-              </button>
-            </div>
+            <button
+              type="button"
+              class="ec-icon-button ec-drawer-close"
+              aria-label="Close highlights"
+              mix={on('click', () => void close())}
+            >
+              <XMarkIcon />
+            </button>
             <div class="ec-highlights-content">
               <ol class="ec-drawer-list">
                 {handle.props.highlights.map((highlight) => (
@@ -128,9 +123,20 @@ export function HighlightsDrawer(
                         handle.props.choose(highlight)
                       })}
                     >
-                      <span class="ec-drawer-time">{clock(highlight.start)}</span>
-                      <span class="ec-drawer-description">
-                        <span class="ec-drawer-title">{highlight.title}</span>
+                      <span class="ec-drawer-title">{highlight.title}</span>
+                      <span class="ec-drawer-meta">
+                        <span
+                          class="ec-drawer-time"
+                          title="Start time"
+                        >
+                          {clock(highlight.start)}
+                        </span>
+                        <span
+                          class="ec-drawer-duration"
+                          title="Duration"
+                        >
+                          {clock(highlight.end - highlight.start)}
+                        </span>
                         <span class="ec-drawer-person">{highlight.person}</span>
                       </span>
                     </a>
