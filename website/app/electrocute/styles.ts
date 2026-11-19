@@ -287,9 +287,8 @@ export const archiveStyle = css({
     alignItems: 'center',
     gap: 12,
     minWidth: 0,
-    // Match the editor's padding plus border so both rows share icon centers.
+    // Extend the editor past the fixed main controls by its padding plus border.
     '--control-inset': '13px',
-    paddingInline: 'var(--control-inset)',
   },
   '& .ec-player .ec-icon-button': {
     width: 44,
