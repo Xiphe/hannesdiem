@@ -2,6 +2,7 @@ import { on, ref, type Handle } from 'remix/component'
 import type { ElectroCuteArchiveProps, ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { archiveStyle } from './styles.ts'
 import { HighlightsDrawer } from './highlights-drawer.tsx'
+import { InlineLogin } from './inline-login.tsx'
 import { XMarkIcon } from '../heroicons.tsx'
 import { FeedIcon } from '../temple/feed/icon.tsx'
 import { preciseClock, TrimTimeline, type TrimEdge } from './trim.tsx'
@@ -70,6 +71,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let ready = false
   let failed = false
   let editing = false
+  let loginAt: number | undefined
   let editorStep: 'range' | 'name' = 'range'
   let selectedEdge: TrimEdge = 'start'
   let editingId: string | undefined
@@ -228,7 +230,15 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   }
 
   async function openEditor(highlight?: ElectroCuteHighlight, at?: number) {
-    if (!video || (!preview && !runtime.email) || !ready || busy) return
+    if (!video || !ready || busy) return
+    if (!preview && !runtime.email) {
+      loginAt = at ?? video.currentTime
+      await handle.update()
+      player
+        ?.querySelector<HTMLButtonElement>('[aria-label="Close login"]')
+        ?.focus({ preventScroll: true })
+      return
+    }
     previewEnd = undefined
     const point = at ?? video.currentTime
     const currentFrame = session?.frameRate
@@ -286,6 +296,11 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       runtimeFailed = true
     }
     handle.update()
+    if (runtime.email && loginAt !== undefined) {
+      const at = loginAt
+      loginAt = undefined
+      await openEditor(undefined, at)
+    }
   }
 
   async function mutate(intent: HighlightIntent, input: HighlightInput) {
@@ -862,6 +877,18 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                     >
                       <FeedIcon name={fullscreen ? 'exit-fullscreen' : 'fullscreen'} />
                     </button>
+                    {loginAt !== undefined && (
+                      <InlineLogin
+                        close={async () => {
+                          loginAt = undefined
+                          await handle.update()
+                          player
+                            ?.querySelector<HTMLButtonElement>('.ec-playhead-highlight')
+                            ?.focus({ preventScroll: true })
+                        }}
+                        authenticated={loadRuntime}
+                      />
+                    )}
                     <HighlightsDrawer
                       sessionId={session.id}
                       highlights={highlights()}
@@ -891,9 +918,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                           editor={editing ? editor() : undefined}
                           editorActions={editing ? editorActions() : undefined}
                           editorStep={editorStep}
-                          canHighlight={Boolean(
-                            (preview || runtime.email) && !editing && ready && !busy,
-                          )}
+                          canHighlight={!editing && !busy}
                           highlight={(time) => void openEditor(undefined, time)}
                         >
                           {editing && <TrimTimeline {...trimProps()} />}
@@ -904,17 +929,15 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                             {timeline()}
                           </div>
                         </PlaybackTimeline>
-                        {(preview || runtime.email) && (
-                          <button
-                            type="button"
-                            class="ec-icon-button ec-highlight-star ec-playhead-highlight"
-                            aria-label="Highlight at playhead"
-                            disabled={!ready || editing || busy}
-                            mix={on('click', () => void openEditor())}
-                          >
-                            <HighlightStar />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          class="ec-icon-button ec-highlight-star ec-playhead-highlight"
+                          aria-label="Highlight at playhead"
+                          disabled={!ready || editing || busy}
+                          mix={on('click', () => void openEditor())}
+                        >
+                          <HighlightStar />
+                        </button>
                         <div class="ec-volume-control">
                           <button
                             type="button"

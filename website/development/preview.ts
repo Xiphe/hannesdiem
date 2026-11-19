@@ -149,6 +149,8 @@ const server = createServer(async (req, res) => {
       redirect: 'manual',
     })
     const headers: OutgoingHttpHeaders = Object.fromEntries(response.headers)
+    if (url.pathname === '/login' && req.method === 'GET')
+      headers['X-Hdm-Preview-Email'] = '/__preview/email'
     if (response.headers.getSetCookie().length)
       headers['set-cookie'] = response.headers.getSetCookie()
     res.writeHead(response.status, headers)

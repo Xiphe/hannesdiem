@@ -1296,6 +1296,121 @@ test('main playback keeps running while trimming; passage preview starts over an
     .toBeLessThan(11)
 })
 
+test('logged-out stars offer inline login and resume highlighting at the chosen time', async ({
+  page,
+}) => {
+  let authenticated = false
+  let submissions = 0
+  const state = () => ({
+    ready: true,
+    csrfToken: 'synthetic-csrf',
+    ...(authenticated ? { email: 'listener@example.org' } : {}),
+  })
+  await page.route('**/electrocute-api/test-session-1', (route) =>
+    route.fulfill({ json: { ...state(), artist: false, highlights: [] } }),
+  )
+  await page.route('**/login', async (route) => {
+    if (route.request().method() === 'GET')
+      return route.fulfill({
+        json: state(),
+        headers: { 'X-Hdm-Preview-Email': '/__preview/email' },
+      })
+    const form = await new Response(new Uint8Array(route.request().postDataBuffer()!), {
+      headers: route.request().headers(),
+    }).formData()
+    expect(form.get('email')).toBe('listener@example.org')
+    expect(form.get('_csrf')).toBe(submissions === 2 ? 'rotated-csrf' : 'synthetic-csrf')
+    submissions++
+    if (submissions === 1)
+      return route.fulfill({
+        status: 503,
+        json: { type: 'error', message: 'Synthetic login failure.' },
+      })
+    if (submissions === 2)
+      return route.fulfill({
+        json: {
+          type: 'success',
+          nameRequired: true,
+          message: 'Please enter your name.',
+          csrfToken: 'rotated-csrf',
+        },
+      })
+    expect(form.get('name')).toBe('Fixture listener')
+    return route.fulfill({ json: { type: 'success', message: 'Synthetic confirmation sent.' } })
+  })
+  await page.goto('/fixture-public-highlights')
+  const video = page.locator('video')
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  const star = page.getByRole('button', { name: 'Highlight at playhead', exact: true })
+  const login = page.getByRole('dialog', { name: 'Log in to set highlights' })
+  await expect(seek).toBeEnabled()
+  await expect(star).toBeVisible()
+  const rail = (await seek.boundingBox())!
+  await page.mouse.move(rail.x + 12, rail.y + rail.height / 2)
+  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect(login).toBeVisible()
+  await login.getByRole('button', { name: 'Close login' }).click()
+  await expect(login).toBeHidden()
+  await video.evaluate((node) => {
+    ;(node as HTMLVideoElement).currentTime = 20
+  })
+  await expect.poll(() => video.evaluate((node) => (node as HTMLVideoElement).currentTime)).toBe(20)
+  await star.click()
+  const email = login.getByRole('textbox', { name: 'Email address' })
+  await expect(email).toBeFocused()
+  await email.fill('listener@example.org')
+  await email.press('Space')
+  expect(await video.evaluate((node) => (node as HTMLVideoElement).paused)).toBe(true)
+  await email.fill('listener@example.org')
+  await login.getByRole('button', { name: 'Get Login Link', exact: true }).click()
+  await expect(login.getByRole('alert')).toContainText('Synthetic login failure.')
+  await login.getByRole('button', { name: 'Get Login Link', exact: true }).click()
+  await login.getByRole('textbox', { name: 'Name', exact: true }).fill('Fixture listener')
+  await login.getByRole('button', { name: 'Get Login Link', exact: true }).click()
+  await expect(login.getByRole('status')).toHaveText('Synthetic confirmation sent.')
+  await expect(login.getByRole('link', { name: 'Open preview inbox' })).toHaveAttribute(
+    'target',
+    '_blank',
+  )
+  await video.evaluate((node) => {
+    ;(node as HTMLVideoElement).currentTime = 50
+  })
+  authenticated = true
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(login).toBeHidden()
+  await expect(page.getByRole('dialog', { name: 'Highlight editor' })).toBeVisible()
+  await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
+    'aria-valuenow',
+    '20',
+  )
+  expect(new URL(page.url()).pathname).toBe('/fixture-public-highlights')
+})
+
+test('inline login can retry unavailable session state and remains keyboard dismissible', async ({
+  page,
+}) => {
+  let available = false
+  await page.route('**/electrocute-api/test-session-1', (route) => route.fulfill({ status: 503 }))
+  await page.route('**/login', (route) =>
+    available
+      ? route.fulfill({ json: { ready: true, csrfToken: 'synthetic-csrf' } })
+      : route.fulfill({ status: 503 }),
+  )
+  await page.goto('/fixture-public-highlights')
+  const star = page.getByRole('button', { name: 'Highlight at playhead', exact: true })
+  await expect(star).toBeEnabled()
+  await star.click()
+  const login = page.getByRole('dialog', { name: 'Log in to set highlights' })
+  await expect(login.getByRole('alert')).toContainText('temporarily unavailable')
+  available = true
+  await login.getByRole('button', { name: 'Retry login' }).click()
+  await expect(login.getByRole('textbox', { name: 'Email address' })).toBeFocused()
+  await expect(login.getByRole('link', { name: 'Open preview inbox' })).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await expect(login).toBeHidden()
+  await expect(star).toBeFocused()
+})
+
 test('public saving keeps the pending text flow while profile and management UI stay hidden', async ({
   page,
 }) => {

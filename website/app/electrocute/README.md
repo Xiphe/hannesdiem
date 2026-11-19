@@ -18,6 +18,10 @@ uses the isolated preview server without provider credentials or outgoing
 provider requests. The browser loads the MP4 directly from pCloud. Login emails
 are simulated: request a login, open `/__preview/email`, follow its confirmation
 link and return to the session tab. Focus refreshes its authenticated state.
+Both stars remain visible while logged out and open the shared email login form
+inside the player. The local form links to the simulated preview inbox; after
+confirmation, returning to the player opens the selection at the time originally
+chosen, even if playback has continued meanwhile.
 Contribution and login state persist locally in `.wrangler/state/electrocute-preview`
 using Miniflare’s `resourcePersistencePath`; the former `durableObjectsPersist`
 option is silently ignored by the installed compatibility converter. A restart

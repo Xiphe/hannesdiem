@@ -109,7 +109,9 @@ async function readNewsletterState(signal: AbortSignal): Promise<SessionState> {
   return state
 }
 
-function NewsletterForm(handle: Handle<NewsletterFormProps & { refresh?: () => Promise<void> }>) {
+export function NewsletterForm(
+  handle: Handle<NewsletterFormProps & { refresh?: () => Promise<void> }>,
+) {
   let result = handle.props.result
   let emailValue = handle.props.emailValue ?? ''
   let nameValue = handle.props.nameValue ?? ''
