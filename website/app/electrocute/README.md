@@ -65,8 +65,13 @@ a highlight at the current playhead, independently of the hovered time. Its slot
 stays in place while editing so the transport does not shift.
 
 The star starts a one-minute selection at the chosen time without seeking or
-interrupting playback. The same popover expands to the transport row's width;
-main Play, seek and sound retain their positions. Both the full-session bar and
+interrupting playback. The same popover expands to the transport row's width.
+When its compact clock is visible, its shell morphs to the editor over 320ms,
+with a short content crossfade and a fading point-to-trapezoid handoff. Both
+the tooltip star and the separate playhead star use that visible starting shape.
+Focus leaving the clock uses the existing short dismissal delay so clicking the
+separate star does not hide the source popover before it can expand.
+Main Play, seek and sound retain their positions. Both the full-session bar and
 the upper passage bar show the same two draggable boundaries. The upper bar
 zooms into the selection with a small amount of context on either side so the
 ends can be extended as well as shortened. Its playhead follows the actual time
@@ -128,7 +133,12 @@ label switch to Replay / Restart passage. Passage playback and seeking activate 
 selection's end stop. The main timeline still seeks throughout the recording.
 
 Save advances to naming without persisting. The title/save/cancel form replaces
-the passage controls in the same popover and focuses the title. A left-hand Back
+the passage controls in the same popover and focuses the title. Selection slides
+left as naming enters from the right over 280ms; Back reverses that direction.
+Outgoing panels are inert and hidden from accessibility while they leave, then
+removed. A new stage or cancellation aborts the old motion. Reduced-motion
+preferences skip these transitions. The title input keeps its borderless
+appearance when focused or typed into; its caret indicates focus. A left-hand Back
 icon returns to the selection, preserving title, bounds and stable ID. X or
 Escape cancels either step and restores main seek focus. Failed saves retain the
 naming form. The public name is never requested in the clipping UI.

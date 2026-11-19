@@ -877,6 +877,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                           editing={editing}
                           editorRange={{ start: clipStart, end: clipEnd }}
                           editor={editing ? editor() : undefined}
+                          editorStep={editorStep}
                           canHighlight={Boolean(
                             (preview || runtime.email) && !editing && ready && !busy,
                           )}

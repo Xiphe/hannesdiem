@@ -396,6 +396,28 @@ export const archiveStyle = css({
     textAlign: 'center',
     '& span': { opacity: 0.55 },
   },
+  '& .ec-tooltip-panels': {
+    position: 'relative',
+    width: '100%',
+    minWidth: 0,
+    paddingBlock: 6,
+    marginBlock: -6,
+  },
+  '& .ec-time-tooltip[data-motion] .ec-tooltip-panels': { overflow: 'hidden' },
+  '& .ec-panel-current': { position: 'relative', width: '100%' },
+  '& .ec-panel-outgoing': { position: 'absolute', inset: '6px 0 auto', pointerEvents: 'none' },
+  '& .ec-tooltip-panels [data-stage=clock]': { display: 'flex', alignItems: 'center', gap: 4 },
+  '& .ec-morph-pointer': {
+    position: 'absolute',
+    bottom: -5,
+    width: 8,
+    height: 8,
+    transform: 'translateX(-50%) rotate(45deg)',
+    background: '#111',
+    borderBottom: '1px solid rgb(255 248 251 / 16%)',
+    borderRight: '1px solid rgb(255 248 251 / 16%)',
+    pointerEvents: 'none',
+  },
   '& .ec-player .ec-highlight-star': {
     display: 'grid',
     placeItems: 'center',
@@ -539,6 +561,11 @@ export const archiveStyle = css({
     background: 'transparent',
     '&:focus-visible': { outlineOffset: -2 },
   },
+  '& .ec-player .ec-clip-save input:focus-visible, & .ec-player[data-keyboard-focus] .ec-clip-save input:focus-visible':
+    {
+      outline: 'none',
+      boxShadow: 'none',
+    },
   '& .ec-player .ec-clip-save button': {
     borderRadius: 4,
     '&:focus-visible': { outlineOffset: -2 },
@@ -656,6 +683,7 @@ export const archiveStyle = css({
   },
   '& .ec-clip-dock': {
     display: 'flex',
+    width: '100%',
     alignItems: 'center',
     gap: 8,
     minWidth: 0,

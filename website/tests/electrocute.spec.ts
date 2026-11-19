@@ -9,6 +9,9 @@ async function openHighlight(page: Page, touch = false) {
   await seek.focus()
   if (touch) await page.getByRole('button', { name: 'Set highlight', exact: true }).tap()
   else await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'Highlight editor' })).not.toHaveAttribute(
+    'data-motion',
+  )
 }
 
 test.beforeEach(async ({ page }) => {
@@ -323,6 +326,7 @@ test('the seek popover expands into trimming, then replaces its controls with th
   await expect(editor.getByRole('button', { name: 'Save draft', exact: true })).toBeDisabled()
   expect(await seek.boundingBox()).toEqual(original)
   await title.fill('Synthetic title kept while trimming')
+  expect(await title.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none')
   await editor.getByRole('button', { name: 'Back to selection', exact: true }).click()
   await expect(page.getByRole('slider', { name: 'Passage start', exact: true })).toBeFocused()
   await expect(editor.getByRole('slider', { name: 'Passage position' })).toBeVisible()
@@ -331,6 +335,119 @@ test('the seek popover expands into trimming, then replaces its controls with th
   await editor.getByRole('button', { name: 'Cancel', exact: true }).click()
   await expect(editor).toHaveCount(0)
   await expect(seek).toBeFocused()
+})
+
+test('tooltip motion expands the clock and slides naming forward and back without focus outlines', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const animate = Element.prototype.animate
+    Element.prototype.animate = function (frames, options) {
+      const animation = animate.call(this, frames, options)
+      animation.pause()
+      return animation
+    }
+  })
+  await page.goto('/electrocute/test-session-1')
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  await expect(seek).toBeEnabled()
+  await seek.focus()
+  const clock = page.getByRole('dialog', { name: 'Playback tools' })
+  const compact = await clock.boundingBox()
+  await clock.getByRole('button', { name: 'Set highlight' }).click()
+  const editor = page.getByRole('dialog', { name: 'Highlight editor' })
+  await expect(editor).toHaveAttribute('data-motion', 'clock-range')
+  await expect.poll(() => editor.evaluate((node) => node.getAnimations().length)).toBeGreaterThan(0)
+  const sizes = await editor.evaluate((node) => {
+    const animation = node.getAnimations()[0]
+    animation.currentTime = 0
+    const first = node.getBoundingClientRect().width
+    animation.currentTime = 160
+    return { first, middle: node.getBoundingClientRect().width }
+  })
+  const row = await page.locator('.ec-transport-row').boundingBox()
+  expect(sizes.first).toBeCloseTo(compact!.width, 0)
+  expect(sizes.middle).toBeGreaterThan(sizes.first)
+  expect(sizes.middle).toBeLessThan(row!.width)
+  const finish = () =>
+    page.evaluate(() => document.getAnimations().forEach((animation) => animation.finish()))
+  await finish()
+  await expect(editor).not.toHaveAttribute('data-motion')
+  await editor.getByRole('button', { name: 'Name highlight' }).click()
+  await expect(editor).toHaveAttribute('data-motion', 'range-name')
+  await expect
+    .poll(() => editor.locator('.ec-panel-current').evaluate((node) => node.getAnimations().length))
+    .toBeGreaterThan(0)
+  const directions = () =>
+    editor.evaluate((node) => {
+      const first = (selector: string) =>
+        (node.querySelector(selector)!.getAnimations()[0].effect as KeyframeEffect).getKeyframes()
+      const incoming = first('.ec-panel-current')
+      const outgoing = first('.ec-panel-outgoing')
+      return {
+        enter: incoming[0].transform,
+        exit: outgoing.at(-1)!.transform,
+        inert: (node.querySelector('.ec-panel-outgoing') as HTMLElement).inert,
+      }
+    })
+  expect(await directions()).toEqual({
+    enter: 'translateX(100%)',
+    exit: 'translateX(-100%)',
+    inert: true,
+  })
+  await finish()
+  await expect(editor).not.toHaveAttribute('data-motion')
+  const title = editor.getByRole('textbox', { name: 'Title' })
+  await expect(title).toBeFocused()
+  await title.pressSequentially('Synthetic motion title')
+  expect(await title.evaluate((node) => getComputedStyle(node).outlineStyle)).toBe('none')
+  await editor.getByRole('button', { name: 'Back to selection' }).click()
+  await expect(editor).toHaveAttribute('data-motion', 'name-range')
+  await expect
+    .poll(() => editor.locator('.ec-panel-current').evaluate((node) => node.getAnimations().length))
+    .toBeGreaterThan(0)
+  expect(await directions()).toEqual({
+    enter: 'translateX(-100%)',
+    exit: 'translateX(100%)',
+    inert: true,
+  })
+  await finish()
+  await expect(editor).not.toHaveAttribute('data-motion')
+  await expect(editor.getByRole('slider', { name: 'Passage start', exact: true })).toBeFocused()
+  await editor.getByRole('button', { name: 'Name highlight' }).click()
+  await expect(editor).toHaveAttribute('data-motion', 'range-name')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveCount(0)
+  await expect(seek).toBeFocused()
+  await page.getByRole('button', { name: 'Highlight at playhead', exact: true }).click()
+  await expect(editor).toHaveAttribute('data-motion', 'clock-range')
+  await expect.poll(() => editor.evaluate((node) => node.getAnimations().length)).toBeGreaterThan(0)
+  await finish()
+  await expect(editor).not.toHaveAttribute('data-motion')
+  await page.keyboard.press('Escape')
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openHighlight(page)
+  await expect(editor).not.toHaveAttribute('data-motion')
+  expect(
+    await editor.evaluate(
+      (node) =>
+        node
+          .getAnimations({ subtree: true })
+          .filter((animation) => animation.constructor === Animation).length,
+    ),
+  ).toBe(0)
+  await editor.getByRole('button', { name: 'Name highlight' }).click()
+  await expect(title).toBeFocused()
+  await title.pressSequentially('Reduced motion')
+  expect(await title.evaluate((node) => getComputedStyle(node).outlineStyle)).toBe('none')
+  expect(
+    await editor.evaluate(
+      (node) =>
+        node
+          .getAnimations({ subtree: true })
+          .filter((animation) => animation.constructor === Animation).length,
+    ),
+  ).toBe(0)
 })
 
 test('the star popover keeps the whole seek hit area interactive up to its body', async ({

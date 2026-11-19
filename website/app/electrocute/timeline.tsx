@@ -1,5 +1,6 @@
 import { on, ref, type Handle, type RemixNode } from 'remix/component'
 import { clock } from './model.ts'
+import { animateTooltip, captureTooltip, type TooltipStage } from './motion.ts'
 
 interface TimelineProps {
   position: number
@@ -9,6 +10,7 @@ interface TimelineProps {
   editing: boolean
   editorRange: { start: number; end: number }
   editor?: RemixNode
+  editorStep?: 'range' | 'name'
   seek(time: number): void
   highlight(time: number): void
   children?: RemixNode
@@ -28,6 +30,21 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   let width = 0
   let tooltipWidth = 184
   let input: HTMLInputElement | undefined
+  let tooltip: HTMLDivElement | undefined
+  let currentPanel: HTMLDivElement | undefined
+  let outgoingPanel: HTMLDivElement | undefined
+  let previousStage: TooltipStage | undefined
+  let previousContent: RemixNode
+  let outgoingContent: RemixNode
+  let motion:
+    | {
+        from: TooltipStage
+        to: TooltipStage
+        before: ReturnType<typeof captureTooltip>
+        controller: AbortController
+        started: boolean
+      }
+    | undefined
   let closeTimer: ReturnType<typeof setTimeout> | undefined
   const cancelClose = () => clearTimeout(closeTimer)
   function show() {
@@ -50,9 +67,73 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
     }, 180)
   }
   handle.signal.addEventListener('abort', cancelClose, { once: true })
+  handle.signal.addEventListener('abort', () => motion?.controller.abort(), { once: true })
   return () => {
     const p = handle.props
     const time = hoverTime ?? p.position
+    const stage: TooltipStage = p.editing ? (p.editorStep ?? 'range') : 'clock'
+    const content = p.editing ? (
+      p.editor
+    ) : (
+      <>
+        {p.canHighlight && (
+          <button
+            type="button"
+            class="ec-highlight-star"
+            aria-label="Set highlight"
+            tabIndex={-1}
+            mix={on('click', () => {
+              close()
+              p.highlight(time)
+            })}
+          >
+            <HighlightStar />
+          </button>
+        )}
+        <span class="ec-clock ec-time-label">
+          {clock(time)} <span>/ {clock(p.duration)}</span>
+        </span>
+      </>
+    )
+    if (previousStage && previousStage !== stage) {
+      const before = captureTooltip(tooltip, currentPanel)
+      motion?.controller.abort()
+      outgoingPanel = undefined
+      outgoingContent = undefined
+      motion = undefined
+      if (stage !== 'clock' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        outgoingContent = before ? previousContent : undefined
+        motion = {
+          from: previousStage,
+          to: stage,
+          before,
+          controller: new AbortController(),
+          started: false,
+        }
+      }
+    }
+    previousStage = stage
+    previousContent = content
+    if (motion && !motion.started) {
+      const pending = motion
+      handle.queueTask(async () => {
+        if (motion !== pending || pending.started || !tooltip || !currentPanel) return
+        pending.started = true
+        await animateTooltip(
+          tooltip,
+          currentPanel,
+          outgoingPanel,
+          pending.from,
+          pending.to,
+          pending.before,
+          pending.controller.signal,
+        )
+        if (motion !== pending || handle.signal.aborted) return
+        motion = undefined
+        outgoingContent = undefined
+        handle.update()
+      })
+    }
     const point = 5 + (p.duration ? time / p.duration : 0) * Math.max(0, width - 10)
     const half = Math.min(width / 2, tooltipWidth / 2)
     // Let the body overhang the rail into its gap so the arrow clears its corners.
@@ -97,7 +178,8 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           on<HTMLDivElement, 'pointerleave'>('pointerleave', (event) => leave(event.currentTarget)),
           on('focusin', cancelClose),
           on<HTMLDivElement, 'focusout'>('focusout', (event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close()
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+              leave(event.currentTarget)
           }),
           on('keydown', (event) => {
             if (p.editing || event.key !== 'Escape' || !open) return
@@ -143,7 +225,9 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           aria-label={p.editing ? 'Highlight editor' : 'Playback tools'}
           class="ec-time-tooltip"
           mix={ref((node, signal) => {
+            tooltip = node
             const measure = () => {
+              if (handle.props.editing) return
               tooltipWidth = node.getBoundingClientRect().width
               handle.update()
             }
@@ -154,6 +238,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           data-open={p.editing || open ? 'true' : undefined}
           data-editing={p.editing ? 'true' : undefined}
           data-action={!p.editing && p.canHighlight ? '' : undefined}
+          data-motion={motion ? `${motion.from}-${motion.to}` : undefined}
           style={
             p.editing
               ? undefined
@@ -175,30 +260,40 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
               <path d={`M0 0 L5 5 H${rangeWidth + 5} L${rangeWidth + 10} 0`} />
             </svg>
           )}
-          {p.editing ? (
-            p.editor
-          ) : (
-            <>
-              {p.canHighlight && (
-                <button
-                  type="button"
-                  class="ec-highlight-star"
-                  aria-label="Set highlight"
-                  tabIndex={-1}
-                  mix={on('click', () => {
-                    // Dismiss the hover state before the parent opens its editor.
-                    close()
-                    p.highlight(time)
-                  })}
-                >
-                  <HighlightStar />
-                </button>
-              )}
-              <span class="ec-clock ec-time-label">
-                {clock(time)} <span>/ {clock(p.duration)}</span>
-              </span>
-            </>
+          {motion?.from === 'clock' && motion.before && (
+            <span
+              class="ec-morph-pointer"
+              aria-hidden="true"
+              style={{ left: `${motion.before.arrowX}px` }}
+            />
           )}
+          <div class="ec-tooltip-panels">
+            {outgoingContent && (
+              <div
+                key={`outgoing-${motion?.from}`}
+                class="ec-panel-outgoing"
+                data-stage={motion?.from}
+                aria-hidden="true"
+                inert
+                style={{ width: motion?.before ? `${motion.before.panelWidth}px` : '100%' }}
+                mix={ref((node) => {
+                  outgoingPanel = node
+                })}
+              >
+                {outgoingContent}
+              </div>
+            )}
+            <div
+              key={stage}
+              class="ec-panel-current"
+              data-stage={stage}
+              mix={ref((node) => {
+                currentPanel = node
+              })}
+            >
+              {content}
+            </div>
+          </div>
         </div>
         {p.children}
       </div>
