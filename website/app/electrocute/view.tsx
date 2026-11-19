@@ -517,6 +517,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   function editor() {
     return editorStep === 'name' ? (
       <form
+        id="ec-highlight-name"
         class="ec-clip-save"
         aria-label="Save highlight"
         mix={on('submit', (event) => {
@@ -545,23 +546,6 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             handle.update()
           })}
         />
-        <button
-          type="submit"
-          class="ec-save-clip"
-          aria-label={preview ? 'Save draft' : 'Save highlight'}
-          disabled={busy || !valid() || !title.trim()}
-        >
-          {busy ? 'Saving…' : 'Save'}
-        </button>
-        <button
-          type="button"
-          class="ec-cancel-clip"
-          aria-label="Cancel"
-          disabled={busy}
-          mix={on('click', closeEditor)}
-        >
-          <XMarkIcon />
-        </button>
       </form>
     ) : (
       <div
@@ -619,34 +603,44 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
           />
           <TrimTimeline {...trimProps('passage')} />
         </div>
-        <div class="ec-clip-actions">
-          <span class="ec-clock ec-passage-duration">{clock(Math.round(clipEnd - clipStart))}</span>
-          <button
-            type="button"
-            class="ec-save-clip"
-            aria-label="Name highlight"
-            disabled={!valid() || busy}
-            mix={on('click', async () => {
-              cancelPassageAnimation()
-              editorStep = 'name'
-              await handle.update()
-              player
-                ?.querySelector<HTMLInputElement>('[aria-label="Title"]')
-                ?.focus({ preventScroll: true })
-            })}
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            class="ec-cancel-clip"
-            aria-label="Cancel"
-            disabled={busy}
-            mix={on('click', closeEditor)}
-          >
-            <XMarkIcon />
-          </button>
-        </div>
+        <span class="ec-clock ec-passage-duration">{clock(Math.round(clipEnd - clipStart))}</span>
+      </div>
+    )
+  }
+
+  function editorActions() {
+    return (
+      <div class="ec-clip-actions">
+        <button
+          type={editorStep === 'name' ? 'submit' : 'button'}
+          form={editorStep === 'name' ? 'ec-highlight-name' : undefined}
+          class="ec-save-clip"
+          aria-label={
+            editorStep === 'name' ? (preview ? 'Save draft' : 'Save highlight') : 'Name highlight'
+          }
+          disabled={busy || !valid() || (editorStep === 'name' && !title.trim())}
+          mix={on('click', async (event) => {
+            if (editorStep !== 'range') return
+            event.preventDefault()
+            cancelPassageAnimation()
+            editorStep = 'name'
+            await handle.update()
+            player
+              ?.querySelector<HTMLInputElement>('[aria-label="Title"]')
+              ?.focus({ preventScroll: true })
+          })}
+        >
+          {busy ? 'Saving…' : 'Save'}
+        </button>
+        <button
+          type="button"
+          class="ec-cancel-clip"
+          aria-label="Cancel"
+          disabled={busy}
+          mix={on('click', closeEditor)}
+        >
+          <XMarkIcon />
+        </button>
       </div>
     )
   }
@@ -877,6 +871,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                           editing={editing}
                           editorRange={{ start: clipStart, end: clipEnd }}
                           editor={editing ? editor() : undefined}
+                          editorActions={editing ? editorActions() : undefined}
                           editorStep={editorStep}
                           canHighlight={Boolean(
                             (preview || runtime.email) && !editing && ready && !busy,

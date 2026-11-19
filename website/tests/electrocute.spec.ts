@@ -373,11 +373,28 @@ test('tooltip motion expands the clock and slides naming forward and back withou
     page.evaluate(() => document.getAnimations().forEach((animation) => animation.finish()))
   await finish()
   await expect(editor).not.toHaveAttribute('data-motion')
+  const actionPositions = () =>
+    editor.locator('.ec-clip-actions button').evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const { x, y, width, height } = button.getBoundingClientRect()
+        return { x, y, width, height }
+      }),
+    )
+  const fixedActions = await actionPositions()
   await editor.getByRole('button', { name: 'Name highlight' }).click()
   await expect(editor).toHaveAttribute('data-motion', 'range-name')
   await expect
     .poll(() => editor.locator('.ec-panel-current').evaluate((node) => node.getAnimations().length))
     .toBeGreaterThan(0)
+  expect(await actionPositions()).toEqual(fixedActions)
+  const slide = await editor.locator('.ec-panel-current').evaluate((node) => {
+    const animation = node.getAnimations()[0]
+    const duration = animation.effect!.getTiming().duration
+    animation.currentTime = 180
+    return duration
+  })
+  expect(slide).toBe(360)
+  expect(await actionPositions()).toEqual(fixedActions)
   const directions = () =>
     editor.evaluate((node) => {
       const first = (selector: string) =>
@@ -397,6 +414,7 @@ test('tooltip motion expands the clock and slides naming forward and back withou
   })
   await finish()
   await expect(editor).not.toHaveAttribute('data-motion')
+  expect(await actionPositions()).toEqual(fixedActions)
   const title = editor.getByRole('textbox', { name: 'Title' })
   await expect(title).toBeFocused()
   await title.pressSequentially('Synthetic motion title')
@@ -406,6 +424,11 @@ test('tooltip motion expands the clock and slides naming forward and back withou
   await expect
     .poll(() => editor.locator('.ec-panel-current').evaluate((node) => node.getAnimations().length))
     .toBeGreaterThan(0)
+  expect(await actionPositions()).toEqual(fixedActions)
+  await editor.locator('.ec-panel-current').evaluate((node) => {
+    node.getAnimations()[0].currentTime = 140
+  })
+  expect(await actionPositions()).toEqual(fixedActions)
   expect(await directions()).toEqual({
     enter: 'translateX(-100%)',
     exit: 'translateX(100%)',
@@ -448,6 +471,9 @@ test('tooltip motion expands the clock and slides naming forward and back withou
           .filter((animation) => animation.constructor === Animation).length,
     ),
   ).toBe(0)
+  await title.press('Enter')
+  await expect(page.getByRole('status')).toHaveText('Draft saved on this device.')
+  await expect(editor).toHaveCount(0)
 })
 
 test('the star popover keeps the whole seek hit area interactive up to its body', async ({

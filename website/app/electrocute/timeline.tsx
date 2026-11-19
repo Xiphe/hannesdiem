@@ -9,6 +9,7 @@ interface TimelineProps {
   canHighlight: boolean
   editing: boolean
   editorRange: { start: number; end: number }
+  editorActions?: RemixNode
   editor?: RemixNode
   editorStep?: 'range' | 'name'
   seek(time: number): void
@@ -294,6 +295,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
               {content}
             </div>
           </div>
+          {p.editing && p.editorActions}
         </div>
         {p.children}
       </div>

@@ -62,6 +62,7 @@ export async function animateTooltip(
         220,
         80,
       )
+      run(tooltip.querySelector('.ec-clip-actions'), [{ opacity: 0 }, { opacity: 1 }], 220, 80)
       run(tooltip.querySelector('.ec-morph-pointer'), [{ opacity: 1 }, { opacity: 0 }], 100)
       run(tooltip.querySelector('.ec-range-arrow'), [{ opacity: 0 }, { opacity: 1 }], 160, 160)
       run(
@@ -72,13 +73,14 @@ export async function animateTooltip(
       )
     } else {
       const direction = to === 'name' ? 1 : -1
+      const duration = to === 'name' ? 360 : 280
       run(
         outgoing,
         [
           { transform: 'translateX(0)', opacity: 1 },
           { transform: `translateX(${-direction * 100}%)`, opacity: 0 },
         ],
-        280,
+        duration,
       )
       run(
         incoming,
@@ -86,7 +88,7 @@ export async function animateTooltip(
           { transform: `translateX(${direction * 100}%)`, opacity: 0 },
           { transform: 'translateX(0)', opacity: 1 },
         ],
-        280,
+        duration,
       )
     }
     await Promise.allSettled(animations.map((animation) => animation.finished))

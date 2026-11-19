@@ -403,6 +403,7 @@ export const archiveStyle = css({
     paddingBlock: 6,
     marginBlock: -6,
   },
+  '& .ec-time-tooltip[data-editing] .ec-tooltip-panels': { flex: 1, width: 0 },
   '& .ec-time-tooltip[data-motion] .ec-tooltip-panels': { overflow: 'hidden' },
   '& .ec-panel-current': { position: 'relative', width: '100%' },
   '& .ec-panel-outgoing': { position: 'absolute', inset: '6px 0 auto', pointerEvents: 'none' },
@@ -433,6 +434,9 @@ export const archiveStyle = css({
     '& svg': { width: 16, height: 16 },
   },
   '& .ec-time-tooltip[data-editing]': {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
     left: 'calc(0px - var(--editor-inset))',
     bottom: 'calc(50% + 24px)',
     width: 'calc(100% + var(--editor-inset) * 2 + var(--editor-tail))',
@@ -688,7 +692,13 @@ export const archiveStyle = css({
     gap: 8,
     minWidth: 0,
   },
-  '& .ec-clip-actions': { display: 'flex', alignItems: 'center', gap: 12, marginLeft: 4 },
+  '& .ec-clip-actions': {
+    display: 'flex',
+    flexShrink: 0,
+    alignItems: 'center',
+    gap: 12,
+    marginLeft: 4,
+  },
   '& .ec-passage-track': {
     position: 'relative',
     flex: 1,
