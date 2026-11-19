@@ -194,6 +194,42 @@ for (const viewport of [
   })
 }
 
+test('the highlights drawer overlays playback and navigates the listed ranges', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
+  const trigger = page.getByRole('button', { name: 'Show highlights', exact: true })
+  const drawer = page.getByRole('complementary', { name: 'Highlights', exact: true })
+  const video = page.locator('video')
+  const before = await video.boundingBox()
+  await expect(drawer).toBeHidden()
+  await trigger.click()
+  await expect(drawer).toBeVisible()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  await expect(drawer.getByRole('button', { name: 'Close highlights' })).toBeFocused()
+  expect(await video.boundingBox()).toEqual(before)
+  await drawer.getByRole('link', { name: /Test highlight B/ }).click()
+  await expect
+    .poll(() => video.evaluate((node) => (node as HTMLVideoElement).currentTime))
+    .toBeGreaterThanOrEqual(26)
+  await expect(drawer.getByRole('link', { name: /Test highlight B/ })).toHaveAttribute(
+    'aria-current',
+    'true',
+  )
+  await expect(drawer).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(drawer).toBeHidden()
+  await expect(trigger).toBeFocused()
+  await trigger.press('Enter')
+  await expect(drawer).toBeVisible()
+  await drawer.getByRole('button', { name: 'Close highlights' }).click()
+  await expect(drawer).toBeHidden()
+  await trigger.click()
+  await page.locator('.ec-video-tap').click({ position: { x: 20, y: 100 } })
+  await expect(drawer).toBeHidden()
+})
+
 test('range editing clamps bounds, previews the passage and persists only a local draft', async ({
   page,
 }) => {

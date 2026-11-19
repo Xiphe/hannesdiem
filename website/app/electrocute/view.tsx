@@ -1,6 +1,7 @@
 import { on, ref, type Handle } from 'remix/component'
 import type { ElectroCuteArchiveProps, ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { archiveStyle } from './styles.ts'
+import { HighlightsDrawer } from './highlights-drawer.tsx'
 import { XMarkIcon } from '../heroicons.tsx'
 import { FeedIcon } from '../temple/feed/icon.tsx'
 import { preciseClock, TrimTimeline, type TrimEdge } from './trim.tsx'
@@ -861,6 +862,13 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                     >
                       <FeedIcon name={fullscreen ? 'exit-fullscreen' : 'fullscreen'} />
                     </button>
+                    <HighlightsDrawer
+                      sessionId={session.id}
+                      highlights={highlights()}
+                      position={position}
+                      ready={ready}
+                      choose={choose}
+                    />
                     <div class="ec-transport">
                       <div class="ec-transport-row">
                         <button
