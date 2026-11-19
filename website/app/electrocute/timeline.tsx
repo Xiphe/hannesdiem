@@ -20,8 +20,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   let hoverTime: number | undefined
   let open = false
   let width = 0
-  let wrap: HTMLDivElement | undefined
-  let connection: number[] | undefined
+  let tooltipWidth = 184
   let input: HTMLInputElement | undefined
   let closeTimer: ReturnType<typeof setTimeout> | undefined
   const cancelClose = () => clearTimeout(closeTimer)
@@ -45,39 +44,17 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
     }, 180)
   }
   handle.signal.addEventListener('abort', cancelClose, { once: true })
-  function measureConnection() {
-    const passage = wrap?.querySelector('.ec-passage-track input')?.getBoundingClientRect()
-    const selection = wrap?.querySelector('.ec-trim-selection')?.getBoundingClientRect()
-    const popup = wrap?.querySelector('.ec-time-tooltip')?.getBoundingClientRect()
-    const root = wrap?.getBoundingClientRect()
-    const next =
-      handle.props.editing && passage && selection && popup && root
-        ? [
-            passage.left + 5 - root.left,
-            passage.right - 5 - root.left,
-            popup.bottom - root.top,
-            selection.left - root.left,
-            selection.right - root.left,
-            selection.top - root.top,
-          ]
-        : undefined
-    if (JSON.stringify(next) === JSON.stringify(connection)) return
-    connection = next
-    handle.update()
-  }
   return () => {
     const p = handle.props
     const time = hoverTime ?? p.position
     const point = 5 + (p.duration ? time / p.duration : 0) * Math.max(0, width - 10)
-    const half = Math.min(width / 2, p.canHighlight ? 84 : 60)
+    const half = Math.min(width / 2, tooltipWidth / 2)
     const center = clamp(point, half, Math.max(half, width - half))
-    handle.queueTask(measureConnection)
     return (
       <div
         class="ec-seek-wrap"
         mix={[
           ref((node, signal) => {
-            wrap = node
             const measure = () => {
               width = node.clientWidth
               handle.update()
@@ -119,28 +96,6 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           }),
         ]}
       >
-        {p.editing && connection && (
-          <svg
-            class="ec-range-link"
-            width={width}
-            height={44}
-            viewBox={`0 0 ${width} 44`}
-            aria-hidden="true"
-          >
-            <path
-              class="ec-range-wash"
-              d={`M${connection[0]},${connection[2]} L${connection[1]},${connection[2]} L${connection[4]},${connection[5]} L${connection[3]},${connection[5]} Z`}
-            />
-            <path
-              data-edge="start"
-              d={`M${connection[0]},${connection[2]} L${connection[3]},${connection[5]}`}
-            />
-            <path
-              data-edge="end"
-              d={`M${connection[1]},${connection[2]} L${connection[4]},${connection[5]}`}
-            />
-          </svg>
-        )}
         <input
           type="range"
           class="ec-seek"
@@ -175,9 +130,17 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           role="dialog"
           aria-label={p.editing ? 'Highlight editor' : 'Playback tools'}
           class="ec-time-tooltip"
+          mix={ref((node, signal) => {
+            const measure = () => {
+              tooltipWidth = node.getBoundingClientRect().width
+              handle.update()
+            }
+            const observer = new ResizeObserver(measure)
+            observer.observe(node)
+            signal.addEventListener('abort', () => observer.disconnect(), { once: true })
+          })}
           data-open={p.editing || open ? 'true' : undefined}
           data-editing={p.editing ? 'true' : undefined}
-          data-connected={p.editing && connection ? 'true' : undefined}
           data-action={!p.editing && p.canHighlight ? '' : undefined}
           style={
             p.editing

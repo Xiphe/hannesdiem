@@ -77,27 +77,27 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 - Der Stern erweitert denselben Tooltip über die volle Breite der Steuerleiste.
   Die bisherige Zeitinformation wird durch die Highlight-Bedienung ersetzt.
   Haupt-Play, Suchleiste und Volume bleiben an ihrer Position.
-- Die bestehende Video-Progressbar ist die einzige Oberfläche zum Trimmen.
-  Die Auswahl sitzt vertikal mittig auf ihr. Beide Kanten lassen sich über die
-  gesamte Aufnahmedauer verschieben und einzeln auswählen. Pfeiltasten ändern
-  um eine Sekunde; Shift und Pfeiltaste ändern bei bekannter Quellbildrate um
-  ein Bild. Der Playhead läuft beim Setzen und Trimmen normal weiter.
-- Im breiten Tooltip stehen Passage-Play, die kleine Passage-Suchleiste,
-  Gesamtlänge sowie Save und X. Im aktuellen Entwurf zur Erprobung bilden
-  Minus, die passende Klammer `[` / `]` und Plus eine Gruppe. Die gut treffbaren
-  Tasten ändern den gewählten Marker um eine Sekunde; Gedrückthalten wiederholt
-  die Änderung. Die Gruppe steht beim linken Marker links, beim rechten
-  Marker rechts neben der Passage-Suchleiste. Play startet die Passage von vorne;
-  Sprünge darin verändern keine Grenzen. Die Vorschau stoppt am gesetzten Ende.
-- Ebenfalls zur Erprobung: Zwei feine pinke Verbindungslinien verbinden die
-  Auswahl unten mit den Enden der Passage-Leiste oben. Die gewählte Kante ist
-  stärker hervorgehoben, beide Leisten teilen eine dezente pinke Färbung. Dauer,
-  Save und X bekommen mehr Abstand und stehen auf schmalen Displays in einer
-  zweiten Zeile desselben Tooltips. Die visuelle Wirkung bleibt zur Sichtung offen.
-- Save öffnet erst die Benennung und speichert noch kein Highlight. Die bisherige
-  Tooltip-Bedienung wird dort durch Titel, Speichern und X als gemeinsames Element
-  ersetzt. Erst dieser zweite Save speichert. Der öffentliche Name wird hier
-  nicht abgefragt. X und Escape brechen in beiden Schritten ab.
+- Die Auswahl sitzt vertikal mittig auf der bestehenden Video-Progressbar.
+  Die obere Passage-Leiste spiegelt dieselbe Auswahl mit zwei schlichten
+  Drag-Griffen. Beide Oberflächen ändern dieselben Grenzen. Oben ist etwas
+  Kontext vor und hinter der Passage sichtbar, um die Grenzen auch erweitern zu
+  können; der Zoom bleibt beim Ziehen stabil und passt sich nach dem Loslassen an.
+- Die ausgewählte Kante reagiert auf Pfeiltasten in Sekundenschritten. Shift und
+  Pfeiltaste ändern bei bekannter Quellbildrate um ein Bild. Die verworfenen
+  Pfeil-/Minus-/Plus-Gruppen und Verbindungslinien entfallen. Die beiden Leisten
+  spiegeln sich durch ihre gleichen, zurückhaltenden Griffe.
+- Space startet und pausiert das Video auf der gesamten Session-Seite, ohne
+  Scrollen oder eine zusätzliche Button-Aktion. Eingabefelder behalten Space zum
+  Schreiben. Gedrückthalten schaltet die Wiedergabe nicht wiederholt um.
+- Passage-Play setzt pausierte Wiedergabe innerhalb der Auswahl an derselben
+  Stelle fort. Bei laufender Wiedergabe oder einem Playhead außerhalb der Passage
+  beziehungsweise an ihrem Ende startet es am Anfang der Auswahl. Die Vorschau
+  stoppt am gesetzten Ende. Die Hauptzeitleiste bleibt für die gesamte Aufnahme.
+- Save öffnet die Benennung und speichert noch kein Highlight. Links führt ein
+  kleines Zurück-Icon wieder in die Auswahl; Titel und Grenzen bleiben erhalten.
+  Erst Save in der Namensansicht speichert. Der öffentliche Name wird hier nicht
+  abgefragt. X und Escape brechen in beiden Schritten ab. Save hat einen ruhigen,
+  konsistenten Hover; Schließen und Zurück haben zentrierte Icons.
 - Außerhalb der Highlight-Bearbeitung sind Abspielzeit und Sessionlänge nur beim
   Überfahren oder Tastaturfokus als Tooltip sichtbar.
 - Die Feed-Steuerung dient als Vorlage: runder zentraler Play-Button, Vollbild oben

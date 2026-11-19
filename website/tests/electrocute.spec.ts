@@ -273,22 +273,22 @@ test('the seek popover expands into trimming, then replaces its controls with th
     .boundingBox()
   expect(popup!.x + popup!.width - cancel!.x - cancel!.width).toBeGreaterThanOrEqual(12)
   expect(cancel!.x - save!.x - save!.width).toBeGreaterThanOrEqual(12)
-  const links = page.locator('.ec-range-link path[data-edge]')
-  await expect(links).toHaveCount(2)
-  const endpoints = await links.evaluateAll((nodes) =>
-    nodes.map((node) => {
-      const path = node as SVGPathElement
-      const point = path.getPointAtLength(path.getTotalLength())
-      return new DOMPoint(point.x, point.y).matrixTransform(path.getScreenCTM()!)
-    }),
-  )
-  const selection = await page.locator('.ec-trim-selection').boundingBox()
-  expect(Math.abs(endpoints[0].x - selection!.x)).toBeLessThan(1)
-  expect(Math.abs(endpoints[1].x - selection!.x - selection!.width)).toBeLessThan(1)
-  expect(Math.abs(endpoints[0].y - selection!.y)).toBeLessThan(1)
+  const closeIcon = await editor
+    .getByRole('button', { name: 'Cancel', exact: true })
+    .locator('svg')
+    .boundingBox()
   expect(
-    await page.locator('.ec-range-link').evaluate((node) => getComputedStyle(node).pointerEvents),
-  ).toBe('none')
+    Math.abs(closeIcon!.x + closeIcon!.width / 2 - cancel!.x - cancel!.width / 2),
+  ).toBeLessThan(1)
+  expect(
+    Math.abs(closeIcon!.y + closeIcon!.height / 2 - cancel!.y - cancel!.height / 2),
+  ).toBeLessThan(1)
+  const saveButton = editor.getByRole('button', { name: 'Name highlight', exact: true })
+  const saveColor = await saveButton.evaluate((button) => getComputedStyle(button).color)
+  await saveButton.hover()
+  expect(await saveButton.evaluate((button) => getComputedStyle(button).color)).toBe(saveColor)
+  expect(await saveButton.boundingBox()).toEqual(save)
+  await expect(page.locator('.ec-range-link, .ec-trim-adjust')).toHaveCount(0)
   await editor.getByRole('button', { name: 'Name highlight', exact: true }).click()
   const title = editor.getByRole('textbox', { name: 'Title', exact: true })
   await expect(title).toBeFocused()
@@ -297,7 +297,8 @@ test('the seek popover expands into trimming, then replaces its controls with th
   await expect(editor.getByRole('button', { name: 'Save draft', exact: true })).toBeDisabled()
   expect(await seek.boundingBox()).toEqual(original)
   await title.fill('Synthetic title kept while trimming')
-  await page.getByRole('slider', { name: 'Highlight end', exact: true }).focus()
+  await editor.getByRole('button', { name: 'Back to selection', exact: true }).click()
+  await expect(page.getByRole('slider', { name: 'Passage start', exact: true })).toBeFocused()
   await expect(editor.getByRole('slider', { name: 'Passage position' })).toBeVisible()
   await editor.getByRole('button', { name: 'Name highlight', exact: true }).click()
   await expect(title).toHaveValue('Synthetic title kept while trimming')
@@ -424,15 +425,15 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   )
   await openHighlight(page)
   const player = page.locator('.ec-player')
-  await expect(player.locator('.ec-seek-wrap .ec-trim-rail')).toHaveCount(1)
+  await expect(player.locator('.ec-seek-wrap > .ec-main-trim .ec-trim-rail')).toHaveCount(1)
   await expect(
     player.getByRole('dialog', { name: 'Highlight editor' }).getByRole('slider'),
-  ).toHaveCount(1)
+  ).toHaveCount(3)
   await expect(
     player.getByRole('dialog', { name: 'Highlight editor' }).locator('.ec-trim-edge'),
-  ).toHaveCount(0)
+  ).toHaveCount(2)
   await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toHaveCount(0)
-  const rail = await player.locator('.ec-trim-rail').boundingBox()
+  const rail = await player.locator('.ec-seek-wrap > .ec-main-trim .ec-trim-rail').boundingBox()
   if (!rail) throw new Error('Missing trim timeline')
   const start = player.getByRole('slider', { name: 'Highlight start', exact: true })
   const end = player.getByRole('slider', { name: 'Highlight end', exact: true })
@@ -454,35 +455,25 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   await drag(end, -10)
   await expect(end).toHaveAttribute('aria-valuenow', '70')
   await start.click()
-  const selection = await player.locator('.ec-trim-selection').boundingBox()
+  const selection = await player
+    .locator('.ec-seek-wrap > .ec-main-trim .ec-trim-selection')
+    .boundingBox()
   const playback = await page
     .getByRole('slider', { name: 'Playback position', exact: true })
     .boundingBox()
   expect(
     Math.abs(selection!.y + selection!.height / 2 - playback!.y - playback!.height / 2),
   ).toBeLessThan(1)
-  const controls = player.locator('.ec-trim-adjust')
-  await expect(controls.getByRole('button')).toHaveText(['−', '+'])
-  const popup = await controls.boundingBox()
-  const passage = await player
-    .getByRole('slider', { name: 'Passage position', exact: true })
-    .boundingBox()
-  expect(popup!.x + popup!.width).toBeLessThanOrEqual(passage!.x)
-  await expect(player.getByRole('dialog', { name: 'Highlight editor' })).toBeVisible()
-  await expect(player.getByRole('textbox', { name: 'Title', exact: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Increase highlight start by one second' }).click()
+  await expect(player.locator('.ec-trim-adjust')).toHaveCount(0)
+  const passageStart = page.getByRole('slider', { name: 'Passage start', exact: true })
+  const passageEnd = page.getByRole('slider', { name: 'Passage end', exact: true })
+  await passageStart.press('ArrowRight')
   await expect(start).toHaveAttribute('aria-valuenow', '31')
   await start.press('ArrowRight')
-  await expect(start).toHaveAttribute('aria-valuenow', '32')
-  await start.press('Shift+ArrowLeft')
+  await expect(passageStart).toHaveAttribute('aria-valuenow', '32')
+  await passageStart.press('Shift+ArrowLeft')
   await expect(start).toHaveAttribute('aria-valuenow', '31.8')
-  await end.click()
-  const rightControls = await controls.boundingBox()
-  const rightPassage = await player
-    .getByRole('slider', { name: 'Passage position', exact: true })
-    .boundingBox()
-  expect(rightControls!.x).toBeGreaterThanOrEqual(rightPassage!.x + rightPassage!.width)
-  await page.getByRole('button', { name: 'Decrease highlight end by one second' }).click()
+  await passageEnd.press('ArrowLeft')
   await expect(end).toHaveAttribute('aria-valuenow', '69')
   await expect
     .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
@@ -492,41 +483,141 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeFocused()
 })
 
-test('minus and plus repeat while held, stop on release, and retain keyboard precision', async ({
+test('the upper passage grips drag either boundary and mirror the main timeline', async ({
   page,
 }) => {
   await page.goto('/electrocute/test-session-1')
   await openHighlight(page)
-  const start = page.getByRole('slider', { name: 'Highlight start', exact: true })
-  const plus = page.getByRole('button', { name: 'Increase highlight start by one second' })
-  await expect(page.locator('.ec-trim-bracket')).toHaveText('[')
-  const box = await plus.boundingBox()
-  if (!box) throw Error('Missing plus button')
+  await setRange(page, 20, 60)
+  const seek = page.getByRole('slider', { name: 'Passage position', exact: true })
+  const upper = page.getByRole('slider', { name: 'Passage end', exact: true })
+  const lower = page.getByRole('slider', { name: 'Highlight end', exact: true })
+  const span = Number(await seek.getAttribute('max')) - Number(await seek.getAttribute('min'))
+  const rail = await page.locator('.ec-passage-trim .ec-trim-rail').boundingBox()
+  const box = await upper.boundingBox()
+  if (!box || !rail) throw Error('Missing passage trim surface')
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await page.mouse.down()
-  await expect
-    .poll(async () => Number(await start.getAttribute('aria-valuenow')))
-    .toBeGreaterThanOrEqual(3)
+  await page.mouse.move(box.x + box.width / 2 - (5 / span) * rail.width, box.y + box.height / 2, {
+    steps: 6,
+  })
   await page.mouse.up()
-  const released = Number(await start.getAttribute('aria-valuenow'))
-  await page.waitForTimeout(350)
-  await expect(start).toHaveAttribute('aria-valuenow', String(released))
-  await plus.click()
-  await expect(start).toHaveAttribute('aria-valuenow', String(released + 1))
-  await plus.press('Shift+ArrowRight')
-  await expect(start).toHaveAttribute('aria-valuenow', String(released + 1.2))
-  await page.getByRole('slider', { name: 'Highlight end', exact: true }).focus()
-  await expect(page.locator('.ec-trim-bracket')).toHaveText(']')
-  const minus = page.getByRole('button', { name: 'Decrease highlight end by one second' })
-  const minusBox = await minus.boundingBox()
-  if (!minusBox) throw Error('Missing minus button')
-  await page.mouse.move(minusBox.x + minusBox.width / 2, minusBox.y + minusBox.height / 2)
-  await page.mouse.down()
-  await page.keyboard.press('Escape')
-  await page.mouse.up()
-  await page.waitForTimeout(600)
+  await expect(upper).toHaveAttribute('aria-valuenow', '55')
+  await expect(lower).toHaveAttribute('aria-valuenow', '55')
+  await upper.press('Shift+ArrowRight')
+  await expect(lower).toHaveAttribute('aria-valuenow', '55.2')
+  const start = page.getByRole('slider', { name: 'Passage start', exact: true })
+  await start.press('ArrowLeft')
+  await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
+    'aria-valuenow',
+    '19',
+  )
+})
+
+test('Space toggles video across the page and keeps text entry and buttons safe', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  const video = page.locator('video')
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
+  await video.evaluate((video) => {
+    ;(video as HTMLVideoElement).muted = true
+  })
+  await page.getByRole('link', { name: 'All sessions', exact: true }).focus()
+  await page.keyboard.down('Space')
+  await expect.poll(() => video.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(false)
+  await page.keyboard.down('Space')
+  await expect.poll(() => video.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(false)
+  await page.keyboard.up('Space')
+  await page.keyboard.press('Space')
+  await expect.poll(() => video.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(true)
   await openHighlight(page)
-  await expect(start).toHaveAttribute('aria-valuenow', '0')
+  const start = page.getByRole('slider', { name: 'Passage start', exact: true })
+  const before = await start.getAttribute('aria-valuenow')
+  await start.focus()
+  await page.keyboard.press('Space')
+  await expect.poll(() => video.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(false)
+  await page.keyboard.press('Space')
+  await expect(start).toHaveAttribute('aria-valuenow', before!)
+  const name = page.getByRole('button', { name: 'Name highlight', exact: true })
+  await name.focus()
+  await page.keyboard.press('Space')
+  await expect.poll(() => video.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(false)
+  await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveCount(0)
+  await page.keyboard.press('Space')
+  await name.click()
+  const title = page.getByRole('textbox', { name: 'Title', exact: true })
+  await title.fill('Synthetic')
+  await title.press('Space')
+  await expect(title).toHaveValue('Synthetic ')
+  await expect.poll(() => video.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(true)
+})
+
+test('passage Play resumes a paused point inside the selection and restarts when playing or outside', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await openHighlight(page)
+  await setRange(page, 10, 20)
+  const video = page.locator('video')
+  const play = page.getByRole('button', { name: 'Preview passage', exact: true })
+  await video.evaluate((video) => {
+    const v = video as HTMLVideoElement
+    v.muted = true
+    v.pause()
+    v.currentTime = 15
+  })
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toHaveValue(
+    '15',
+  )
+  await play.click()
+  await expect
+    .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
+    .toBeGreaterThanOrEqual(15)
+  await play.click()
+  await expect
+    .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
+    .toBeLessThan(11)
+  await video.evaluate((video) => {
+    const v = video as HTMLVideoElement
+    v.pause()
+    v.currentTime = 5
+  })
+  await play.click()
+  await expect
+    .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
+    .toBeGreaterThanOrEqual(10)
+  await expect
+    .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
+    .toBeLessThan(11)
+  await video.evaluate((video) => {
+    const v = video as HTMLVideoElement
+    v.pause()
+    v.currentTime = 20
+  })
+  await play.click()
+  await expect
+    .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
+    .toBeLessThan(11)
+})
+
+test('the star tooltip stays on one line for long session clocks', async ({ page }) => {
+  await page.goto('/electrocute/test-session-1')
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  await expect(seek).toBeEnabled()
+  await page.locator('video').evaluate((video) => {
+    Object.defineProperty(video, 'duration', { configurable: true, value: 12345 })
+    video.dispatchEvent(new Event('loadedmetadata'))
+    Object.defineProperty(video, 'currentTime', { configurable: true, value: 10234 })
+    video.dispatchEvent(new Event('timeupdate'))
+  })
+  await seek.focus()
+  const popup = page.getByRole('dialog', { name: 'Playback tools' })
+  await expect(popup).toContainText('2:50:34 / 3:25:45')
+  const label = await popup.locator('.ec-time-label').boundingBox()
+  const star = await popup.getByRole('button', { name: 'Set highlight', exact: true }).boundingBox()
+  expect(Math.abs(label!.y + label!.height / 2 - star!.y - star!.height / 2)).toBeLessThan(1)
+  expect(star!.x).toBeGreaterThanOrEqual(label!.x + label!.width)
 })
 
 test('main playback keeps running while trimming; passage preview starts over and seeks within its bounds', async ({
@@ -736,9 +827,12 @@ test.describe('mobile player', () => {
       .toBeGreaterThanOrEqual(70)
     await openHighlight(page, true)
     await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toBeFocused()
-    const end = page.getByRole('slider', { name: 'Highlight end', exact: true })
+    const end = page.getByRole('slider', { name: 'Passage end', exact: true })
     const box = await end.boundingBox()
-    const rail = await page.locator('.ec-trim-rail').boundingBox()
+    const rail = await page.locator('.ec-passage-trim .ec-trim-rail').boundingBox()
+    const passage = page.getByRole('slider', { name: 'Passage position', exact: true })
+    const span =
+      Number(await passage.getAttribute('max')) - Number(await passage.getAttribute('min'))
     if (!box || !rail) throw new Error('Missing touch trim controls')
     const touch = await page.context().newCDPSession(page)
     const x = box.x + box.width / 2,
@@ -747,29 +841,17 @@ test.describe('mobile player', () => {
     for (let step = 1; step <= 6; step++) {
       await touch.send('Input.dispatchTouchEvent', {
         type: 'touchMove',
-        touchPoints: [{ x: x - ((10 / 96) * rail.width * step) / 6, y }],
+        touchPoints: [{ x: x - ((10 / span) * rail.width * step) / 6, y }],
       })
     }
     await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
     await expect(end).toHaveAttribute('aria-valuenow', '86')
     await end.tap()
-    const minus = page.getByRole('button', { name: 'Decrease highlight end by one second' })
-    const target = await minus.boundingBox()
-    expect(target!.width).toBeGreaterThanOrEqual(44)
-    expect(target!.height).toBeGreaterThanOrEqual(44)
-    await minus.tap()
-    await expect(end).toHaveAttribute('aria-valuenow', '85')
-    await touch.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [{ x: target!.x + target!.width / 2, y: target!.y + target!.height / 2 }],
-    })
-    await expect
-      .poll(async () => Number(await end.getAttribute('aria-valuenow')))
-      .toBeLessThanOrEqual(82)
-    await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-    const released = await end.getAttribute('aria-valuenow')
-    await page.waitForTimeout(300)
-    await expect(end).toHaveAttribute('aria-valuenow', released!)
+    await end.press('ArrowLeft')
+    await expect(page.getByRole('slider', { name: 'Highlight end', exact: true })).toHaveAttribute(
+      'aria-valuenow',
+      '85',
+    )
     await page.keyboard.press('Escape')
     await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toHaveCount(0)

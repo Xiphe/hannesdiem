@@ -10,6 +10,9 @@ interface TrimProps {
   frameRate?: number
   disabled: boolean
   selected: TrimEdge
+  viewport?: { start: number; end: number }
+  surface?: 'passage'
+  settle?(): void
   select(edge: TrimEdge): void
   change(start: number, end: number): void
 }
@@ -42,120 +45,20 @@ function key(p: TrimProps, event: KeyboardEvent, kind: 'start' | 'end') {
   change(p, kind, value)
 }
 
-export function TrimControls(handle: Handle<TrimProps>) {
-  let repeatTimer: ReturnType<typeof setTimeout> | undefined
-  let held: { pointer: number; edge: TrimEdge; direction: number } | undefined
-  let skipClick = false
-  function stop() {
-    clearTimeout(repeatTimer)
-    held = undefined
-  }
-  function repeat() {
-    const p = handle.props
-    if (!held || p.disabled || held.edge !== p.selected) return stop()
-    const gap = p.frameRate ? 1 / p.frameRate : 0.001
-    const next = clamp(
-      p[p.selected] + held.direction,
-      p.selected === 'start' ? 0 : p.start + gap,
-      p.selected === 'start' ? p.end - gap : p.duration,
-    )
-    if (next === p[p.selected]) return stop()
-    skipClick = true
-    change(p, p.selected, next)
-    repeatTimer = setTimeout(repeat, 120)
-  }
-  function begin(event: PointerEvent, direction: number) {
-    if (event.button !== 0 || !event.isPrimary || handle.props.disabled) return
-    stop()
-    skipClick = false
-    const button = event.currentTarget as HTMLButtonElement
-    button.focus({ preventScroll: true })
-    button.setPointerCapture(event.pointerId)
-    held = { pointer: event.pointerId, edge: handle.props.selected, direction }
-    repeatTimer = setTimeout(repeat, 450)
-  }
-  function release(event: PointerEvent) {
-    if (held?.pointer === event.pointerId) stop()
-  }
-  handle.signal.addEventListener('abort', stop, { once: true })
-  handle.queueTask(() => window.addEventListener('blur', stop, { signal: handle.signal }))
-  return () => {
-    const p = handle.props
-    return (
-      <div
-        class="ec-trim-adjust"
-        data-edge={p.selected}
-        mix={[
-          on('keydown', (event) => {
-            stop()
-            skipClick = false
-            key(p, event, p.selected)
-          }),
-          on<HTMLDivElement, 'pointerup'>('pointerup', release),
-          on<HTMLDivElement, 'pointercancel'>('pointercancel', release),
-          on<HTMLDivElement, 'lostpointercapture'>('lostpointercapture', release),
-          on('focusout', stop),
-          on('contextmenu', (event) => event.preventDefault()),
-        ]}
-      >
-        <button
-          type="button"
-          aria-label={`Decrease highlight ${p.selected} by one second`}
-          disabled={
-            p.disabled ||
-            (p.selected === 'start' ? p.start <= 0 : p.end <= p.start + 1 / (p.frameRate ?? 1000))
-          }
-          mix={[
-            on('pointerdown', (event) => begin(event, -1)),
-            on('click', () => {
-              if (skipClick) {
-                skipClick = false
-                return
-              }
-              change(p, p.selected, p[p.selected] - 1)
-            }),
-          ]}
-        >
-          −
-        </button>
-        <span
-          class="ec-trim-bracket"
-          aria-hidden="true"
-        >
-          {p.selected === 'start' ? '[' : ']'}
-        </span>
-        <button
-          type="button"
-          aria-label={`Increase highlight ${p.selected} by one second`}
-          disabled={
-            p.disabled ||
-            (p.selected === 'end'
-              ? p.end >= p.duration
-              : p.start >= p.end - 1 / (p.frameRate ?? 1000))
-          }
-          mix={[
-            on('pointerdown', (event) => begin(event, 1)),
-            on('click', () => {
-              if (skipClick) {
-                skipClick = false
-                return
-              }
-              change(p, p.selected, p[p.selected] + 1)
-            }),
-          ]}
-        >
-          +
-        </button>
-      </div>
-    )
-  }
-}
-
-/** The full recording's playback bar is also the only trimming surface. */
+/** Shared boundary interaction for the recording and its zoomed passage. */
 export function TrimTimeline(handle: Handle<TrimProps>) {
   let rail: HTMLDivElement | undefined
   let drag:
-    { id: number; kind: 'start' | 'end'; x: number; value: number; width: number } | undefined
+    | {
+        id: number
+        kind: 'start' | 'end'
+        x: number
+        value: number
+        width: number
+        from: number
+        to: number
+      }
+    | undefined
   function begin(event: PointerEvent, kind: 'start' | 'end') {
     if (handle.props.disabled || event.button !== 0 || !rail) return
     event.preventDefault()
@@ -170,6 +73,8 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
       x: event.clientX,
       value: handle.props[kind],
       width: rail.getBoundingClientRect().width,
+      from: handle.props.viewport?.start ?? 0,
+      to: handle.props.viewport?.end ?? handle.props.duration,
     }
     handle.update()
   }
@@ -181,7 +86,11 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
     change(
       handle.props,
       drag.kind,
-      Math.round(drag.value + ((event.clientX - drag.x) / drag.width) * handle.props.duration),
+      clamp(
+        drag.value + ((event.clientX - drag.x) / drag.width) * (drag.to - drag.from),
+        drag.from,
+        drag.to,
+      ),
     )
   }
   function finish(event: PointerEvent) {
@@ -189,13 +98,17 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
     const target = event.currentTarget as HTMLButtonElement
     if (target.hasPointerCapture(event.pointerId)) target.releasePointerCapture(event.pointerId)
     drag = undefined
+    handle.props.settle?.()
   }
   return () => {
     const p = handle.props
+    const from = p.viewport?.start ?? 0
+    const span = (p.viewport?.end ?? p.duration) - from
+    const helpId = p.surface ? 'ec-passage-trim-help' : 'ec-trim-help'
     return (
       <div
-        class="ec-main-trim"
-        aria-label="Trim highlight"
+        class={p.surface ? 'ec-main-trim ec-passage-trim' : 'ec-main-trim'}
+        aria-label={p.surface ? 'Trim passage' : 'Trim highlight'}
       >
         <div
           class="ec-trim-rail"
@@ -206,8 +119,8 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
           <span
             class="ec-trim-selection"
             style={{
-              left: `${(p.start / p.duration) * 100}%`,
-              width: `${((p.end - p.start) / p.duration) * 100}%`,
+              left: `${((p.start - from) / span) * 100}%`,
+              width: `${((p.end - p.start) / span) * 100}%`,
             }}
           />
           {(['start', 'end'] as const).map((kind) => (
@@ -217,15 +130,15 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
               role="slider"
               class="ec-trim-edge"
               data-edge={kind}
-              aria-label={`Highlight ${kind}`}
+              aria-label={`${p.surface ? 'Passage' : 'Highlight'} ${kind}`}
               aria-valuemin={kind === 'start' ? 0 : p.start}
               aria-valuemax={kind === 'start' ? p.end : p.duration}
               aria-valuenow={p[kind]}
               aria-valuetext={preciseClock(p[kind])}
-              aria-describedby="ec-trim-help"
+              aria-describedby={helpId}
               data-selected={p.selected === kind ? '' : undefined}
               disabled={p.disabled}
-              style={{ left: `${(p[kind] / p.duration) * 100}%` }}
+              style={{ left: `${((p[kind] - from) / span) * 100}%` }}
               mix={[
                 on<HTMLButtonElement, 'focus'>('focus', () => {
                   p.select(kind)
@@ -242,11 +155,10 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
           ))}
         </div>
         <span
-          id="ec-trim-help"
+          id={helpId}
           class="ec-sr-only"
         >
-          Drag either edge. Select an edge, then use minus or plus for seconds. Hold to repeat.
-          Keyboard arrow keys also adjust seconds.
+          Drag either edge. Select an edge, then use keyboard arrow keys for seconds.
           {p.frameRate ? ' Shift and arrow keys adjust one frame.' : ''}
         </span>
       </div>

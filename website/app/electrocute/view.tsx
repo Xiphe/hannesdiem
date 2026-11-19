@@ -1,8 +1,9 @@
 import { on, ref, type Handle } from 'remix/component'
 import type { ElectroCuteArchiveProps, ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { archiveStyle } from './styles.ts'
+import { XMarkIcon } from '../heroicons.tsx'
 import { FeedIcon } from '../temple/feed/icon.tsx'
-import { preciseClock, TrimControls, TrimTimeline, type TrimEdge } from './trim.tsx'
+import { preciseClock, TrimTimeline, type TrimEdge } from './trim.tsx'
 import { PlaybackTimeline } from './timeline.tsx'
 import { readSessionState, submitSessionForm } from '../identity/client.ts'
 import {
@@ -72,6 +73,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let editingId: string | undefined
   let clipStart = 0
   let clipEnd = 60
+  let passageWindow = { start: 0, end: 60 }
   let title = ''
   let feedback = ''
   let shareUrl = ''
@@ -152,6 +154,30 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     }
   }
 
+  async function playPassage() {
+    if (!video || !ready || !valid()) return
+    const inside = video.currentTime >= clipStart && video.currentTime < clipEnd
+    await playAt(video.paused && inside ? video.currentTime : clipStart, clipEnd)
+  }
+
+  function zoomPassage() {
+    const margin = Math.max(2, (clipEnd - clipStart) * 0.12)
+    passageWindow = {
+      start: Math.max(0, clipStart - margin),
+      end: Math.min(duration, clipEnd + margin),
+    }
+  }
+
+  async function backToSelection() {
+    if (busy) return
+    editorStep = 'range'
+    zoomPassage()
+    await handle.update()
+    player
+      ?.querySelector<HTMLElement>(`[aria-label="Passage ${selectedEdge}"]`)
+      ?.focus({ preventScroll: true })
+  }
+
   async function closeEditor() {
     if (busy) return
     if (previewEnd !== undefined) video?.pause()
@@ -183,6 +209,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     const range = highlight ?? defaultRange(currentFrame, duration)
     clipStart = range.start
     clipEnd = range.end
+    zoomPassage()
     title = highlight?.title ?? ''
     editingId = highlight?.id
     newId = crypto.randomUUID()
@@ -336,6 +363,30 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       },
       { signal },
     )
+    if (session)
+      window.addEventListener(
+        'keydown',
+        (event) => {
+          if (
+            (event.code !== 'Space' && event.key !== ' ') ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            !ready
+          )
+            return
+          const target = event.target as Element | null
+          if (
+            target?.closest(
+              'input:not([type=range]), textarea, select, [contenteditable]:not([contenteditable=false]), [role=textbox]',
+            )
+          )
+            return
+          event.preventDefault()
+          if (!event.repeat) void togglePlayback()
+        },
+        { capture: true, signal },
+      )
     void loadRuntime()
     window.addEventListener(
       'focus',
@@ -380,7 +431,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     handle.update()
   }
 
-  function trimProps() {
+  function trimProps(surface?: 'passage') {
     return {
       start: clipStart,
       end: clipEnd,
@@ -388,6 +439,12 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       frameRate: session?.frameRate,
       disabled: busy,
       selected: selectedEdge,
+      surface,
+      viewport: surface ? passageWindow : undefined,
+      settle() {
+        zoomPassage()
+        handle.update()
+      },
       select(edge: TrimEdge) {
         selectedEdge = edge
         editorStep = 'range'
@@ -396,6 +453,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       change(start: number, end: number) {
         clipStart = start
         clipEnd = end
+        if (!surface || start < passageWindow.start || end > passageWindow.end) zoomPassage()
         previewEnd = undefined
         handle.update()
       },
@@ -412,6 +470,15 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
           void saveHighlight()
         })}
       >
+        <button
+          type="button"
+          class="ec-icon-button ec-back-clip"
+          aria-label="Back to selection"
+          disabled={busy}
+          mix={on('click', backToSelection)}
+        >
+          <FeedIcon name="back" />
+        </button>
         <input
           aria-label="Title"
           placeholder="Name this highlight"
@@ -439,7 +506,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
           disabled={busy}
           mix={on('click', closeEditor)}
         >
-          ×
+          <XMarkIcon />
         </button>
       </form>
     ) : (
@@ -452,24 +519,25 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
           class="ec-icon-button"
           aria-label="Preview passage"
           disabled={!valid() || busy}
-          mix={on('click', () => void playAt(clipStart, clipEnd))}
+          mix={on('click', () => void playPassage())}
         >
           <FeedIcon name="play" />
         </button>
-        {selectedEdge === 'start' && <TrimControls {...trimProps()} />}
         <div class="ec-passage-track">
           <input
             type="range"
             class="ec-seek"
-            min={clipStart}
-            max={clipEnd}
+            min={passageWindow.start}
+            max={passageWindow.end}
             step={session?.frameRate ? 1 / session.frameRate : 0.001}
-            value={Math.max(clipStart, Math.min(clipEnd, position))}
+            value={Math.max(passageWindow.start, Math.min(passageWindow.end, position))}
             aria-label="Passage position"
-            aria-valuetext={preciseClock(Math.max(clipStart, Math.min(clipEnd, position)))}
+            aria-valuetext={preciseClock(
+              Math.max(passageWindow.start, Math.min(passageWindow.end, position)),
+            )}
             disabled={busy}
             style={{
-              '--progress': `${((Math.max(clipStart, Math.min(clipEnd, position)) - clipStart) / (clipEnd - clipStart)) * 100}%`,
+              '--progress': `${((Math.max(passageWindow.start, Math.min(passageWindow.end, position)) - passageWindow.start) / (passageWindow.end - passageWindow.start)) * 100}%`,
             }}
             mix={on('input', (event) => {
               if (!video) return
@@ -482,8 +550,8 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
               handle.update()
             })}
           />
+          <TrimTimeline {...trimProps('passage')} />
         </div>
-        {selectedEdge === 'end' && <TrimControls {...trimProps()} />}
         <div class="ec-clip-actions">
           <span class="ec-clock ec-passage-duration">{clock(Math.round(clipEnd - clipStart))}</span>
           <button
@@ -508,7 +576,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             disabled={busy}
             mix={on('click', closeEditor)}
           >
-            ×
+            <XMarkIcon />
           </button>
         </div>
       </div>

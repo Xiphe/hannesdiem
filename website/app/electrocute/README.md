@@ -59,41 +59,39 @@ and restores seek focus. Sound keeps the feed's expanding volume capsule without
 an additional button hover fill.
 
 The star starts a one-minute selection at the chosen time without seeking or
-interrupting playback. The same popover expands to the width of the transport
-row and replaces the session timestamp with the range controls. The main Play,
-seek and sound controls retain their positions. The range is centered vertically
-on the full-session bar, the only trim surface: drag either edge or select it and
-use keyboard arrows (one second). Shift plus an arrow adjusts one source frame
-when explicit session metadata provides its frame rate; it is never inferred
-from browser rendering speed. The first pCloud recording was probed at 60 fps.
+interrupting playback. The same popover expands to the transport row's width;
+main Play, seek and sound retain their positions. Both the full-session bar and
+the upper passage bar show the same two draggable boundaries. The upper bar
+zooms into the selection with a small amount of context on either side so the
+ends can be extended as well as shortened. Its scale stays fixed during a drag
+and reframes after release. Lower-bar changes also reframe the upper view.
 
-The expanded popover has passage Play first, a seek bar spanning the selection,
-total passage length, Save and X. In the current review version, a 44px minus/plus
-button pair surrounds a pink `[` or `]` matching the selected boundary. It sits
-before the passage bar for the start marker and after it for the end marker;
-tab order follows that placement. Holding a button repeats after 450ms, at 120ms
-intervals. Release, pointer cancellation, focus/window changes and unmount stop
-the timer; release adds no extra step. Passage Play starts at the selection's beginning, and passage seeking
-activates its end stop. Main-bar seeking returns to full-session playback. There
-are no additional trim handles in the passage bar.
+Both surfaces share the same trim component and range state. Select a boundary
+and use arrows for one-second changes; Shift plus arrows adjusts one source frame
+when explicit metadata provides its frame rate. Source frame rates are never
+inferred from browser rendering speed. The first pCloud recording is 60 fps.
+The rejected minus/plus/bracket controls, their repeat timers and decorative
+connection lines are removed. Matching minimal neutral grips and selections
+supply the visual relationship.
 
-This interaction experiment also connects the bottom selection's two corners to
-the passage bar's endpoints with fine pink lines and a faint wash. The selected
-edge's line is stronger. Connections follow measured DOM bounds after trimming,
-side changes and resizing; they never intercept pointer events. They replace the
-popover arrow while the passage controls are present. The passage track repeats
-the selection tint. Extra inset and spacing separate duration, a quieter Save
-button and X. On narrow screens those actions occupy a second row in the same
-popover, keeping the passage bar usable. The artist requested this version to
-try; bracket affordance and visual weighting remain open for review.
+Space toggles video playback throughout a session page, including from focused
+controls, without scrolling or also activating a native button. Repeated held
+keydown events do not keep toggling. Text inputs, textareas, selects and editable
+content retain Space for entry. Passage Play resumes at the current point when
+paused inside the selection; when already playing, outside the selection or at
+its end it restarts at the beginning. Passage playback and seeking activate the
+selection's end stop. The main timeline still seeks throughout the recording.
 
-Save advances to naming without persisting a highlight. The range controls are
-replaced with the joined title/save/cancel form in the same popover. The title
-receives focus and the final Save persists the existing selection and stable ID.
-Selecting either main-bar marker returns to trimming while retaining a typed
-title. X or Escape cancels from either step and restores focus to the main seek
-bar. Failed saves keep the naming step available for correction or retry. The
-public name is never requested in the clipping UI.
+Save advances to naming without persisting. The title/save/cancel form replaces
+the passage controls in the same popover and focuses the title. A left-hand Back
+icon returns to the selection, preserving title, bounds and stable ID. X or
+Escape cancels either step and restores main seek focus. Failed saves retain the
+naming form. The public name is never requested in the clipping UI.
+
+Save has a consistent neutral hover in both steps. Back and X use centered SVG
+icons with 44px hit targets. The collapsed clock/star popover is explicitly one
+non-wrapping row with intrinsic width; measuring that width preserves its arrow
+placement for long clocks and near either edge of the seek bar.
 
 The feed remains the control reference: a circular central play button,
 fullscreen in the upper right and vertical hover/focus volume treatment. Touch
