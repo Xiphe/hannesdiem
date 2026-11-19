@@ -71,8 +71,9 @@ Its scale stays fixed during a drag and reframes over approximately one second
 after release. A new interaction interrupts that animation; reduced-motion
 preferences use an immediate reframe. Lower-bar changes also reframe the upper view.
 
-The artist selected the quiet time ruler on both trimming surfaces after trying
-it together with a selection grid. The grid was removed. Ticks refer to absolute
+The artist selected the quiet time ruler only in the tooltip's passage transport
+after trying it together with a selection grid. The grid and the ruler on the
+lower full-session transport were removed. Ticks refer to absolute
 recording timestamps, so reframing visibly moves the ruler while the chosen bounds
 stay fixed. Tick spacing uses hysteresis to keep the same time marks through
 ordinary zoom adjustments; labels are sparse and noninteractive. This makes the

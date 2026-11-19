@@ -266,6 +266,8 @@ test('the seek popover expands into trimming, then replaces its controls with th
   expect(Math.abs(popup!.width - row!.width)).toBeLessThan(1)
   expect(popup!.y + popup!.height).toBeLessThan(original!.y)
   await expect(editor.getByRole('slider', { name: 'Passage position' })).toBeVisible()
+  await expect(editor.locator('.ec-time-ruler')).toBeVisible()
+  await expect(page.locator('.ec-seek-wrap > .ec-main-trim .ec-time-ruler')).toHaveCount(0)
   await expect(editor.locator('.ec-passage-duration')).toHaveText('1:00')
   const arrow = await editor.locator('.ec-range-arrow').boundingBox()
   const selection = await page

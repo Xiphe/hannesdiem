@@ -175,25 +175,27 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
             signal.addEventListener('abort', () => observer.disconnect(), { once: true })
           })}
         >
-          <div
-            class="ec-time-ruler"
-            aria-hidden="true"
-            data-step={step}
-          >
-            {marks.map(({ time, major, label }) => (
-              <span
-                key={time}
-                class="ec-time-tick"
-                data-time={time}
-                data-major={major ? '' : undefined}
-                style={{ left: `${((time - from) / span) * 100}%` }}
-              >
-                {label && (
-                  <span>{step < 1 ? preciseClock(time).replace(/\.?0+$/, '') : clock(time)}</span>
-                )}
-              </span>
-            ))}
-          </div>
+          {p.surface === 'passage' && (
+            <div
+              class="ec-time-ruler"
+              aria-hidden="true"
+              data-step={step}
+            >
+              {marks.map(({ time, major, label }) => (
+                <span
+                  key={time}
+                  class="ec-time-tick"
+                  data-time={time}
+                  data-major={major ? '' : undefined}
+                  style={{ left: `${((time - from) / span) * 100}%` }}
+                >
+                  {label && (
+                    <span>{step < 1 ? preciseClock(time).replace(/\.?0+$/, '') : clock(time)}</span>
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
           <span
             class="ec-trim-selection"
             style={{
