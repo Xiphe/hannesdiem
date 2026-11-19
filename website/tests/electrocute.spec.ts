@@ -143,6 +143,27 @@ async function setRange(page: Page, start: number, end: number) {
     .toBeCloseTo(Math.min(96, end + margin), 6)
 }
 
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`the session is only an uncropped viewport player at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport)
+    await page.goto('/electrocute/test-session-1')
+    await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
+    expect(await page.locator('.ec-player').boundingBox()).toEqual({ x: 0, y: 0, ...viewport })
+    expect(await page.locator('video').boundingBox()).toEqual({ x: 0, y: 0, ...viewport })
+    await expect(page.locator('video')).toHaveCSS('object-fit', 'contain')
+    await expect(page.getByRole('heading')).toHaveCount(0)
+    await expect(page.getByRole('complementary')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'All sessions' })).toHaveCount(0)
+    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(viewport.height)
+  })
+}
+
 test('range editing clamps bounds, previews the passage and persists only a local draft', async ({
   page,
 }) => {
@@ -176,19 +197,14 @@ test('range editing clamps bounds, previews the passage and persists only a loca
   await page.getByRole('button', { name: 'Save draft', exact: true }).click()
   await expect(page.getByRole('status')).toHaveText('Draft saved on this device.')
   await page.reload()
-  const draft = page.locator('.ec-highlight').filter({ hasText: 'Synthetic saved passage' })
-  await expect(draft).toContainText('You')
-  await draft.getByRole('button', { name: 'Edit draft' }).click()
-  await page.getByRole('button', { name: 'Name highlight', exact: true }).click()
-  await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
-    'Synthetic saved passage',
-  )
-  await expect(start).toHaveAttribute('aria-valuenow', '10')
-  await expect(end).toHaveAttribute('aria-valuenow', '12')
-  await page.getByRole('button', { name: 'Cancel', exact: true }).click()
-  await draft.getByRole('button', { name: 'Remove draft' }).click()
-  await expect(draft).toHaveCount(0)
-  await page.getByRole('link', { name: /Test highlight B/ }).click()
+  const draft = page.getByRole('button', { name: /Synthetic saved passage, 0:10 to 0:12/ })
+  await expect(draft).toBeVisible()
+  await expect(page.getByRole('complementary', { name: 'Highlights' })).toHaveCount(0)
+  await draft.click()
+  await expect
+    .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
+    .toBeGreaterThanOrEqual(10)
+  await page.getByRole('button', { name: /Test highlight B, 0:26 to 0:58/ }).click()
   await video.evaluate((video) => {
     ;(video as HTMLVideoElement).currentTime = 59
   })
@@ -1074,7 +1090,10 @@ test('Space toggles video across the page and keeps text entry and buttons safe'
   await video.evaluate((video) => {
     ;(video as HTMLVideoElement).muted = true
   })
-  await page.getByRole('link', { name: 'All sessions', exact: true }).focus()
+  await page.locator('body').evaluate((node) => {
+    node.tabIndex = -1
+    node.focus()
+  })
   await page.keyboard.down('Space')
   await expect.poll(() => video.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(false)
   await page.keyboard.down('Space')
@@ -1210,7 +1229,7 @@ test('main playback keeps running while trimming; passage preview starts over an
     .toBeLessThan(11)
 })
 
-test('public editor uses a separate profile, handles pending text, withdrawal and restoration', async ({
+test('public saving keeps the pending text flow while profile and management UI stay hidden', async ({
   page,
 }) => {
   let state: HighlightState = {
@@ -1282,31 +1301,11 @@ test('public editor uses a separate profile, handles pending text, withdrawal an
   expect(savedIds).toHaveLength(0)
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Synthetic public passage')
   await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
-  const privateList = page.getByRole('region', { name: 'Unpublished highlights' })
-  await expect(privateList).toContainText('Text check pending')
-  await expect(privateList.getByRole('button', { name: 'Share' })).toHaveCount(0)
   await expect(page.getByRole('status')).toContainText('Saved privately')
-  await privateList.getByRole('button', { name: 'Edit highlight' }).click()
-  approved = true
-  await page.getByRole('button', { name: 'Name highlight', exact: true }).click()
-  await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
-  await expect(privateList).toHaveCount(0)
-  const clip = page.locator('.ec-highlight').filter({ hasText: 'Synthetic public passage' })
-  await expect(clip).toContainText('Listener')
-  await page.getByText('Public profile', { exact: true }).click()
-  await expect(page.getByRole('textbox', { name: 'Public name', exact: true })).toHaveValue(
-    'Circle fixture alias',
-  )
-  await page.getByRole('textbox', { name: 'Public name', exact: true }).fill('Confirmed fixture')
-  await page.getByRole('button', { name: 'Update public name', exact: true }).click()
-  await expect(clip).toContainText('Confirmed fixture')
-  await expect(clip.getByRole('button', { name: 'Share' })).toBeVisible()
-  expect(savedIds[0], 'edits preserve the stable link').toBe(savedIds[1])
-  await clip.getByRole('button', { name: 'Withdraw', exact: true }).click()
-  await expect(privateList).toContainText('Withdrawn')
-  await privateList.getByRole('button', { name: 'Restore', exact: true }).click()
-  await expect(privateList).toHaveCount(0)
-  await expect(clip).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Unpublished highlights' })).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Public name', exact: true })).toHaveCount(0)
+  expect(savedIds).toHaveLength(1)
+  expect(state.highlights[0].status).toBe('pending')
 })
 
 test('a public runtime highlight link overrides saved progress after its asynchronous load', async ({
@@ -1346,7 +1345,7 @@ test('a public runtime highlight link overrides saved progress after its asynchr
     await route.fulfill({ json: state })
   })
   await page.goto('/fixture-public-highlights?highlight=runtime-fixture')
-  await expect(page.getByRole('link', { name: 'Log in to set highlights' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Log in to set highlights' })).toHaveCount(0)
   await expect
     .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
     .toBeCloseTo(20, 0)
@@ -1365,13 +1364,13 @@ test('a public runtime highlight link overrides saved progress after its asynchr
 
 test.describe('mobile player', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
-  test('highlight list and editor work without thumbnails, hover or horizontal overflow', async ({
+  test('the viewport player and editor work without surrounding UI, hover or horizontal overflow', async ({
     page,
   }) => {
     await page.goto('/electrocute/test-session-1')
-    const list = page.getByRole('complementary', { name: 'Highlights' })
-    await expect(list.locator('img')).toHaveCount(0)
-    await list.getByRole('link', { name: /Test highlight C/ }).tap()
+    await expect(page.getByRole('complementary', { name: 'Highlights' })).toHaveCount(0)
+    const highlight = page.getByRole('button', { name: /Test highlight C, 1:10 to 1:30/ })
+    await highlight.tap()
     await expect
       .poll(() =>
         page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime),
@@ -1382,9 +1381,9 @@ test.describe('mobile player', () => {
     await expect(clock).toBeHidden()
     await seek.tap({ position: { x: 15, y: 9 } })
     await expect(clock).toBeVisible()
-    await page.getByRole('heading', { name: 'Test session 01', exact: true }).tap()
+    await page.locator('.ec-video-tap').tap({ position: { x: 20, y: 20 } })
     await expect(clock).toBeHidden()
-    await list.getByRole('link', { name: /Test highlight C/ }).tap()
+    await highlight.tap()
     await openHighlight(page, true)
     await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toBeFocused()
     const end = page.getByRole('slider', { name: 'Passage end', exact: true })

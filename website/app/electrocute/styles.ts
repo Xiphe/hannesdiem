@@ -58,7 +58,22 @@ export const archiveStyle = css({
     textUnderlineOffset: 4,
   },
   '& .ec-date': { display: 'block', marginBlock: '.75rem 2rem', opacity: 0.7 },
-  '&[data-session]': { paddingTop: '4rem' },
+  '&[data-session]': {
+    position: 'fixed',
+    inset: 0,
+    width: '100%',
+    height: '100dvh',
+    maxWidth: 'none',
+    margin: 0,
+    padding: 0,
+    background: '#000',
+  },
+  '&[data-session] .ec-layout': { display: 'block', height: '100%', margin: 0 },
+  '&[data-session] .ec-layout > div, &[data-session] .ec-player': { height: '100%' },
+  '&[data-session] .ec-player, &[data-session] .ec-stage, &[data-session] .ec-video': {
+    borderRadius: 0,
+  },
+  '&[data-session] .ec-stage': { height: '100%', aspectRatio: 'auto', maxHeight: 'none' },
   '&[data-session] h1': {
     fontSize: 'clamp(1.4rem,3vw,2rem)',
     fontWeight: 600,
@@ -776,12 +791,11 @@ export const archiveStyle = css({
     textDecoration: 'underline',
   },
   '@media (width < 40rem)': {
-    '&[data-session]': { paddingInline: '.75rem', paddingTop: '3rem' },
     '& .ec-transport': { paddingInline: 8, paddingBottom: 8 },
-    '& .ec-transport-row': { gap: 4 },
+    '& .ec-transport-row': { gap: 4, '--control-inset': '8px' },
     '& .ec-seek-wrap': { '--editor-inset': '48px' },
     '& .ec-transport-row:has(.ec-playhead-highlight) .ec-seek-wrap': { '--editor-tail': '48px' },
-    '& .ec-time-tooltip[data-editing]': { padding: '4px 12px' },
+    '& .ec-time-tooltip[data-editing]': { padding: '4px 7px' },
   },
   '@media (width >= 40rem) and (hover: hover) and (pointer: fine)': {
     '& .ec-player .ec-icon-button, & .ec-player .ec-highlight-star, & .ec-player .ec-cancel-clip, & .ec-player .ec-back-clip':

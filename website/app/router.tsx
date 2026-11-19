@@ -210,6 +210,7 @@ export function createApp(content: ContentLoader) {
                   ogTitle: selected.session.title,
                 }}
                 path={path}
+                plain
               />
             </SiteContent>,
             {

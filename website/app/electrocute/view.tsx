@@ -741,22 +741,26 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         aria-label="ElectroCute archive"
         data-session={session ? '' : undefined}
       >
-        {preview && <p class="ec-preview">Local preview. Highlight drafts stay on this device.</p>}
+        {preview && !session && (
+          <p class="ec-preview">Local preview. Highlight drafts stay on this device.</p>
+        )}
         {session ? (
           <>
-            <a
-              class="ec-back"
-              href={archivePath}
-            >
-              All sessions
-            </a>
-            <h1>{session.title}</h1>
-            <time
-              class="ec-date"
-              dateTime={session.recordedAt}
-            >
-              {date(session.recordedAt)}
-            </time>
+            <div hidden>
+              <a
+                class="ec-back"
+                href={archivePath}
+              >
+                All sessions
+              </a>
+              <h1>{session.title}</h1>
+              <time
+                class="ec-date"
+                dateTime={session.recordedAt}
+              >
+                {date(session.recordedAt)}
+              </time>
+            </div>
             <div class="ec-layout">
               <div>
                 <div
@@ -960,95 +964,98 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                     </div>
                   </div>
                 </div>
-                {failed && (
-                  <div
-                    class="ec-error"
-                    role="alert"
-                  >
-                    <p>This video could not be loaded.</p>
-                    <button
-                      type="button"
-                      mix={on('click', () => video?.load())}
+                <div hidden>
+                  {failed && (
+                    <div
+                      class="ec-error"
+                      role="alert"
                     >
-                      Retry
-                    </button>{' '}
+                      <p>This video could not be loaded.</p>
+                      <button
+                        type="button"
+                        mix={on('click', () => video?.load())}
+                      >
+                        Retry
+                      </button>{' '}
+                      <a
+                        href={session.src}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Open video
+                      </a>
+                    </div>
+                  )}
+                  {!preview && runtime.ready && !runtime.email && (
                     <a
-                      href={session.src}
+                      class="ec-login-link"
+                      href="/login"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Open video
+                      Log in to set highlights
                     </a>
-                  </div>
-                )}
-                {!preview && runtime.ready && !runtime.email && (
-                  <a
-                    class="ec-login-link"
-                    href="/login"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Log in to set highlights
-                  </a>
-                )}
-                {!preview && runtime.email && (
-                  <details class="ec-profile">
-                    <summary
-                      mix={on('click', () => {
-                        alias = runtime.alias ?? runtime.suggestedAlias ?? ''
-                        handle.update()
-                      })}
-                    >
-                      Public profile
-                    </summary>
-                    <form
-                      mix={on('submit', (event) => {
-                        event.preventDefault()
-                        void mutate('profile', { id: crypto.randomUUID(), alias })
-                      })}
-                    >
-                      <label>
-                        Public name
-                        <input
-                          aria-label="Public name"
-                          maxLength={20}
-                          required
-                          value={alias}
-                          disabled={busy}
-                          mix={on('input', (event) => {
-                            alias = (event.currentTarget as HTMLInputElement).value
-                            handle.update()
-                          })}
-                        />
-                      </label>
-                      <button
-                        type="submit"
-                        disabled={busy || !alias.trim()}
+                  )}
+                  {!preview && runtime.email && (
+                    <details class="ec-profile">
+                      <summary
+                        mix={on('click', () => {
+                          alias = runtime.alias ?? runtime.suggestedAlias ?? ''
+                          handle.update()
+                        })}
                       >
-                        Update public name
+                        Public profile
+                      </summary>
+                      <form
+                        mix={on('submit', (event) => {
+                          event.preventDefault()
+                          void mutate('profile', { id: crypto.randomUUID(), alias })
+                        })}
+                      >
+                        <label>
+                          Public name
+                          <input
+                            aria-label="Public name"
+                            maxLength={20}
+                            required
+                            value={alias}
+                            disabled={busy}
+                            mix={on('input', (event) => {
+                              alias = (event.currentTarget as HTMLInputElement).value
+                              handle.update()
+                            })}
+                          />
+                        </label>
+                        <button
+                          type="submit"
+                          disabled={busy || !alias.trim()}
+                        >
+                          Update public name
+                        </button>
+                      </form>
+                    </details>
+                  )}
+                  {!preview && runtimeFailed && (
+                    <div class="ec-error">
+                      <p>{highlightMessages.failure}</p>
+                      <button
+                        type="button"
+                        mix={on('click', () => void loadRuntime())}
+                      >
+                        Reload highlights
                       </button>
-                    </form>
-                  </details>
-                )}
-                {!preview && runtimeFailed && (
-                  <div class="ec-error">
-                    <p>{highlightMessages.failure}</p>
-                    <button
-                      type="button"
-                      mix={on('click', () => void loadRuntime())}
-                    >
-                      Reload highlights
-                    </button>
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
                 <p
-                  class="ec-status"
+                  class="ec-status ec-sr-only"
                   role="status"
                 >
                   {feedback}
                 </p>
                 {shareUrl && (
                   <input
+                    hidden
                     aria-label="Highlight link"
                     value={shareUrl}
                     readOnly
@@ -1056,7 +1063,10 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                   />
                 )}
               </div>
-              <aside aria-label="Highlights">
+              <aside
+                hidden
+                aria-label="Highlights"
+              >
                 <h2>
                   Highlights <span class="ec-muted">{highlights().length}</span>
                 </h2>
