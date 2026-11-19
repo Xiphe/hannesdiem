@@ -4,6 +4,7 @@ import { createServer, type OutgoingHttpHeaders } from 'node:http'
 import { basename, resolve } from 'node:path'
 import { cp, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { previewPersistence } from './preview-state.ts'
 
 // This preview never reads runtime credentials or forwards provider requests.
 const port = Number(process.env.PREVIEW_PORT ?? 8787)
@@ -56,7 +57,7 @@ const mf = new Miniflare(
       ELECTROCUTE_STATE: { className: 'ElectroCuteState', useSQLite: true },
     },
     ...(process.env.ELECTROCUTE_PREVIEW === 'authored'
-      ? { durableObjectsPersist: resolve('.wrangler/state/electrocute-preview') }
+      ? previewPersistence('.wrangler/state/electrocute-preview')
       : {}),
     bindings: {
       CMX_PUBLISH_PUBLIC_KEYS: '{}',
