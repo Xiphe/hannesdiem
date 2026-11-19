@@ -147,7 +147,7 @@ for (const viewport of [
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
 ]) {
-  test(`the session is only an uncropped viewport player at ${viewport.width}px`, async ({
+  test(`the top-aligned viewport player retains the site menu and footer at ${viewport.width}px`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport)
@@ -156,11 +156,31 @@ for (const viewport of [
     expect(await page.locator('.ec-player').boundingBox()).toEqual({ x: 0, y: 0, ...viewport })
     expect(await page.locator('video').boundingBox()).toEqual({ x: 0, y: 0, ...viewport })
     await expect(page.locator('video')).toHaveCSS('object-fit', 'contain')
-    await expect(page.getByRole('heading')).toHaveCount(0)
+    await expect(
+      page.getByRole('region', { name: 'ElectroCute archive' }).getByRole('heading'),
+    ).toHaveCount(0)
+    await expect(page.locator('video')).toHaveCSS('object-position', '50% 0%')
+    const ratio = await page.locator('video').evaluate((node) => {
+      const video = node as HTMLVideoElement
+      return video.videoWidth / video.videoHeight
+    })
+    const badge = (await page.locator('.ec-play-badge').boundingBox())!
+    expect(badge.y + badge.height / 2).toBeCloseTo(
+      Math.min(viewport.height, viewport.width / ratio) / 2,
+      1,
+    )
+
     await expect(page.getByRole('complementary')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
+    await page.getByRole('button', { name: 'Open menu' }).click()
+    await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Close navigation', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).not.toBeVisible()
     await expect(page.getByRole('link', { name: 'All sessions' })).toHaveCount(0)
-    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(viewport.height)
+    const footer = page.getByRole('contentinfo')
+    expect((await footer.boundingBox())!.y).toBe(viewport.height)
+    await footer.scrollIntoViewIfNeeded()
+    await expect(footer).toBeInViewport()
   })
 }
 
@@ -278,7 +298,8 @@ test('the inline transport plays, seeks, controls sound and opens timeline highl
     .getByRole('button', { name: 'Enter fullscreen', exact: true })
     .boundingBox()
   expect(fullscreen!.y - stage!.y).toBeLessThanOrEqual(16)
-  expect(stage!.x + stage!.width - fullscreen!.x - fullscreen!.width).toBeLessThanOrEqual(16)
+  const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!
+  expect(fullscreen!.x + fullscreen!.width).toBeLessThanOrEqual(menu.x)
   await page.locator('.ec-volume-control').hover()
   expect(
     await page

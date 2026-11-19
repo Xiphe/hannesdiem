@@ -59,8 +59,7 @@ export const archiveStyle = css({
   },
   '& .ec-date': { display: 'block', marginBlock: '.75rem 2rem', opacity: 0.7 },
   '&[data-session]': {
-    position: 'fixed',
-    inset: 0,
+    position: 'relative',
     width: '100%',
     height: '100dvh',
     maxWidth: 'none',
@@ -74,6 +73,14 @@ export const archiveStyle = css({
     borderRadius: 0,
   },
   '&[data-session] .ec-stage': { height: '100%', aspectRatio: 'auto', maxHeight: 'none' },
+  '&[data-session] .ec-video': { objectPosition: 'center top' },
+  '&[data-session] .ec-play-badge': {
+    position: 'absolute',
+    left: '50%',
+    top: 'min(50%, calc(50vw / var(--ec-video-ratio)))',
+    transform: 'translate(-50%, -50%)',
+  },
+  '&[data-session] .ec-player:not(:fullscreen) .ec-fullscreen': { right: 64 },
   '&[data-session] h1': {
     fontSize: 'clamp(1.4rem,3vw,2rem)',
     fontWeight: 600,

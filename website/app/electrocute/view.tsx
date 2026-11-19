@@ -765,6 +765,12 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
               <div>
                 <div
                   class="ec-player"
+                  style={{
+                    '--ec-video-ratio':
+                      video?.videoWidth && video.videoHeight
+                        ? video.videoWidth / video.videoHeight
+                        : 16 / 9,
+                  }}
                   data-enhanced={enhanced ? '' : undefined}
                   data-editing={editing ? '' : undefined}
                   data-keyboard-focus={keyboardFocus ? '' : undefined}
