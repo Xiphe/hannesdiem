@@ -47,7 +47,16 @@ and the media stage are compact, with transport controls over the image using th
 existing feed icons. The artist rejected the detached range form and requested
 clipping directly inside the player, following the Twitch-style trimming interaction.
 
-Set highlight places a default one-minute selection above the video's existing
+Play, the full-session seek bar and sound sit on one horizontal line. Set highlight
+lives in the seek popover. Its arrow points to the hovered time even when the
+popover is clamped near an edge. Moving upward freezes that point; a pointer bridge
+and delayed dismissal let the user enter the popover and select its action. Focus
+also opens it for keyboard and touch use. As it contains a button, its accessible
+role is a non-modal dialog, rather than a text-only tooltip. Escape dismisses it
+and restores seek focus. Sound keeps the feed's expanding volume capsule without
+an additional button hover fill.
+
+Set highlight places a default one-minute selection at the chosen time above the video's existing
 full-session progress bar. This is the only trim surface: drag either edge, or
 select one and adjust it with adjacent 44px `< | >` buttons or arrow keys
 (one second). Shift plus an arrow adjusts one source frame when session metadata
@@ -58,12 +67,12 @@ The playhead and full-session playback continue independently while editing.
 A floating preview anchored to the combined title/save/cancel control contains
 only Play, a seek bar spanning the selected bounds and total passage length. Seeking there activates the passage end stop; seeking on the
 main bar returns to full-session playback. It has no trim handles. Title, save and
-an X form one control replacing Set highlight between playback and volume.
+an X form one control below and aligned with the seek bar while editing.
 Trim nudges follow the selected edge without visible time labels. The feed is
 the control reference: a circular central play button, fullscreen in the upper
 right and the same vertical hover/focus volume treatment. Touch devices retain
-sound toggling and use their system volume controls. Escape cancels and restores focus to the
-trigger. The public name is never requested in the clipping UI. There are no
+sound toggling and use their system volume controls. Escape cancels the editor and
+restores focus to the seek bar. The public name is never requested in the clipping UI. There are no
 highlight thumbnails or decorative introductory text.
 
 ## Data and navigation

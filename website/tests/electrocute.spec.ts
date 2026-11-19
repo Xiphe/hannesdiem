@@ -2,6 +2,14 @@ import { expect, test, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import type { HighlightState, RuntimeHighlight } from '../app/electrocute/contract.ts'
 
+async function openHighlight(page: Page, touch = false) {
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  await expect(seek).toBeEnabled()
+  await seek.focus()
+  if (touch) await page.getByRole('button', { name: 'Set highlight', exact: true }).tap()
+  else await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route('**/fixture-media/electrocute.mp4', async (route) => {
     const clip = await readFile(new URL('./media/electrocute.mp4', import.meta.url))
@@ -53,7 +61,7 @@ test('highlight links override stored progress, while unmarked session links res
     ),
   )
   await page.goto('/electrocute/test-session-1?highlight=test-highlight-b')
-  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
   await expect
     .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
     .toBeCloseTo(26, 0)
@@ -71,7 +79,7 @@ test('progress stays separate for each session and the last heard session is pin
     ['test-session-2', 38],
   ] as const) {
     await page.goto(`/electrocute/${id}`)
-    await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
+    await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
     await page.locator('video').evaluate(async (video, time) => {
       const media = video as HTMLVideoElement
       media.muted = true
@@ -123,11 +131,14 @@ test('range editing clamps bounds, previews the passage and persists only a loca
 }) => {
   await page.goto('/electrocute/test-session-1')
   const video = page.locator('video')
-  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
   await video.evaluate((video) => {
     ;(video as HTMLVideoElement).currentTime = 20
   })
-  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toHaveValue(
+    '20',
+  )
+  await openHighlight(page)
   const start = page.getByRole('slider', { name: 'Highlight start', exact: true })
   const end = page.getByRole('slider', { name: 'Highlight end', exact: true })
   await expect(start).toHaveAttribute('aria-valuenow', '20')
@@ -170,10 +181,16 @@ test('the inline transport plays, seeks, controls sound and opens timeline highl
 }) => {
   await page.goto('/electrocute/test-session-1')
   await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeEnabled()
-  const set = await page.getByRole('button', { name: 'Set highlight', exact: true }).boundingBox()
+  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toHaveCount(0)
+  const play = await page.getByRole('button', { name: 'Play', exact: true }).boundingBox()
+  const bar = await page
+    .getByRole('slider', { name: 'Playback position', exact: true })
+    .boundingBox()
   const sound = await page.getByRole('button', { name: 'Mute sound', exact: true }).boundingBox()
-  expect(set!.x + set!.width).toBeLessThanOrEqual(sound!.x)
-  expect(Math.abs(set!.y + set!.height / 2 - sound!.y - sound!.height / 2)).toBeLessThan(1)
+  expect(play!.x + play!.width).toBeLessThanOrEqual(bar!.x)
+  expect(bar!.x + bar!.width).toBeLessThanOrEqual(sound!.x)
+  expect(Math.abs(play!.y + play!.height / 2 - bar!.y - bar!.height / 2)).toBeLessThan(1)
+  expect(Math.abs(sound!.y + sound!.height / 2 - bar!.y - bar!.height / 2)).toBeLessThan(1)
   const stage = await page.locator('.ec-stage').boundingBox()
   const fullscreen = await page
     .getByRole('button', { name: 'Enter fullscreen', exact: true })
@@ -181,6 +198,11 @@ test('the inline transport plays, seeks, controls sound and opens timeline highl
   expect(fullscreen!.y - stage!.y).toBeLessThanOrEqual(16)
   expect(stage!.x + stage!.width - fullscreen!.x - fullscreen!.width).toBeLessThanOrEqual(16)
   await page.locator('.ec-volume-control').hover()
+  expect(
+    await page
+      .getByRole('button', { name: 'Mute sound', exact: true })
+      .evaluate((button) => getComputedStyle(button).backgroundColor),
+  ).toBe('rgba(0, 0, 0, 0)')
   const volume = page.getByRole('slider', { name: 'Volume', exact: true })
   await expect(volume).toBeVisible()
   expect(await volume.evaluate((input) => getComputedStyle(input).writingMode)).toBe('vertical-lr')
@@ -212,7 +234,7 @@ test('the inline transport plays, seeks, controls sound and opens timeline highl
       page.locator('.ec-player').evaluate((player) => document.fullscreenElement === player),
     )
     .toBe(true)
-  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await openHighlight(page)
   await expect(
     page.locator('.ec-player').getByRole('region', { name: 'Highlight editor' }),
   ).toBeVisible()
@@ -224,14 +246,14 @@ test('playback time is transient and stays clear of clipping tools and fullscree
 }) => {
   await page.goto('/electrocute/test-session-1')
   const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
-  const time = page.getByRole('tooltip')
+  const time = page.getByRole('dialog', { name: 'Playback tools' })
   await expect(seek).toBeEnabled()
   await expect(time).toBeHidden()
   await expect(page.locator('.ec-player-clock')).toHaveCount(0)
   await page.locator('.ec-seek-wrap').hover()
   await expect(time).toBeVisible()
   await expect(time).toContainText('/ 1:36')
-  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await openHighlight(page)
   await seek.press('Home')
   await expect(time).toBeVisible()
   const tip = await time.boundingBox()
@@ -245,9 +267,72 @@ test('playback time is transient and stays clear of clipping tools and fullscree
   expect(intersects(tip, nudges)).toBe(false)
   expect(intersects(tip, fullscreen)).toBe(false)
   await seek.press('Home')
-  await expect(time).toHaveText('0:00 / 1:36')
+  await expect(time).toContainText('0:00 / 1:36')
   await page.getByRole('textbox', { name: 'Title', exact: true }).focus()
   await expect(time).toBeHidden()
+})
+
+test('the seek popover follows its point and stays reachable across the gap to Set highlight', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  await expect(seek).toBeEnabled()
+  const box = await seek.boundingBox()
+  if (!box) throw Error('Missing playback bar')
+  const popup = page.getByRole('dialog', { name: 'Playback tools' })
+  for (const fraction of [0.01, 0.5, 0.99]) {
+    const x = box.x + 5 + fraction * (box.width - 10),
+      y = box.y + box.height / 2
+    await page.mouse.move(x, y)
+    await expect(popup).toBeVisible()
+    const arrow = await popup.evaluate((node) => {
+      const r = node.getBoundingClientRect()
+      return r.x + parseFloat(getComputedStyle(node, '::before').left)
+    })
+    expect(Math.abs(arrow - x)).toBeLessThan(2)
+  }
+  await page.mouse.move(box.x + 5, box.y + box.height / 2)
+  const edgeAction = popup.getByRole('button', { name: 'Set highlight', exact: true })
+  const edge = await edgeAction.boundingBox()
+  if (!edge) throw Error('Missing clamped action')
+  const original = await popup.locator('.ec-time-label').textContent()
+  for (let step = 1; step <= 8; step++) {
+    await page.mouse.move(
+      box.x + 5 + ((edge.x + edge.width / 2 - box.x - 5) * step) / 8,
+      box.y + box.height / 2 + ((edge.y + edge.height / 2 - box.y - box.height / 2) * step) / 8,
+    )
+    await page.waitForTimeout(40)
+  }
+  await expect(popup).toBeVisible()
+  await expect(popup.locator('.ec-time-label')).toHaveText(original!)
+  const x = box.x + 5 + 0.5 * (box.width - 10),
+    y = box.y + box.height / 2
+  await page.mouse.move(x, y)
+  await expect(popup).toContainText('0:48')
+  const action = popup.getByRole('button', { name: 'Set highlight', exact: true })
+  const target = await action.boundingBox()
+  if (!target) throw Error('Missing highlight action')
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 })
+  await expect(action).toBeVisible()
+  await expect(popup).toContainText('0:48')
+  await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2)
+  await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
+    'aria-valuenow',
+    '48',
+  )
+  await expect
+    .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
+    .toBeLessThan(1)
+  await page.keyboard.press('Escape')
+  await seek.press('Tab')
+  const keyboardAction = popup.getByRole('button', { name: 'Set highlight', exact: true })
+  await expect(keyboardAction).toBeFocused()
+  await keyboardAction.press('Enter')
+  await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  )
 })
 
 test('failed device storage keeps the unsaved form available', async ({ page }) => {
@@ -257,8 +342,8 @@ test('failed device storage keeps the unsaved form available', async ({ page }) 
     }
   })
   await page.goto('/electrocute/test-session-1')
-  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
-  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
+  await openHighlight(page)
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Unsaved test passage')
   await page.getByRole('button', { name: 'Save draft', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Highlight editor' })).toBeVisible()
@@ -269,11 +354,14 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   page,
 }) => {
   await page.goto('/electrocute/test-session-1')
-  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
   await page.locator('video').evaluate((video) => {
     ;(video as HTMLVideoElement).currentTime = 20
   })
-  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toHaveValue(
+    '20',
+  )
+  await openHighlight(page)
   const player = page.locator('.ec-player')
   await expect(player.locator('.ec-seek-wrap .ec-trim-rail')).toHaveCount(1)
   await expect(
@@ -326,7 +414,7 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   const sound = await page.getByRole('button', { name: 'Mute sound', exact: true }).boundingBox()
   expect(form!.x).toBeGreaterThan(play!.x + play!.width)
   expect(form!.x + form!.width).toBeLessThanOrEqual(sound!.x)
-  expect(Math.abs(form!.y + form!.height / 2 - sound!.y - sound!.height / 2)).toBeLessThan(1)
+  expect(form!.y).toBeGreaterThanOrEqual(sound!.y + sound!.height)
   await page.getByRole('button', { name: 'Increase highlight start by one second' }).click()
   await expect(start).toHaveAttribute('aria-valuenow', '31')
   await start.press('ArrowRight')
@@ -341,7 +429,7 @@ test('main playback bar owns trimming with selected edges, second and frame cont
     .toBeCloseTo(20, 0)
   await page.keyboard.press('Escape')
   await expect(player.getByRole('region', { name: 'Highlight editor' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeFocused()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeFocused()
 })
 
 test('main playback keeps running while trimming; passage preview starts over and seeks within its bounds', async ({
@@ -349,14 +437,14 @@ test('main playback keeps running while trimming; passage preview starts over an
 }) => {
   await page.goto('/electrocute/test-session-1')
   const video = page.locator('video')
-  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
   await video.evaluate(async (video) => {
     const v = video as HTMLVideoElement
     v.muted = true
     v.currentTime = 20
     await v.play()
   })
-  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await openHighlight(page)
   await expect.poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused)).toBe(false)
   await expect
     .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
@@ -444,8 +532,8 @@ test('public editor uses a separate profile, handles pending text, withdrawal an
     await route.fulfill({ json: state, headers: { 'Cache-Control': 'no-store' } })
   })
   await page.goto('/fixture-public-highlights')
-  await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeEnabled()
-  await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
+  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
+  await openHighlight(page)
   await expect(
     page.locator('.ec-player').getByRole('textbox', { name: /public|alias/i }),
   ).toHaveCount(0)
@@ -546,7 +634,7 @@ test.describe('mobile player', () => {
         page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime),
       )
       .toBeGreaterThanOrEqual(70)
-    await page.getByRole('button', { name: 'Set highlight', exact: true }).tap()
+    await openHighlight(page, true)
     await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toBeFocused()
     const end = page.getByRole('slider', { name: 'Highlight end', exact: true })
     const box = await end.boundingBox()
@@ -571,6 +659,14 @@ test.describe('mobile player', () => {
     expect(target!.height).toBeGreaterThanOrEqual(44)
     await minus.tap()
     await expect(end).toHaveAttribute('aria-valuenow', '85')
+    await page.keyboard.press('Escape')
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toHaveCount(0)
+    await page
+      .getByRole('slider', { name: 'Playback position', exact: true })
+      .tap({ position: { x: 6, y: 22 } })
+    await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toBeVisible()
+
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
       .toBe(true)

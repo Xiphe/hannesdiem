@@ -65,8 +65,13 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 
 - Ein Highlight ist ein Zeitbereich in einer Originalaufnahme mit Anfang, Ende,
   Titel und öffentlicher Zuordnung zur Person, die es gesetzt hat.
-- „Highlight setzen“ übernimmt die aktuelle Abspielposition als Anfang und
-  schlägt eine Minute Dauer vor, begrenzt durch das Sessionende.
+- Die Hauptleiste zeigt Play, Suchleiste und Volume auf einer horizontalen Ebene.
+  „Set highlight“ erscheint im Zeit-Tooltip der Suchleiste. Der Tooltip zeigt mit
+  einem Pfeil auf den gewählten Punkt und bleibt beim Wechsel mit der Maus hinein
+  offen. Tastaturfokus und Touch machen die Aktion ebenfalls erreichbar.
+- „Highlight setzen“ beginnt an der im Tooltip gewählten Zeit und schlägt eine
+  Minute Dauer vor, begrenzt durch das Sessionende. Der Playhead wird dabei
+  nicht versetzt.
 - Die bestehende Video-Progressbar ist die einzige Oberfläche zum Trimmen.
   Beim Setzen erscheint darüber eine Auswahl für eine Minute. Beide Kanten
   lassen sich über die gesamte Aufnahmedauer verschieben und einzeln auswählen.
@@ -77,9 +82,8 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
   Vorschau-Element an der Titel/Speichern/Abbrechen-Gruppe enthält nur Play,
   Suchleiste und Gesamtlänge der ausgewählten Passage. Play startet sie von vorne;
   Sprünge darin verändern keine Grenzen. Die Vorschau stoppt am gesetzten Ende.
-- Der Set-Highlight-Button wird beim Bearbeiten durch Titel, Speichern und ein
-  kleines X zum Abbrechen ersetzt. Diese bilden ein gemeinsames Element im freien
-  Platz zwischen Wiedergabe und Lautstärke. Der öffentliche Name wird hier nicht abgefragt.
+- Beim Bearbeiten bilden Titel, Speichern und ein kleines X zum Abbrechen ein
+  gemeinsames Element. Der öffentliche Name wird hier nicht abgefragt.
 - Abspielzeit und Sessionlänge sind nicht dauerhaft sichtbar. Ein Tooltip an der
   Suchleiste zeigt die Zeitinformation beim Überfahren oder Tastaturfokus. Er hält
   Abstand zu den Highlight-Griffen und ihren Bedienelementen.
