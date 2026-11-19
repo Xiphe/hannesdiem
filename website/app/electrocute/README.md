@@ -47,12 +47,14 @@ and the media stage are compact, with transport controls over the image using th
 existing feed icons. The artist rejected the detached range form and requested
 clipping directly inside the player, following the Twitch-style trimming interaction.
 
-Play, the full-session seek bar and sound sit on one horizontal line. Set highlight
-lives in the seek popover. Its arrow points to the hovered time even when the
-popover is clamped near an edge. Moving upward freezes that point; a pointer bridge
-and delayed dismissal let the user enter the popover and select its action. Focus
-also opens it for keyboard and touch use. As it contains a button, its accessible
-role is a non-modal dialog, rather than a text-only tooltip. Escape dismisses it
+Play, the full-session seek bar and sound sit on one horizontal line. A compact
+star button in the seek popover sets a highlight. Its arrow points to the hovered
+time even when the popover is clamped near an edge. The full range hit area above
+the visible line continues tracking the pointer and accepts seek clicks right up
+to the popover. Entering the popover keeps the chosen time; delayed dismissal
+keeps the action reachable. Focus also opens it for keyboard and touch use.
+As it contains a button, its accessible role is a non-modal dialog, rather than a
+text-only tooltip. Escape dismisses it
 and restores seek focus. Sound keeps the feed's expanding volume capsule without
 an additional button hover fill.
 

@@ -66,9 +66,11 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 - Ein Highlight ist ein Zeitbereich in einer Originalaufnahme mit Anfang, Ende,
   Titel und öffentlicher Zuordnung zur Person, die es gesetzt hat.
 - Die Hauptleiste zeigt Play, Suchleiste und Volume auf einer horizontalen Ebene.
-  „Set highlight“ erscheint im Zeit-Tooltip der Suchleiste. Der Tooltip zeigt mit
-  einem Pfeil auf den gewählten Punkt und bleibt beim Wechsel mit der Maus hinein
-  offen. Tastaturfokus und Touch machen die Aktion ebenfalls erreichbar.
+  Ein kleiner Stern zum Highlight-Setzen erscheint im Zeit-Tooltip der Suchleiste.
+  Der Tooltip zeigt mit einem Pfeil auf den gewählten Punkt und bleibt beim Wechsel
+  mit der Maus hinein offen. Auch oberhalb der sichtbaren Leiste bis zum Tooltip
+  folgt die Zeit der Maus; Klicks springen dort zur gewählten Position.
+  Tastaturfokus und Touch machen die Aktion ebenfalls erreichbar.
 - „Highlight setzen“ beginnt an der im Tooltip gewählten Zeit und schlägt eine
   Minute Dauer vor, begrenzt durch das Sessionende. Der Playhead wird dabei
   nicht versetzt.

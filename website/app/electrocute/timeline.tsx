@@ -12,7 +12,7 @@ interface TimelineProps {
 }
 const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(high, value))
 
-/** The seek popover keeps its timestamp while the pointer moves up to its action. */
+/** Track the whole range hit area; entering the popover keeps the chosen time. */
 export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   let hoverTime: number | undefined
   let open = false
@@ -68,8 +68,6 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
               return
             const box = input.getBoundingClientRect()
             if (event.clientY < box.top || event.clientY > box.bottom) return
-            // Moving upward enters the action, rather than choosing a new time.
-            if (open && event.clientY < box.top + box.height / 2 - 1) return
             hoverTime = clamp(
               ((event.clientX - box.left - 5) / Math.max(1, box.width - 10)) * p.duration,
               0,
@@ -136,13 +134,27 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           {p.canHighlight && (
             <button
               type="button"
-              class="ec-clip-button"
+              class="ec-highlight-star"
+              aria-label="Set highlight"
               mix={on('click', () => {
                 p.highlight(time)
                 close()
               })}
             >
-              Set highlight
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </button>
           )}
         </div>

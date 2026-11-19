@@ -272,7 +272,7 @@ test('playback time is transient and stays clear of clipping tools and fullscree
   await expect(time).toBeHidden()
 })
 
-test('the seek popover follows its point and stays reachable across the gap to Set highlight', async ({
+test('the star popover keeps the whole seek hit area interactive up to its body', async ({
   page,
 }) => {
   await page.goto('/electrocute/test-session-1')
@@ -297,15 +297,40 @@ test('the seek popover follows its point and stays reachable across the gap to S
   const edge = await edgeAction.boundingBox()
   if (!edge) throw Error('Missing clamped action')
   const original = await popup.locator('.ec-time-label').textContent()
+  const edgePopup = await popup.boundingBox()
+  if (!edgePopup) throw Error('Missing clamped popover')
   for (let step = 1; step <= 8; step++) {
     await page.mouse.move(
-      box.x + 5 + ((edge.x + edge.width / 2 - box.x - 5) * step) / 8,
-      box.y + box.height / 2 + ((edge.y + edge.height / 2 - box.y - box.height / 2) * step) / 8,
+      box.x + 5,
+      box.y +
+        box.height / 2 +
+        ((edgePopup.y + edgePopup.height / 2 - box.y - box.height / 2) * step) / 8,
     )
     await page.waitForTimeout(40)
   }
+  await page.mouse.move(edge.x + edge.width / 2, edge.y + edge.height / 2, { steps: 8 })
   await expect(popup).toBeVisible()
   await expect(popup.locator('.ec-time-label')).toHaveText(original!)
+  await expect(edgeAction).toHaveText('')
+  await expect(edgeAction.locator('svg')).toBeVisible()
+  expect(edge.width).toBeGreaterThanOrEqual(44)
+  expect(edge.height).toBeGreaterThanOrEqual(44)
+  // The strip below the popover (including its arrow) belongs to the native range.
+  const gapY = box.y + 9
+  for (const fraction of [0.25, 0.5]) {
+    const gapX = box.x + 5 + fraction * (box.width - 10)
+    await page.mouse.move(gapX, gapY)
+    await expect(popup).toContainText(fraction === 0.25 ? '0:24' : '0:48')
+    expect(
+      await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className, {
+        x: gapX,
+        y: gapY,
+      }),
+    ).toBe('ec-seek')
+  }
+  await page.mouse.click(box.x + 5 + 0.25 * (box.width - 10), gapY)
+  await expect(seek).toHaveValue('24')
+  await seek.press('Home')
   const x = box.x + 5 + 0.5 * (box.width - 10),
     y = box.y + box.height / 2
   await page.mouse.move(x, y)
@@ -313,7 +338,8 @@ test('the seek popover follows its point and stays reachable across the gap to S
   const action = popup.getByRole('button', { name: 'Set highlight', exact: true })
   const target = await action.boundingBox()
   if (!target) throw Error('Missing highlight action')
-  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 })
+  await page.mouse.move(x, target.y + target.height / 2, { steps: 8 })
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 8 })
   await expect(action).toBeVisible()
   await expect(popup).toContainText('0:48')
   await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2)
