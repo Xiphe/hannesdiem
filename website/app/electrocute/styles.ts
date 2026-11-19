@@ -65,10 +65,12 @@ export const archiveStyle = css({
     maxWidth: 'none',
     margin: 0,
     padding: 0,
-    background: '#000',
   },
   '&[data-session] .ec-layout': { display: 'block', height: '100%', margin: 0 },
   '&[data-session] .ec-layout > div, &[data-session] .ec-player': { height: '100%' },
+  '&[data-session] .ec-player:not(:fullscreen)': {
+    height: 'min(100dvh, calc(100vw / var(--ec-video-ratio)))',
+  },
   '&[data-session] .ec-player, &[data-session] .ec-stage, &[data-session] .ec-video': {
     borderRadius: 0,
   },

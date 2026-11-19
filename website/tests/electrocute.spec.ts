@@ -144,17 +144,16 @@ async function setRange(page: Page, start: number, end: number) {
 }
 
 for (const viewport of [
+  { width: 1440, height: 700 },
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
 ]) {
-  test(`the top-aligned viewport player retains the site menu and footer at ${viewport.width}px`, async ({
+  test(`the top-aligned player fits the image without a black band at ${viewport.width}x${viewport.height}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport)
     await page.goto('/electrocute/test-session-1')
     await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
-    expect(await page.locator('.ec-player').boundingBox()).toEqual({ x: 0, y: 0, ...viewport })
-    expect(await page.locator('video').boundingBox()).toEqual({ x: 0, y: 0, ...viewport })
     await expect(page.locator('video')).toHaveCSS('object-fit', 'contain')
     await expect(
       page.getByRole('region', { name: 'ElectroCute archive' }).getByRole('heading'),
@@ -164,11 +163,22 @@ for (const viewport of [
       const video = node as HTMLVideoElement
       return video.videoWidth / video.videoHeight
     })
-    const badge = (await page.locator('.ec-play-badge').boundingBox())!
-    expect(badge.y + badge.height / 2).toBeCloseTo(
-      Math.min(viewport.height, viewport.width / ratio) / 2,
-      1,
+    const imageHeight = Math.min(viewport.height, viewport.width / ratio)
+    for (const selector of ['.ec-player', '.ec-stage', 'video']) {
+      const box = (await page.locator(selector).boundingBox())!
+      expect(box.x).toBe(0)
+      expect(box.y).toBe(0)
+      expect(box.width).toBe(viewport.width)
+      expect(box.height).toBeCloseTo(imageHeight, 1)
+    }
+    const transport = (await page.locator('.ec-transport').boundingBox())!
+    expect(transport.y + transport.height).toBeCloseTo(imageHeight, 1)
+    await expect(page.getByRole('region', { name: 'ElectroCute archive' })).toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
     )
+    const badge = (await page.locator('.ec-play-badge').boundingBox())!
+    expect(badge.y + badge.height / 2).toBeCloseTo(imageHeight / 2, 1)
 
     await expect(page.getByRole('complementary')).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
