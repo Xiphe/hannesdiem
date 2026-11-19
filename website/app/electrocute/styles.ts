@@ -406,7 +406,7 @@ export const archiveStyle = css({
   },
   '& .ec-time-tooltip[data-editing]': {
     left: 'calc(0px - var(--editor-inset))',
-    bottom: 'calc(50% + 32px)',
+    bottom: 'calc(50% + 24px)',
     width: 'calc(100% + var(--editor-inset) * 2 + var(--editor-tail))',
     maxWidth: 'none',
     transform: 'none',
@@ -664,7 +664,7 @@ export const archiveStyle = css({
     '& .ec-transport-row': { gap: 4 },
     '& .ec-seek-wrap': { '--editor-inset': '48px' },
     '& .ec-transport-row:has(.ec-playhead-highlight) .ec-seek-wrap': { '--editor-tail': '48px' },
-    '& .ec-time-tooltip[data-editing]': { padding: '4px 12px', bottom: 'calc(50% + 24px)' },
+    '& .ec-time-tooltip[data-editing]': { padding: '4px 12px' },
   },
   '@media (width >= 40rem) and (hover: hover) and (pointer: fine)': {
     '& .ec-player .ec-icon-button, & .ec-player .ec-highlight-star, & .ec-player .ec-cancel-clip, & .ec-player .ec-back-clip':
