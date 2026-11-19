@@ -328,7 +328,7 @@ test('the star popover keeps the whole seek hit area interactive up to its body'
   const box = await seek.boundingBox()
   if (!box) throw Error('Missing playback bar')
   const popup = page.getByRole('dialog', { name: 'Playback tools' })
-  for (const fraction of [0.01, 0.5, 0.99]) {
+  for (const fraction of [0, 0.01, 0.5, 0.99, 1]) {
     const x = box.x + 5 + fraction * (box.width - 10),
       y = box.y + box.height / 2
     await page.mouse.move(x, y)
@@ -338,6 +338,10 @@ test('the star popover keeps the whole seek hit area interactive up to its body'
       return r.x + parseFloat(getComputedStyle(node, '::before').left)
     })
     expect(Math.abs(arrow - x)).toBeLessThan(2)
+    const tip = await popup.boundingBox()
+    // Keep the arrow's base clear of both rounded corners at either timeline end.
+    expect(arrow - tip!.x).toBeGreaterThanOrEqual(12)
+    expect(tip!.x + tip!.width - arrow).toBeGreaterThanOrEqual(12)
   }
   await page.mouse.move(box.x + 5, box.y + box.height / 2)
   const edgeAction = popup.getByRole('button', { name: 'Set highlight', exact: true })

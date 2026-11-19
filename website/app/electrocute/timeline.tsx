@@ -49,7 +49,8 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
     const time = hoverTime ?? p.position
     const point = 5 + (p.duration ? time / p.duration : 0) * Math.max(0, width - 10)
     const half = Math.min(width / 2, tooltipWidth / 2)
-    const center = clamp(point, half, Math.max(half, width - half))
+    // Let the body overhang the rail into its gap so the arrow clears its corners.
+    const center = clamp(point, half - 8, Math.max(half - 8, width - half + 8))
     const rangeLeft =
       5 + (p.duration ? p.editorRange.start / p.duration : 0) * Math.max(0, width - 10)
     const rangeWidth = p.duration
