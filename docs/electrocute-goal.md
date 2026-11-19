@@ -74,21 +74,25 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 - „Highlight setzen“ beginnt an der im Tooltip gewählten Zeit und schlägt eine
   Minute Dauer vor, begrenzt durch das Sessionende. Der Playhead wird dabei
   nicht versetzt.
+- Der Stern erweitert denselben Tooltip über die volle Breite der Steuerleiste.
+  Die bisherige Zeitinformation wird durch die Highlight-Bedienung ersetzt.
+  Haupt-Play, Suchleiste und Volume bleiben an ihrer Position.
 - Die bestehende Video-Progressbar ist die einzige Oberfläche zum Trimmen.
-  Beim Setzen erscheint darüber eine Auswahl für eine Minute. Beide Kanten
-  lassen sich über die gesamte Aufnahmedauer verschieben und einzeln auswählen.
-  Direkt an der ausgewählten Kante erscheinen nur `< | >`, ohne Zeitbeschriftung.
-  Die Tasten sind auf Touchgeräten gut treffbar und ändern um eine Sekunde. Pfeiltasten ändern ebenfalls um eine Sekunde;
-  Shift und Pfeiltaste ändern bei bekannter Quellbildrate um ein Bild.
-- Der Playhead läuft beim Setzen und Trimmen normal weiter. Ein schwebendes
-  Vorschau-Element an der Titel/Speichern/Abbrechen-Gruppe enthält nur Play,
-  Suchleiste und Gesamtlänge der ausgewählten Passage. Play startet sie von vorne;
+  Die Auswahl sitzt vertikal mittig auf ihr. Beide Kanten lassen sich über die
+  gesamte Aufnahmedauer verschieben und einzeln auswählen. Pfeiltasten ändern
+  um eine Sekunde; Shift und Pfeiltaste ändern bei bekannter Quellbildrate um
+  ein Bild. Der Playhead läuft beim Setzen und Trimmen normal weiter.
+- Im breiten Tooltip stehen Passage-Play, die kleine Passage-Suchleiste,
+  Gesamtlänge sowie Save und X. Die gut treffbaren `< | >`-Tasten ändern den
+  gewählten Marker um eine Sekunde: beim linken Marker links, beim rechten
+  Marker rechts neben der Passage-Suchleiste. Play startet die Passage von vorne;
   Sprünge darin verändern keine Grenzen. Die Vorschau stoppt am gesetzten Ende.
-- Beim Bearbeiten bilden Titel, Speichern und ein kleines X zum Abbrechen ein
-  gemeinsames Element. Der öffentliche Name wird hier nicht abgefragt.
-- Abspielzeit und Sessionlänge sind nicht dauerhaft sichtbar. Ein Tooltip an der
-  Suchleiste zeigt die Zeitinformation beim Überfahren oder Tastaturfokus. Er hält
-  Abstand zu den Highlight-Griffen und ihren Bedienelementen.
+- Save öffnet erst die Benennung und speichert noch kein Highlight. Die bisherige
+  Tooltip-Bedienung wird dort durch Titel, Speichern und X als gemeinsames Element
+  ersetzt. Erst dieser zweite Save speichert. Der öffentliche Name wird hier
+  nicht abgefragt. X und Escape brechen in beiden Schritten ab.
+- Außerhalb der Highlight-Bearbeitung sind Abspielzeit und Sessionlänge nur beim
+  Überfahren oder Tastaturfokus als Tooltip sichtbar.
 - Die Feed-Steuerung dient als Vorlage: runder zentraler Play-Button, Vollbild oben
   rechts und der vertikale Lautstärkeregler im Hover/Fokus-Popover.
 - Highlights dürfen sich überschneiden und bleiben eigenständige Beiträge.

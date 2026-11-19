@@ -147,7 +147,6 @@ test('range editing clamps bounds, previews the passage and persists only a loca
   await start.press('ArrowRight')
   expect(Number(await start.getAttribute('aria-valuenow'))).toBeLessThan(80)
   await setRange(page, 10, 12)
-  await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Synthetic saved passage')
   await page.getByRole('button', { name: 'Preview passage', exact: true }).click()
   await expect
     .poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused), { timeout: 8000 })
@@ -155,12 +154,15 @@ test('range editing clamps bounds, previews the passage and persists only a loca
   await expect
     .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
     .toBeCloseTo(12, 0)
+  await page.getByRole('button', { name: 'Name highlight', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Synthetic saved passage')
   await page.getByRole('button', { name: 'Save draft', exact: true }).click()
   await expect(page.getByRole('status')).toHaveText('Draft saved on this device.')
   await page.reload()
   const draft = page.locator('.ec-highlight').filter({ hasText: 'Synthetic saved passage' })
   await expect(draft).toContainText('You')
   await draft.getByRole('button', { name: 'Edit draft' }).click()
+  await page.getByRole('button', { name: 'Name highlight', exact: true }).click()
   await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
     'Synthetic saved passage',
   )
@@ -236,12 +238,12 @@ test('the inline transport plays, seeks, controls sound and opens timeline highl
     .toBe(true)
   await openHighlight(page)
   await expect(
-    page.locator('.ec-player').getByRole('region', { name: 'Highlight editor' }),
+    page.locator('.ec-player').getByRole('dialog', { name: 'Highlight editor' }),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click()
 })
 
-test('playback time is transient and stays clear of clipping tools and fullscreen', async ({
+test('the seek popover expands into trimming, then replaces its controls with the name step', async ({
   page,
 }) => {
   await page.goto('/electrocute/test-session-1')
@@ -249,27 +251,37 @@ test('playback time is transient and stays clear of clipping tools and fullscree
   const time = page.getByRole('dialog', { name: 'Playback tools' })
   await expect(seek).toBeEnabled()
   await expect(time).toBeHidden()
-  await expect(page.locator('.ec-player-clock')).toHaveCount(0)
-  await page.locator('.ec-seek-wrap').hover()
-  await expect(time).toBeVisible()
+  await seek.focus()
   await expect(time).toContainText('/ 1:36')
+  const original = await seek.boundingBox()
   await openHighlight(page)
-  await seek.press('Home')
-  await expect(time).toBeVisible()
-  const tip = await time.boundingBox()
-  const nudges = await page.locator('.ec-trim-adjust').boundingBox()
-  const fullscreen = await page
-    .getByRole('button', { name: 'Enter fullscreen', exact: true })
-    .boundingBox()
-  if (!tip || !nudges || !fullscreen) throw Error('Missing playback tools')
-  const intersects = (a: typeof tip, b: typeof tip) =>
-    a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
-  expect(intersects(tip, nudges)).toBe(false)
-  expect(intersects(tip, fullscreen)).toBe(false)
-  await seek.press('Home')
-  await expect(time).toContainText('0:00 / 1:36')
-  await page.getByRole('textbox', { name: 'Title', exact: true }).focus()
-  await expect(time).toBeHidden()
+  const editor = page.getByRole('dialog', { name: 'Highlight editor' })
+  await expect(editor).toBeVisible()
+  await expect(editor.locator('.ec-time-label')).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveCount(0)
+  expect(await seek.boundingBox()).toEqual(original)
+  const popup = await editor.boundingBox()
+  const row = await page.locator('.ec-transport-row').boundingBox()
+  expect(Math.abs(popup!.x - row!.x)).toBeLessThan(1)
+  expect(Math.abs(popup!.width - row!.width)).toBeLessThan(1)
+  expect(popup!.y + popup!.height).toBeLessThan(original!.y)
+  await expect(editor.getByRole('slider', { name: 'Passage position' })).toBeVisible()
+  await expect(editor.locator('.ec-passage-duration')).toHaveText('1:00')
+  await editor.getByRole('button', { name: 'Name highlight', exact: true }).click()
+  const title = editor.getByRole('textbox', { name: 'Title', exact: true })
+  await expect(title).toBeFocused()
+  await expect(editor.getByRole('slider')).toHaveCount(0)
+  await expect(editor.locator('.ec-trim-adjust')).toHaveCount(0)
+  await expect(editor.getByRole('button', { name: 'Save draft', exact: true })).toBeDisabled()
+  expect(await seek.boundingBox()).toEqual(original)
+  await title.fill('Synthetic title kept while trimming')
+  await page.getByRole('slider', { name: 'Highlight end', exact: true }).focus()
+  await expect(editor.getByRole('slider', { name: 'Passage position' })).toBeVisible()
+  await editor.getByRole('button', { name: 'Name highlight', exact: true }).click()
+  await expect(title).toHaveValue('Synthetic title kept while trimming')
+  await editor.getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(editor).toHaveCount(0)
+  await expect(seek).toBeFocused()
 })
 
 test('the star popover keeps the whole seek hit area interactive up to its body', async ({
@@ -370,9 +382,10 @@ test('failed device storage keeps the unsaved form available', async ({ page }) 
   await page.goto('/electrocute/test-session-1')
   await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
   await openHighlight(page)
+  await page.getByRole('button', { name: 'Name highlight', exact: true }).click()
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Unsaved test passage')
   await page.getByRole('button', { name: 'Save draft', exact: true }).click()
-  await expect(page.getByRole('region', { name: 'Highlight editor' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Highlight editor' })).toBeVisible()
   await expect(page.getByRole('status')).toContainText('Could not save')
 })
 
@@ -391,10 +404,10 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   const player = page.locator('.ec-player')
   await expect(player.locator('.ec-seek-wrap .ec-trim-rail')).toHaveCount(1)
   await expect(
-    player.getByRole('region', { name: 'Highlight editor' }).getByRole('slider'),
+    player.getByRole('dialog', { name: 'Highlight editor' }).getByRole('slider'),
   ).toHaveCount(1)
   await expect(
-    player.getByRole('region', { name: 'Highlight editor' }).locator('.ec-trim-edge'),
+    player.getByRole('dialog', { name: 'Highlight editor' }).locator('.ec-trim-edge'),
   ).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toHaveCount(0)
   const rail = await player.locator('.ec-trim-rail').boundingBox()
@@ -424,23 +437,17 @@ test('main playback bar owns trimming with selected edges, second and frame cont
     .getByRole('slider', { name: 'Playback position', exact: true })
     .boundingBox()
   expect(
-    Math.abs(selection!.y + selection!.height - playback!.y - playback!.height / 2),
+    Math.abs(selection!.y + selection!.height / 2 - playback!.y - playback!.height / 2),
   ).toBeLessThan(1)
   const controls = player.locator('.ec-trim-adjust')
   await expect(controls.getByRole('button')).toHaveText(['<', '>'])
   const popup = await controls.boundingBox()
-  const selected = await start.boundingBox()
-  expect(Math.abs(popup!.x + popup!.width / 2 - selected!.x - selected!.width)).toBeLessThan(1)
-  await expect(
-    player.locator('.ec-highlight-action').getByRole('region', { name: 'Highlight editor' }),
-  ).toBeVisible()
-  await expect(player.locator('.ec-passage-times')).toHaveCount(0)
-  const form = await player.getByRole('form', { name: 'Save highlight' }).boundingBox()
-  const play = await page.getByRole('button', { name: 'Play', exact: true }).boundingBox()
-  const sound = await page.getByRole('button', { name: 'Mute sound', exact: true }).boundingBox()
-  expect(form!.x).toBeGreaterThan(play!.x + play!.width)
-  expect(form!.x + form!.width).toBeLessThanOrEqual(sound!.x)
-  expect(form!.y).toBeGreaterThanOrEqual(sound!.y + sound!.height)
+  const passage = await player
+    .getByRole('slider', { name: 'Passage position', exact: true })
+    .boundingBox()
+  expect(popup!.x + popup!.width).toBeLessThanOrEqual(passage!.x)
+  await expect(player.getByRole('dialog', { name: 'Highlight editor' })).toBeVisible()
+  await expect(player.getByRole('textbox', { name: 'Title', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Increase highlight start by one second' }).click()
   await expect(start).toHaveAttribute('aria-valuenow', '31')
   await start.press('ArrowRight')
@@ -448,13 +455,18 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   await start.press('Shift+ArrowLeft')
   await expect(start).toHaveAttribute('aria-valuenow', '31.8')
   await end.click()
+  const rightControls = await controls.boundingBox()
+  const rightPassage = await player
+    .getByRole('slider', { name: 'Passage position', exact: true })
+    .boundingBox()
+  expect(rightControls!.x).toBeGreaterThanOrEqual(rightPassage!.x + rightPassage!.width)
   await page.getByRole('button', { name: 'Decrease highlight end by one second' }).click()
   await expect(end).toHaveAttribute('aria-valuenow', '69')
   await expect
     .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime))
     .toBeCloseTo(20, 0)
   await page.keyboard.press('Escape')
-  await expect(player.getByRole('region', { name: 'Highlight editor' })).toHaveCount(0)
+  await expect(player.getByRole('dialog', { name: 'Highlight editor' })).toHaveCount(0)
   await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeFocused()
 })
 
@@ -564,6 +576,8 @@ test('public editor uses a separate profile, handles pending text, withdrawal an
     page.locator('.ec-player').getByRole('textbox', { name: /public|alias/i }),
   ).toHaveCount(0)
   expect(savedIds).toHaveLength(0)
+  await page.getByRole('button', { name: 'Name highlight', exact: true }).click()
+  expect(savedIds).toHaveLength(0)
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Synthetic public passage')
   await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
   const privateList = page.getByRole('region', { name: 'Unpublished highlights' })
@@ -572,6 +586,7 @@ test('public editor uses a separate profile, handles pending text, withdrawal an
   await expect(page.getByRole('status')).toContainText('Saved privately')
   await privateList.getByRole('button', { name: 'Edit highlight' }).click()
   approved = true
+  await page.getByRole('button', { name: 'Name highlight', exact: true }).click()
   await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
   await expect(privateList).toHaveCount(0)
   const clip = page.locator('.ec-highlight').filter({ hasText: 'Synthetic public passage' })

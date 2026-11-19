@@ -58,23 +58,33 @@ text-only tooltip. Escape dismisses it
 and restores seek focus. Sound keeps the feed's expanding volume capsule without
 an additional button hover fill.
 
-Set highlight places a default one-minute selection at the chosen time above the video's existing
-full-session progress bar. This is the only trim surface: drag either edge, or
-select one and adjust it with adjacent 44px `< | >` buttons or arrow keys
-(one second). Shift plus an arrow adjusts one source frame when session metadata
-provides its frame rate. Source frame rates are explicit, never inferred from
-browser rendering speed. The first pCloud recording was probed at 60 fps.
-The playhead and full-session playback continue independently while editing.
+The star starts a one-minute selection at the chosen time without seeking or
+interrupting playback. The same popover expands to the width of the transport
+row and replaces the session timestamp with the range controls. The main Play,
+seek and sound controls retain their positions. The range is centered vertically
+on the full-session bar, the only trim surface: drag either edge or select it and
+use keyboard arrows (one second). Shift plus an arrow adjusts one source frame
+when explicit session metadata provides its frame rate; it is never inferred
+from browser rendering speed. The first pCloud recording was probed at 60 fps.
 
-A floating preview anchored to the combined title/save/cancel control contains
-only Play, a seek bar spanning the selected bounds and total passage length. Seeking there activates the passage end stop; seeking on the
-main bar returns to full-session playback. It has no trim handles. Title, save and
-an X form one control below and aligned with the seek bar while editing.
-Trim nudges follow the selected edge without visible time labels. The feed is
-the control reference: a circular central play button, fullscreen in the upper
-right and the same vertical hover/focus volume treatment. Touch devices retain
-sound toggling and use their system volume controls. Escape cancels the editor and
-restores focus to the seek bar. The public name is never requested in the clipping UI. There are no
+The expanded popover has passage Play first, a seek bar spanning the selection,
+total passage length, Save and X. Its 44px `< | >` buttons sit before the passage
+bar for the start marker and after it for the end marker; tab order follows that
+placement. Passage Play starts at the selection's beginning, and passage seeking
+activates its end stop. Main-bar seeking returns to full-session playback. There
+are no additional trim handles in the passage bar.
+
+Save advances to naming without persisting a highlight. The range controls are
+replaced with the joined title/save/cancel form in the same popover. The title
+receives focus and the final Save persists the existing selection and stable ID.
+Selecting either main-bar marker returns to trimming while retaining a typed
+title. X or Escape cancels from either step and restores focus to the main seek
+bar. Failed saves keep the naming step available for correction or retry. The
+public name is never requested in the clipping UI.
+
+The feed remains the control reference: a circular central play button,
+fullscreen in the upper right and vertical hover/focus volume treatment. Touch
+devices retain sound toggling and use their system volume controls. There are no
 highlight thumbnails or decorative introductory text.
 
 ## Data and navigation

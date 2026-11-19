@@ -6,6 +6,9 @@ interface TimelineProps {
   duration: number
   disabled: boolean
   canHighlight: boolean
+  editing: boolean
+  editorPoint: number
+  editor?: RemixNode
   seek(time: number): void
   highlight(time: number): void
   children?: RemixNode
@@ -28,6 +31,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   }
   function close() {
     cancelClose()
+    if (handle.props.editing) return
     open = false
     hoverTime = undefined
     handle.update()
@@ -61,6 +65,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           }),
           on<HTMLDivElement, 'pointermove'>('pointermove', (event) => {
             if (
+              p.editing ||
               event.pointerType !== 'mouse' ||
               (event.target as Element).closest('.ec-main-trim, .ec-time-tooltip') ||
               !input
@@ -82,7 +87,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
             if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close()
           }),
           on('keydown', (event) => {
-            if (event.key !== 'Escape' || !open) return
+            if (p.editing || event.key !== 'Escape' || !open) return
             event.preventDefault()
             event.stopPropagation()
             input?.focus({ preventScroll: true })
@@ -100,7 +105,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           aria-label="Playback position"
           aria-valuetext={`${clock(p.position)} / ${clock(p.duration)}`}
           aria-controls="ec-playback-tools"
-          aria-expanded={open}
+          aria-expanded={p.editing || open}
           aria-haspopup="dialog"
           disabled={p.disabled}
           style={{ '--progress': `${p.duration ? (p.position / p.duration) * 100 : 0}%` }}
@@ -122,40 +127,54 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
         <div
           id="ec-playback-tools"
           role="dialog"
-          aria-label="Playback tools"
+          aria-label={p.editing ? 'Highlight editor' : 'Playback tools'}
           class="ec-time-tooltip"
-          data-open={open ? '' : undefined}
-          data-action={p.canHighlight ? '' : undefined}
-          style={{ left: `${center}px`, '--tip-arrow-x': `${point - center + half}px` }}
+          data-open={p.editing || open ? 'true' : undefined}
+          data-editing={p.editing ? 'true' : undefined}
+          data-action={!p.editing && p.canHighlight ? '' : undefined}
+          style={
+            p.editing
+              ? {
+                  '--tip-arrow-x': `calc(var(--editor-inset) + ${5 + (p.duration ? p.editorPoint / p.duration : 0) * Math.max(0, width - 10)}px)`,
+                }
+              : { left: `${center}px`, '--tip-arrow-x': `${point - center + half}px` }
+          }
         >
-          <span class="ec-clock ec-time-label">
-            {clock(time)} <span>/ {clock(p.duration)}</span>
-          </span>
-          {p.canHighlight && (
-            <button
-              type="button"
-              class="ec-highlight-star"
-              aria-label="Set highlight"
-              mix={on('click', () => {
-                p.highlight(time)
-                close()
-              })}
-            >
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
+          {p.editing ? (
+            p.editor
+          ) : (
+            <>
+              <span class="ec-clock ec-time-label">
+                {clock(time)} <span>/ {clock(p.duration)}</span>
+              </span>
+              {p.canHighlight && (
+                <button
+                  type="button"
+                  class="ec-highlight-star"
+                  aria-label="Set highlight"
+                  mix={on('click', () => {
+                    // Dismiss the hover state before the parent opens its editor.
+                    close()
+                    p.highlight(time)
+                  })}
+                >
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
+            </>
           )}
         </div>
         {p.children}

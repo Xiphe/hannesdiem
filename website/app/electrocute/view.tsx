@@ -2,7 +2,7 @@ import { on, ref, type Handle } from 'remix/component'
 import type { ElectroCuteArchiveProps, ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { archiveStyle } from './styles.ts'
 import { FeedIcon } from '../temple/feed/icon.tsx'
-import { preciseClock, TrimTimeline } from './trim.tsx'
+import { preciseClock, TrimControls, TrimTimeline, type TrimEdge } from './trim.tsx'
 import { PlaybackTimeline } from './timeline.tsx'
 import { readSessionState, submitSessionForm } from '../identity/client.ts'
 import {
@@ -67,6 +67,8 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let ready = false
   let failed = false
   let editing = false
+  let editorStep: 'range' | 'name' = 'range'
+  let selectedEdge: TrimEdge = 'start'
   let editingId: string | undefined
   let clipStart = 0
   let clipEnd = 60
@@ -186,6 +188,8 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     newId = crypto.randomUUID()
     const existing = runtime.highlights.find((item) => item.id === highlight?.id)
     editingRevision = existing?.revision
+    editorStep = 'range'
+    selectedEdge = 'start'
     editing = true
     feedback = ''
     await handle.update()
@@ -374,6 +378,139 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       initialPosition = undefined
     }
     handle.update()
+  }
+
+  function trimProps() {
+    return {
+      start: clipStart,
+      end: clipEnd,
+      duration,
+      frameRate: session?.frameRate,
+      disabled: busy,
+      selected: selectedEdge,
+      select(edge: TrimEdge) {
+        selectedEdge = edge
+        editorStep = 'range'
+        handle.update()
+      },
+      change(start: number, end: number) {
+        clipStart = start
+        clipEnd = end
+        previewEnd = undefined
+        handle.update()
+      },
+    }
+  }
+
+  function editor() {
+    return editorStep === 'name' ? (
+      <form
+        class="ec-clip-save"
+        aria-label="Save highlight"
+        mix={on('submit', (event) => {
+          event.preventDefault()
+          void saveHighlight()
+        })}
+      >
+        <input
+          aria-label="Title"
+          placeholder="Name this highlight"
+          required
+          maxLength={120}
+          disabled={busy}
+          value={title}
+          mix={on('input', (event) => {
+            title = (event.currentTarget as HTMLInputElement).value
+            handle.update()
+          })}
+        />
+        <button
+          type="submit"
+          class="ec-save-clip"
+          aria-label={preview ? 'Save draft' : 'Save highlight'}
+          disabled={busy || !valid() || !title.trim()}
+        >
+          {busy ? 'Saving…' : 'Save'}
+        </button>
+        <button
+          type="button"
+          class="ec-cancel-clip"
+          aria-label="Cancel"
+          disabled={busy}
+          mix={on('click', closeEditor)}
+        >
+          ×
+        </button>
+      </form>
+    ) : (
+      <div
+        class="ec-clip-dock"
+        data-edge={selectedEdge}
+      >
+        <button
+          type="button"
+          class="ec-icon-button"
+          aria-label="Preview passage"
+          disabled={!valid() || busy}
+          mix={on('click', () => void playAt(clipStart, clipEnd))}
+        >
+          <FeedIcon name="play" />
+        </button>
+        {selectedEdge === 'start' && <TrimControls {...trimProps()} />}
+        <div class="ec-passage-track">
+          <input
+            type="range"
+            class="ec-seek"
+            min={clipStart}
+            max={clipEnd}
+            step={session?.frameRate ? 1 / session.frameRate : 0.001}
+            value={Math.max(clipStart, Math.min(clipEnd, position))}
+            aria-label="Passage position"
+            aria-valuetext={preciseClock(Math.max(clipStart, Math.min(clipEnd, position)))}
+            disabled={busy}
+            style={{
+              '--progress': `${((Math.max(clipStart, Math.min(clipEnd, position)) - clipStart) / (clipEnd - clipStart)) * 100}%`,
+            }}
+            mix={on('input', (event) => {
+              if (!video) return
+              previewEnd = clipEnd
+              video.currentTime = Math.max(
+                clipStart,
+                Math.min(clipEnd, Number((event.currentTarget as HTMLInputElement).value)),
+              )
+              position = video.currentTime
+              handle.update()
+            })}
+          />
+        </div>
+        {selectedEdge === 'end' && <TrimControls {...trimProps()} />}
+        <span class="ec-clock ec-passage-duration">{clock(Math.round(clipEnd - clipStart))}</span>
+        <button
+          type="button"
+          class="ec-save-clip"
+          aria-label="Name highlight"
+          disabled={!valid() || busy}
+          mix={on('click', async () => {
+            editorStep = 'name'
+            await handle.update()
+            player
+              ?.querySelector<HTMLInputElement>('[aria-label="Title"]')
+              ?.focus({ preventScroll: true })
+          })}
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          class="ec-cancel-clip"
+          aria-label="Cancel"
+          disabled={busy}
+          mix={on('click', closeEditor)}
+        >
+          ×
+        </button>
+      </div>
+    )
   }
 
   function timeline() {
@@ -596,26 +733,15 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                           duration={duration}
                           disabled={!ready}
                           seek={seekTo}
+                          editing={editing}
+                          editorPoint={selectedEdge === 'start' ? clipStart : clipEnd}
+                          editor={editing ? editor() : undefined}
                           canHighlight={Boolean(
                             (preview || runtime.email) && !editing && ready && !busy,
                           )}
                           highlight={(time) => void openEditor(undefined, time)}
                         >
-                          {editing && (
-                            <TrimTimeline
-                              start={clipStart}
-                              end={clipEnd}
-                              duration={duration}
-                              frameRate={session.frameRate}
-                              disabled={busy}
-                              change={(from, to) => {
-                                clipStart = from
-                                clipEnd = to
-                                previewEnd = undefined
-                                handle.update()
-                              }}
-                            />
-                          )}
+                          {editing && <TrimTimeline {...trimProps()} />}
                           <div
                             class="ec-timeline"
                             aria-label="Highlight timeline"
@@ -683,99 +809,6 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                           </div>
                         </div>
                       </div>
-                      {editing && (
-                        <div class="ec-highlight-action">
-                          <form
-                            class="ec-clip-save"
-                            aria-label="Save highlight"
-                            mix={on('submit', (event) => {
-                              event.preventDefault()
-                              void saveHighlight()
-                            })}
-                          >
-                            <input
-                              aria-label="Title"
-                              placeholder="Name this highlight"
-                              required
-                              maxLength={120}
-                              disabled={busy}
-                              value={title}
-                              mix={on('input', (event) => {
-                                title = (event.currentTarget as HTMLInputElement).value
-                                handle.update()
-                              })}
-                            />
-                            <button
-                              type="submit"
-                              class="ec-save-clip"
-                              aria-label={preview ? 'Save draft' : 'Save highlight'}
-                              disabled={busy || !valid() || !title.trim()}
-                            >
-                              {busy ? 'Saving…' : 'Save'}
-                            </button>
-                            <button
-                              type="button"
-                              class="ec-cancel-clip"
-                              aria-label="Cancel"
-                              disabled={busy}
-                              mix={on('click', closeEditor)}
-                            >
-                              ×
-                            </button>
-                          </form>
-                          {editing && (
-                            <div
-                              class="ec-clip-dock"
-                              role="region"
-                              aria-label="Highlight editor"
-                            >
-                              <button
-                                type="button"
-                                class="ec-icon-button"
-                                aria-label="Preview passage"
-                                disabled={!valid() || busy}
-                                mix={on('click', () => void playAt(clipStart, clipEnd))}
-                              >
-                                <FeedIcon name="play" />
-                              </button>
-                              <div class="ec-passage-track">
-                                <input
-                                  type="range"
-                                  class="ec-seek"
-                                  min={clipStart}
-                                  max={clipEnd}
-                                  step={session.frameRate ? 1 / session.frameRate : 0.001}
-                                  value={Math.max(clipStart, Math.min(clipEnd, position))}
-                                  aria-label="Passage position"
-                                  aria-valuetext={preciseClock(
-                                    Math.max(clipStart, Math.min(clipEnd, position)),
-                                  )}
-                                  disabled={busy}
-                                  style={{
-                                    '--progress': `${((Math.max(clipStart, Math.min(clipEnd, position)) - clipStart) / (clipEnd - clipStart)) * 100}%`,
-                                  }}
-                                  mix={on('input', (event) => {
-                                    if (!video) return
-                                    previewEnd = clipEnd
-                                    video.currentTime = Math.max(
-                                      clipStart,
-                                      Math.min(
-                                        clipEnd,
-                                        Number((event.currentTarget as HTMLInputElement).value),
-                                      ),
-                                    )
-                                    position = video.currentTime
-                                    handle.update()
-                                  })}
-                                />
-                              </div>
-                              <span class="ec-clock ec-passage-duration">
-                                {clock(Math.round(clipEnd - clipStart))}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
