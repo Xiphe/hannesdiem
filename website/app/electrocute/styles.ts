@@ -582,10 +582,6 @@ export const archiveStyle = css({
     height: 24,
     borderBlock: '1px solid rgb(255 248 251 / 55%)',
     background: 'rgb(255 248 251 / 5%)',
-    backgroundImage:
-      'linear-gradient(to right,rgb(255 248 251 / 16%) 1px,transparent 1px),linear-gradient(to bottom,rgb(255 248 251 / 7%) 1px,transparent 1px)',
-    backgroundSize: 'var(--grid-step) 100%,100% 8px',
-    backgroundPosition: 'var(--grid-offset) 0,0 -1px',
   },
   '& .ec-time-ruler': {
     position: 'absolute',

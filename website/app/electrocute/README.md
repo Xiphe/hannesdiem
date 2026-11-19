@@ -71,13 +71,12 @@ Its scale stays fixed during a drag and reframes over approximately one second
 after release. A new interaction interrupts that animation; reduced-motion
 preferences use an immediate reframe. Lower-bar changes also reframe the upper view.
 
-Current visual experiment, awaiting artist feedback: both trimming surfaces show
-a quiet time ruler and a grid inside the selection. Ticks and grid columns share
-absolute recording timestamps, so reframing moves the ruler and changes grid
-spacing while the chosen bounds stay fixed. Tick spacing uses hysteresis to keep
-the same time marks through ordinary zoom adjustments; labels are sparse and
-noninteractive. This investigates whether the reframe reads as a change of scale
-rather than rejection of the drag. It adds no extra controls or saved data.
+The artist selected the quiet time ruler on both trimming surfaces after trying
+it together with a selection grid. The grid was removed. Ticks refer to absolute
+recording timestamps, so reframing visibly moves the ruler while the chosen bounds
+stay fixed. Tick spacing uses hysteresis to keep the same time marks through
+ordinary zoom adjustments; labels are sparse and noninteractive. This makes the
+change of scale visible after a drag without adding controls or saved data.
 
 Both surfaces share the same trim component and range state. Select a boundary
 and use arrows for one-second changes; Shift plus arrows adjusts one source frame

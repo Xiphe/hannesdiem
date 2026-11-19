@@ -155,7 +155,6 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
         marks.push({ time, major, label: major && x >= 24 && x <= width - 24 })
       }
     }
-    const gridWidth = span > 0 ? (step / span) * width : 0
     const helpId = p.surface ? 'ec-passage-trim-help' : 'ec-trim-help'
     return (
       <div
@@ -200,8 +199,6 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
             style={{
               left: `${((p.start - from) / span) * 100}%`,
               width: `${((p.end - p.start) / span) * 100}%`,
-              '--grid-step': `${gridWidth}px`,
-              '--grid-offset': `${step ? -((((p.start / step) % 1) + 1) % 1) * gridWidth : 0}px`,
             }}
           />
           {(['start', 'end'] as const).map((kind) => (
