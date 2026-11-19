@@ -181,11 +181,8 @@ for (const viewport of [
     expect(badge.y + badge.height / 2).toBeCloseTo(imageHeight / 2, 1)
 
     await expect(page.getByRole('complementary')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
-    await page.getByRole('button', { name: 'Open menu' }).click()
-    await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Close navigation', exact: true }).click()
-    await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
+    await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'All sessions' })).toHaveCount(0)
     const footer = page.getByRole('contentinfo')
     expect((await footer.boundingBox())!.y).toBe(viewport.height)
@@ -194,41 +191,71 @@ for (const viewport of [
   })
 }
 
-test('the highlights drawer overlays playback and navigates the listed ranges', async ({
-  page,
-}) => {
-  await page.goto('/electrocute/test-session-1')
-  await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
-  const trigger = page.getByRole('button', { name: 'Show highlights', exact: true })
-  const drawer = page.getByRole('complementary', { name: 'Highlights', exact: true })
-  const video = page.locator('video')
-  const before = await video.boundingBox()
-  await expect(drawer).toBeHidden()
-  await trigger.click()
-  await expect(drawer).toBeVisible()
-  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
-  await expect(drawer.getByRole('button', { name: 'Close highlights' })).toBeFocused()
-  expect(await video.boundingBox()).toEqual(before)
-  await drawer.getByRole('link', { name: /Test highlight B/ }).click()
-  await expect
-    .poll(() => video.evaluate((node) => (node as HTMLVideoElement).currentTime))
-    .toBeGreaterThanOrEqual(26)
-  await expect(drawer.getByRole('link', { name: /Test highlight B/ })).toHaveAttribute(
-    'aria-current',
-    'true',
-  )
-  await expect(drawer).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(drawer).toBeHidden()
-  await expect(trigger).toBeFocused()
-  await trigger.press('Enter')
-  await expect(drawer).toBeVisible()
-  await drawer.getByRole('button', { name: 'Close highlights' }).click()
-  await expect(drawer).toBeHidden()
-  await trigger.click()
-  await page.locator('.ec-video-tap').click({ position: { x: 20, y: 100 } })
-  await expect(drawer).toBeHidden()
-})
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`the highlights drawer resizes playback beside its list at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport)
+    await page.goto('/electrocute/test-session-1')
+    await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
+    const trigger = page.getByRole('button', { name: 'Show highlights', exact: true })
+    const drawer = page.getByRole('complementary', { name: 'Highlights', exact: true })
+    const video = page.locator('video')
+    const before = (await video.boundingBox())!
+    await expect(drawer).toBeHidden()
+    await trigger.click()
+    await expect(drawer).toBeVisible()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await expect(drawer.getByRole('button', { name: 'Close highlights' })).toBeFocused()
+    const sidebarWidth = Math.min(360, viewport.width * 0.42)
+    await expect
+      .poll(async () => (await video.boundingBox())!.width)
+      .toBeCloseTo(before.width - sidebarWidth, 1)
+    const image = (await video.boundingBox())!
+    const sidebar = (await drawer.boundingBox())!
+    expect(sidebar.x).toBeCloseTo(image.x + image.width, 1)
+    expect(sidebar.y).toBe(image.y)
+    expect(sidebar.height).toBeCloseTo(image.height, 1)
+    expect(image.height).toBeLessThan(before.height)
+    const controls = (await page.locator('.ec-transport').boundingBox())!
+    expect(controls.x + controls.width).toBeLessThanOrEqual(sidebar.x)
+    await drawer.getByRole('link', { name: /Test highlight B/ }).click()
+    await expect
+      .poll(() => video.evaluate((node) => (node as HTMLVideoElement).currentTime))
+      .toBeGreaterThanOrEqual(26)
+    await expect(drawer.getByRole('link', { name: /Test highlight B/ })).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+    await expect(drawer).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(drawer).toBeHidden()
+    await expect(trigger).toBeFocused()
+    await expect.poll(async () => (await video.boundingBox())!.width).toBeCloseTo(before.width, 1)
+    await trigger.press('Enter')
+    await expect(drawer).toBeVisible()
+    await drawer.getByRole('button', { name: 'Close highlights' }).click()
+    await expect(drawer).toBeHidden()
+    await trigger.click()
+    await page.locator('.ec-video-tap').click({ position: { x: 20, y: 10 } })
+    await expect(drawer).toBeVisible()
+    await page.getByRole('button', { name: 'Enter fullscreen', exact: true }).click()
+    await expect
+      .poll(() =>
+        page.locator('.ec-player').evaluate((node) => document.fullscreenElement === node),
+      )
+      .toBe(true)
+    await expect(drawer).toBeVisible()
+    const fullVideo = (await video.boundingBox())!
+    expect(fullVideo.x + fullVideo.width).toBeLessThanOrEqual((await drawer.boundingBox())!.x)
+    await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click()
+    await drawer.getByRole('button', { name: 'Close highlights' }).click()
+    await expect(drawer).toBeHidden()
+  })
+}
 
 test('range editing clamps bounds, previews the passage and persists only a local draft', async ({
   page,
@@ -344,8 +371,7 @@ test('the inline transport plays, seeks, controls sound and opens timeline highl
     .getByRole('button', { name: 'Enter fullscreen', exact: true })
     .boundingBox()
   expect(fullscreen!.y - stage!.y).toBeLessThanOrEqual(16)
-  const menu = (await page.getByRole('button', { name: 'Open menu' }).boundingBox())!
-  expect(fullscreen!.x + fullscreen!.width).toBeLessThanOrEqual(menu.x)
+  expect(stage!.x + stage!.width - fullscreen!.x - fullscreen!.width).toBeLessThanOrEqual(16)
   await page.locator('.ec-volume-control').hover()
   expect(
     await page

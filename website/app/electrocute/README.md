@@ -45,10 +45,15 @@ logo stay in place. Controls follow the existing feed and form language, includi
 rounded grouped inputs and quiet overlay surfaces. The seek bar shows tabular time
 values on hover or keyboard focus, on a separate vertical level from trim controls.
 
-The archive is a chronological list with a separate Continue entry. On desktop,
-the player sits beside the highlight list; on mobile they stack. Session headings
-and the media stage are compact, with transport controls over the image using the
-existing feed icons. The artist rejected the detached range form and requested
+The archive is a chronological list with a separate Continue entry. The session
+detail keeps the video top-aligned and uncropped, with the website footer below
+the viewport and the website hamburger hidden. The List Bullet toggle slides in
+a right sidebar and shrinks the video and transport together. Its width is capped
+at 360px and 42% of the viewport, including on narrow screens. The sidebar stays
+open while playback is operated and participates in native fullscreen. Closing it
+restores the player's width; reduced motion disables the resize transition.
+The transport overlays the image using the existing feed icons.
+The artist rejected the detached range form and requested
 clipping directly inside the player, following the Twitch-style trimming interaction.
 
 Play, the full-session seek bar and sound sit on one horizontal line. A compact

@@ -802,204 +802,209 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                     }),
                   ]}
                 >
-                  <div class="ec-stage">
-                    <video
-                      class="ec-video"
-                      controls
-                      playsInline
-                      preload="metadata"
-                      src={session.src}
-                      poster={session.poster}
-                      aria-label={session.title}
-                      mix={[
-                        ref((node) => {
-                          video = node
-                        }),
-                        on('loadedmetadata', metadata),
-                        on('play', () => {
-                          heard = true
-                          handle.update()
-                        }),
-                        on('pause', () => {
-                          savePosition(true)
-                          handle.update()
-                        }),
-                        on('volumechange', () => {
-                          handle.update()
-                        }),
-                        on('seeked', () => {
-                          position = video?.currentTime ?? position
-                          handle.update()
-                        }),
-                        on('ended', () => {
-                          savePosition(true)
-                          handle.update()
-                        }),
-                        on('error', () => {
-                          ready = false
-                          failed = true
-                          handle.update()
-                        }),
-                        on('timeupdate', () => {
-                          if (!video) return
-                          if (previewEnd !== undefined && video.currentTime >= previewEnd) {
-                            const stop = previewEnd
-                            previewEnd = undefined
-                            video.pause()
-                            video.currentTime = stop
-                          }
-                          position = video.currentTime
-                          savePosition()
-                          handle.update()
-                        }),
-                      ]}
-                    />
+                  <HighlightsDrawer
+                    sessionId={session.id}
+                    highlights={highlights()}
+                    position={position}
+                    ready={ready}
+                    choose={choose}
+                    renderPlayer={(highlightsToggle) => (
+                      <div class="ec-stage">
+                        <video
+                          class="ec-video"
+                          controls
+                          playsInline
+                          preload="metadata"
+                          src={session.src}
+                          poster={session.poster}
+                          aria-label={session.title}
+                          mix={[
+                            ref((node) => {
+                              video = node
+                            }),
+                            on('loadedmetadata', metadata),
+                            on('play', () => {
+                              heard = true
+                              handle.update()
+                            }),
+                            on('pause', () => {
+                              savePosition(true)
+                              handle.update()
+                            }),
+                            on('volumechange', () => {
+                              handle.update()
+                            }),
+                            on('seeked', () => {
+                              position = video?.currentTime ?? position
+                              handle.update()
+                            }),
+                            on('ended', () => {
+                              savePosition(true)
+                              handle.update()
+                            }),
+                            on('error', () => {
+                              ready = false
+                              failed = true
+                              handle.update()
+                            }),
+                            on('timeupdate', () => {
+                              if (!video) return
+                              if (previewEnd !== undefined && video.currentTime >= previewEnd) {
+                                const stop = previewEnd
+                                previewEnd = undefined
+                                video.pause()
+                                video.currentTime = stop
+                              }
+                              position = video.currentTime
+                              savePosition()
+                              handle.update()
+                            }),
+                          ]}
+                        />
 
-                    <button
-                      class="ec-video-tap"
-                      type="button"
-                      aria-label={video?.paused !== false ? 'Play video' : 'Pause video'}
-                      disabled={!ready}
-                      mix={on('click', () => void togglePlayback())}
-                    >
-                      {video?.paused !== false && (
-                        <span class="ec-play-badge">
-                          <FeedIcon name="play" />
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      class="ec-icon-button ec-fullscreen"
-                      aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                      disabled={!ready}
-                      mix={on('click', () => void toggleFullscreen())}
-                    >
-                      <FeedIcon name={fullscreen ? 'exit-fullscreen' : 'fullscreen'} />
-                    </button>
-                    {loginAt !== undefined && (
-                      <InlineLogin
-                        close={async () => {
-                          loginAt = undefined
-                          await handle.update()
-                          player
-                            ?.querySelector<HTMLButtonElement>('.ec-playhead-highlight')
-                            ?.focus({ preventScroll: true })
-                        }}
-                        authenticated={loadRuntime}
-                      />
-                    )}
-                    <HighlightsDrawer
-                      sessionId={session.id}
-                      highlights={highlights()}
-                      position={position}
-                      ready={ready}
-                      choose={choose}
-                    />
-                    <div class="ec-transport">
-                      <div class="ec-transport-row">
                         <button
+                          class="ec-video-tap"
                           type="button"
-                          class="ec-icon-button"
-                          data-icon={video?.paused !== false ? 'play' : 'pause'}
-                          aria-label={video?.paused !== false ? 'Play' : 'Pause'}
+                          aria-label={video?.paused !== false ? 'Play video' : 'Pause video'}
                           disabled={!ready}
                           mix={on('click', () => void togglePlayback())}
                         >
-                          <FeedIcon name={video?.paused !== false ? 'play' : 'pause'} />
+                          {video?.paused !== false && (
+                            <span class="ec-play-badge">
+                              <FeedIcon name="play" />
+                            </span>
+                          )}
                         </button>
-                        <PlaybackTimeline
-                          position={position}
-                          duration={duration}
-                          disabled={!ready}
-                          seek={seekTo}
-                          editing={editing}
-                          editorRange={{ start: clipStart, end: clipEnd }}
-                          editor={editing ? editor() : undefined}
-                          editorActions={editing ? editorActions() : undefined}
-                          editorStep={editorStep}
-                          canHighlight={!editing && !busy}
-                          highlight={(time) => void openEditor(undefined, time)}
-                        >
-                          {editing && <TrimTimeline {...trimProps()} />}
-                          <div
-                            class="ec-timeline"
-                            aria-label="Highlight timeline"
-                          >
-                            {timeline()}
-                          </div>
-                        </PlaybackTimeline>
                         <button
                           type="button"
-                          class="ec-icon-button ec-highlight-star ec-playhead-highlight"
-                          aria-label="Highlight at playhead"
-                          disabled={!ready || editing || busy}
-                          mix={on('click', () => void openEditor())}
+                          class="ec-icon-button ec-fullscreen"
+                          aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                          disabled={!ready}
+                          mix={on('click', () => void toggleFullscreen())}
                         >
-                          <HighlightStar />
+                          <FeedIcon name={fullscreen ? 'exit-fullscreen' : 'fullscreen'} />
                         </button>
-                        <div class="ec-volume-control">
-                          <button
-                            type="button"
-                            class="ec-icon-button"
-                            aria-label={
-                              video?.muted || video?.volume === 0 ? 'Unmute sound' : 'Mute sound'
-                            }
-                            disabled={!ready}
-                            mix={on('click', () => {
-                              if (video) {
-                                video.muted = !video.muted
-                                if (!video.muted && video.volume === 0) video.volume = 1
-                              }
-                            })}
-                          >
-                            <FeedIcon
-                              name={video?.muted || video?.volume === 0 ? 'muted' : 'sound'}
-                            />
-                          </button>
-
-                          <div class="ec-volume-popover">
-                            <input
-                              type="range"
-                              class="ec-volume ec-seek"
-                              min={0}
-                              max={1}
-                              step={0.01}
-                              value={video?.volume ?? 1}
-                              aria-label="Volume"
-                              style={{ '--progress': `${(video?.volume ?? 1) * 100}%` }}
-                              mix={[
-                                on('input', (event) => {
+                        {loginAt !== undefined && (
+                          <InlineLogin
+                            close={async () => {
+                              loginAt = undefined
+                              await handle.update()
+                              player
+                                ?.querySelector<HTMLButtonElement>('.ec-playhead-highlight')
+                                ?.focus({ preventScroll: true })
+                            }}
+                            authenticated={loadRuntime}
+                          />
+                        )}
+                        {highlightsToggle}
+                        <div class="ec-transport">
+                          <div class="ec-transport-row">
+                            <button
+                              type="button"
+                              class="ec-icon-button"
+                              data-icon={video?.paused !== false ? 'play' : 'pause'}
+                              aria-label={video?.paused !== false ? 'Play' : 'Pause'}
+                              disabled={!ready}
+                              mix={on('click', () => void togglePlayback())}
+                            >
+                              <FeedIcon name={video?.paused !== false ? 'play' : 'pause'} />
+                            </button>
+                            <PlaybackTimeline
+                              position={position}
+                              duration={duration}
+                              disabled={!ready}
+                              seek={seekTo}
+                              editing={editing}
+                              editorRange={{ start: clipStart, end: clipEnd }}
+                              editor={editing ? editor() : undefined}
+                              editorActions={editing ? editorActions() : undefined}
+                              editorStep={editorStep}
+                              canHighlight={!editing && !busy}
+                              highlight={(time) => void openEditor(undefined, time)}
+                            >
+                              {editing && <TrimTimeline {...trimProps()} />}
+                              <div
+                                class="ec-timeline"
+                                aria-label="Highlight timeline"
+                              >
+                                {timeline()}
+                              </div>
+                            </PlaybackTimeline>
+                            <button
+                              type="button"
+                              class="ec-icon-button ec-highlight-star ec-playhead-highlight"
+                              aria-label="Highlight at playhead"
+                              disabled={!ready || editing || busy}
+                              mix={on('click', () => void openEditor())}
+                            >
+                              <HighlightStar />
+                            </button>
+                            <div class="ec-volume-control">
+                              <button
+                                type="button"
+                                class="ec-icon-button"
+                                aria-label={
+                                  video?.muted || video?.volume === 0
+                                    ? 'Unmute sound'
+                                    : 'Mute sound'
+                                }
+                                disabled={!ready}
+                                mix={on('click', () => {
                                   if (video) {
-                                    video.volume = Number(
-                                      (event.currentTarget as HTMLInputElement).value,
-                                    )
-                                    video.muted = video.volume === 0
+                                    video.muted = !video.muted
+                                    if (!video.muted && video.volume === 0) video.volume = 1
                                   }
-                                }),
-                                on('keydown', (event) => {
-                                  if (
-                                    !video ||
-                                    (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')
-                                  )
-                                    return
-                                  event.preventDefault()
-                                  video.volume = Math.max(
-                                    0,
-                                    Math.min(
-                                      1,
-                                      video.volume + (event.key === 'ArrowUp' ? 0.01 : -0.01),
-                                    ),
-                                  )
-                                  video.muted = video.volume === 0
-                                }),
-                              ]}
-                            />
+                                })}
+                              >
+                                <FeedIcon
+                                  name={video?.muted || video?.volume === 0 ? 'muted' : 'sound'}
+                                />
+                              </button>
+
+                              <div class="ec-volume-popover">
+                                <input
+                                  type="range"
+                                  class="ec-volume ec-seek"
+                                  min={0}
+                                  max={1}
+                                  step={0.01}
+                                  value={video?.volume ?? 1}
+                                  aria-label="Volume"
+                                  style={{ '--progress': `${(video?.volume ?? 1) * 100}%` }}
+                                  mix={[
+                                    on('input', (event) => {
+                                      if (video) {
+                                        video.volume = Number(
+                                          (event.currentTarget as HTMLInputElement).value,
+                                        )
+                                        video.muted = video.volume === 0
+                                      }
+                                    }),
+                                    on('keydown', (event) => {
+                                      if (
+                                        !video ||
+                                        (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')
+                                      )
+                                        return
+                                      event.preventDefault()
+                                      video.volume = Math.max(
+                                        0,
+                                        Math.min(
+                                          1,
+                                          video.volume + (event.key === 'ArrowUp' ? 0.01 : -0.01),
+                                        ),
+                                      )
+                                      video.muted = video.volume === 0
+                                    }),
+                                  ]}
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    )}
+                  />
                 </div>
                 <div hidden>
                   {failed && (

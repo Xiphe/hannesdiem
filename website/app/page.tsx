@@ -16,11 +16,12 @@ export function Page(
     noindex?: boolean
     plain?: boolean
     feed?: boolean
+    hideMenu?: boolean
   }>,
 ) {
   const site = handle.context.get(SiteContent)
   return () => {
-    const { title, body, route, path = '/', noindex, plain, feed } = handle.props
+    const { title, body, route, path = '/', noindex, plain, feed, hideMenu } = handle.props
     const temple = route?.kind === 'temple'
     const canonical = `https://hannesdiem.de${path}`
     const image = route?.ogImage ?? (route?.image ? getMedia(site.media, route.image) : undefined)
@@ -214,9 +215,9 @@ export function Page(
             <>
               <Chrome
                 path={path}
-                hideMenu={temple}
+                hideMenu={temple || hideMenu}
               />
-              <NavigationDialog pathname={path} />
+              {!hideMenu && <NavigationDialog pathname={path} />}
             </>
           )}
           <main id="content">{body}</main>
