@@ -4,6 +4,9 @@ The opener, location invitation, first three verse/refrain pairs, bridge and fin
 
 CMX contract: `contracts/components/temple.d.ts`; tests and synthetic input: `tests/`; fonts/favicon: `assets/`.
 
+For typography, masks and reuse in other media, read the current
+[artist-defined design rules](docs/design-rules.md).
+
 ## Content and rendering
 
 - `location/` renders the accepted location invitation immediately after the opener. Its copy and room photo live in the CMX content module; the shared Opening task owns its map enhancement. See [location implementation](location/README.md). The retired standalone study is archived at `b8e61ec`; no prototype server or duplicated artwork ships.
