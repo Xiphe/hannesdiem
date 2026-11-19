@@ -278,12 +278,12 @@ test('the seek popover expands into trimming, then replaces its controls with th
   expect(
     (await editor.getByRole('button', { name: 'Name highlight', exact: true }).boundingBox())!
       .height,
-  ).toBeLessThan(32)
+  ).toBe(32)
   const cancel = await editor.getByRole('button', { name: 'Cancel', exact: true }).boundingBox()
   const save = await editor
     .getByRole('button', { name: 'Name highlight', exact: true })
     .boundingBox()
-  expect(popup!.x + popup!.width - cancel!.x - cancel!.width).toBeGreaterThanOrEqual(10)
+  expect(popup!.x + popup!.width - cancel!.x - cancel!.width).toBeGreaterThanOrEqual(8)
   expect(cancel!.x - save!.x - save!.width).toBeGreaterThanOrEqual(8)
   const closeIcon = await editor
     .getByRole('button', { name: 'Cancel', exact: true })
@@ -360,8 +360,8 @@ test('the star popover keeps the whole seek hit area interactive up to its body'
   await expect(popup.locator('.ec-time-label')).toHaveText(original!)
   await expect(edgeAction).toHaveText('')
   await expect(edgeAction.locator('svg')).toBeVisible()
-  expect(edge.width).toBeGreaterThanOrEqual(44)
-  expect(edge.height).toBeGreaterThanOrEqual(44)
+  expect(edge.width).toBeGreaterThanOrEqual(28)
+  expect(edge.height).toBeGreaterThanOrEqual(28)
   // The strip below the popover (including its arrow) belongs to the native range.
   const gapY = box.y + 9
   for (const fraction of [0.25, 0.5]) {

@@ -361,11 +361,12 @@ export const archiveStyle = css({
       display: 'flex',
       flexWrap: 'nowrap',
       alignItems: 'center',
-      gap: 8,
+      gap: 4,
       width: 'max-content',
-      minWidth: 184,
+      minWidth: 0,
       maxWidth: 'none',
-      padding: 4,
+      padding: '3px 7px 3px 3px',
+      fontSize: 11,
     },
     '&::before': {
       content: "''",
@@ -662,8 +663,7 @@ export const archiveStyle = css({
     '& .ec-time-tooltip[data-editing]': { padding: '4px 12px', bottom: 'calc(50% + 24px)' },
   },
   '@media (width >= 40rem) and (hover: hover) and (pointer: fine)': {
-    '& .ec-time-tooltip[data-editing]': { padding: '6px 10px' },
-    '& .ec-time-tooltip[data-editing] .ec-icon-button, & .ec-player .ec-cancel-clip, & .ec-player .ec-back-clip':
+    '& .ec-player .ec-icon-button, & .ec-player .ec-highlight-star, & .ec-player .ec-cancel-clip, & .ec-player .ec-back-clip':
       {
         width: 32,
         minWidth: 32,
@@ -672,8 +672,16 @@ export const archiveStyle = css({
         flex: '0 0 32px',
         padding: 6,
       },
+    '& .ec-transport-row': { gap: 8 },
+    '& .ec-seek-wrap': { '--editor-inset': '40px' },
+    '& .ec-transport-row:has(.ec-playhead-highlight) .ec-seek-wrap': { '--editor-tail': '40px' },
+    '& .ec-volume-control': { flex: '0 0 32px' },
+    '& .ec-volume-control::before': { borderRadius: 16 },
+    '& .ec-volume-popover': { width: 32, paddingInline: 0 },
+    '& .ec-time-tooltip[data-action]': { padding: '4px 8px 4px 4px' },
+    '& .ec-time-tooltip[data-editing]': { padding: '6px 8px' },
     '& .ec-player .ec-passage-track > .ec-seek': { height: 32, minHeight: 32 },
-    '& .ec-clip-actions': { gap: 8 },
+    '& .ec-clip-actions': { gap: 8, marginLeft: 0 },
     '& .ec-clip-save': { alignItems: 'center', gap: 8 },
     '& .ec-player .ec-clip-save input': {
       height: 32,
@@ -682,8 +690,8 @@ export const archiveStyle = css({
       fontSize: 13,
     },
     '& .ec-player .ec-save-clip': {
-      height: 28,
-      minHeight: 28,
+      height: 32,
+      minHeight: 32,
       padding: '0 12px',
       fontSize: 13,
       fontWeight: 500,
