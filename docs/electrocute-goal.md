@@ -71,15 +71,18 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 - Die bestehende Video-Progressbar ist die einzige Oberfläche zum Trimmen.
   Beim Setzen erscheint darüber eine Auswahl für eine Minute. Beide Kanten
   lassen sich über die gesamte Aufnahmedauer verschieben und einzeln auswählen.
-  Plus/Minus neben der ausgewählten Kante sind auf Touchgeräten gut treffbar
-  und ändern um eine Sekunde. Pfeiltasten ändern ebenfalls um eine Sekunde;
+  Direkt an der ausgewählten Kante erscheinen nur `< | >`, ohne Zeitbeschriftung.
+  Die Tasten sind auf Touchgeräten gut treffbar und ändern um eine Sekunde. Pfeiltasten ändern ebenfalls um eine Sekunde;
   Shift und Pfeiltaste ändern bei bekannter Quellbildrate um ein Bild.
-- Der Playhead läuft beim Setzen und Trimmen normal weiter. Unter dem Video
-  zeigt eine zweite Leiste ausschließlich die ausgewählte Passage: Play startet
-  sie von vorne, ihre Suchleiste erlaubt Sprünge darin, ohne weitere Trim-Griffe.
-  Die Vorschau stoppt am gesetzten Ende.
+- Der Playhead läuft beim Setzen und Trimmen normal weiter. Ein schwebendes
+  Vorschau-Element an der Titel/Speichern/Abbrechen-Gruppe enthält nur Play,
+  Suchleiste und Gesamtlänge der ausgewählten Passage. Play startet sie von vorne;
+  Sprünge darin verändern keine Grenzen. Die Vorschau stoppt am gesetzten Ende.
 - Der Set-Highlight-Button wird beim Bearbeiten durch Titel, Speichern und ein
-  kleines X zum Abbrechen ersetzt. Der öffentliche Name wird hier nicht abgefragt.
+  kleines X zum Abbrechen ersetzt. Diese bilden ein gemeinsames Element im freien
+  Platz zwischen Wiedergabe und Lautstärke. Der öffentliche Name wird hier nicht abgefragt.
+- Die Feed-Steuerung dient als Vorlage: runder zentraler Play-Button, Vollbild oben
+  rechts und der vertikale Lautstärkeregler im Hover/Fokus-Popover.
 - Highlights dürfen sich überschneiden und bleiben eigenständige Beiträge.
   Lange unmarkierte Strecken sind erlaubt. Es gibt keine zusätzlichen Kapitel,
   Freitextkommentare oder automatische Musikerkennung.

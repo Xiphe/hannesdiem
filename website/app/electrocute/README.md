@@ -18,7 +18,10 @@ uses the isolated preview server without provider credentials or outgoing
 provider requests. The browser loads the MP4 directly from pCloud. Login emails
 are simulated: request a login, open `/__preview/email`, follow its confirmation
 link and return to the session tab. Focus refreshes its authenticated state.
-Contribution and login state persist locally in `.wrangler/state/electrocute-preview`.
+Contribution and login state persist locally in `.wrangler/state/electrocute-preview`
+using Miniflare’s `resourcePersistencePath`; the former `durableObjectsPersist`
+option is silently ignored by the installed compatibility converter. A restart
+regression exercises the actual session storage and signed cookie.
 Visitor submissions remain pending because no remote model is called. The configured
 artist account can save directly. `PREVIEW_PORT` can select another port. The
 preview copies its own assets before serving them so other builds do not invalidate it.
@@ -45,16 +48,20 @@ clipping directly inside the player, following the Twitch-style trimming interac
 
 Set highlight places a default one-minute selection above the video's existing
 full-session progress bar. This is the only trim surface: drag either edge, or
-select one and adjust it with adjacent 44px plus/minus buttons or arrow keys
+select one and adjust it with adjacent 44px `< | >` buttons or arrow keys
 (one second). Shift plus an arrow adjusts one source frame when session metadata
 provides its frame rate. Source frame rates are explicit, never inferred from
 browser rendering speed. The first pCloud recording was probed at 60 fps.
 The playhead and full-session playback continue independently while editing.
 
-The lower dock contains only Play from the passage start and a seek bar spanning
-the selected bounds. Seeking there activates the passage end stop; seeking on the
+A floating preview anchored to the combined title/save/cancel control contains
+only Play, a seek bar spanning the selected bounds and total passage length. Seeking there activates the passage end stop; seeking on the
 main bar returns to full-session playback. It has no trim handles. Title, save and
-an X replace the Set highlight action. Escape cancels and restores focus to the
+an X form one control replacing Set highlight between playback and volume.
+Trim nudges follow the selected edge without visible time labels. The feed is
+the control reference: a circular central play button, fullscreen in the upper
+right and the same vertical hover/focus volume treatment. Touch devices retain
+sound toggling and use their system volume controls. Escape cancels and restores focus to the
 trigger. The public name is never requested in the clipping UI. There are no
 highlight thumbnails or decorative introductory text.
 

@@ -170,6 +170,25 @@ test('the inline transport plays, seeks, controls sound and opens timeline highl
 }) => {
   await page.goto('/electrocute/test-session-1')
   await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeEnabled()
+  const set = await page.getByRole('button', { name: 'Set highlight', exact: true }).boundingBox()
+  const sound = await page.getByRole('button', { name: 'Mute sound', exact: true }).boundingBox()
+  expect(set!.x + set!.width).toBeLessThanOrEqual(sound!.x)
+  expect(Math.abs(set!.y + set!.height / 2 - sound!.y - sound!.height / 2)).toBeLessThan(1)
+  const stage = await page.locator('.ec-stage').boundingBox()
+  const fullscreen = await page
+    .getByRole('button', { name: 'Enter fullscreen', exact: true })
+    .boundingBox()
+  expect(fullscreen!.y - stage!.y).toBeLessThanOrEqual(16)
+  expect(stage!.x + stage!.width - fullscreen!.x - fullscreen!.width).toBeLessThanOrEqual(16)
+  await page.locator('.ec-volume-control').hover()
+  const volume = page.getByRole('slider', { name: 'Volume', exact: true })
+  await expect(volume).toBeVisible()
+  expect(await volume.evaluate((input) => getComputedStyle(input).writingMode)).toBe('vertical-lr')
+  await volume.press('Home')
+  await volume.press('ArrowUp')
+  await expect
+    .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).volume))
+    .toBeCloseTo(0.01, 2)
   await page.getByRole('button', { name: 'Mute sound', exact: true }).click()
   await expect
     .poll(() => page.locator('video').evaluate((video) => (video as HTMLVideoElement).muted))
@@ -255,6 +274,28 @@ test('main playback bar owns trimming with selected edges, second and frame cont
   await drag(end, -10)
   await expect(end).toHaveAttribute('aria-valuenow', '70')
   await start.click()
+  const selection = await player.locator('.ec-trim-selection').boundingBox()
+  const playback = await page
+    .getByRole('slider', { name: 'Playback position', exact: true })
+    .boundingBox()
+  expect(
+    Math.abs(selection!.y + selection!.height - playback!.y - playback!.height / 2),
+  ).toBeLessThan(1)
+  const controls = player.locator('.ec-trim-adjust')
+  await expect(controls.getByRole('button')).toHaveText(['<', '>'])
+  const popup = await controls.boundingBox()
+  const selected = await start.boundingBox()
+  expect(Math.abs(popup!.x + popup!.width / 2 - selected!.x - selected!.width)).toBeLessThan(1)
+  await expect(
+    player.locator('.ec-highlight-action').getByRole('region', { name: 'Highlight editor' }),
+  ).toBeVisible()
+  await expect(player.locator('.ec-passage-times')).toHaveCount(0)
+  const form = await player.getByRole('form', { name: 'Save highlight' }).boundingBox()
+  const play = await page.getByRole('button', { name: 'Play', exact: true }).boundingBox()
+  const sound = await page.getByRole('button', { name: 'Mute sound', exact: true }).boundingBox()
+  expect(form!.x).toBeGreaterThan(play!.x + play!.width)
+  expect(form!.x + form!.width).toBeLessThanOrEqual(sound!.x)
+  expect(Math.abs(form!.y + form!.height / 2 - sound!.y - sound!.height / 2)).toBeLessThan(1)
   await page.getByRole('button', { name: 'Increase highlight start by one second' }).click()
   await expect(start).toHaveAttribute('aria-valuenow', '31')
   await start.press('ArrowRight')

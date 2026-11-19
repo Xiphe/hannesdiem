@@ -84,13 +84,11 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
         class="ec-main-trim"
         aria-label="Trim highlight"
       >
-        <div class="ec-trim-adjust">
-          <span
-            class="ec-clock"
-            aria-live="polite"
-          >
-            {selected === 'start' ? 'Start' : 'End'} {preciseClock(p[selected])}
-          </span>
+        <div
+          class="ec-trim-adjust"
+          style={{ left: `clamp(44px, ${(p[selected] / p.duration) * 100}%, calc(100% - 44px))` }}
+          mix={on('keydown', (event) => key(event, selected))}
+        >
           <button
             type="button"
             aria-label={`Decrease highlight ${selected} by one second`}
@@ -100,7 +98,7 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
             }
             mix={on('click', () => change(selected, p[selected] - 1))}
           >
-            −
+            {'<'}
           </button>
           <button
             type="button"
@@ -113,7 +111,7 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
             }
             mix={on('click', () => change(selected, p[selected] + 1))}
           >
-            +
+            {'>'}
           </button>
         </div>
         <div
@@ -165,7 +163,8 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
           id="ec-trim-help"
           class="ec-sr-only"
         >
-          Drag either edge. Select an edge, then use plus or minus, or arrow keys for seconds.
+          Drag either edge. Select an edge, then use the adjacent arrows, or keyboard arrow keys for
+          seconds.
           {p.frameRate ? ' Shift and arrow keys adjust one frame.' : ''}
         </span>
       </div>
