@@ -341,6 +341,11 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           {p.editing && p.editorActions}
         </div>
         {p.children}
+        <span
+          class="ec-main-playhead"
+          aria-hidden="true"
+          style={{ left: playedProgress(p.position, 0, p.duration) }}
+        />
       </div>
     )
   }

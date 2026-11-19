@@ -195,6 +195,53 @@ test('range editing clamps bounds, previews the passage and persists only a loca
   await expect.poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused)).toBe(false)
 })
 
+test('paused Play stays visible over the transport and highlights sit below an accurately placed playhead', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  await expect(seek).toBeEnabled()
+  const badge = page.locator('.ec-play-badge')
+  await page.mouse.move(0, 0)
+  await expect(badge).toHaveCSS('opacity', '1')
+  await page.locator('.ec-transport').hover()
+  await expect(badge).toHaveCSS('opacity', '1')
+  await badge.hover()
+  await expect(badge).toHaveCSS('background-color', 'rgba(0, 0, 0, 0.55)')
+  await expect(badge.locator('svg')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, -2, 0)')
+  await page.mouse.move(0, 0)
+  await expect(badge).toHaveCSS('background-color', 'rgba(0, 0, 0, 0.36)')
+  await page.locator('video').evaluate((video) => {
+    ;(video as HTMLVideoElement).currentTime = 20
+  })
+  await expect(seek).toHaveValue('20')
+  const bar = (await seek.boundingBox())!
+  const marker = (await page
+    .getByRole('button', { name: /Test highlight A, 0:12 to 0:32/ })
+    .boundingBox())!
+  const head = (await page.locator('.ec-main-playhead').boundingBox())!
+  expect(marker.x).toBeCloseTo(bar.x + 5 + (12 / 96) * (bar.width - 10), 1)
+  expect(marker.width).toBeCloseTo((20 / 96) * (bar.width - 10), 1)
+  expect(head.x + head.width / 2).toBeCloseTo(bar.x + 5 + (20 / 96) * (bar.width - 10), 1)
+  const wrap = page.locator('.ec-seek-wrap')
+  const box = (await wrap.boundingBox())!
+  const pixels = await sharp(await wrap.screenshot())
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  const color = (offset: number) => {
+    const x = Math.round(head.x + head.width / 2 - box.x + offset)
+    const y = Math.round(head.y + head.height / 2 - box.y)
+    const index = (y * pixels.info.width + x) * pixels.info.channels
+    return [...pixels.data.subarray(index, index + 3)]
+  }
+  expect(color(0)).toEqual([255, 248, 251])
+  const pink = color(-8)
+  expect(pink[0]).toBeGreaterThan(220)
+  expect(pink[1]).toBeLessThan(180)
+  expect(pink[2]).toBeGreaterThan(170)
+})
+
 test('the inline transport plays, seeks, controls sound and opens timeline highlights', async ({
   page,
 }) => {

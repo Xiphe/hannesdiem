@@ -260,10 +260,10 @@ export const archiveStyle = css({
     height: 72,
     borderRadius: '50%',
     background: 'rgb(0 0 0 / 36%)',
-    '& svg': { width: 40, height: 40 },
+    '& svg': { width: 40, height: 40, transform: 'translateX(-2px)' },
+    '&:hover': { background: 'rgb(0 0 0 / 55%)' },
   },
-  '& .ec-player[data-editing] .ec-play-badge, & .ec-player:has(.ec-transport:hover) .ec-play-badge, & .ec-player:has(.ec-transport:focus-within) .ec-play-badge':
-    { opacity: 0 },
+  '& .ec-video-tap:focus-visible .ec-play-badge': { background: 'rgb(0 0 0 / 55%)' },
   '& .ec-player .ec-fullscreen': {
     position: 'absolute',
     top: 12,
@@ -342,6 +342,22 @@ export const archiveStyle = css({
       border: 0,
       borderRadius: '50%',
     },
+  },
+  // Keep the native range's interaction, but paint its thumb above highlight markers.
+  '& .ec-seek-wrap > .ec-seek': {
+    '&::-webkit-slider-thumb': { background: 'transparent' },
+    '&::-moz-range-thumb': { background: 'transparent' },
+  },
+  '& .ec-main-playhead': {
+    position: 'absolute',
+    top: '50%',
+    width: 10,
+    height: 10,
+    transform: 'translate(-50%, -50%)',
+    borderRadius: '50%',
+    background: '#fff8fb',
+    pointerEvents: 'none',
+    zIndex: 1,
   },
   '& .ec-player .ec-passage-track .ec-seek[data-outside]': {
     '&::-webkit-slider-thumb': { opacity: 0 },
@@ -540,14 +556,21 @@ export const archiveStyle = css({
 
   '& .ec-player .ec-timeline': {
     position: 'absolute',
-    inset: '0 0 auto',
+    inset: '0 5px',
     gap: 0,
     margin: 0,
     pointerEvents: 'none',
   },
-  '& .ec-player .ec-timeline-row': { height: 0, background: 'transparent' },
+  '& .ec-player .ec-timeline-row': {
+    position: 'absolute',
+    inset: 0,
+    height: '100%',
+    background: 'transparent',
+  },
   '& .ec-player .ec-marker': {
-    top: 10,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    minWidth: 0,
     height: 24,
     minHeight: 24,
     padding: 0,
@@ -558,7 +581,7 @@ export const archiveStyle = css({
     '&::before': {
       content: "''",
       position: 'absolute',
-      inset: '10px 0 auto',
+      inset: 'calc(50% - 1.5px) 0 auto',
       height: 3,
       background: '#fd5ee0',
     },
