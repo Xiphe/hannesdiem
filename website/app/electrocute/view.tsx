@@ -490,7 +490,9 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         clipStart = start
         clipEnd = end
         if (source === 'keyboard') zoomPassage(250)
-        else if (!surface || start < passageWindow.start || end > passageWindow.end) zoomPassage()
+        // A frame-rounded edge can sit just outside the viewport during a drag.
+        // Keep the passage scale fixed until release, including that overshoot.
+        else if (!surface) zoomPassage()
         previewEnd = undefined
         handle.update()
       },

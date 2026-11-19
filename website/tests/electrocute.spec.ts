@@ -626,6 +626,36 @@ test('releasing an outward passage drag eases into its new zoom over about one s
   expect(Math.abs(markAfter!.x - markBefore!.x)).toBeGreaterThan(1)
 })
 
+test('a fast outward drag past the passage rail keeps its zoom until release', async ({ page }) => {
+  await page.clock.install({ time: new Date('2020-01-01T00:00:00Z') })
+  await page.goto('/electrocute/test-session-1')
+  await openHighlight(page)
+  await setRange(page, 20, 61)
+  await page.clock.pauseAt(new Date('2020-01-01T00:01:00Z'))
+  const seek = page.getByRole('slider', { name: 'Passage position', exact: true })
+  const before = Number(await seek.getAttribute('max'))
+  const end = page.getByRole('slider', { name: 'Passage end', exact: true })
+  const rail = await page.locator('.ec-passage-trim .ec-trim-rail').boundingBox()
+  const grip = await end.locator('span').boundingBox()
+  if (!rail || !grip) throw Error('Missing passage grip')
+  const y = grip.y + grip.height / 2
+  await page.mouse.move(grip.x + grip.width / 2, y)
+  await page.mouse.down()
+  await page.mouse.move(rail.x + rail.width + 40, y)
+  const selectedEnd = Number(await end.getAttribute('aria-valuenow'))
+  expect(selectedEnd).toBeGreaterThan(61)
+  expect(Number(await seek.getAttribute('max'))).toBe(before)
+  await page.mouse.up()
+  expect(Number(await seek.getAttribute('max'))).toBe(before)
+  await page.clock.runFor(100)
+  const target = Math.min(96, selectedEnd + Math.max(2, (selectedEnd - 20) * 0.12))
+  expect(Number(await seek.getAttribute('max'))).toBeGreaterThan(before)
+  expect(Number(await seek.getAttribute('max'))).toBeLessThan(target)
+  await page.clock.runFor(1000)
+  await expect.poll(async () => Number(await seek.getAttribute('max'))).toBeCloseTo(target, 6)
+  await expect(end).toHaveAttribute('aria-valuenow', String(selectedEnd))
+})
+
 test('keyboard trimming briefly reframes from the current zoom and respects reduced motion', async ({
   page,
 }) => {

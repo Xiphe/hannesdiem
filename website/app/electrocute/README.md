@@ -70,6 +70,9 @@ hidden when playback is outside the selected bounds, including the context area.
 Its scale stays fixed during a drag and reframes over approximately one second
 after release. A new interaction interrupts that animation; reduced-motion
 preferences use an immediate reframe. Lower-bar changes also reframe the upper view.
+Frame rounding can place an edge just beyond the visible passage window during
+a fast outward drag. That does not reframe the viewport until release; an earlier
+out-of-window fallback snapped immediately and consumed the release animation.
 Keyboard adjustments on either transport reframe over 250ms, including frame
 steps; repeated keys continue from the current zoom instead of snapping it.
 
