@@ -7,6 +7,8 @@ async function openHighlight(page: Page, touch = false) {
   const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
   await expect(seek).toBeEnabled()
   await seek.focus()
+  await seek.press('Shift+Tab')
+  await page.keyboard.press('Tab')
   if (touch) await page.getByRole('button', { name: 'Set highlight', exact: true }).tap()
   else await page.getByRole('button', { name: 'Set highlight', exact: true }).click()
   await expect(page.getByRole('dialog', { name: 'Highlight editor' })).not.toHaveAttribute(
@@ -500,6 +502,31 @@ test('tooltip motion expands the clock and slides naming forward and back withou
   await title.press('Enter')
   await expect(page.getByRole('status')).toHaveText('Draft saved on this device.')
   await expect(editor).toHaveCount(0)
+})
+
+test('the compact tooltip closes when the mouse leaves a focused transport or dismissed editor', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  const popup = page.getByRole('dialog', { name: 'Playback tools' })
+  await expect(seek).toBeEnabled()
+  const box = (await seek.boundingBox())!
+  await page.mouse.click(box.x + box.width / 2, box.y + 9)
+  await expect(popup).toBeVisible()
+  await page.mouse.move(0, 0)
+  await expect(popup).toBeHidden()
+  await expect(seek).toBeFocused()
+  await openHighlight(page)
+  await page.mouse.move(0, 0)
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'Highlight editor' })).toHaveCount(0)
+  await expect(popup).toBeHidden()
+  await expect(seek).toBeFocused()
+  await seek.press('ArrowRight')
+  await expect(popup).toBeVisible()
+  await page.mouse.move(1, 1)
+  await expect(popup).toBeHidden()
 })
 
 test('the star popover keeps the whole seek hit area interactive up to its body', async ({
@@ -1295,6 +1322,14 @@ test.describe('mobile player', () => {
         page.locator('video').evaluate((video) => (video as HTMLVideoElement).currentTime),
       )
       .toBeGreaterThanOrEqual(70)
+    const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+    const clock = page.getByRole('dialog', { name: 'Playback tools' })
+    await expect(clock).toBeHidden()
+    await seek.tap({ position: { x: 15, y: 9 } })
+    await expect(clock).toBeVisible()
+    await page.getByRole('heading', { name: 'Test session 01', exact: true }).tap()
+    await expect(clock).toBeHidden()
+    await list.getByRole('link', { name: /Test highlight C/ }).tap()
     await openHighlight(page, true)
     await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toBeFocused()
     const end = page.getByRole('slider', { name: 'Passage end', exact: true })

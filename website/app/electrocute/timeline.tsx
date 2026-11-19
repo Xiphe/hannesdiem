@@ -30,6 +30,8 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   let open = false
   let width = 0
   let tooltipWidth = 184
+  let inputMode: 'mouse' | 'touch' | 'keyboard' = 'keyboard'
+  let wrap: HTMLDivElement | undefined
   let input: HTMLInputElement | undefined
   let tooltip: HTMLDivElement | undefined
   let currentPanel: HTMLDivElement | undefined
@@ -47,7 +49,10 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
       }
     | undefined
   let closeTimer: ReturnType<typeof setTimeout> | undefined
-  const cancelClose = () => clearTimeout(closeTimer)
+  const cancelClose = () => {
+    clearTimeout(closeTimer)
+    closeTimer = undefined
+  }
   function show() {
     cancelClose()
     if (handle.props.disabled) return
@@ -56,17 +61,42 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
   }
   function close() {
     cancelClose()
-    if (handle.props.editing) return
+    if (handle.props.editing || (!open && hoverTime === undefined)) return
     open = false
     hoverTime = undefined
     handle.update()
   }
-  function leave(node: HTMLElement) {
-    cancelClose()
-    closeTimer = setTimeout(() => {
-      if (!node.contains(document.activeElement)) close()
-    }, 180)
+  function leave() {
+    if (closeTimer !== undefined) return
+    closeTimer = setTimeout(close, 180)
   }
+  handle.queueTask(() => {
+    const signal = handle.signal
+    window.addEventListener(
+      'keydown',
+      () => {
+        inputMode = 'keyboard'
+      },
+      { capture: true, signal },
+    )
+    window.addEventListener(
+      'pointerdown',
+      (event) => {
+        inputMode = event.pointerType === 'mouse' ? 'mouse' : 'touch'
+        if (!wrap?.contains(event.target as Node)) leave()
+      },
+      { capture: true, signal },
+    )
+    window.addEventListener(
+      'pointermove',
+      (event) => {
+        if (event.pointerType !== 'mouse') return
+        inputMode = 'mouse'
+        if (open && !wrap?.contains(event.target as Node)) leave()
+      },
+      { signal },
+    )
+  })
   handle.signal.addEventListener('abort', cancelClose, { once: true })
   handle.signal.addEventListener('abort', () => motion?.controller.abort(), { once: true })
   return () => {
@@ -97,6 +127,10 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
       </>
     )
     if (previousStage && previousStage !== stage) {
+      if (stage === 'clock') {
+        open = false
+        hoverTime = undefined
+      }
       const before = captureTooltip(tooltip, currentPanel)
       motion?.controller.abort()
       outgoingPanel = undefined
@@ -149,6 +183,7 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
         class="ec-seek-wrap"
         mix={[
           ref((node, signal) => {
+            wrap = node
             const measure = () => {
               width = node.clientWidth
               handle.update()
@@ -176,11 +211,12 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
             show()
           }),
           on('pointerenter', cancelClose),
-          on<HTMLDivElement, 'pointerleave'>('pointerleave', (event) => leave(event.currentTarget)),
+          on<HTMLDivElement, 'pointerleave'>('pointerleave', (event) => {
+            if (event.pointerType === 'mouse') leave()
+          }),
           on('focusin', cancelClose),
           on<HTMLDivElement, 'focusout'>('focusout', (event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null))
-              leave(event.currentTarget)
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) leave()
           }),
           on('keydown', (event) => {
             if (p.editing || event.key !== 'Escape' || !open) return
@@ -210,7 +246,9 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
               input = node
             }),
             on('input', (event) => p.seek(Number((event.currentTarget as HTMLInputElement).value))),
-            on('focus', show),
+            on('focus', () => {
+              if (inputMode === 'keyboard') show()
+            }),
             on('pointerdown', show),
             on('keydown', (event) => {
               if (event.key !== 'Escape') {
