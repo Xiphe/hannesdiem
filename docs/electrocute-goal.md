@@ -70,7 +70,9 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
   Der Tooltip zeigt mit einem Pfeil auf den gewählten Punkt und bleibt beim Wechsel
   mit der Maus hinein offen. Auch oberhalb der sichtbaren Leiste bis zum Tooltip
   folgt die Zeit der Maus; Klicks springen dort zur gewählten Position.
-  Tastaturfokus und Touch machen die Aktion ebenfalls erreichbar.
+  Tastaturfokus und Touch machen die Aktion ebenfalls erreichbar. Der kleinere
+  Stern steht links neben der Zeit. Ein zweiter Stern direkt links neben Volume
+  startet die Auswahl an der tatsächlichen Abspielposition.
 - „Highlight setzen“ beginnt an der im Tooltip gewählten Zeit und schlägt eine
   Minute Dauer vor, begrenzt durch das Sessionende. Der Playhead wird dabei
   nicht versetzt.
@@ -81,18 +83,29 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
   Die obere Passage-Leiste spiegelt dieselbe Auswahl mit zwei schlichten
   Drag-Griffen. Beide Oberflächen ändern dieselben Grenzen. Oben ist etwas
   Kontext vor und hinter der Passage sichtbar, um die Grenzen auch erweitern zu
-  können; der Zoom bleibt beim Ziehen stabil und passt sich nach dem Loslassen an.
+  können; der Zoom bleibt beim Ziehen stabil und passt sich nach dem Loslassen
+  über ungefähr eine Sekunde animiert an. Ein erneuter Eingriff unterbricht die
+  Animation. Beide Tracker verwenden exakt dieselbe Auswahl-Darstellung.
 - Die ausgewählte Kante reagiert auf Pfeiltasten in Sekundenschritten. Shift und
   Pfeiltaste ändern bei bekannter Quellbildrate um ein Bild. Die verworfenen
   Pfeil-/Minus-/Plus-Gruppen und Verbindungslinien entfallen. Die beiden Leisten
-  spiegeln sich durch ihre gleichen, zurückhaltenden Griffe.
+  spiegeln sich durch ihre gleichen Griffe. Die aktive Kante ist pink. Die
+  Trefferflächen erweitern sich beidseitig, ohne die andere Kante zu überlagern.
+  Die Griffe haben keine Hover-Fläche, sondern Grab-/Grabbing-Cursor.
+- Der Tooltip-Pfeil wird beim Bearbeiten zum flachen Trapez: unten so breit wie
+  die Auswahl in der Hauptzeitleiste, bei gleicher Höhe und 45-Grad-Seiten.
+  Auf großen Bildschirmen ist die Bedienleiste kompakter und Save flacher.
+- Doppelklick beziehungsweise Doppeltap auf die linke Kante springt zum Anfang.
+  Die rechte springt fünf Sekunden vor das Ende, bei kürzeren Passagen zum Anfang.
+  Pausierte Wiedergabe bleibt dabei pausiert.
 - Space startet und pausiert das Video auf der gesamten Session-Seite, ohne
   Scrollen oder eine zusätzliche Button-Aktion. Eingabefelder behalten Space zum
   Schreiben. Gedrückthalten schaltet die Wiedergabe nicht wiederholt um.
 - Passage-Play setzt pausierte Wiedergabe innerhalb der Auswahl an derselben
   Stelle fort. Bei laufender Wiedergabe oder einem Playhead außerhalb der Passage
   beziehungsweise an ihrem Ende startet es am Anfang der Auswahl. Die Vorschau
-  stoppt am gesetzten Ende. Die Hauptzeitleiste bleibt für die gesamte Aufnahme.
+  stoppt am gesetzten Ende. Während der Wiedergabe zeigt der Passage-Button ein
+  Replay-Icon. Die Hauptzeitleiste bleibt für die gesamte Aufnahme.
 - Save öffnet die Benennung und speichert noch kein Highlight. Links führt ein
   kleines Zurück-Icon wieder in die Auswahl; Titel und Grenzen bleiben erhalten.
   Erst Save in der Namensansicht speichert. Der öffentliche Name wird hier nicht

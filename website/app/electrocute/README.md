@@ -48,7 +48,7 @@ existing feed icons. The artist rejected the detached range form and requested
 clipping directly inside the player, following the Twitch-style trimming interaction.
 
 Play, the full-session seek bar and sound sit on one horizontal line. A compact
-star button in the seek popover sets a highlight. Its arrow points to the hovered
+star button to the left of the clock in the seek popover sets a highlight. Its arrow points to the hovered
 time even when the popover is clamped near an edge. The full range hit area above
 the visible line continues tracking the pointer and accepts seek clicks right up
 to the popover. Entering the popover keeps the chosen time; delayed dismissal
@@ -56,7 +56,9 @@ keeps the action reachable. Focus also opens it for keyboard and touch use.
 As it contains a button, its accessible role is a non-modal dialog, rather than a
 text-only tooltip. Escape dismisses it
 and restores seek focus. Sound keeps the feed's expanding volume capsule without
-an additional button hover fill.
+an additional button hover fill. A second star immediately left of sound starts
+a highlight at the current playhead, independently of the hovered time. Its slot
+stays in place while editing so the transport does not shift.
 
 The star starts a one-minute selection at the chosen time without seeking or
 interrupting playback. The same popover expands to the transport row's width;
@@ -65,23 +67,35 @@ the upper passage bar show the same two draggable boundaries. The upper bar
 zooms into the selection with a small amount of context on either side so the
 ends can be extended as well as shortened. Its playhead and progress fill are
 hidden when playback is outside the selected bounds, including the context area.
-Its scale stays fixed during a drag
-and reframes after release. Lower-bar changes also reframe the upper view.
+Its scale stays fixed during a drag and reframes over approximately one second
+after release. A new interaction interrupts that animation; reduced-motion
+preferences use an immediate reframe. Lower-bar changes also reframe the upper view.
 
 Both surfaces share the same trim component and range state. Select a boundary
 and use arrows for one-second changes; Shift plus arrows adjusts one source frame
 when explicit metadata provides its frame rate. Source frame rates are never
 inferred from browser rendering speed. The first pCloud recording is 60 fps.
 The rejected minus/plus/bracket controls, their repeat timers and decorative
-connection lines are removed. Matching minimal neutral grips and selections
-supply the visual relationship.
+connection lines are removed. Both trackers use exactly the same selection and
+grip styling. The selected boundary is pink, and handles use grab/grabbing cursors
+without a hover fill. Hit areas extend 24px outward and up to 24px inward, capped
+at the selection midpoint so close boundaries do not overlap. A low trapezoid
+replaces the editor's tooltip arrow: its bottom matches the lower selection's
+width and its sides retain the previous 45-degree angle and 5px height.
+
+Double-click or double-tap either boundary to seek: the left goes to the start;
+the right goes five seconds before the end, clamped to the start for shorter
+passages. This does not start paused playback or change the selection. Desktop
+fine-pointer controls use a compact row and a flatter Save; touch retains larger
+targets. The taller selection stays the same on both trackers.
 
 Space toggles video playback throughout a session page, including from focused
 controls, without scrolling or also activating a native button. Repeated held
 keydown events do not keep toggling. Text inputs, textareas, selects and editable
 content retain Space for entry. Passage Play resumes at the current point when
 paused inside the selection; when already playing, outside the selection or at
-its end it restarts at the beginning. Passage playback and seeking activate the
+its end it restarts at the beginning. While playing, its icon and accessible
+label switch to Replay / Restart passage. Passage playback and seeking activate the
 selection's end stop. The main timeline still seeks throughout the recording.
 
 Save advances to naming without persisting. The title/save/cancel form replaces

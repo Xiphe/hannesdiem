@@ -147,7 +147,7 @@ test('range editing clamps bounds, previews the passage and persists only a loca
   await start.press('ArrowRight')
   expect(Number(await start.getAttribute('aria-valuenow'))).toBeLessThan(80)
   await setRange(page, 10, 12)
-  await page.getByRole('button', { name: 'Preview passage', exact: true }).click()
+  await page.getByRole('button', { name: /^(Preview|Restart) passage$/ }).click()
   await expect
     .poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused), { timeout: 8000 })
     .toBe(true)
@@ -267,12 +267,24 @@ test('the seek popover expands into trimming, then replaces its controls with th
   expect(popup!.y + popup!.height).toBeLessThan(original!.y)
   await expect(editor.getByRole('slider', { name: 'Passage position' })).toBeVisible()
   await expect(editor.locator('.ec-passage-duration')).toHaveText('1:00')
+  const arrow = await editor.locator('.ec-range-arrow').boundingBox()
+  const selection = await page
+    .locator('.ec-seek-wrap > .ec-main-trim .ec-trim-selection')
+    .boundingBox()
+  expect(arrow!.height).toBe(5)
+  expect(Math.abs(arrow!.x + 5 - selection!.x)).toBeLessThan(1)
+  expect(Math.abs(arrow!.width - 10 - selection!.width)).toBeLessThan(1)
+  expect(popup!.height).toBeLessThan(50)
+  expect(
+    (await editor.getByRole('button', { name: 'Name highlight', exact: true }).boundingBox())!
+      .height,
+  ).toBeLessThan(32)
   const cancel = await editor.getByRole('button', { name: 'Cancel', exact: true }).boundingBox()
   const save = await editor
     .getByRole('button', { name: 'Name highlight', exact: true })
     .boundingBox()
-  expect(popup!.x + popup!.width - cancel!.x - cancel!.width).toBeGreaterThanOrEqual(12)
-  expect(cancel!.x - save!.x - save!.width).toBeGreaterThanOrEqual(12)
+  expect(popup!.x + popup!.width - cancel!.x - cancel!.width).toBeGreaterThanOrEqual(10)
+  expect(cancel!.x - save!.x - save!.width).toBeGreaterThanOrEqual(8)
   const closeIcon = await editor
     .getByRole('button', { name: 'Cancel', exact: true })
     .locator('svg')
@@ -495,14 +507,23 @@ test('the upper passage grips drag either boundary and mirror the main timeline'
   const span = Number(await seek.getAttribute('max')) - Number(await seek.getAttribute('min'))
   const rail = await page.locator('.ec-passage-trim .ec-trim-rail').boundingBox()
   const box = await upper.boundingBox()
-  if (!box || !rail) throw Error('Missing passage trim surface')
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  const grip = await upper.locator('span').boundingBox()
+  if (!box || !rail || !grip) throw Error('Missing passage trim surface')
+  expect(box.width).toBeGreaterThanOrEqual(47)
+  expect(grip.x - box.x).toBeGreaterThan(20)
+  await page.mouse.move(grip.x + grip.width / 2 - 12, box.y + box.height / 2)
   await page.mouse.down()
-  await page.mouse.move(box.x + box.width / 2 - (5 / span) * rail.width, box.y + box.height / 2, {
-    steps: 6,
-  })
+  await page.mouse.move(
+    grip.x + grip.width / 2 - 12 - (5 / span) * rail.width,
+    box.y + box.height / 2,
+    {
+      steps: 6,
+    },
+  )
   await page.mouse.up()
   await expect(upper).toHaveAttribute('aria-valuenow', '55')
+  await expect(upper.locator('span')).toHaveCSS('background-color', 'rgb(253, 94, 224)')
+  await expect(lower.locator('span')).toHaveCSS('background-color', 'rgb(253, 94, 224)')
   await expect(lower).toHaveAttribute('aria-valuenow', '55')
   await upper.press('Shift+ArrowRight')
   await expect(lower).toHaveAttribute('aria-valuenow', '55.2')
@@ -512,6 +533,98 @@ test('the upper passage grips drag either boundary and mirror the main timeline'
     'aria-valuenow',
     '19',
   )
+  await lower.press('Home')
+  for (const surface of ['', 'Passage ']) {
+    const left = await page
+      .getByRole('slider', { name: surface ? 'Passage start' : 'Highlight start', exact: true })
+      .boundingBox()
+    const right = await page
+      .getByRole('slider', { name: surface ? 'Passage end' : 'Highlight end', exact: true })
+      .boundingBox()
+    expect(left!.x + left!.width).toBeLessThanOrEqual(right!.x + 0.1)
+  }
+})
+
+test('double-clicking range ends seeks the start or final five seconds without starting paused video', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await openHighlight(page)
+  await setRange(page, 20, 60)
+  const video = page.locator('video')
+  for (const [name, seconds] of [
+    ['Passage end', 55],
+    ['Highlight start', 20],
+  ] as const) {
+    await page.getByRole('slider', { name, exact: true }).dblclick()
+    await expect
+      .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
+      .toBeCloseTo(seconds, 1)
+    await expect.poll(() => video.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(true)
+  }
+  await setRange(page, 20, 22)
+  await page.getByRole('slider', { name: 'Highlight end', exact: true }).dblclick()
+  await expect
+    .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
+    .toBeCloseTo(20, 1)
+})
+
+test('releasing an outward passage drag eases into its new zoom over about one second', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  await openHighlight(page)
+  await setRange(page, 20, 60)
+  const seek = page.getByRole('slider', { name: 'Passage position', exact: true })
+  const before = Number(await seek.getAttribute('max'))
+  const span = before - Number(await seek.getAttribute('min'))
+  const rail = await page.locator('.ec-passage-trim .ec-trim-rail').boundingBox()
+  const end = page.getByRole('slider', { name: 'Passage end', exact: true })
+  const grip = await end.locator('span').boundingBox()
+  if (!rail || !grip) throw Error('Missing passage grip')
+  const x = grip.x + grip.width / 2,
+    y = grip.y + grip.height / 2
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x + (3 / span) * rail.width, y, { steps: 6 })
+  await expect(end).toHaveAttribute('aria-valuenow', '63')
+  expect(Number(await seek.getAttribute('max'))).toBe(before)
+  await page.mouse.up()
+  await expect
+    .poll(async () => Number(await seek.getAttribute('max')))
+    .toBeGreaterThan(before + 0.1)
+  expect(Number(await seek.getAttribute('max'))).toBeLessThan(68.16)
+  await expect
+    .poll(async () => Number(await seek.getAttribute('max')), { timeout: 2000 })
+    .toBeCloseTo(68.16, 3)
+  await expect(end).toHaveAttribute('aria-valuenow', '63')
+})
+
+test('the transport star uses the current playhead instead of the hovered time', async ({
+  page,
+}) => {
+  await page.goto('/electrocute/test-session-1')
+  const seek = page.getByRole('slider', { name: 'Playback position', exact: true })
+  await expect(seek).toBeEnabled()
+  await page.locator('video').evaluate((v) => {
+    ;(v as HTMLVideoElement).currentTime = 20
+  })
+  await expect(seek).toHaveValue('20')
+  const box = await seek.boundingBox()
+  if (!box) throw Error('Missing playback bar')
+  await page.mouse.move(box.x + 5 + 0.5 * (box.width - 10), box.y + box.height / 2)
+  const popup = page.getByRole('dialog', { name: 'Playback tools' })
+  await expect(popup).toContainText('0:48')
+  const star = page.getByRole('button', { name: 'Highlight at playhead', exact: true })
+  const starBox = await star.boundingBox()
+  const volume = await page.locator('.ec-volume-control').boundingBox()
+  expect(starBox!.x + starBox!.width).toBeLessThan(volume!.x)
+  await star.click()
+  await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
+    'aria-valuenow',
+    '20',
+  )
+  await expect(star).toBeDisabled()
 })
 
 test('Space toggles video across the page and keeps text entry and buttons safe', async ({
@@ -560,7 +673,7 @@ test('passage Play resumes a paused point inside the selection and restarts when
   await openHighlight(page)
   await setRange(page, 10, 20)
   const video = page.locator('video')
-  const play = page.getByRole('button', { name: 'Preview passage', exact: true })
+  const play = page.getByRole('button', { name: /^(Preview|Restart) passage$/ })
   await video.evaluate((video) => {
     const v = video as HTMLVideoElement
     v.muted = true
@@ -571,6 +684,7 @@ test('passage Play resumes a paused point inside the selection and restarts when
     '15',
   )
   await play.click()
+  await expect(page.getByRole('button', { name: 'Restart passage', exact: true })).toBeVisible()
   await expect
     .poll(() => video.evaluate((v) => (v as HTMLVideoElement).currentTime))
     .toBeGreaterThanOrEqual(15)
@@ -617,7 +731,7 @@ test('the star tooltip stays on one line for long session clocks', async ({ page
   const label = await popup.locator('.ec-time-label').boundingBox()
   const star = await popup.getByRole('button', { name: 'Set highlight', exact: true }).boundingBox()
   expect(Math.abs(label!.y + label!.height / 2 - star!.y - star!.height / 2)).toBeLessThan(1)
-  expect(star!.x).toBeGreaterThanOrEqual(label!.x + label!.width)
+  expect(star!.x + star!.width).toBeLessThanOrEqual(label!.x)
 })
 
 test('main playback keeps running while trimming; passage preview starts over and seeks within its bounds', async ({
@@ -642,7 +756,7 @@ test('main playback keeps running while trimming; passage preview starts over an
   await expect.poll(() => video.evaluate((video) => (video as HTMLVideoElement).paused)).toBe(false)
   await page.getByRole('button', { name: 'Pause', exact: true }).click()
   await setRange(page, 10, 12)
-  await page.getByRole('button', { name: 'Preview passage', exact: true }).click()
+  await page.getByRole('button', { name: /^(Preview|Restart) passage$/ }).click()
   await expect
     .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
     .toBeLessThan(11)
@@ -652,7 +766,7 @@ test('main playback keeps running while trimming; passage preview starts over an
   await expect
     .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
     .toBeCloseTo(12, 1)
-  await page.getByRole('button', { name: 'Preview passage', exact: true }).click()
+  await page.getByRole('button', { name: /^(Preview|Restart) passage$/ }).click()
   await expect
     .poll(() => video.evaluate((video) => (video as HTMLVideoElement).currentTime))
     .toBeLessThan(11)
@@ -847,11 +961,20 @@ test.describe('mobile player', () => {
     await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
     await expect(end).toHaveAttribute('aria-valuenow', '86')
     await end.tap()
+    await page.locator('video').evaluate((v) => (v as HTMLVideoElement).pause())
     await end.press('ArrowLeft')
     await expect(page.getByRole('slider', { name: 'Highlight end', exact: true })).toHaveAttribute(
       'aria-valuenow',
       '85',
     )
+    await end.tap()
+    await end.tap()
+    await expect
+      .poll(() => page.locator('video').evaluate((v) => (v as HTMLVideoElement).currentTime))
+      .toBeCloseTo(80, 1)
+    await expect
+      .poll(() => page.locator('video').evaluate((v) => (v as HTMLVideoElement).paused))
+      .toBe(true)
     await page.keyboard.press('Escape')
     await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: 'Set highlight', exact: true })).toHaveCount(0)

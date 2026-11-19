@@ -7,7 +7,7 @@ interface TimelineProps {
   disabled: boolean
   canHighlight: boolean
   editing: boolean
-  editorPoint: number
+  editorRange: { start: number; end: number }
   editor?: RemixNode
   seek(time: number): void
   highlight(time: number): void
@@ -50,6 +50,11 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
     const point = 5 + (p.duration ? time / p.duration : 0) * Math.max(0, width - 10)
     const half = Math.min(width / 2, tooltipWidth / 2)
     const center = clamp(point, half, Math.max(half, width - half))
+    const rangeLeft =
+      5 + (p.duration ? p.editorRange.start / p.duration : 0) * Math.max(0, width - 10)
+    const rangeWidth = p.duration
+      ? ((p.editorRange.end - p.editorRange.start) / p.duration) * Math.max(0, width - 10)
+      : 0
     return (
       <div
         class="ec-seek-wrap"
@@ -144,19 +149,29 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
           data-action={!p.editing && p.canHighlight ? '' : undefined}
           style={
             p.editing
-              ? {
-                  '--tip-arrow-x': `calc(var(--editor-inset) + ${5 + (p.duration ? p.editorPoint / p.duration : 0) * Math.max(0, width - 10)}px)`,
-                }
+              ? undefined
               : { left: `${center}px`, '--tip-arrow-x': `${point - center + half}px` }
           }
         >
+          {p.editing && (
+            <svg
+              class="ec-range-arrow"
+              aria-hidden="true"
+              width={rangeWidth + 10}
+              height={5}
+              viewBox={`0 0 ${rangeWidth + 10} 5`}
+              style={{
+                left: `calc(var(--editor-inset) + ${rangeLeft - 6}px)`,
+                width: `${rangeWidth + 10}px`,
+              }}
+            >
+              <path d={`M0 0 L5 5 H${rangeWidth + 5} L${rangeWidth + 10} 0`} />
+            </svg>
+          )}
           {p.editing ? (
             p.editor
           ) : (
             <>
-              <span class="ec-clock ec-time-label">
-                {clock(time)} <span>/ {clock(p.duration)}</span>
-              </span>
               {p.canHighlight && (
                 <button
                   type="button"
@@ -168,22 +183,12 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
                     p.highlight(time)
                   })}
                 >
-                  <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"
-                      stroke="currentColor"
-                      stroke-width="1.7"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
+                  <HighlightStar />
                 </button>
               )}
+              <span class="ec-clock ec-time-label">
+                {clock(time)} <span>/ {clock(p.duration)}</span>
+              </span>
             </>
           )}
         </div>
@@ -191,4 +196,23 @@ export function PlaybackTimeline(handle: Handle<TimelineProps>) {
       </div>
     )
   }
+}
+
+export function HighlightStar() {
+  return () => (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linejoin="round"
+      />
+    </svg>
+  )
 }

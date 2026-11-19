@@ -14,6 +14,7 @@ interface TrimProps {
   surface?: 'passage'
   settle?(): void
   select(edge: TrimEdge): void
+  seek(edge: TrimEdge): void
   change(start: number, end: number): void
 }
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
@@ -48,11 +49,15 @@ function key(p: TrimProps, event: KeyboardEvent, kind: 'start' | 'end') {
 /** Shared boundary interaction for the recording and its zoomed passage. */
 export function TrimTimeline(handle: Handle<TrimProps>) {
   let rail: HTMLDivElement | undefined
+  let lastTap: { kind: TrimEdge; time: number; x: number; y: number } | undefined
   let drag:
     | {
         id: number
         kind: 'start' | 'end'
         x: number
+        y: number
+        began: number
+        moved: boolean
         value: number
         width: number
         from: number
@@ -71,6 +76,9 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
       id: event.pointerId,
       kind,
       x: event.clientX,
+      y: event.clientY,
+      began: event.timeStamp,
+      moved: false,
       value: handle.props[kind],
       width: rail.getBoundingClientRect().width,
       from: handle.props.viewport?.start ?? 0,
@@ -83,6 +91,8 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
     event.preventDefault()
     // Clicking selects an edge without quantizing or moving it.
     if (Math.abs(event.clientX - drag.x) < 2) return
+    drag.moved = true
+    lastTap = undefined
     change(
       handle.props,
       drag.kind,
@@ -95,10 +105,28 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
   }
   function finish(event: PointerEvent) {
     if (!drag || event.pointerId !== drag.id) return
+    const finished = drag
     const target = event.currentTarget as HTMLButtonElement
     if (target.hasPointerCapture(event.pointerId)) target.releasePointerCapture(event.pointerId)
     drag = undefined
-    handle.props.settle?.()
+    if (finished.moved) handle.props.settle?.()
+    if (event.type !== 'pointerup' || finished.moved || event.pointerType === 'mouse') return
+    if (
+      event.timeStamp - finished.began > 400 ||
+      Math.hypot(event.clientX - finished.x, event.clientY - finished.y) > 6
+    ) {
+      lastTap = undefined
+      return
+    }
+    if (
+      lastTap?.kind === finished.kind &&
+      event.timeStamp - lastTap.time < 350 &&
+      Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) < 24
+    ) {
+      lastTap = undefined
+      handle.props.seek(finished.kind)
+    } else
+      lastTap = { kind: finished.kind, time: event.timeStamp, x: event.clientX, y: event.clientY }
   }
   return () => {
     const p = handle.props
@@ -138,7 +166,10 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
               aria-describedby={helpId}
               data-selected={p.selected === kind ? '' : undefined}
               disabled={p.disabled}
-              style={{ left: `${((p[kind] - from) / span) * 100}%` }}
+              style={{
+                left: `${((p[kind] - from) / span) * 100}%`,
+                '--hit-width': `calc(24px + min(24px, ${((p.end - p.start) / span) * 50}%))`,
+              }}
               mix={[
                 on<HTMLButtonElement, 'focus'>('focus', () => {
                   p.select(kind)
@@ -147,6 +178,11 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
                 on<HTMLButtonElement, 'pointermove'>('pointermove', move),
                 on<HTMLButtonElement, 'pointerup'>('pointerup', finish),
                 on<HTMLButtonElement, 'pointercancel'>('pointercancel', finish),
+                on('dblclick', (event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  p.seek(kind)
+                }),
                 on<HTMLButtonElement, 'keydown'>('keydown', (event) => key(p, event, kind)),
               ]}
             >

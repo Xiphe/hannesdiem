@@ -4,7 +4,7 @@ import { archiveStyle } from './styles.ts'
 import { XMarkIcon } from '../heroicons.tsx'
 import { FeedIcon } from '../temple/feed/icon.tsx'
 import { preciseClock, TrimTimeline, type TrimEdge } from './trim.tsx'
-import { PlaybackTimeline } from './timeline.tsx'
+import { HighlightStar, PlaybackTimeline } from './timeline.tsx'
 import { readSessionState, submitSessionForm } from '../identity/client.ts'
 import {
   highlightsPath,
@@ -74,6 +74,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let clipStart = 0
   let clipEnd = 60
   let passageWindow = { start: 0, end: 60 }
+  let passageFrame: number | undefined
   let title = ''
   let feedback = ''
   let shareUrl = ''
@@ -160,12 +161,36 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     await playAt(video.paused && inside ? video.currentTime : clipStart, clipEnd)
   }
 
-  function zoomPassage() {
+  function cancelPassageAnimation() {
+    if (passageFrame !== undefined) cancelAnimationFrame(passageFrame)
+    passageFrame = undefined
+  }
+  handle.signal.addEventListener('abort', cancelPassageAnimation, { once: true })
+
+  function zoomPassage(animate = false) {
+    cancelPassageAnimation()
     const margin = Math.max(2, (clipEnd - clipStart) * 0.12)
-    passageWindow = {
+    const target = {
       start: Math.max(0, clipStart - margin),
       end: Math.min(duration, clipEnd + margin),
     }
+    if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      passageWindow = target
+      return
+    }
+    const from = passageWindow
+    const began = performance.now()
+    function frame(now: number) {
+      const progress = Math.min(1, (now - began) / 1000)
+      const eased = 1 - (1 - progress) ** 3
+      passageWindow = {
+        start: from.start + (target.start - from.start) * eased,
+        end: from.end + (target.end - from.end) * eased,
+      }
+      handle.update()
+      passageFrame = progress < 1 ? requestAnimationFrame(frame) : undefined
+    }
+    passageFrame = requestAnimationFrame(frame)
   }
 
   async function backToSelection() {
@@ -180,6 +205,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
 
   async function closeEditor() {
     if (busy) return
+    cancelPassageAnimation()
     if (previewEnd !== undefined) video?.pause()
     previewEnd = undefined
     editing = false
@@ -441,16 +467,26 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       selected: selectedEdge,
       surface,
       viewport: surface ? passageWindow : undefined,
+      seek(edge: TrimEdge) {
+        if (!video || !ready) return
+        const time = edge === 'end' ? Math.max(clipStart, clipEnd - 5) : clipStart
+        previewEnd = clipEnd
+        video.currentTime = time
+        position = time
+        handle.update()
+      },
       settle() {
-        zoomPassage()
+        zoomPassage(surface === 'passage')
         handle.update()
       },
       select(edge: TrimEdge) {
+        cancelPassageAnimation()
         selectedEdge = edge
         editorStep = 'range'
         handle.update()
       },
       change(start: number, end: number) {
+        cancelPassageAnimation()
         clipStart = start
         clipEnd = end
         if (!surface || start < passageWindow.start || end > passageWindow.end) zoomPassage()
@@ -517,11 +553,11 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         <button
           type="button"
           class="ec-icon-button"
-          aria-label="Preview passage"
+          aria-label={video?.paused === false ? 'Restart passage' : 'Preview passage'}
           disabled={!valid() || busy}
           mix={on('click', () => void playPassage())}
         >
-          <FeedIcon name="play" />
+          <FeedIcon name={video?.paused === false ? 'replay' : 'play'} />
         </button>
         <div class="ec-passage-track">
           <input
@@ -561,6 +597,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             aria-label="Name highlight"
             disabled={!valid() || busy}
             mix={on('click', async () => {
+              cancelPassageAnimation()
               editorStep = 'name'
               await handle.update()
               player
@@ -805,7 +842,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                           disabled={!ready}
                           seek={seekTo}
                           editing={editing}
-                          editorPoint={selectedEdge === 'start' ? clipStart : clipEnd}
+                          editorRange={{ start: clipStart, end: clipEnd }}
                           editor={editing ? editor() : undefined}
                           canHighlight={Boolean(
                             (preview || runtime.email) && !editing && ready && !busy,
@@ -820,6 +857,17 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                             {timeline()}
                           </div>
                         </PlaybackTimeline>
+                        {(preview || runtime.email) && (
+                          <button
+                            type="button"
+                            class="ec-icon-button ec-highlight-star ec-playhead-highlight"
+                            aria-label="Highlight at playhead"
+                            disabled={!ready || editing || busy}
+                            mix={on('click', () => void openEditor())}
+                          >
+                            <HighlightStar />
+                          </button>
+                        )}
                         <div class="ec-volume-control">
                           <button
                             type="button"
