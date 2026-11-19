@@ -167,21 +167,21 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   }
   handle.signal.addEventListener('abort', cancelPassageAnimation, { once: true })
 
-  function zoomPassage(animate = false) {
+  function zoomPassage(milliseconds = 0) {
     cancelPassageAnimation()
     const margin = Math.max(2, (clipEnd - clipStart) * 0.12)
     const target = {
       start: Math.max(0, clipStart - margin),
       end: Math.min(duration, clipEnd + margin),
     }
-    if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!milliseconds || matchMedia('(prefers-reduced-motion: reduce)').matches) {
       passageWindow = target
       return
     }
     const from = passageWindow
     const began = performance.now()
     function frame(now: number) {
-      const progress = Math.min(1, (now - began) / 1000)
+      const progress = Math.min(1, (now - began) / milliseconds)
       const eased = 1 - (1 - progress) ** 3
       passageWindow = {
         start: from.start + (target.start - from.start) * eased,
@@ -476,7 +476,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         handle.update()
       },
       settle() {
-        zoomPassage(surface === 'passage')
+        zoomPassage(surface === 'passage' ? 1000 : 0)
         handle.update()
       },
       select(edge: TrimEdge) {
@@ -485,11 +485,12 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
         editorStep = 'range'
         handle.update()
       },
-      change(start: number, end: number) {
+      change(start: number, end: number, source: 'keyboard' | 'pointer') {
         cancelPassageAnimation()
         clipStart = start
         clipEnd = end
-        if (!surface || start < passageWindow.start || end > passageWindow.end) zoomPassage()
+        if (source === 'keyboard') zoomPassage(250)
+        else if (!surface || start < passageWindow.start || end > passageWindow.end) zoomPassage()
         previewEnd = undefined
         handle.update()
       },

@@ -15,7 +15,7 @@ interface TrimProps {
   settle?(): void
   select(edge: TrimEdge): void
   seek(edge: TrimEdge): void
-  change(start: number, end: number): void
+  change(start: number, end: number, source: 'keyboard' | 'pointer'): void
 }
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
 export const preciseClock = (seconds: number) => {
@@ -23,13 +23,19 @@ export const preciseClock = (seconds: number) => {
   return `${clock(milliseconds / 1000)}.${String(milliseconds % 1000).padStart(3, '0')}`
 }
 
-function change(p: TrimProps, kind: 'start' | 'end', value: number) {
+function change(
+  p: TrimProps,
+  kind: 'start' | 'end',
+  value: number,
+  source: 'keyboard' | 'pointer',
+) {
   const gap = p.frameRate ? 1 / p.frameRate : 0.001
   if (p.frameRate) value = Math.round(value * p.frameRate) / p.frameRate
   else value = Math.round(value * 1000) / 1000
   p.change(
     kind === 'start' ? clamp(value, 0, p.end - gap) : p.start,
     kind === 'end' ? clamp(value, p.start + gap, p.duration) : p.end,
+    source,
   )
 }
 
@@ -43,7 +49,7 @@ function key(p: TrimProps, event: KeyboardEvent, kind: 'start' | 'end') {
   else if (event.key === 'End') value = kind === 'start' ? p.end : p.duration
   else return
   event.preventDefault()
-  change(p, kind, value)
+  change(p, kind, value, 'keyboard')
 }
 
 /** Shared boundary interaction for the recording and its zoomed passage. */
@@ -103,6 +109,7 @@ export function TrimTimeline(handle: Handle<TrimProps>) {
         drag.from,
         drag.to,
       ),
+      'pointer',
     )
   }
   function finish(event: PointerEvent) {

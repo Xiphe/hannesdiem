@@ -124,6 +124,17 @@ async function setRange(page: Page, start: number, end: number) {
   // The synthetic source is 5 fps: Home leaves a one-frame minimum.
   for (let frame = 0; frame < 4; frame++) await right.press('Shift+ArrowRight')
   for (let second = start + 1; second < end; second++) await right.press('ArrowRight')
+  // Geometry-based drag checks begin after the keyboard reframe has settled.
+  const margin = Math.max(2, (end - start) * 0.12)
+  await expect
+    .poll(async () =>
+      Number(
+        await page
+          .getByRole('slider', { name: 'Passage position', exact: true })
+          .getAttribute('max'),
+      ),
+    )
+    .toBeCloseTo(Math.min(96, end + margin), 6)
 }
 
 test('range editing clamps bounds, previews the passage and persists only a local draft', async ({
@@ -613,6 +624,41 @@ test('releasing an outward passage drag eases into its new zoom over about one s
   // A fixed timestamp reframes with the ruler, while the edit stays put.
   const markAfter = await timeMark.boundingBox()
   expect(Math.abs(markAfter!.x - markBefore!.x)).toBeGreaterThan(1)
+})
+
+test('keyboard trimming briefly reframes from the current zoom and respects reduced motion', async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date('2020-01-01T00:00:00Z') })
+  await page.goto('/electrocute/test-session-1')
+  await openHighlight(page)
+  await setRange(page, 20, 60)
+  await page.clock.pauseAt(new Date('2020-01-01T00:01:00Z'))
+  const seek = page.getByRole('slider', { name: 'Passage position', exact: true })
+  const end = page.getByRole('slider', { name: 'Passage end', exact: true })
+  const before = Number(await seek.getAttribute('max'))
+  await end.press('ArrowRight')
+  await expect(end).toHaveAttribute('aria-valuenow', '61')
+  expect(Number(await seek.getAttribute('max'))).toBeCloseTo(before, 6)
+  await page.clock.runFor(80)
+  const midway = Number(await seek.getAttribute('max'))
+  expect(midway).toBeGreaterThan(before)
+  expect(midway).toBeLessThan(65.92)
+  await end.press('ArrowRight')
+  await expect(end).toHaveAttribute('aria-valuenow', '62')
+  expect(Number(await seek.getAttribute('max'))).toBeCloseTo(midway, 6)
+  await page.clock.runFor(300)
+  await expect.poll(async () => Number(await seek.getAttribute('max'))).toBeCloseTo(67.04, 6)
+  const lowerEnd = page.getByRole('slider', { name: 'Highlight end', exact: true })
+  await lowerEnd.press('Shift+ArrowRight')
+  await expect(end).toHaveAttribute('aria-valuenow', '62.2')
+  expect(Number(await seek.getAttribute('max'))).toBeCloseTo(67.04, 6)
+  await page.clock.runFor(300)
+  await expect.poll(async () => Number(await seek.getAttribute('max'))).toBeCloseTo(67.264, 6)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await lowerEnd.press('ArrowRight')
+  await expect(end).toHaveAttribute('aria-valuenow', '63.2')
+  expect(Number(await seek.getAttribute('max'))).toBeCloseTo(68.384, 6)
 })
 
 test('the transport star uses the current playhead instead of the hovered time', async ({

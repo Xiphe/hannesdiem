@@ -70,6 +70,8 @@ hidden when playback is outside the selected bounds, including the context area.
 Its scale stays fixed during a drag and reframes over approximately one second
 after release. A new interaction interrupts that animation; reduced-motion
 preferences use an immediate reframe. Lower-bar changes also reframe the upper view.
+Keyboard adjustments on either transport reframe over 250ms, including frame
+steps; repeated keys continue from the current zoom instead of snapping it.
 
 The artist selected the quiet time ruler only in the tooltip's passage transport
 after trying it together with a selection grid. The grid and the ruler on the
