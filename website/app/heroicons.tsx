@@ -1,7 +1,7 @@
 import type { Handle, Props } from 'remix/component'
 
 // Exact optimized Heroicons 2.2.0 SVGs, matching the legacy @heroicons/react pin.
-// https://github.com/tailwindlabs/heroicons/tree/v2.2.0/optimized/24
+// https://github.com/tailwindlabs/heroicons/tree/v2.2.0/optimized
 // MIT license: assets/heroicons-LICENSE
 type SvgProps = Props<'svg'>
 
@@ -264,6 +264,85 @@ export function ArrowDownIcon(handle: Handle<SvgProps>) {
         fillRule="evenodd"
         d="M8 2a.75.75 0 0 1 .75.75v8.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.22 3.22V2.75A.75.75 0 0 1 8 2Z"
         clipRule="evenodd"
+      />
+    </svg>
+  )
+}
+
+// optimized/16/solid/pencil.svg
+export function PencilIcon(handle: Handle<SvgProps>) {
+  return () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      data-slot="icon"
+      {...handle.props}
+    >
+      <path
+        fillRule="evenodd"
+        d="M11.013 2.513a1.75 1.75 0 0 1 2.475 2.474L6.226 12.25a2.751 2.751 0 0 1-.892.596l-2.047.848a.75.75 0 0 1-.98-.98l.848-2.047a2.75 2.75 0 0 1 .596-.892l7.262-7.261Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  )
+}
+
+// optimized/16/solid/trash.svg
+export function TrashIcon(handle: Handle<SvgProps>) {
+  return () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      data-slot="icon"
+      {...handle.props}
+    >
+      <path
+        fillRule="evenodd"
+        d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  )
+}
+
+// optimized/16/solid/arrow-up-tray.svg
+export function ArrowUpTrayIcon(handle: Handle<SvgProps>) {
+  return () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      data-slot="icon"
+      {...handle.props}
+    >
+      <path d="M7.25 10.25a.75.75 0 0 0 1.5 0V4.56l2.22 2.22a.75.75 0 1 0 1.06-1.06l-3.5-3.5a.75.75 0 0 0-1.06 0l-3.5 3.5a.75.75 0 0 0 1.06 1.06l2.22-2.22v5.69Z" />
+      <path d="M3.5 9.75a.75.75 0 0 0-1.5 0v1.5A2.75 2.75 0 0 0 4.75 14h6.5A2.75 2.75 0 0 0 14 11.25v-1.5a.75.75 0 0 0-1.5 0v1.5c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-1.5Z" />
+    </svg>
+  )
+}
+
+// optimized/24/outline/list-bullet.svg
+export function ListBulletIcon(handle: Handle<SvgProps>) {
+  return () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      aria-hidden="true"
+      data-slot="icon"
+      {...handle.props}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
       />
     </svg>
   )

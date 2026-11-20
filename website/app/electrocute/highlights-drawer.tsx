@@ -1,27 +1,7 @@
 import { on, ref, type Handle, type RemixNode } from 'remix/component'
 import type { ElectroCuteHighlight } from '@hannesdiem/content-components'
-import { FeedIcon } from '../temple/feed/icon.tsx'
+import { PencilIcon, TrashIcon, ArrowUpTrayIcon, ListBulletIcon } from '../heroicons.tsx'
 import { clock, highlightPath } from './model.ts'
-
-function ActionIcon(handle: Handle<{ name: 'edit' | 'delete' }>) {
-  return () => (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {handle.props.name === 'edit' ? (
-        <path d="m16 3 5 5L8 21H3v-5ZM14 5l5 5" />
-      ) : (
-        <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" />
-      )}
-    </svg>
-  )
-}
 
 // CMX supplies recording content; its Remix adapter has no player/sidebar primitive.
 export function HighlightsDrawer(
@@ -69,20 +49,7 @@ export function HighlightsDrawer(
           handle.update()
         })}
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <path d="M9 6h12M9 12h12M9 18h12" />
-          <path
-            d="M3 6h.01M3 12h.01M3 18h.01"
-            strokeWidth="3"
-          />
-        </svg>
+        <ListBulletIcon />
       </button>
     )
     return (
@@ -164,7 +131,7 @@ export function HighlightsDrawer(
                             disabled={p.busy || !p.ready}
                             mix={on('click', () => p.edit(highlight))}
                           >
-                            <ActionIcon name="edit" />
+                            <PencilIcon />
                           </button>
                           <button
                             type="button"
@@ -174,7 +141,7 @@ export function HighlightsDrawer(
                             disabled={p.busy}
                             mix={on('click', () => p.remove(highlight))}
                           >
-                            <ActionIcon name="delete" />
+                            <TrashIcon />
                           </button>
                         </>
                       )}
@@ -185,7 +152,7 @@ export function HighlightsDrawer(
                         title="Copy highlight link"
                         mix={on('click', () => p.share(highlight))}
                       >
-                        <FeedIcon name="share" />
+                        <ArrowUpTrayIcon />
                       </button>
                     </div>
                   </li>
