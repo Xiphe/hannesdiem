@@ -358,6 +358,7 @@ export const archiveStyle = css({
     minHeight: 32,
     flex: '0 0 32px',
     padding: 6,
+    '& svg': { width: 16, height: 16 },
   },
   '& .ec-drawer-feedback': { padding: '8px 16px', fontSize: 12 },
   '& .ec-player .ec-drawer-share': { width: 'calc(100% - 24px)', margin: '8px 12px' },
