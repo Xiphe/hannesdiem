@@ -82,11 +82,11 @@ export const archiveStyle = css({
     aspectRatio: 'auto',
     maxHeight: 'none',
   },
-  '&[data-session] .ec-video': { objectPosition: 'center top' },
+  '&[data-session] .ec-video': { objectPosition: 'center' },
   '&[data-session] .ec-play-badge': {
     position: 'absolute',
     left: '50%',
-    top: 'min(50%, calc(50cqw / var(--ec-video-ratio)))',
+    top: '50%',
     transform: 'translate(-50%, -50%)',
   },
   '&[data-session] h1': {

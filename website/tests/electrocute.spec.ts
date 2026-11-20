@@ -158,7 +158,7 @@ for (const viewport of [
     await expect(
       page.getByRole('region', { name: 'ElectroCute archive' }).getByRole('heading'),
     ).toHaveCount(0)
-    await expect(page.locator('video')).toHaveCSS('object-position', '50% 0%')
+    await expect(page.locator('video')).toHaveCSS('object-position', '50% 50%')
     const ratio = await page.locator('video').evaluate((node) => {
       const video = node as HTMLVideoElement
       return video.videoWidth / video.videoHeight
@@ -260,7 +260,20 @@ for (const viewport of [
       .toBe(true)
     await expect(drawer).toBeVisible()
     const fullVideo = (await video.boundingBox())!
-    expect(fullVideo.x + fullVideo.width).toBeLessThanOrEqual((await drawer.boundingBox())!.x)
+    const fullDrawer = (await drawer.boundingBox())!
+    expect(fullDrawer.y).toBe(0)
+    expect(fullDrawer.height).toBe(viewport.height)
+    expect(fullVideo.height).toBe(viewport.height)
+    expect(fullVideo.x + fullVideo.width).toBeLessThanOrEqual(fullDrawer.x)
+    const fullControls = (await page.locator('.ec-transport').boundingBox())!
+    expect(fullControls.x + fullControls.width).toBeLessThanOrEqual(fullDrawer.x)
+    await expect(video).toHaveCSS('object-position', '50% 50%')
+    await video.evaluate((node) => (node as HTMLVideoElement).pause())
+    const badge = page.locator('.ec-play-badge')
+    await expect(badge).toBeVisible()
+    const center = (await badge.boundingBox())!
+    expect(center.y + center.height / 2).toBeCloseTo(viewport.height / 2, 1)
+    expect(center.x + center.width / 2).toBeCloseTo(fullVideo.x + fullVideo.width / 2, 1)
     await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click()
     await trigger.click()
     await expect(drawer).toBeHidden()
