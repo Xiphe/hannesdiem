@@ -1,16 +1,11 @@
 import { DurableObject } from 'cloudflare:workers'
 import { HighlightService, HighlightError } from './service.ts'
-import { textCheck } from './moderation.ts'
 import type { HighlightInput, HighlightIntent } from './contract.ts'
 
 /** Binding-only requests carry identity and session bounds resolved by the Worker. */
 export class ElectroCuteState extends DurableObject<Env> {
   private service() {
-    return new HighlightService(
-      this.ctx.storage,
-      textCheck(this.env.AI),
-      this.env.ELECTROCUTE_ARTIST_EMAIL,
-    )
+    return new HighlightService(this.ctx.storage, this.env.ELECTROCUTE_ARTIST_EMAIL)
   }
   async fetch(request: Request) {
     if (request.method !== 'POST') return new Response(null, { status: 405 })
@@ -31,6 +26,7 @@ export class ElectroCuteState extends DurableObject<Env> {
     }
   }
   alarm() {
-    return this.service().maintain()
+    // Retire alarms scheduled by the former text-review workflow.
+    return this.ctx.storage.deleteAlarm()
   }
 }

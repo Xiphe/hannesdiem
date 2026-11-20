@@ -201,7 +201,7 @@ for (const viewport of [
     await page.setViewportSize(viewport)
     await page.goto('/electrocute/test-session-1')
     await expect(page.getByRole('slider', { name: 'Playback position', exact: true })).toBeEnabled()
-    const trigger = page.getByRole('button', { name: 'Show highlights', exact: true })
+    const trigger = page.getByRole('button', { name: 'Toggle highlights', exact: true })
     const drawer = page.getByRole('complementary', { name: 'Highlights', exact: true })
     const video = page.locator('video')
     const before = (await video.boundingBox())!
@@ -209,7 +209,9 @@ for (const viewport of [
     await trigger.click()
     await expect(drawer).toBeVisible()
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
-    await expect(drawer.getByRole('button', { name: 'Close highlights' })).toBeFocused()
+    await expect(drawer.getByRole('button', { name: 'Close highlights' })).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+    await expect(page).toHaveURL(/highlights=1/)
     const sidebarWidth = Math.min(360, viewport.width * 0.42)
     await expect
       .poll(async () => (await video.boundingBox())!.width)
@@ -232,12 +234,20 @@ for (const viewport of [
     )
     await expect(drawer).toBeVisible()
     await page.keyboard.press('Escape')
+    await expect(drawer).toBeVisible()
+    await expect(page).toHaveURL(
+      /highlight=test-highlight-b.*highlights=1|highlights=1.*highlight=test-highlight-b/,
+    )
+    await page.reload()
+    await expect(drawer).toBeVisible()
+    await trigger.click()
+    await expect(page).not.toHaveURL(/highlights=1/)
     await expect(drawer).toBeHidden()
     await expect(trigger).toBeFocused()
     await expect.poll(async () => (await video.boundingBox())!.width).toBeCloseTo(before.width, 1)
     await trigger.press('Enter')
     await expect(drawer).toBeVisible()
-    await drawer.getByRole('button', { name: 'Close highlights' }).click()
+    await trigger.click()
     await expect(drawer).toBeHidden()
     await trigger.click()
     await page.locator('.ec-video-tap').click({ position: { x: 20, y: 10 } })
@@ -252,7 +262,7 @@ for (const viewport of [
     const fullVideo = (await video.boundingBox())!
     expect(fullVideo.x + fullVideo.width).toBeLessThanOrEqual((await drawer.boundingBox())!.x)
     await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click()
-    await drawer.getByRole('button', { name: 'Close highlights' }).click()
+    await trigger.click()
     await expect(drawer).toBeHidden()
   })
 }
@@ -1437,7 +1447,7 @@ test('inline login can retry unavailable session state and remains keyboard dism
   await expect(star).toBeFocused()
 })
 
-test('public saving keeps the pending text flow while profile and management UI stay hidden', async ({
+test('public saving publishes immediately and drawer actions edit, share and permanently delete', async ({
   page,
 }) => {
   let state: HighlightState = {
@@ -1448,8 +1458,8 @@ test('public saving keeps the pending text flow while profile and management UI 
     suggestedAlias: 'Circle fixture alias',
     highlights: [],
   }
-  let approved = false
   const savedIds: string[] = []
+  const deletedIds: string[] = []
   await page.route('**/login', (route) => route.fulfill({ json: state }))
   await page.route('**/electrocute-api/test-session-1', async (route) => {
     if (route.request().method() === 'POST') {
@@ -1471,25 +1481,26 @@ test('public saving keeps the pending text flow while profile and management UI 
         return
       }
       expect(input).not.toHaveProperty('alias')
-      const previous = state.highlights[0]
       const intent = form.get('intent')
-      const highlight: RuntimeHighlight =
-        intent === 'save'
-          ? {
-              ...previous,
-              id: input.id,
-              title: input.title,
-              person: state.alias ?? 'Listener',
-              start: input.start,
-              end: input.end,
-              revision: (previous?.revision ?? 0) + 1,
-              status: approved ? 'approved' : 'pending',
-              withdrawn: false,
-              hidden: false,
-              own: true,
-              canEdit: true,
-            }
-          : { ...previous, revision: previous.revision + 1, withdrawn: intent === 'withdraw' }
+      const previous = state.highlights.find((item) => item.id === input.id)
+      if (intent === 'delete') {
+        expect(input.revision).toBe(previous!.revision)
+        deletedIds.push(input.id)
+        state = { ...state, highlights: state.highlights.filter((item) => item.id !== input.id) }
+        await route.fulfill({ json: state })
+        return
+      }
+      expect(intent).toBe('save')
+      const highlight: RuntimeHighlight = {
+        id: input.id,
+        title: input.title,
+        person: state.alias ?? 'Listener',
+        start: input.start,
+        end: input.end,
+        revision: (previous?.revision ?? 0) + 1,
+        own: true,
+        canEdit: true,
+      }
       savedIds.push(input.id)
       state = {
         ...state,
@@ -1509,12 +1520,114 @@ test('public saving keeps the pending text flow while profile and management UI 
   expect(savedIds).toHaveLength(0)
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Synthetic public passage')
   await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('Saved privately')
+  await expect(page.getByRole('status')).toContainText('Highlight saved.')
   await expect(page.getByRole('region', { name: 'Unpublished highlights' })).toHaveCount(0)
   await expect(page.getByRole('textbox', { name: 'Public name', exact: true })).toHaveCount(0)
   expect(savedIds).toHaveLength(1)
-  expect(state.highlights[0].status).toBe('pending')
+  const id = savedIds[0]
+  await page.getByRole('button', { name: 'Toggle highlights' }).click()
+  const drawer = page.getByRole('complementary', { name: 'Highlights' })
+  const row = drawer.getByRole('listitem').filter({ hasText: 'Synthetic public passage' })
+  await expect(row.getByRole('button')).toHaveCount(3)
+  await expect(drawer.getByRole('button', { name: 'Close highlights' })).toHaveCount(0)
+  await row.getByRole('button', { name: 'Edit highlight' }).click()
+  await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
+    'aria-valuenow',
+    String(state.highlights[0].start),
+  )
+  await page.getByRole('button', { name: 'Name highlight', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
+    'Synthetic public passage',
+  )
+  await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Revised synthetic passage')
+  await page.getByRole('button', { name: 'Save highlight', exact: true }).click()
+  expect(savedIds).toEqual([id, id])
+  await expect(drawer.getByRole('link', { name: /Revised synthetic passage/ })).toBeVisible()
+  await page.evaluate(() =>
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw Error('Clipboard denied fixture')
+        },
+      },
+    }),
+  )
+  await drawer
+    .getByRole('listitem')
+    .filter({ hasText: 'Revised synthetic passage' })
+    .getByRole('button', { name: 'Copy highlight link' })
+    .press('Enter')
+  const link = drawer.getByRole('textbox', { name: 'Highlight link' })
+  await expect(link).toBeFocused()
+  await expect(link).toHaveValue(new RegExp(`highlight=${id}&highlights=1$`))
+  page.on('dialog', () => {
+    throw Error('Deletion must not ask for confirmation')
+  })
+  await drawer.getByRole('button', { name: 'Delete highlight' }).click()
+  await expect(drawer.getByRole('link', { name: /Revised synthetic passage/ })).toHaveCount(0)
+  await expect(link).toHaveCount(0)
+  expect(deletedIds).toEqual([id])
+  await page.reload()
+  await expect(drawer).toBeVisible()
+  await expect(drawer.getByRole('link', { name: /Revised synthetic passage/ })).toHaveCount(0)
 })
+
+for (const role of ['admin', 'other listener', 'logged out'] as const) {
+  test(`drawer actions respect ${role} permissions and failed deletion keeps the entry`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    const editable = role === 'admin'
+    const state: HighlightState = {
+      ready: true,
+      artist: editable,
+      ...(role !== 'logged out' ? { email: `${editable ? 'artist' : 'other'}@example.org` } : {}),
+      csrfToken: 'synthetic-csrf',
+      highlights: [
+        {
+          id: '00000000-0000-0000-0000-000000000001',
+          title: 'Other listener fixture',
+          person: 'Fixture listener',
+          start: 20,
+          end: 40,
+          revision: 1,
+          own: false,
+          canEdit: editable,
+        },
+      ],
+    }
+    await page.route('**/login', (route) => route.fulfill({ json: state }))
+    await page.route('**/electrocute-api/test-session-1', async (route) => {
+      if (route.request().method() === 'POST') {
+        const body = await new Response(route.request().postData(), {
+          headers: route.request().headers(),
+        }).formData()
+        expect(body.get('intent')).toBe('delete')
+        await route.fulfill({ status: 503, json: { message: 'Synthetic deletion failure' } })
+      } else await route.fulfill({ json: state })
+    })
+    await page.goto('/fixture-public-highlights?highlights=1')
+    const drawer = page.getByRole('complementary', { name: 'Highlights' })
+    const row = drawer.getByRole('listitem').filter({ hasText: 'Other listener fixture' })
+    await expect(row.getByRole('button', { name: 'Copy highlight link' })).toBeVisible()
+    await expect(row.getByRole('button', { name: 'Edit highlight' })).toHaveCount(editable ? 1 : 0)
+    await expect(row.getByRole('button', { name: 'Delete highlight' })).toHaveCount(
+      editable ? 1 : 0,
+    )
+    await expect(drawer.getByRole('button', { name: 'Close highlights' })).toHaveCount(0)
+    if (editable) {
+      for (const button of await row.getByRole('button').all()) {
+        await button.scrollIntoViewIfNeeded()
+        await expect(button).toBeInViewport()
+      }
+      await row.getByRole('button', { name: 'Delete highlight' }).click()
+      await expect(drawer.getByRole('alert')).toHaveText('Synthetic deletion failure')
+      await expect(row).toBeVisible()
+      await expect(row.getByRole('button', { name: 'Delete highlight' })).toBeEnabled()
+    }
+  })
+}
 
 test('a public runtime highlight link overrides saved progress after its asynchronous load', async ({
   page,
@@ -1537,11 +1650,8 @@ test('a public runtime highlight link overrides saved progress after its asynchr
         start: 20,
         end: 40,
         revision: 1,
-        status: 'approved',
         own: false,
         canEdit: false,
-        hidden: false,
-        withdrawn: false,
       },
     ],
   }

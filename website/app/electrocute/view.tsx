@@ -11,9 +11,7 @@ import { readSessionState, submitSessionForm } from '../identity/client.ts'
 import {
   highlightsPath,
   highlightMessages,
-  isPublic,
   type HighlightState,
-  type RuntimeHighlight,
   type HighlightInput,
   type HighlightIntent,
 } from './contract.ts'
@@ -82,6 +80,8 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let title = ''
   let feedback = ''
   let shareUrl = ''
+  let actionError = ''
+  const deleting = new Set<string>()
   let heard = false
   let lastSave = -1
   let previewEnd: number | undefined
@@ -95,9 +95,9 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   let runtimeRequest = 0
   let runtimeLinkResolved = false
   const highlights = () =>
-    [...(session?.highlights ?? []), ...drafts, ...runtime.highlights.filter(isPublic)].sort(
-      (a, b) => a.start - b.start || a.end - b.end || a.id.localeCompare(b.id),
-    )
+    [...(session?.highlights ?? []), ...drafts, ...runtime.highlights]
+      .filter((item) => !deleting.has(item.id))
+      .sort((a, b) => a.start - b.start || a.end - b.end || a.id.localeCompare(b.id))
   const bounds = () => ({ start: clipStart, end: clipEnd })
   const valid = () => {
     const { start, end } = bounds()
@@ -134,7 +134,10 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
   }
 
   function choose(highlight: ElectroCuteHighlight) {
-    history.replaceState(history.state, '', highlightPath(session!.id, highlight.id))
+    const url = new URL(location.href)
+    url.pathname = sessionPath(session!.id)
+    url.searchParams.set('highlight', highlight.id)
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash)
     void playAt(highlight.start)
   }
 
@@ -327,22 +330,18 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
           busy = false
           await loadRuntime()
           if (editing && (editingId ?? newId) === input.id)
-            editingRevision = runtime.highlights.find((item) => item.id === input.id)?.revision
+            editingRevision =
+              runtime.highlights.find((item) => item.id === input.id)?.revision ?? editingRevision
         }
         return false
       }
       runtime = result
-      const saved = runtime.highlights.find((item) => item.id === input.id)
       feedback =
-        saved?.status === 'rejected'
-          ? highlightMessages.rejected
-          : saved?.status === 'pending'
-            ? highlightMessages.pending
-            : intent === 'save'
-              ? 'Highlight saved.'
-              : intent === 'profile'
-                ? 'Public name updated.'
-                : 'Highlight updated.'
+        intent === 'save'
+          ? 'Highlight saved.'
+          : intent === 'profile'
+            ? 'Public name updated.'
+            : 'Highlight deleted.'
       return true
     } catch {
       feedback = highlightMessages.failure
@@ -695,57 +694,62 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     ))
   }
 
-  function runtimeActions(item?: RuntimeHighlight) {
-    if (!item?.canEdit) return null
-    const action = (intent: HighlightIntent) =>
-      void mutate(intent, { id: item.id, revision: item.revision })
+  function canEdit(highlight: ElectroCuteHighlight) {
     return (
-      <>
-        <button
-          type="button"
-          disabled={busy || !ready}
-          mix={on('click', () => void openEditor(item))}
-        >
-          Edit highlight
-        </button>
-        {item.own && !item.withdrawn && (
-          <button
-            type="button"
-            disabled={busy}
-            mix={on('click', () => action('withdraw'))}
-          >
-            Withdraw
-          </button>
-        )}
-        {runtime.artist && !item.hidden && (
-          <button
-            type="button"
-            disabled={busy}
-            mix={on('click', () => action('hide'))}
-          >
-            Hide
-          </button>
-        )}
-        {((runtime.artist && item.hidden) || (item.own && item.withdrawn)) && (
-          <button
-            type="button"
-            disabled={busy}
-            mix={on('click', () => action('restore'))}
-          >
-            Restore
-          </button>
-        )}
-        {item.status !== 'approved' && !item.hidden && !item.withdrawn && (
-          <button
-            type="button"
-            disabled={busy}
-            mix={on('click', () => action('retry'))}
-          >
-            Retry text check
-          </button>
-        )}
-      </>
+      drafts.some((item) => item.id === highlight.id) ||
+      Boolean(runtime.highlights.find((item) => item.id === highlight.id)?.canEdit)
     )
+  }
+
+  async function removeHighlight(highlight: ElectroCuteHighlight) {
+    if (busy || !session || !canEdit(highlight)) return
+    actionError = ''
+    const draft = drafts.find((item) => item.id === highlight.id)
+    if (draft) {
+      const next = drafts.filter((item) => item.id !== draft.id)
+      if (!store(draftKey(session.id), next)) {
+        actionError = 'Could not delete this highlight. Please try again.'
+        handle.update()
+        return
+      }
+      drafts = next
+    } else {
+      const item = runtime.highlights.find((item) => item.id === highlight.id)!
+      deleting.add(item.id)
+      const removed = await mutate('delete', { id: item.id, revision: item.revision })
+      deleting.delete(item.id)
+      if (!removed) {
+        actionError = feedback
+        handle.update()
+        return
+      }
+    }
+    shareUrl = ''
+    if (editingId === highlight.id) {
+      editing = false
+      previewEnd = undefined
+      cancelPassageAnimation()
+    }
+    const url = new URL(location.href)
+    if (url.searchParams.get('highlight') === highlight.id) {
+      url.searchParams.delete('highlight')
+      history.replaceState(history.state, '', url.pathname + url.search + url.hash)
+    }
+    handle.update()
+  }
+
+  async function shareHighlight(highlight: ElectroCuteHighlight) {
+    if (!session) return
+    const url = new URL(highlightPath(session.id, highlight.id, true), location.origin).href
+    shareUrl = ''
+    try {
+      await navigator.clipboard.writeText(url)
+      feedback = 'Link copied.'
+    } catch {
+      shareUrl = url
+      feedback = 'Copy this highlight link.'
+    }
+    handle.update()
   }
 
   return () => {
@@ -808,6 +812,13 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                     position={position}
                     ready={ready}
                     choose={choose}
+                    canEdit={canEdit}
+                    edit={(item) => void openEditor(item)}
+                    remove={(item) => void removeHighlight(item)}
+                    share={(item) => void shareHighlight(item)}
+                    busy={busy}
+                    shareUrl={shareUrl}
+                    error={actionError}
                     renderPlayer={(highlightsToggle) => (
                       <div class="ec-stage">
                         <video
@@ -1095,144 +1106,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                 >
                   {feedback}
                 </p>
-                {shareUrl && (
-                  <input
-                    hidden
-                    aria-label="Highlight link"
-                    value={shareUrl}
-                    readOnly
-                    mix={ref((node) => node.select())}
-                  />
-                )}
               </div>
-              <aside
-                hidden
-                aria-label="Highlights"
-              >
-                <h2>
-                  Highlights <span class="ec-muted">{highlights().length}</span>
-                </h2>
-                <ol class="ec-highlight-list">
-                  {highlights().map((highlight) => (
-                    <li
-                      class="ec-highlight"
-                      key={highlight.id}
-                      data-active={
-                        position >= highlight.start && position < highlight.end ? '' : undefined
-                      }
-                    >
-                      <a
-                        class="ec-highlight-link"
-                        href={highlightPath(session.id, highlight.id)}
-                        mix={on('click', (event) => {
-                          if (
-                            ready &&
-                            event.button === 0 &&
-                            !event.metaKey &&
-                            !event.ctrlKey &&
-                            !event.shiftKey &&
-                            !event.altKey
-                          ) {
-                            event.preventDefault()
-                            choose(highlight)
-                          }
-                        })}
-                      >
-                        <span class="ec-highlight-title">{highlight.title}</span>
-                        <span class="ec-highlight-meta">
-                          <span class="ec-clock">
-                            {clock(highlight.start)}–{clock(highlight.end)}
-                          </span>
-                          <span>{highlight.person}</span>
-                        </span>
-                      </a>
-                      <div class="ec-highlight-actions">
-                        {runtimeActions(
-                          runtime.highlights.find((item) => item.id === highlight.id),
-                        )}
-                        {!drafts.some((item) => item.id === highlight.id) && (
-                          <button
-                            type="button"
-                            mix={on('click', async () => {
-                              const url = new URL(
-                                highlightPath(session.id, highlight.id),
-                                location.origin,
-                              ).href
-                              try {
-                                await navigator.clipboard.writeText(url)
-                                feedback = 'Link copied.'
-                              } catch {
-                                shareUrl = url
-                                feedback = 'Copy this highlight link.'
-                              }
-                              handle.update()
-                            })}
-                          >
-                            Share
-                          </button>
-                        )}
-                        {drafts.some((item) => item.id === highlight.id) && (
-                          <>
-                            <button
-                              type="button"
-                              mix={on('click', () => void openEditor(highlight))}
-                            >
-                              Edit draft
-                            </button>
-                            <button
-                              type="button"
-                              mix={on('click', () => {
-                                const next = drafts.filter((item) => item.id !== highlight.id)
-                                if (store(draftKey(session.id), next)) {
-                                  drafts = next
-                                  feedback = 'Draft removed.'
-                                } else feedback = 'Could not remove this draft. Try again.'
-                                handle.update()
-                              })}
-                            >
-                              Remove draft
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-                {!highlights().length && <p class="ec-muted">No highlights yet.</p>}
-                {runtime.highlights.some((item) => !isPublic(item)) && (
-                  <section aria-label="Unpublished highlights">
-                    <h2>Unpublished</h2>
-                    <ol class="ec-highlight-list">
-                      {runtime.highlights
-                        .filter((item) => !isPublic(item))
-                        .map((item) => (
-                          <li
-                            class="ec-highlight"
-                            key={item.id}
-                          >
-                            <strong class="ec-highlight-title">{item.title}</strong>
-                            <p class="ec-highlight-meta">
-                              <span class="ec-clock">
-                                {clock(item.start)}–{clock(item.end)}
-                              </span>
-                              <span>{item.person}</span>
-                            </p>
-                            <p class="ec-muted">
-                              {item.hidden
-                                ? 'Hidden by artist'
-                                : item.withdrawn
-                                  ? 'Withdrawn'
-                                  : item.status === 'rejected'
-                                    ? 'Revise title or public name'
-                                    : 'Text check pending'}
-                            </p>
-                            <div class="ec-highlight-actions">{runtimeActions(item)}</div>
-                          </li>
-                        ))}
-                    </ol>
-                  </section>
-                )}
-              </aside>
             </div>
           </>
         ) : (

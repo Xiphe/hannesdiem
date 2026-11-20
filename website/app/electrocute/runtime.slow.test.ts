@@ -127,7 +127,7 @@ test('runtime API uses the shared verified session, private responses, CSRF and 
     const saved = await h.submit(artist, clip)
     assert.equal(saved.status, 200)
     assert.equal(saved.headers.get('Cache-Control'), 'no-store')
-    assert.equal(((await saved.json()) as HighlightState).highlights[0].status, 'approved')
+    assert.equal(((await saved.json()) as HighlightState).highlights[0].id, clip.id)
     const visitor = await h.identity('visitor@example.org')
     assert.equal(visitor.state.highlights[0].canEdit, false)
     assert.equal(
@@ -144,21 +144,22 @@ test('runtime API uses the shared verified session, private responses, CSRF and 
     assert.equal((await h.submit(artist, { ...data(), end: 200, duration: 9999 })).status, 400)
     assert.equal(
       (
-        await h.submit(artist, { id: clip.id, revision: 1 }, 'hide', {
+        await h.submit(artist, { id: clip.id, revision: 1 }, 'delete', {
           Origin: 'https://attacker.example.org',
         })
       ).status,
       403,
     )
     const badToken = { ...artist, state: { ...artist.state, csrfToken: 'forged' } }
-    const denied = await h.submit(badToken, { id: clip.id, revision: 1 }, 'hide')
+    const denied = await h.submit(badToken, { id: clip.id, revision: 1 }, 'delete')
     assert.equal(denied.status, 403)
     assert.equal(denied.headers.get('X-Hdm-Csrf-Rejected'), 'invalid-token')
-    assert.equal((await h.submit(artist, { id: clip.id, revision: 1 }, 'hide')).status, 200)
+    assert.equal((await h.submit(artist, { id: clip.id, revision: 1 }, 'delete')).status, 200)
     assert.equal((await h.identity()).state.highlights.length, 0)
-    assert.equal((await h.submit(artist, { id: clip.id, revision: 2 }, 'restore')).status, 200)
+    assert.equal((await h.submit(artist, { id: clip.id, revision: 1 }, 'restore')).status, 400)
+    assert.equal((await h.submit(artist, { ...clip, revision: 1 })).status, 409)
     const publicState = (await h.identity()).state
-    assert.equal(publicState.highlights.length, 1)
+    assert.equal(publicState.highlights.length, 0)
     assert.ok(!JSON.stringify(publicState).includes('artist@example.org'))
     assert.equal((await h.request('/electrocute-api/not-a-session')).status, 404)
     assert.equal(
@@ -180,7 +181,7 @@ test('runtime API uses the shared verified session, private responses, CSRF and 
   }
 })
 
-test('missing model binding persists private contributions and confirmed aliases never use private contact names', async () => {
+test('visitor contributions publish immediately and confirmed aliases never use private contact names', async () => {
   const h = await harness()
   try {
     const user = await h.identity('visitor@example.org')
@@ -189,11 +190,11 @@ test('missing model binding persists private contributions and confirmed aliases
     const clip = data()
     const saved = await h.submit(user, clip)
     assert.equal(saved.status, 200)
-    const pending = (await saved.json()) as HighlightState
-    assert.equal(pending.highlights[0].status, 'pending')
-    assert.equal(pending.highlights[0].own, true)
-    assert.equal(pending.alias, undefined, 'unreviewed name is not a confirmed profile alias')
-    assert.equal((await h.identity()).state.highlights.length, 0)
+    const published = (await saved.json()) as HighlightState
+    assert.equal(published.highlights[0].id, clip.id)
+    assert.equal(published.highlights[0].own, true)
+    assert.equal(published.alias, undefined, 'contact names are not confirmed public aliases')
+    assert.equal((await h.identity()).state.highlights.length, 1)
     assert.equal((await h.identity('visitor@example.org')).state.highlights[0].id, clip.id)
     const artist = await h.identity('artist@example.org')
     await h.submit(artist, { id: crypto.randomUUID(), alias: 'Public fixture' }, 'profile')
@@ -207,6 +208,23 @@ test('missing model binding persists private contributions and confirmed aliases
       (await h.submit(user, { ...clip, revision: 1, title: 'Stale fixture' })).status,
       409,
     )
+    assert.equal(
+      (await h.submit(artist, { ...clip, revision: 2, title: 'Admin correction' })).status,
+      200,
+    )
+    const corrected = (await h.identity('visitor@example.org')).state.highlights.find(
+      (item) => item.id === clip.id,
+    )!
+    assert.equal(corrected.title, 'Admin correction')
+    assert.equal(corrected.own, true)
+    assert.equal((await h.submit(user, { id: clip.id, revision: 2 }, 'delete')).status, 409)
+    assert.equal((await h.submit(artist, { id: clip.id, revision: 3 }, 'delete')).status, 200)
+    assert.ok(
+      !(await h.identity('visitor@example.org')).state.highlights.some(
+        (item) => item.id === clip.id,
+      ),
+    )
+    assert.equal((await h.submit(user, { ...clip, revision: 3 })).status, 409)
   } finally {
     await h.mf.dispose()
   }

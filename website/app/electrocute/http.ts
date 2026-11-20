@@ -79,8 +79,7 @@ export async function handleHighlights(request: Request, env: Environment, load:
     const email = context.session.get('email')
     if (typeof email !== 'string') return failure(401)
     const intent = context.formData.get('intent')
-    if (!['save', 'withdraw', 'hide', 'restore', 'retry', 'profile'].includes(String(intent)))
-      return failure(400)
+    if (!['save', 'delete', 'profile'].includes(String(intent))) return failure(400)
     let input: HighlightInput
     try {
       const raw = context.formData.get('payload')
@@ -96,11 +95,7 @@ export async function handleHighlights(request: Request, env: Environment, load:
     if (!response.ok)
       return failure(
         response.status,
-        response.status === 409
-          ? highlightMessages.conflict
-          : response.status === 422
-            ? highlightMessages.rejected
-            : highlightMessages.failure,
+        response.status === 409 ? highlightMessages.conflict : highlightMessages.failure,
       )
     return Response.json({
       ...((await response.json()) as object),

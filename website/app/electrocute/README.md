@@ -26,8 +26,7 @@ Contribution and login state persist locally in `.wrangler/state/electrocute-pre
 using Miniflare’s `resourcePersistencePath`; the former `durableObjectsPersist`
 option is silently ignored by the installed compatibility converter. A restart
 regression exercises the actual session storage and signed cookie.
-Visitor submissions remain pending because no remote model is called. The configured
-artist account can save directly. `PREVIEW_PORT` can select another port. The
+All signed-in accounts publish directly, without automatic text review. `PREVIEW_PORT` can select another port. The
 preview copies its own assets before serving them so other builds do not invalidate it.
 
 For the original four synthetic sessions, generated 96-second MP4 and overlapping
@@ -195,12 +194,19 @@ payload. The server-side `ELECTROCUTE_ARTIST_EMAIL` setting identifies the artis
 Public results contain only public names and highlight fields, never login emails.
 
 `ElectroCuteState` stores individual highlights and confirmed profile aliases in
-SQLite-backed Durable Object KV storage. Owners edit or withdraw their own
-highlights; the artist edits or hides any highlight. Withdrawal and artist hiding
-are separate reversible flags. A creator cannot reverse an artist hide, and an
-artist restore respects a creator's withdrawal. IDs stay stable across edits;
-revision checks prevent silent overwrites from stale editors. Text-check results
-also compare that revision, so an old inference cannot undo a correction or hide.
+SQLite-backed Durable Object KV storage. Owners edit or permanently delete their own
+highlights; the artist can edit or permanently delete any visitor highlight.
+There are no moderation states, restore actions or confirmation dialogs. IDs stay
+stable across edits; revision checks prevent stale writes and a stale editor cannot
+recreate a deleted record. Legacy hidden or withdrawn records remain excluded.
+
+The list is a persistent, non-modal sidebar. Its List Bullet button is the only
+close toggle; there is no close X, focus trap or Escape dismissal. `?highlights=1`
+keeps it open after refresh and can accompany `highlight=<id>` deep links. Each row
+has a share action; editable rows also have Pencil and Trash actions. Pencil opens
+the existing range/name editor. Share copies a link with the list open, with a
+selectable input fallback when clipboard access fails. An unsuccessful deletion
+restores its row and shows an inline error.
 
 The public-name record is independent of Circle membership and private Resend
 contact names. A separate collapsed Public profile section outside the player
@@ -211,35 +217,18 @@ profile at read time: name changes apply across sessions without rewriting range
 titles, IDs or revisions. No public-name snapshot is written to a new highlight;
 submitted names on highlight writes are ignored, including artist corrections.
 Approved legacy snapshots seed a missing profile once and are removed on access;
-an existing profile always wins over an old snapshot. Profile updates pass the
-text check independently and retain the previous name on rejection or outage.
+an existing profile always wins over an old snapshot. Profile updates validate the supplied public name independently of highlight writes.
 A dedicated account page and avatars remain outside this change.
 
-The small agentic check uses Workers AI with
-[`llama-3.3-70b-instruct-fp8-fast`](https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/).
-Only title and public alias are sent. It checks directed abuse, threats and illegal
-solicitation, allowing artistic language and ordinary profanity. Separate strict
-boolean JSON decisions for title and alias are required. Parsed JSON objects,
-JSON text and completion envelopes are normalized at the provider boundary. Rejection stays editable and private; outages, timeouts
-and malformed responses stay pending and retry through a Durable Object alarm.
-Artist contributions and corrections publish directly. Visitor text changes are
-checked again; range-only changes reuse the previous text decision.
-
-`npm run dev` and browser tests use Wrangler's `local` environment, intentionally
-without an AI binding. Its storage bindings and vars are repeated because Wrangler
-does not inherit them into named environments. Production has the AI binding. No deployment was performed. The production
-policy and parser were exercised against the real model with synthetic texts:
-all eight final examples passed (neutral English/German, enthusiastic profanity,
-directed insult, threat, illegal offer, instruction injection and abusive alias).
-The smaller initial model confused alias checks and harmless profanity, which
-motivated the model choice. The final requests took 0.64–0.84 seconds each.
-This sample establishes basic behavior, not exhaustive moderation accuracy.
-The feed expansion remains a later milestone.
+Highlights and public-name updates publish directly after validation. The former
+Workers AI check, review alarms and AI binding are removed. The named local
+Wrangler environment repeats storage bindings and vars because they are not
+inherited. The feed expansion remains a later milestone.
 
 CMX provides the content contract, document traversal and rendering. Its installed
 UGC verifier constrains markup elements and props; its document store commits
 Publication updates. Neither supplies mutable visitor ranges, shared profile state,
-listening progress or semantic text moderation. The previously surfaced CMX gap
+or listening progress. The previously surfaced CMX gap
 therefore remains at this runtime boundary; these features use the existing
 identity machinery and a separate mutable service rather than changing Publications.
 
@@ -259,10 +248,9 @@ to be checked. Cover selection remains part of the separate image work.
 
 The synthetic suite tests Range-capable MP4 delivery, session navigation, local
 progress, range editing (mouse, real browser touch events and keyboard), preview stopping,
-optional-storage failures, alias
-confirmation, publication states and stable links. Service and Workers runtime
+optional-storage failures, direct publication, edit/delete/share actions and stable links. Service and Workers runtime
 checks cover authorization, CSRF/origin rejection, server-resolved duration,
-concurrent moderation, retries and reversible hiding. The existing Circle and
+revision conflicts, permanent deletion and stale-editor protection. The existing Circle and
 newsletter runtime suites also pass. They never read authored content or production
 media. Operational QA additionally confirmed the simulated email-login round trip,
 artist rights and editor on the actual pCloud session, without saving fake highlights.
