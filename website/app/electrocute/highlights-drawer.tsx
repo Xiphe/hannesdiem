@@ -1,6 +1,7 @@
 import { on, ref, type Handle, type RemixNode } from 'remix/component'
 import type { ElectroCuteHighlight } from '@hannesdiem/content-components'
-import { PencilIcon, TrashIcon, ArrowUpTrayIcon, ListBulletIcon } from '../heroicons.tsx'
+import { ArrowUturnRightIcon, ListBulletIcon } from '../heroicons.tsx'
+import { HighlightMenu } from './highlight-menu.tsx'
 import { clock, highlightPath } from './model.ts'
 
 /** Avatar presentation is optional; real profiles currently supply only a name. */
@@ -27,13 +28,28 @@ export function HighlightsDrawer(
   }>,
 ) {
   let open = false
+  let drawer: HTMLElement | undefined
+  const closeMenus = () => {
+    drawer
+      ?.querySelectorAll<HTMLElement>('[popover]:popover-open')
+      .forEach((menu) => menu.hidePopover())
+  }
   handle.queueTask(() => {
     const sync = () => {
       open = new URL(location.href).searchParams.get('highlights') === '1'
+      if (!open) closeMenus()
       handle.update()
     }
     sync()
     window.addEventListener('popstate', sync, { signal: handle.signal })
+    window.addEventListener('resize', closeMenus, { signal: handle.signal })
+    // Dismiss on scrolling gestures, not focus-induced scrolls while opening.
+    for (const event of ['wheel', 'touchmove'])
+      window.addEventListener(event, closeMenus, {
+        capture: true,
+        passive: true,
+        signal: handle.signal,
+      })
   })
   return () => {
     const p = handle.props
@@ -47,6 +63,7 @@ export function HighlightsDrawer(
         title="Highlights"
         mix={on('click', () => {
           open = !open
+          if (!open) closeMenus()
           const url = new URL(location.href)
           if (open) url.searchParams.set('highlights', '1')
           else url.searchParams.delete('highlights')
@@ -70,6 +87,9 @@ export function HighlightsDrawer(
           aria-hidden={!open}
           inert={!open}
           data-open={open ? '' : undefined}
+          mix={ref((node) => {
+            drawer = node
+          })}
         >
           <div class="ec-highlights-drawer-inner">
             <div class="ec-highlights-content">
@@ -82,89 +102,73 @@ export function HighlightsDrawer(
                       p.position >= highlight.start && p.position < highlight.end ? '' : undefined
                     }
                   >
-                    <a
-                      class="ec-drawer-link"
-                      href={highlightPath(p.sessionId, highlight.id, true)}
-                      aria-current={
-                        p.position >= highlight.start && p.position < highlight.end
-                          ? 'true'
-                          : undefined
-                      }
-                      mix={on('click', (event) => {
-                        if (
-                          !p.ready ||
-                          event.button !== 0 ||
-                          event.metaKey ||
-                          event.ctrlKey ||
-                          event.shiftKey ||
-                          event.altKey
-                        )
-                          return
-                        event.preventDefault()
-                        p.choose(highlight)
-                      })}
-                    >
-                      <span class="ec-drawer-title">{highlight.title}</span>
-                      <span class="ec-drawer-meta">
-                        <span class="ec-drawer-person">
-                          {highlight.avatarUrl && (
-                            <img
-                              class="ec-drawer-avatar"
-                              src={highlight.avatarUrl}
-                              alt=""
-                              width="20"
-                              height="20"
-                            />
-                          )}
-                          <span>{highlight.person}</span>
-                        </span>
-                        <span
-                          class="ec-drawer-duration"
-                          title="Duration"
-                        >
-                          {clock(highlight.end - highlight.start)}
-                        </span>
-                      </span>
-                    </a>
                     <div
-                      class="ec-drawer-actions"
-                      role="group"
-                      aria-label={`Actions for ${highlight.title}`}
+                      class="ec-drawer-heading"
+                      data-editable={p.canEdit(highlight) ? '' : undefined}
                     >
-                      {p.canEdit(highlight) && (
-                        <>
-                          <button
-                            type="button"
-                            class="ec-icon-button"
-                            aria-label="Edit highlight"
-                            title="Edit highlight"
-                            disabled={p.busy || !p.ready}
-                            mix={on('click', () => p.edit(highlight))}
-                          >
-                            <PencilIcon />
-                          </button>
-                          <button
-                            type="button"
-                            class="ec-icon-button"
-                            aria-label="Delete highlight"
-                            title="Delete highlight"
-                            disabled={p.busy}
-                            mix={on('click', () => p.remove(highlight))}
-                          >
-                            <TrashIcon />
-                          </button>
-                        </>
-                      )}
+                      <a
+                        class="ec-drawer-link"
+                        href={highlightPath(p.sessionId, highlight.id, true)}
+                        aria-current={
+                          p.position >= highlight.start && p.position < highlight.end
+                            ? 'true'
+                            : undefined
+                        }
+                        mix={on('click', (event) => {
+                          if (
+                            !p.ready ||
+                            event.button !== 0 ||
+                            event.metaKey ||
+                            event.ctrlKey ||
+                            event.shiftKey ||
+                            event.altKey
+                          )
+                            return
+                          event.preventDefault()
+                          p.choose(highlight)
+                        })}
+                      >
+                        <span class="ec-drawer-title">{highlight.title}</span>
+                      </a>
                       <button
                         type="button"
-                        class="ec-icon-button"
+                        class="ec-icon-button ec-drawer-share-action"
                         aria-label="Copy highlight link"
                         title="Copy highlight link"
                         mix={on('click', () => p.share(highlight))}
                       >
-                        <ArrowUpTrayIcon />
+                        <ArrowUturnRightIcon />
                       </button>
                     </div>
+                    <div class="ec-drawer-meta">
+                      <span class="ec-drawer-person">
+                        {highlight.avatarUrl && (
+                          <img
+                            class="ec-drawer-avatar"
+                            src={highlight.avatarUrl}
+                            alt=""
+                            width="20"
+                            height="20"
+                          />
+                        )}
+                        <span>{highlight.person}</span>
+                      </span>
+                      <span
+                        class="ec-drawer-duration"
+                        title="Duration"
+                      >
+                        {clock(highlight.end - highlight.start)}
+                      </span>
+                    </div>
+                    {p.canEdit(highlight) && (
+                      <HighlightMenu
+                        id={highlight.id}
+                        ready={p.ready}
+                        busy={p.busy}
+                        edit={() => p.edit(highlight)}
+                        remove={() => p.remove(highlight)}
+                      />
+                    )}
                   </li>
                 ))}
               </ol>

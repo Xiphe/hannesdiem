@@ -433,7 +433,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
           const target = event.target as Element | null
           if (
             target?.closest(
-              'input:not([type=range]), textarea, select, [contenteditable]:not([contenteditable=false]), [role=textbox]',
+              'input:not([type=range]), textarea, select, [contenteditable]:not([contenteditable=false]), [role=textbox], [role=menu], [aria-haspopup=menu]',
             )
           )
             return

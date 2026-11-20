@@ -280,14 +280,15 @@ for (const viewport of [
   })
 }
 
-test('highlight rows reveal centered actions on hover or keyboard focus and the whole row seeks', async ({
+test('highlight rows keep sharing beside the title and duration opposite the author', async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/electrocute/test-session-1?highlights=1')
   const drawer = page.getByRole('complementary', { name: 'Highlights' })
   const row = drawer.getByRole('listitem').filter({ hasText: 'Test highlight A' })
-  const actions = row.getByRole('group')
+  await expect.poll(async () => (await drawer.boundingBox())!.width).toBeCloseTo(360, 1)
+  const share = row.getByRole('button', { name: 'Copy highlight link' })
   await expect(row.getByTitle('Start time')).toHaveCount(0)
   await expect(row.getByTitle('Duration')).toHaveText('0:20')
   await expect(drawer.locator('.ec-drawer-avatar')).toHaveCount(1)
@@ -299,30 +300,26 @@ test('highlight rows reveal centered actions on hover or keyboard focus and the 
     )
     .toBe(true)
   await page.mouse.move(0, 500)
-  await expect(actions).toHaveCSS('opacity', '0')
-  await row.hover()
-  await expect(actions).toHaveCSS('opacity', '1')
+  await expect(share).toHaveCSS('opacity', '1')
   const bounds = (await row.boundingBox())!
-  const controls = (await actions.boundingBox())!
-  expect(controls.y + controls.height / 2).toBeCloseTo(bounds.y + bounds.height / 2, 1)
-  const share = row.getByRole('button', { name: 'Copy highlight link' })
+  const duration = (await row.getByTitle('Duration').boundingBox())!
+  const title = (await row.getByRole('link').boundingBox())!
+  const arrow = (await share.boundingBox())!
+  expect(duration.x + duration.width).toBeCloseTo(bounds.x + bounds.width - 12, 1)
+  expect(arrow.x).toBeGreaterThanOrEqual(title.x + title.width)
+  expect(arrow.y + arrow.height / 2).toBeCloseTo(title.y + title.height / 2, 1)
   await share.hover()
-  await expect(share).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
-  await expect(share).not.toHaveCSS('box-shadow', 'none')
+  await expect(share).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await expect(share).toHaveCSS('box-shadow', 'none')
   await drawer
     .locator('.ec-drawer-list')
     .screenshot({ path: testInfo.outputPath('avatar-example.png') })
-  await page.mouse.move(0, 500)
-  await expect(actions).toHaveCSS('opacity', '0')
   await row.getByRole('link').focus()
   await page.keyboard.press('Tab')
   await expect(share).toBeFocused()
-  await expect(actions).toHaveCSS('opacity', '1')
-  // The quiet space beneath the icons belongs to the native highlight link too.
+  await expect(row.getByRole('button', { name: 'Highlight actions' })).toHaveCount(0)
   await row.click({ position: { x: bounds.width - 3, y: bounds.height - 2 } })
   await expect(page).toHaveURL(/highlight=test-highlight-a/)
-  await page.mouse.move(0, 500)
-  await expect(actions).toHaveCSS('opacity', '0')
   await expect
     .poll(() => page.locator('video').evaluate((node) => (node as HTMLVideoElement).currentTime))
     .toBeGreaterThanOrEqual(12)
@@ -1589,10 +1586,32 @@ test('public saving publishes immediately and drawer actions edit, share and per
   await page.getByRole('button', { name: 'Toggle highlights' }).click()
   const drawer = page.getByRole('complementary', { name: 'Highlights' })
   const row = drawer.getByRole('listitem').filter({ hasText: 'Synthetic public passage' })
-  await expect(row.getByRole('button')).toHaveCount(3)
+  await expect(row.getByRole('button')).toHaveCount(2)
   await expect(drawer.getByRole('button', { name: 'Close highlights' })).toHaveCount(0)
-  await row.hover()
-  await row.getByRole('button', { name: 'Edit highlight' }).click()
+  const more = row.getByRole('button', { name: 'Highlight actions', exact: true })
+  await more.press('Enter')
+  const menu = page.getByRole('menu', { name: 'Highlight actions' })
+  await expect(menu.getByRole('menuitem', { name: 'Edit highlight' })).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(menu.getByRole('menuitem', { name: 'Delete highlight' })).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(menu).toBeHidden()
+  await expect(drawer.getByRole('link', { name: 'Test highlight A', exact: true })).toBeFocused()
+  await more.press('Enter')
+  await page.keyboard.press('Escape')
+  await expect(menu).toBeHidden()
+  await expect(drawer).toBeVisible()
+  await expect(more).toBeFocused()
+  await more.press('ArrowUp')
+  await expect(menu.getByRole('menuitem', { name: 'Delete highlight' })).toBeFocused()
+  await page.keyboard.press('Home')
+  await expect(menu.getByRole('menuitem', { name: 'Edit highlight' })).toBeFocused()
+  const paused = await page.locator('video').evaluate((node) => (node as HTMLVideoElement).paused)
+  await menu.getByRole('menuitem', { name: 'Edit highlight' }).press('Space')
+  await expect(menu).toBeHidden()
+  expect(await page.locator('video').evaluate((node) => (node as HTMLVideoElement).paused)).toBe(
+    paused,
+  )
   await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
     'aria-valuenow',
     String(state.highlights[0].start),
@@ -1626,8 +1645,12 @@ test('public saving publishes immediately and drawer actions edit, share and per
   page.on('dialog', () => {
     throw Error('Deletion must not ask for confirmation')
   })
-  await drawer.getByRole('listitem').filter({ hasText: 'Revised synthetic passage' }).hover()
-  await drawer.getByRole('button', { name: 'Delete highlight' }).click()
+  await drawer
+    .getByRole('listitem')
+    .filter({ hasText: 'Revised synthetic passage' })
+    .getByRole('button', { name: 'Highlight actions', exact: true })
+    .press('Enter')
+  await menu.getByRole('menuitem', { name: 'Delete highlight' }).click()
   await expect(drawer.getByRole('link', { name: /Revised synthetic passage/ })).toHaveCount(0)
   await expect(link).toHaveCount(0)
   expect(deletedIds).toEqual([id])
@@ -1674,21 +1697,50 @@ for (const role of ['admin', 'other listener', 'logged out'] as const) {
     const drawer = page.getByRole('complementary', { name: 'Highlights' })
     const row = drawer.getByRole('listitem').filter({ hasText: 'Other listener fixture' })
     await expect(row.getByRole('button', { name: 'Copy highlight link' })).toBeVisible()
-    await expect(row.getByRole('button', { name: 'Edit highlight' })).toHaveCount(editable ? 1 : 0)
-    await expect(row.getByRole('button', { name: 'Delete highlight' })).toHaveCount(
-      editable ? 1 : 0,
-    )
+    const more = row.getByRole('button', { name: 'Highlight actions', exact: true })
+    await expect(more).toHaveCount(editable ? 1 : 0)
+    await expect(row.getByRole('menuitem')).toHaveCount(0)
     await expect(drawer.getByRole('button', { name: 'Close highlights' })).toHaveCount(0)
     if (editable) {
-      for (const button of await row.getByRole('button').all()) {
-        await button.scrollIntoViewIfNeeded()
-        await expect(button).toBeInViewport()
-      }
-      await row.hover()
-      await row.getByRole('button', { name: 'Delete highlight' }).click()
+      await expect(more).toHaveCSS('opacity', '1')
+      await more.click()
+      const menu = page.getByRole('menu', { name: 'Highlight actions' })
+      await expect(menu).toBeVisible()
+      await more.click()
+      await expect(menu).toBeHidden()
+      await more.click()
+      await expect(menu).toBeVisible()
+      await expect(menu).toBeInViewport({ ratio: 1 })
+      await expect(more).toHaveAttribute('aria-expanded', 'true')
+      await expect(menu.getByRole('menuitem')).toHaveCount(2)
+      await page.locator('.ec-video-tap').click({ position: { x: 10, y: 10 } })
+      await expect(menu).toBeHidden()
+      await expect(more).toHaveAttribute('aria-expanded', 'false')
+      await more.click()
+      await drawer.getByRole('link', { name: 'Other listener fixture', exact: true }).focus()
+      await page.getByRole('button', { name: 'Toggle highlights' }).click()
+      await expect(menu).toBeHidden()
+      await expect(drawer).toBeHidden()
+      await page.getByRole('button', { name: 'Toggle highlights' }).click()
+      await expect(menu).toBeHidden()
+      await more.click()
+      await page.mouse.wheel(0, 30)
+      await expect(menu).toBeHidden()
+      await more.click()
+      await menu.getByRole('menuitem', { name: 'Delete highlight' }).click()
       await expect(drawer.getByRole('alert')).toHaveText('Synthetic deletion failure')
       await expect(row).toBeVisible()
-      await expect(row.getByRole('button', { name: 'Delete highlight' })).toBeEnabled()
+      await expect(more).toBeEnabled()
+      await page.getByRole('button', { name: 'Enter fullscreen', exact: true }).click()
+      await more.click()
+      await expect(menu).toBeVisible()
+      await expect(menu).toBeInViewport({ ratio: 1 })
+      await page.keyboard.press('Escape')
+      await expect(menu).toBeHidden()
+      await expect(drawer).toBeVisible()
+      expect(
+        await page.locator('.ec-player').evaluate((node) => document.fullscreenElement === node),
+      ).toBe(true)
     }
   })
 }
@@ -1766,6 +1818,8 @@ test.describe('mobile player', () => {
     await page.locator('.ec-video-tap').tap({ position: { x: 20, y: 20 } })
     await expect(clock).toBeHidden()
     await highlight.tap()
+    // Wait for the visible playhead to follow the asynchronous media seek.
+    await expect.poll(async () => Number(await seek.inputValue())).toBeGreaterThanOrEqual(70)
     await openHighlight(page, true)
     await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toBeFocused()
     const end = page.getByRole('slider', { name: 'Passage end', exact: true })
