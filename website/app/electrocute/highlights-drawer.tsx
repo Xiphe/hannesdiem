@@ -97,36 +97,38 @@ export function HighlightsDrawer(
                       p.position >= highlight.start && p.position < highlight.end ? '' : undefined
                     }
                   >
-                    <a
-                      class="ec-drawer-link"
-                      href={highlightPath(p.sessionId, highlight.id, true)}
-                      aria-current={
-                        p.position >= highlight.start && p.position < highlight.end
-                          ? 'true'
-                          : undefined
-                      }
-                      mix={on('click', (event) => {
-                        if (
-                          !p.ready ||
-                          event.button !== 0 ||
-                          event.metaKey ||
-                          event.ctrlKey ||
-                          event.shiftKey ||
-                          event.altKey
-                        )
-                          return
-                        event.preventDefault()
-                        p.choose(highlight)
-                      })}
-                    >
-                      <span class="ec-drawer-title">{highlight.title}</span>
-                    </a>
-                    <span
-                      class="ec-drawer-duration"
-                      title="Duration"
-                    >
-                      {clock(highlight.end - highlight.start)}
-                    </span>
+                    <div class="ec-drawer-info">
+                      <a
+                        class="ec-drawer-link"
+                        href={highlightPath(p.sessionId, highlight.id, true)}
+                        aria-current={
+                          p.position >= highlight.start && p.position < highlight.end
+                            ? 'true'
+                            : undefined
+                        }
+                        mix={on('click', (event) => {
+                          if (
+                            !p.ready ||
+                            event.button !== 0 ||
+                            event.metaKey ||
+                            event.ctrlKey ||
+                            event.shiftKey ||
+                            event.altKey
+                          )
+                            return
+                          event.preventDefault()
+                          p.choose(highlight)
+                        })}
+                      >
+                        <span class="ec-drawer-title">{highlight.title}</span>
+                      </a>
+                      <span
+                        class="ec-drawer-duration"
+                        title="Duration"
+                      >
+                        {clock(highlight.end - highlight.start)}
+                      </span>
+                    </div>
                     <div class="ec-drawer-actions">
                       <button
                         type="button"

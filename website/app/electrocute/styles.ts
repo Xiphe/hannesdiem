@@ -335,14 +335,16 @@ export const archiveStyle = css({
   '& .ec-drawer-row': {
     position: 'relative',
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) auto auto',
+    gridTemplateColumns: 'minmax(0, 1fr) auto',
     alignItems: 'center',
-    gap: 12,
+    gap: 24,
     minHeight: 60,
     boxSizing: 'border-box',
     padding: '8px 12px 8px 16px',
     borderLeft: '2px solid transparent',
-    '&:hover, &[data-active]': { background: 'rgb(255 248 251 / 7%)' },
+    '&:hover, &[data-active], &:has(.ec-drawer-menu:popover-open)': {
+      background: 'rgb(255 248 251 / 7%)',
+    },
     '&[data-active]': { borderLeftColor: '#fd5ee0' },
   },
   '& .ec-player[data-keyboard-focus] .ec-drawer-row:focus-within': {
@@ -352,6 +354,12 @@ export const archiveStyle = css({
     display: 'flex',
     alignItems: 'center',
     gap: 2,
+  },
+  '& .ec-drawer-info': {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    minWidth: 0,
   },
   '& .ec-drawer-link': {
     minWidth: 0,
@@ -377,7 +385,7 @@ export const archiveStyle = css({
   },
   '& .ec-drawer-menu-control': { display: 'flex', position: 'relative', zIndex: 2 },
   '@media (pointer: coarse)': {
-    '& .ec-drawer-row': { gap: 8, paddingLeft: 10, paddingRight: 6 },
+    '& .ec-drawer-row': { gap: 16, paddingLeft: 10, paddingRight: 6 },
     '& .ec-player .ec-drawer-actions .ec-icon-button': {
       width: 44,
       minWidth: 44,
@@ -416,12 +424,18 @@ export const archiveStyle = css({
   '& .ec-drawer-feedback': { padding: '8px 16px', fontSize: 12 },
   '& .ec-player .ec-drawer-share': { width: 'calc(100% - 24px)', margin: '8px 12px' },
   '& .ec-drawer-duration': {
+    flexShrink: 0,
     fontVariantNumeric: 'tabular-nums',
     whiteSpace: 'nowrap',
     fontSize: 12,
     color: 'rgb(255 248 251 / 55%)',
   },
-  '& .ec-drawer-title': { fontSize: 14, fontWeight: 500, overflowWrap: 'anywhere' },
+  '& .ec-drawer-title': {
+    minWidth: 0,
+    fontSize: 14,
+    fontWeight: 500,
+    overflowWrap: 'anywhere',
+  },
   '& .ec-drawer-empty': {
     padding: '16px',
     fontSize: 14,

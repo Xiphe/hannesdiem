@@ -296,13 +296,13 @@ test('highlight rows align title, duration and quiet sharing actions on one axis
   await expect(share).toHaveCSS('opacity', '1')
   const bounds = (await row.boundingBox())!
   const duration = (await row.getByTitle('Duration').boundingBox())!
-  const title = (await row.getByRole('link').boundingBox())!
+  const title = (await row.locator('.ec-drawer-title').boundingBox())!
   const arrow = (await share.boundingBox())!
-  expect(duration.x).toBeGreaterThanOrEqual(title.x + title.width)
-  expect(arrow.x).toBeGreaterThanOrEqual(duration.x + duration.width)
+  expect(duration.x - (title.x + title.width)).toBeCloseTo(8, 1)
+  expect(arrow.x - (duration.x + duration.width)).toBeGreaterThanOrEqual(24)
   expect(arrow.x + arrow.width).toBeCloseTo(bounds.x + bounds.width - 12, 1)
   expect(duration.y + duration.height / 2).toBeCloseTo(bounds.y + bounds.height / 2, 1)
-  expect(arrow.y + arrow.height / 2).toBeCloseTo(title.y + title.height / 2, 1)
+  expect(arrow.y + arrow.height / 2).toBeCloseTo(bounds.y + bounds.height / 2, 1)
   await share.hover()
   await expect(share).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
   await expect(share).toHaveCSS('color', 'rgb(255, 248, 251)')
@@ -1708,8 +1708,12 @@ for (const role of ['admin', 'other listener', 'logged out'] as const) {
       await more.click()
       const menu = page.getByRole('menu', { name: 'Highlight actions' })
       await expect(menu).toBeVisible()
+      await menu.getByRole('menuitem', { name: 'Delete highlight' }).hover()
+      await expect(row).toHaveCSS('background-color', 'rgba(255, 248, 251, 0.07)')
       await more.click()
       await expect(menu).toBeHidden()
+      await page.locator('.ec-video-tap').hover({ position: { x: 10, y: 10 } })
+      await expect(row).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
       await more.click()
       await expect(menu).toBeVisible()
       await expect(menu).toBeInViewport({ ratio: 1 })

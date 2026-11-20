@@ -210,6 +210,8 @@ entire row is a native highlight link and shares its hover/active surface. A
 quiet duration follows the title, with a three-node share icon and, for editable
 highlights, a subtle ellipsis at the far right. The title, duration and actions
 share one horizontal axis; long titles wrap while the actions remain centered.
+The duration sits beside the title, with a larger gap before the action group.
+The row retains its hover surface while its native action menu is open.
 Both controls stay visible and turn white on hover without an added surface.
 The menu contains Edit and Delete and uses a
 native auto popover for top-layer rendering, outside dismissal and single-menu
