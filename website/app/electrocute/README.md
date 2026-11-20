@@ -206,7 +206,13 @@ recreate a deleted record. Legacy hidden or withdrawn records remain excluded.
 The list is a persistent, non-modal sidebar. Its List Bullet button is the only
 close toggle; there is no close X, focus trap or Escape dismissal. `?highlights=1`
 keeps it open after refresh and can accompany `highlight=<id>` deep links. Each row
-has a share action; editable rows also have Pencil and Trash actions. Pencil opens
+has a share action; editable rows also have Pencil and Trash actions. The entire row
+is the highlight link and shares its hover/active surface. Actions are centered
+vertically and appear on row hover or keyboard focus; touch keeps them visible.
+Metadata shows the author and duration, without the start time or dot separators.
+An optional author avatar renders only when supplied; a single synthetic fixture
+provides a fake avatar to review the layout. Real profiles currently have none.
+Pencil opens
 the existing range/name editor. Share copies a link with the list open, with a
 selectable input fallback when clipboard access fails. An unsuccessful deletion
 restores its row and shows an inline error.

@@ -3,11 +3,16 @@ import type { ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { PencilIcon, TrashIcon, ArrowUpTrayIcon, ListBulletIcon } from '../heroicons.tsx'
 import { clock, highlightPath } from './model.ts'
 
+/** Avatar presentation is optional; real profiles currently supply only a name. */
+interface DrawerHighlight extends ElectroCuteHighlight {
+  avatarUrl?: string
+}
+
 // CMX supplies recording content; its Remix adapter has no player/sidebar primitive.
 export function HighlightsDrawer(
   handle: Handle<{
     sessionId: string
-    highlights: ElectroCuteHighlight[]
+    highlights: DrawerHighlight[]
     position: number
     ready: boolean
     busy: boolean
@@ -101,11 +106,17 @@ export function HighlightsDrawer(
                     >
                       <span class="ec-drawer-title">{highlight.title}</span>
                       <span class="ec-drawer-meta">
-                        <span
-                          class="ec-drawer-time"
-                          title="Start time"
-                        >
-                          {clock(highlight.start)}
+                        <span class="ec-drawer-person">
+                          {highlight.avatarUrl && (
+                            <img
+                              class="ec-drawer-avatar"
+                              src={highlight.avatarUrl}
+                              alt=""
+                              width="20"
+                              height="20"
+                            />
+                          )}
+                          <span>{highlight.person}</span>
                         </span>
                         <span
                           class="ec-drawer-duration"
@@ -113,7 +124,6 @@ export function HighlightsDrawer(
                         >
                           {clock(highlight.end - highlight.start)}
                         </span>
-                        <span class="ec-drawer-person">{highlight.person}</span>
                       </span>
                     </a>
                     <div

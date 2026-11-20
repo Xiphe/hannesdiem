@@ -280,6 +280,54 @@ for (const viewport of [
   })
 }
 
+test('highlight rows reveal centered actions on hover or keyboard focus and the whole row seeks', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/electrocute/test-session-1?highlights=1')
+  const drawer = page.getByRole('complementary', { name: 'Highlights' })
+  const row = drawer.getByRole('listitem').filter({ hasText: 'Test highlight A' })
+  const actions = row.getByRole('group')
+  await expect(row.getByTitle('Start time')).toHaveCount(0)
+  await expect(row.getByTitle('Duration')).toHaveText('0:20')
+  await expect(drawer.locator('.ec-drawer-avatar')).toHaveCount(1)
+  await expect
+    .poll(() =>
+      row
+        .locator('img')
+        .evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0),
+    )
+    .toBe(true)
+  await page.mouse.move(0, 500)
+  await expect(actions).toHaveCSS('opacity', '0')
+  await row.hover()
+  await expect(actions).toHaveCSS('opacity', '1')
+  const bounds = (await row.boundingBox())!
+  const controls = (await actions.boundingBox())!
+  expect(controls.y + controls.height / 2).toBeCloseTo(bounds.y + bounds.height / 2, 1)
+  const share = row.getByRole('button', { name: 'Copy highlight link' })
+  await share.hover()
+  await expect(share).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await expect(share).not.toHaveCSS('box-shadow', 'none')
+  await drawer
+    .locator('.ec-drawer-list')
+    .screenshot({ path: testInfo.outputPath('avatar-example.png') })
+  await page.mouse.move(0, 500)
+  await expect(actions).toHaveCSS('opacity', '0')
+  await row.getByRole('link').focus()
+  await page.keyboard.press('Tab')
+  await expect(share).toBeFocused()
+  await expect(actions).toHaveCSS('opacity', '1')
+  // The quiet space beneath the icons belongs to the native highlight link too.
+  await row.click({ position: { x: bounds.width - 3, y: bounds.height - 2 } })
+  await expect(page).toHaveURL(/highlight=test-highlight-a/)
+  await page.mouse.move(0, 500)
+  await expect(actions).toHaveCSS('opacity', '0')
+  await expect
+    .poll(() => page.locator('video').evaluate((node) => (node as HTMLVideoElement).currentTime))
+    .toBeGreaterThanOrEqual(12)
+})
+
 test('range editing clamps bounds, previews the passage and persists only a local draft', async ({
   page,
 }) => {
@@ -1543,6 +1591,7 @@ test('public saving publishes immediately and drawer actions edit, share and per
   const row = drawer.getByRole('listitem').filter({ hasText: 'Synthetic public passage' })
   await expect(row.getByRole('button')).toHaveCount(3)
   await expect(drawer.getByRole('button', { name: 'Close highlights' })).toHaveCount(0)
+  await row.hover()
   await row.getByRole('button', { name: 'Edit highlight' }).click()
   await expect(page.getByRole('slider', { name: 'Highlight start', exact: true })).toHaveAttribute(
     'aria-valuenow',
@@ -1577,6 +1626,7 @@ test('public saving publishes immediately and drawer actions edit, share and per
   page.on('dialog', () => {
     throw Error('Deletion must not ask for confirmation')
   })
+  await drawer.getByRole('listitem').filter({ hasText: 'Revised synthetic passage' }).hover()
   await drawer.getByRole('button', { name: 'Delete highlight' }).click()
   await expect(drawer.getByRole('link', { name: /Revised synthetic passage/ })).toHaveCount(0)
   await expect(link).toHaveCount(0)
@@ -1634,6 +1684,7 @@ for (const role of ['admin', 'other listener', 'logged out'] as const) {
         await button.scrollIntoViewIfNeeded()
         await expect(button).toBeInViewport()
       }
+      await row.hover()
       await row.getByRole('button', { name: 'Delete highlight' }).click()
       await expect(drawer.getByRole('alert')).toHaveText('Synthetic deletion failure')
       await expect(row).toBeVisible()
