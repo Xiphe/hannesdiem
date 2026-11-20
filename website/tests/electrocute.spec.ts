@@ -280,7 +280,7 @@ for (const viewport of [
   })
 }
 
-test('highlight rows align title, duration and quiet sharing actions on one axis', async ({
+test('highlight rows place dimmed duration and author beneath the title with centered actions', async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -291,17 +291,17 @@ test('highlight rows align title, duration and quiet sharing actions on one axis
   const share = row.getByRole('button', { name: 'Copy highlight link' })
   await expect(row.getByTitle('Start time')).toHaveCount(0)
   await expect(row.getByTitle('Duration')).toHaveText('0:20')
-  await expect(row).not.toContainText('Test listener A')
+  await expect(row.locator('.ec-drawer-meta')).toHaveText('0:20 by Test listener A')
   await page.mouse.move(0, 500)
   await expect(share).toHaveCSS('opacity', '1')
   const bounds = (await row.boundingBox())!
   const duration = (await row.getByTitle('Duration').boundingBox())!
   const title = (await row.locator('.ec-drawer-title').boundingBox())!
   const arrow = (await share.boundingBox())!
-  expect(duration.x - (title.x + title.width)).toBeCloseTo(8, 1)
+  expect(duration.x).toBeCloseTo(title.x, 1)
+  expect(duration.y).toBeGreaterThanOrEqual(title.y + title.height)
   expect(arrow.x - (duration.x + duration.width)).toBeGreaterThanOrEqual(24)
   expect(arrow.x + arrow.width).toBeCloseTo(bounds.x + bounds.width - 12, 1)
-  expect(duration.y + duration.height / 2).toBeCloseTo(bounds.y + bounds.height / 2, 1)
   expect(arrow.y + arrow.height / 2).toBeCloseTo(bounds.y + bounds.height / 2, 1)
   await share.hover()
   await expect(share).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
@@ -309,7 +309,7 @@ test('highlight rows align title, duration and quiet sharing actions on one axis
   await expect(share).toHaveCSS('box-shadow', 'none')
   await drawer
     .locator('.ec-drawer-list')
-    .screenshot({ path: testInfo.outputPath('flat-highlight-rows.png') })
+    .screenshot({ path: testInfo.outputPath('highlight-row-metadata.png') })
   await row.getByRole('link').focus()
   await page.keyboard.press('Tab')
   await expect(share).toBeFocused()

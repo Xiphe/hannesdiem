@@ -356,9 +356,8 @@ export const archiveStyle = css({
     gap: 2,
   },
   '& .ec-drawer-info': {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
+    display: 'grid',
+    gap: 3,
     minWidth: 0,
   },
   '& .ec-drawer-link': {
@@ -423,13 +422,12 @@ export const archiveStyle = css({
   },
   '& .ec-drawer-feedback': { padding: '8px 16px', fontSize: 12 },
   '& .ec-player .ec-drawer-share': { width: 'calc(100% - 24px)', margin: '8px 12px' },
-  '& .ec-drawer-duration': {
-    flexShrink: 0,
-    fontVariantNumeric: 'tabular-nums',
-    whiteSpace: 'nowrap',
+  '& .ec-drawer-meta': {
     fontSize: 12,
-    color: 'rgb(255 248 251 / 55%)',
+    color: 'rgb(255 248 251 / 45%)',
+    overflowWrap: 'anywhere',
   },
+  '& .ec-drawer-duration': { fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
   '& .ec-drawer-title': {
     minWidth: 0,
     fontSize: 14,

@@ -122,12 +122,15 @@ export function HighlightsDrawer(
                       >
                         <span class="ec-drawer-title">{highlight.title}</span>
                       </a>
-                      <span
-                        class="ec-drawer-duration"
-                        title="Duration"
-                      >
-                        {clock(highlight.end - highlight.start)}
-                      </span>
+                      <small class="ec-drawer-meta">
+                        <span
+                          class="ec-drawer-duration"
+                          title="Duration"
+                        >
+                          {clock(highlight.end - highlight.start)}
+                        </span>{' '}
+                        by {highlight.person}
+                      </small>
                     </div>
                     <div class="ec-drawer-actions">
                       <button
