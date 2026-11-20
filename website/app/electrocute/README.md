@@ -207,17 +207,16 @@ The list is a persistent, non-modal sidebar. Its List Bullet button is the only
 close toggle; there is no close X, focus trap or Escape dismissal. `?highlights=1`
 keeps it open after refresh and can accompany `highlight=<id>` deep links. The
 entire row is a native highlight link and shares its hover/active surface. A
-small curved share arrow follows the title; editable highlights have a subtle
-ellipsis at the far right. Both controls stay visible. Hover uses a lighter
-background without an icon border. The menu contains Edit and Delete and uses a
+quiet duration follows the title, with a three-node share icon and, for editable
+highlights, a subtle ellipsis at the far right. The title, duration and actions
+share one horizontal axis; long titles wrap while the actions remain centered.
+Both controls stay visible and turn white on hover without an added surface.
+The menu contains Edit and Delete and uses a
 native auto popover for top-layer rendering, outside dismissal and single-menu
 behavior. Arrow keys, Home/End, Space/Enter, Tab and Escape work within the menu;
 Escape dismisses the menu while the drawer stays open. Closing or scrolling the
 drawer also dismisses its menu.
-Metadata places the author on the left and the duration badge on the right,
-without the start time or dot separators. An optional author avatar renders only
-when supplied; one synthetic fixture provides a fake avatar to review the layout.
-Real profiles currently have none. Edit opens
+The compact row omits the author, avatar, start time and duration badge. Edit opens
 the existing range/name editor. Share copies a link with the list open, with a
 selectable input fallback when clipboard access fails. An unsuccessful deletion
 restores its row and shows an inline error.

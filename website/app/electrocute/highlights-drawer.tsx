@@ -1,19 +1,14 @@
 import { on, ref, type Handle, type RemixNode } from 'remix/component'
 import type { ElectroCuteHighlight } from '@hannesdiem/content-components'
-import { ArrowUturnRightIcon, ListBulletIcon } from '../heroicons.tsx'
+import { ShareIcon, ListBulletIcon } from '../heroicons.tsx'
 import { HighlightMenu } from './highlight-menu.tsx'
 import { clock, highlightPath } from './model.ts'
-
-/** Avatar presentation is optional; real profiles currently supply only a name. */
-interface DrawerHighlight extends ElectroCuteHighlight {
-  avatarUrl?: string
-}
 
 // CMX supplies recording content; its Remix adapter has no player/sidebar primitive.
 export function HighlightsDrawer(
   handle: Handle<{
     sessionId: string
-    highlights: DrawerHighlight[]
+    highlights: ElectroCuteHighlight[]
     position: number
     ready: boolean
     busy: boolean
@@ -102,34 +97,37 @@ export function HighlightsDrawer(
                       p.position >= highlight.start && p.position < highlight.end ? '' : undefined
                     }
                   >
-                    <div
-                      class="ec-drawer-heading"
-                      data-editable={p.canEdit(highlight) ? '' : undefined}
+                    <a
+                      class="ec-drawer-link"
+                      href={highlightPath(p.sessionId, highlight.id, true)}
+                      aria-current={
+                        p.position >= highlight.start && p.position < highlight.end
+                          ? 'true'
+                          : undefined
+                      }
+                      mix={on('click', (event) => {
+                        if (
+                          !p.ready ||
+                          event.button !== 0 ||
+                          event.metaKey ||
+                          event.ctrlKey ||
+                          event.shiftKey ||
+                          event.altKey
+                        )
+                          return
+                        event.preventDefault()
+                        p.choose(highlight)
+                      })}
                     >
-                      <a
-                        class="ec-drawer-link"
-                        href={highlightPath(p.sessionId, highlight.id, true)}
-                        aria-current={
-                          p.position >= highlight.start && p.position < highlight.end
-                            ? 'true'
-                            : undefined
-                        }
-                        mix={on('click', (event) => {
-                          if (
-                            !p.ready ||
-                            event.button !== 0 ||
-                            event.metaKey ||
-                            event.ctrlKey ||
-                            event.shiftKey ||
-                            event.altKey
-                          )
-                            return
-                          event.preventDefault()
-                          p.choose(highlight)
-                        })}
-                      >
-                        <span class="ec-drawer-title">{highlight.title}</span>
-                      </a>
+                      <span class="ec-drawer-title">{highlight.title}</span>
+                    </a>
+                    <span
+                      class="ec-drawer-duration"
+                      title="Duration"
+                    >
+                      {clock(highlight.end - highlight.start)}
+                    </span>
+                    <div class="ec-drawer-actions">
                       <button
                         type="button"
                         class="ec-icon-button ec-drawer-share-action"
@@ -137,38 +135,18 @@ export function HighlightsDrawer(
                         title="Copy highlight link"
                         mix={on('click', () => p.share(highlight))}
                       >
-                        <ArrowUturnRightIcon />
+                        <ShareIcon />
                       </button>
+                      {p.canEdit(highlight) && (
+                        <HighlightMenu
+                          id={highlight.id}
+                          ready={p.ready}
+                          busy={p.busy}
+                          edit={() => p.edit(highlight)}
+                          remove={() => p.remove(highlight)}
+                        />
+                      )}
                     </div>
-                    <div class="ec-drawer-meta">
-                      <span class="ec-drawer-person">
-                        {highlight.avatarUrl && (
-                          <img
-                            class="ec-drawer-avatar"
-                            src={highlight.avatarUrl}
-                            alt=""
-                            width="20"
-                            height="20"
-                          />
-                        )}
-                        <span>{highlight.person}</span>
-                      </span>
-                      <span
-                        class="ec-drawer-duration"
-                        title="Duration"
-                      >
-                        {clock(highlight.end - highlight.start)}
-                      </span>
-                    </div>
-                    {p.canEdit(highlight) && (
-                      <HighlightMenu
-                        id={highlight.id}
-                        ready={p.ready}
-                        busy={p.busy}
-                        edit={() => p.edit(highlight)}
-                        remove={() => p.remove(highlight)}
-                      />
-                    )}
                   </li>
                 ))}
               </ol>

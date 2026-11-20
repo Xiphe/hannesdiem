@@ -280,7 +280,7 @@ for (const viewport of [
   })
 }
 
-test('highlight rows keep sharing beside the title and duration opposite the author', async ({
+test('highlight rows align title, duration and quiet sharing actions on one axis', async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -291,29 +291,25 @@ test('highlight rows keep sharing beside the title and duration opposite the aut
   const share = row.getByRole('button', { name: 'Copy highlight link' })
   await expect(row.getByTitle('Start time')).toHaveCount(0)
   await expect(row.getByTitle('Duration')).toHaveText('0:20')
-  await expect(drawer.locator('.ec-drawer-avatar')).toHaveCount(1)
-  await expect
-    .poll(() =>
-      row
-        .locator('img')
-        .evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0),
-    )
-    .toBe(true)
+  await expect(row).not.toContainText('Test listener A')
   await page.mouse.move(0, 500)
   await expect(share).toHaveCSS('opacity', '1')
   const bounds = (await row.boundingBox())!
   const duration = (await row.getByTitle('Duration').boundingBox())!
   const title = (await row.getByRole('link').boundingBox())!
   const arrow = (await share.boundingBox())!
-  expect(duration.x + duration.width).toBeCloseTo(bounds.x + bounds.width - 12, 1)
-  expect(arrow.x).toBeGreaterThanOrEqual(title.x + title.width)
+  expect(duration.x).toBeGreaterThanOrEqual(title.x + title.width)
+  expect(arrow.x).toBeGreaterThanOrEqual(duration.x + duration.width)
+  expect(arrow.x + arrow.width).toBeCloseTo(bounds.x + bounds.width - 12, 1)
+  expect(duration.y + duration.height / 2).toBeCloseTo(bounds.y + bounds.height / 2, 1)
   expect(arrow.y + arrow.height / 2).toBeCloseTo(title.y + title.height / 2, 1)
   await share.hover()
-  await expect(share).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await expect(share).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await expect(share).toHaveCSS('color', 'rgb(255, 248, 251)')
   await expect(share).toHaveCSS('box-shadow', 'none')
   await drawer
     .locator('.ec-drawer-list')
-    .screenshot({ path: testInfo.outputPath('avatar-example.png') })
+    .screenshot({ path: testInfo.outputPath('flat-highlight-rows.png') })
   await row.getByRole('link').focus()
   await page.keyboard.press('Tab')
   await expect(share).toBeFocused()
@@ -1703,6 +1699,12 @@ for (const role of ['admin', 'other listener', 'logged out'] as const) {
     await expect(drawer.getByRole('button', { name: 'Close highlights' })).toHaveCount(0)
     if (editable) {
       await expect(more).toHaveCSS('opacity', '1')
+      const bounds = (await row.boundingBox())!
+      const dots = (await more.boundingBox())!
+      expect(dots.y + dots.height / 2).toBeCloseTo(bounds.y + bounds.height / 2, 1)
+      await more.hover()
+      await expect(more).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+      await expect(more).toHaveCSS('color', 'rgb(255, 248, 251)')
       await more.click()
       const menu = page.getByRole('menu', { name: 'Highlight actions' })
       await expect(menu).toBeVisible()
