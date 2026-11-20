@@ -33,6 +33,10 @@ Never invent prose for the user unless explicitly instructed. Preserve supplied 
 
 All external links open in a new tab.
 
+## Icons
+
+Use library-provided icons. Custom SVG icons are allowed only when explicitly requested by the user.
+
 ## Agent skills
 
 - Deploy or take over deployment QA: read `.agents/skills/deploy/SKILL.md`; use the terse, gitignored `.deploy-qa.json` for routine coordination. Direct chat is reserved for unresolved blockers or ownership conflicts.
