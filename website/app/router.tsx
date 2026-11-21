@@ -10,8 +10,7 @@ import { routes } from './routes.ts'
 import { contentCacheTag } from './document-host/index.ts'
 import { ContactCard } from './contact/card.tsx'
 import { renderFeed } from './temple/feed/route.tsx'
-import { feedDocument, findFeedPost } from './temple/feed/document.ts'
-import { feedPath, isFeedPath, postPath, templePath, watchPath } from './temple/feed/model.ts'
+import { feedPath, isFeedPath, templePath, watchPath } from './temple/feed/model.ts'
 import { archivePath, archiveTitle, sessionPath } from './electrocute/model.ts'
 import { sessionDocument } from './electrocute/document.ts'
 
@@ -191,16 +190,9 @@ export function createApp(content: ContentLoader) {
         /* 404 below. */
       }
       if (id && !id.includes('/')) {
-        const publishedFeed = await content(new Request(new URL(feedPath, request.url), request))
-        if (publishedFeed.status === 200) {
-          const { posts } = await feedDocument(publishedFeed.document)
-          const post = findFeedPost(posts, id)
-          if (post && 'session' in post)
-            return redirect(postPath(post.id as string) + new URL(request.url).search, 308)
-        }
         const page = await content(new Request(new URL(archivePath, request.url), request))
         const selected = page.status === 200 ? await sessionDocument(page.document, id) : undefined
-        if (selected) {
+        if (selected && !selected.inFeed) {
           const canonical = sessionPath(id)
           if (path !== canonical) return redirect(canonical + new URL(request.url).search, 308)
           return render(

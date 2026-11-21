@@ -96,8 +96,7 @@ test('the shared feed keeps one player, returns by project and only locks naviga
       headers: { 'x-fixture-shared-feed': '1' },
       maxRedirects: 0,
     })
-    expect(response.status()).toBe(308)
-    expect(response.headers().location).toBe(`${canonical}?highlights=1`)
+    expect(response.status()).toBe(404)
   }
   await page.route('**/electrocute-api/test-session-4', (route) =>
     route.fulfill({

@@ -6,7 +6,7 @@ import assets from '../../../../.generated/assets.json' with { type: 'json' }
 import type { ContentPage } from '../../document-host/index.ts'
 import { SiteContent } from '../../ui-library/context.ts'
 import { resolvePostCover } from '../posts.tsx'
-import { feedDocument, findFeedPost } from './document.ts'
+import { feedDocument } from './document.ts'
 import { Feed as FeedComponent } from './view.tsx'
 import { feedSequence, postPath, type FeedEntry } from './model.ts'
 import { dateLabel } from '../../date.tsx'
@@ -19,7 +19,7 @@ const Feed = clientEntry(`${assets.templeFeed}#Feed`, FeedComponent)
 export async function renderFeed(page: ContentPage, id?: string) {
   const { posts, document } = await feedDocument(await externalLinksDocument(page.document))
   const selected = id
-    ? findFeedPost(posts, id)
+    ? posts.find((post) => post.id === id)
     : feedSequence(posts as unknown as FeedEntry[]).at(-1)
   if (!selected || typeof selected.title !== 'string') return undefined
   const selectedId = selected.id as string

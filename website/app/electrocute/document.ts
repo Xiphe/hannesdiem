@@ -6,6 +6,7 @@ import { validateSessions } from './model.ts'
 /** Resolve a session within its project's coherent CMX Publication snapshot. */
 export async function sessionDocument(source: CmxDocument, id: string) {
   let selected: ElectroCuteSession | undefined
+  let inFeed = false
   const result = await reduceCmxDocumentNodes({
     document: source,
     context: undefined,
@@ -24,8 +25,9 @@ export async function sessionDocument(source: CmxDocument, id: string) {
       const session = sessions.find((session) => session.id === id)
       if (!session) return node
       selected = session
+      inFeed = node.props?.feed === true
       return { ...node, props: { ...node.props, selectedId: id } }
     },
   })
-  return selected ? { session: selected, document: result.document } : undefined
+  return selected ? { session: selected, document: result.document, inFeed } : undefined
 }

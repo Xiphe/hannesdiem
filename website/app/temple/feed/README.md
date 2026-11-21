@@ -7,8 +7,7 @@ Their underscore folders have no public routes. Each authored slug supplies its
 `/feed/<slug>` address. ElectroCute keeps its existing storage key and uses a
 shorter slug combining the Roman numeral and session name. Its Feed heading
 shows the name with the recording date on a second line. The feed shows complete
-sessions before Temple posts, oldest first within each project. Older session
-links redirect with their query parameters intact.
+sessions before Temple posts, oldest first within each project.
 
 The Feed owns the video element, source loading, scroll, fullscreen and playback
 shortcuts. For an active complete ElectroCute session it mounts the existing

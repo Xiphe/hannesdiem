@@ -44,17 +44,16 @@ export function sortedSessions(sessions: readonly ElectroCuteSession[], newest =
 }
 
 export function validateSessions(sessions: readonly ElectroCuteSession[]) {
-  const paths = new Set<string>()
+  const ids = new Set<string>()
+  const slugs = new Set<string>()
   for (const session of sessions) {
-    if (!/^[a-z0-9][a-z0-9-]*$/i.test(session.id) || paths.has(session.id))
+    if (!/^[a-z0-9][a-z0-9-]*$/i.test(session.id) || ids.has(session.id))
       throw new Error('ElectroCute session IDs must be unique URL-safe identifiers')
-    if (
-      session.slug !== undefined &&
-      (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(session.slug) || paths.has(session.slug))
-    )
+    const slug = sessionSlug(session)
+    if (slugs.has(slug) || (session.slug !== undefined && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)))
       throw new Error('ElectroCute session slugs must be unique URL-safe identifiers')
-    paths.add(session.id)
-    if (session.slug) paths.add(session.slug)
+    ids.add(session.id)
+    slugs.add(slug)
     const recordedAt = new Date(`${session.recordedAt}T12:00:00Z`)
     if (
       !session.title.trim() ||

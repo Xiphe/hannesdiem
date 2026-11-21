@@ -3,13 +3,6 @@ import { reduceCmxDocumentNodes } from '@cmx-tools/reduce'
 import type { ElectroCuteSession } from '@hannesdiem/content-components'
 import { sessionSlug, validateSessions } from '../../electrocute/model.ts'
 
-export function findFeedPost(posts: readonly Record<string, unknown>[], id: string) {
-  return (
-    posts.find((post) => post.id === id) ??
-    posts.find((post) => (post.session as ElectroCuteSession | undefined)?.id === id)
-  )
-}
-
 /** Select the explicit Watch collection using CMX's declared children/prop slots. */
 export async function feedDocument(source: CmxDocument) {
   const posts: Record<string, unknown>[] = []
