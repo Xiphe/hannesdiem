@@ -1,5 +1,9 @@
 import { on, ref, type Handle } from 'remix/component'
-import type { ElectroCuteArchiveProps, ElectroCuteHighlight } from '@hannesdiem/content-components'
+import type {
+  ElectroCuteArchiveProps,
+  ElectroCuteHighlight,
+  ElectroCuteSession,
+} from '@hannesdiem/content-components'
 import { archiveStyle } from './styles.ts'
 import { HighlightsDrawer } from './highlights-drawer.tsx'
 import { InlineLogin } from './inline-login.tsx'
@@ -19,12 +23,14 @@ import {
 } from './contract.ts'
 import {
   archivePath,
+  archiveTitle,
   clock,
   defaultRange,
   highlightPath,
   readDrafts,
   readProgress,
   sessionPath,
+  sessionSlug,
   sortedSessions,
   validRange,
   type ListeningProgress,
@@ -68,7 +74,8 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
 
 export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: SessionMedia }>) {
   const { sessions, selectedId, preview, media, feed } = handle.props
-  const sessionHref = (id: string) => (feed ? postPath(id) : sessionPath(id))
+  const sessionHref = (item: ElectroCuteSession) =>
+    feed || media ? postPath(sessionSlug(item)) : sessionPath(item.id)
   const session = sessions.find((item) => item.id === selectedId)
   let progress: ListeningProgress = { positions: {} }
   let newest = false
@@ -149,7 +156,7 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
 
   function choose(highlight: ElectroCuteHighlight) {
     const url = new URL(location.href)
-    url.pathname = media ? postPath(session!.id) : sessionPath(session!.id)
+    url.pathname = sessionHref(session!)
     url.searchParams.set('highlight', highlight.id)
     replaceFeedHistory(history.state, url.pathname + url.search + url.hash)
     void playAt(highlight.start)
@@ -813,8 +820,7 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
 
   async function shareHighlight(highlight: ElectroCuteHighlight) {
     if (!session) return
-    const url = new URL(highlightPath(session.id, highlight.id, true, !!media), location.origin)
-      .href
+    const url = new URL(highlightHref(session, highlight), location.origin).href
     shareUrl = ''
     try {
       await navigator.clipboard.writeText(url)
@@ -824,6 +830,10 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
       feedback = 'Copy this highlight link.'
     }
     handle.update()
+  }
+
+  function highlightHref(item: ElectroCuteSession, highlight: ElectroCuteHighlight) {
+    return highlightPath(media ? sessionSlug(item) : item.id, highlight.id, true, !!media)
   }
 
   return () => {
@@ -849,7 +859,7 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
               >
                 All sessions
               </a>
-              <h1>{session.title}</h1>
+              <h1>{archiveTitle(session)}</h1>
               <time
                 class="ec-date"
                 dateTime={session.recordedAt}
@@ -884,8 +894,7 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
                   ]}
                 >
                   <HighlightsDrawer
-                    sessionId={session.id}
-                    feed={!!media}
+                    href={(item) => highlightHref(session, item)}
                     highlights={highlights()}
                     position={position}
                     ready={ready}
@@ -996,7 +1005,6 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
                                 {timeline()}
                               </div>
                             </PlaybackTimeline>
-                            {media && highlightsToggle}
                             <button
                               type="button"
                               class="ec-icon-button ec-highlight-star ec-playhead-highlight"
@@ -1006,6 +1014,7 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
                             >
                               <HighlightStar />
                             </button>
+                            {media && highlightsToggle}
                             <div class="ec-volume-control">
                               <button
                                 type="button"
@@ -1173,14 +1182,14 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
               <div class="ec-resume">
                 <div class="ec-resume-title">
                   <span class="ec-muted">Continue listening</span>
-                  <strong>{latest.title}</strong>
+                  <strong>{archiveTitle(latest)}</strong>
                   <span class="ec-muted ec-clock">
                     {clock(progress.positions[latest.id])} / {clock(latest.duration)}
                   </span>
                 </div>
                 <a
                   class="ec-button ec-primary"
-                  href={sessionHref(latest.id) + (feed ? '?resume=1' : '')}
+                  href={sessionHref(latest) + (feed ? '?resume=1' : '')}
                 >
                   Continue
                 </a>
@@ -1206,9 +1215,9 @@ export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: S
                 <li key={item.id}>
                   <a
                     class="ec-session"
-                    href={sessionHref(item.id)}
+                    href={sessionHref(item)}
                   >
-                    <span class="ec-session-title">{item.title}</span>
+                    <span class="ec-session-title">{archiveTitle(item)}</span>
                     <time
                       class="ec-session-date"
                       dateTime={item.recordedAt}

@@ -3,13 +3,12 @@ import type { ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { ShareIcon, ListBulletIcon } from '../heroicons.tsx'
 import { replaceFeedHistory } from '../temple/feed/navigation.ts'
 import { HighlightMenu } from './highlight-menu.tsx'
-import { clock, highlightPath } from './model.ts'
+import { clock } from './model.ts'
 
 // CMX supplies recording content; its Remix adapter has no player/sidebar primitive.
 export function HighlightsDrawer(
   handle: Handle<{
-    sessionId: string
-    feed?: boolean
+    href(highlight: ElectroCuteHighlight): string
     highlights: ElectroCuteHighlight[]
     position: number
     ready: boolean
@@ -102,7 +101,7 @@ export function HighlightsDrawer(
                     <div class="ec-drawer-info">
                       <a
                         class="ec-drawer-link"
-                        href={highlightPath(p.sessionId, highlight.id, true, p.feed)}
+                        href={p.href(highlight)}
                         aria-current={
                           p.position >= highlight.start && p.position < highlight.end
                             ? 'true'

@@ -4,7 +4,9 @@ The site-wide Feed is authored at `content/pages/feed/index.tsx`. Its CMX
 `FeedCollection` contains the ElectroCute and Temple of Sound collections in one
 document. The project overviews import the same source modules under `feed/`.
 Their underscore folders have no public routes. Each authored slug supplies its
-`/feed/<slug>` address and the stable key used internally. The feed shows complete
+`/feed/<slug>` address. ElectroCute keeps its existing storage key and uses a
+shorter slug combining the Roman numeral and session name. Its Feed heading
+shows the name with the recording date on a second line. The feed shows complete
 sessions before Temple posts, oldest first within each project. Older session
 links redirect with their query parameters intact.
 

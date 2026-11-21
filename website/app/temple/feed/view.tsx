@@ -77,10 +77,10 @@ export function Feed(handle: Handle<FeedProps>) {
                 />
               )}
               <div class="feed-media-mount" />
-              {activeSession?.id === post.id && (
+              {'session' in post && activeSession?.id === post.id && (
                 <ArchiveView
                   sessions={sessions}
-                  selectedId={post.id}
+                  selectedId={post.session.id}
                   media={activeSession}
                 />
               )}
@@ -147,7 +147,13 @@ export function Feed(handle: Handle<FeedProps>) {
               >
                 {post.title}
               </h2>
-              {post.subheadline && <p class="feed-subheadline">{post.subheadline}</p>}
+              {'session' in post ? (
+                <p class="feed-subheadline">
+                  <time dateTime={post.session.recordedAt}>{post.dateLabel}</time>
+                </p>
+              ) : (
+                post.subheadline && <p class="feed-subheadline">{post.subheadline}</p>
+              )}
             </div>
           </div>
           {post.kind === 'video' && (

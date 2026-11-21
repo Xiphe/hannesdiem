@@ -1,7 +1,14 @@
 import type { CmxDocument, CmxNode } from '@cmx-tools/contracts'
 import { reduceCmxDocumentNodes } from '@cmx-tools/reduce'
 import type { ElectroCuteSession } from '@hannesdiem/content-components'
-import { validateSessions } from '../../electrocute/model.ts'
+import { sessionSlug, validateSessions } from '../../electrocute/model.ts'
+
+export function findFeedPost(posts: readonly Record<string, unknown>[], id: string) {
+  return (
+    posts.find((post) => post.id === id) ??
+    posts.find((post) => (post.session as ElectroCuteSession | undefined)?.id === id)
+  )
+}
 
 /** Select the explicit Watch collection using CMX's declared children/prop slots. */
 export async function feedDocument(source: CmxDocument) {
@@ -26,7 +33,7 @@ export async function feedDocument(source: CmxDocument) {
         validateSessions(sessions)
         for (const session of sessions) {
           posts.push({
-            id: session.id,
+            id: sessionSlug(session),
             kind: 'video',
             title: session.title,
             subheadline: session.subheadline,

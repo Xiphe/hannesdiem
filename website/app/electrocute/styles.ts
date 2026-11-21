@@ -532,6 +532,7 @@ export const archiveStyle = css({
     padding: 11,
   },
   '& .ec-player .ec-icon-button[data-icon=play] > svg': { transform: 'translateX(-1px)' },
+  '& .ec-player .ec-transport-row .ec-icon-button': { borderRadius: 6 },
   '& .ec-seek-wrap': {
     position: 'relative',
     flex: '1 1 auto',
@@ -540,7 +541,12 @@ export const archiveStyle = css({
     '--editor-inset': '56px',
     '--editor-tail': '0px',
   },
-  '& .ec-transport-row:has(.ec-playhead-highlight) .ec-seek-wrap': { '--editor-tail': '56px' },
+  '& .ec-transport-row:has(.ec-playhead-highlight) .ec-seek-wrap': {
+    '--editor-tail': 'var(--editor-inset)',
+  },
+  '& .ec-transport-row:has(.ec-highlights-toggle) .ec-seek-wrap': {
+    '--editor-tail': 'calc(2 * var(--editor-inset))',
+  },
   '& .ec-player .ec-seek': {
     appearance: 'none',
     display: 'block',
@@ -1014,7 +1020,6 @@ export const archiveStyle = css({
     '& .ec-transport': { paddingInline: 8, paddingBottom: 8 },
     '& .ec-transport-row': { gap: 4, '--control-inset': '8px' },
     '& .ec-seek-wrap': { '--editor-inset': '48px' },
-    '& .ec-transport-row:has(.ec-playhead-highlight) .ec-seek-wrap': { '--editor-tail': '48px' },
     '& .ec-time-tooltip[data-editing]': { padding: '4px 7px' },
   },
   '@media (width >= 40rem) and (hover: hover) and (pointer: fine)': {
@@ -1029,7 +1034,6 @@ export const archiveStyle = css({
       },
     '& .ec-transport-row': { gap: 8, '--control-inset': '9px' },
     '& .ec-seek-wrap': { '--editor-inset': '40px' },
-    '& .ec-transport-row:has(.ec-playhead-highlight) .ec-seek-wrap': { '--editor-tail': '40px' },
     '& .ec-volume-control': { flex: '0 0 32px' },
     '& .ec-volume-control::before': { borderRadius: 16 },
     '& .ec-volume-popover': { width: 32, paddingInline: 0 },

@@ -2,6 +2,12 @@ import type { CmxComponentNode, CmxDocument } from '@cmx-tools/contracts'
 import { recordingsTempleContent, entryTempleContent } from '../app/temple/tests/fixture.ts'
 import { electroCuteSessions } from './electrocute-fixture.ts'
 
+export const sharedFeedSessions = electroCuteSessions.map((session) =>
+  session.id === 'test-session-4'
+    ? { ...session, slug: 'iv-sky-to-sea', title: 'Sky to Sea', romanNumeral: 'IV' }
+    : session,
+)
+
 /** Authored by the test suite; neither production media nor Publications. */
 export const mixedFeedContent = structuredClone(recordingsTempleContent)
 const opening = (mixedFeedContent.default as CmxComponentNode).children![0] as CmxComponentNode
@@ -86,7 +92,7 @@ export function sharedFeedFixtureDocument(template: CmxDocument): CmxDocument {
             type: 'component',
             from: '@hannesdiem/content-components',
             import: 'ElectroCuteArchive',
-            props: { sessions: electroCuteSessions },
+            props: { sessions: sharedFeedSessions },
           },
           structuredClone(collection),
         ],

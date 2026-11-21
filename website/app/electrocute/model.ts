@@ -3,6 +3,9 @@ import { postPath } from '../temple/feed/model.ts'
 
 export const archivePath = '/electrocute'
 export const sessionPath = (id: string) => `${archivePath}/${encodeURIComponent(id)}`
+export const sessionSlug = (session: ElectroCuteSession) => session.slug ?? session.id
+export const archiveTitle = (session: ElectroCuteSession) =>
+  session.romanNumeral ? `${session.romanNumeral} ${session.title}` : session.title
 export const highlightPath = (session: string, highlight: string, list = false, feed = false) =>
   `${feed ? postPath(session) : sessionPath(session)}?highlight=${encodeURIComponent(highlight)}${list ? '&highlights=1' : ''}`
 
@@ -41,11 +44,17 @@ export function sortedSessions(sessions: readonly ElectroCuteSession[], newest =
 }
 
 export function validateSessions(sessions: readonly ElectroCuteSession[]) {
-  const ids = new Set<string>()
+  const paths = new Set<string>()
   for (const session of sessions) {
-    if (!/^[a-z0-9][a-z0-9-]*$/i.test(session.id) || ids.has(session.id))
+    if (!/^[a-z0-9][a-z0-9-]*$/i.test(session.id) || paths.has(session.id))
       throw new Error('ElectroCute session IDs must be unique URL-safe identifiers')
-    ids.add(session.id)
+    if (
+      session.slug !== undefined &&
+      (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(session.slug) || paths.has(session.slug))
+    )
+      throw new Error('ElectroCute session slugs must be unique URL-safe identifiers')
+    paths.add(session.id)
+    if (session.slug) paths.add(session.slug)
     const recordedAt = new Date(`${session.recordedAt}T12:00:00Z`)
     if (
       !session.title.trim() ||

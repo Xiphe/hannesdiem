@@ -90,6 +90,15 @@ test('the shared feed keeps one player, returns by project and only locks naviga
 }) => {
   await serveElectroCuteMedia(page)
   await page.setExtraHTTPHeaders({ 'x-fixture-shared-feed': '1' })
+  const canonical = '/feed/iv-sky-to-sea'
+  for (const path of ['/feed/test-session-4', '/electrocute/test-session-4']) {
+    const response = await page.request.get(`${path}?highlights=1`, {
+      headers: { 'x-fixture-shared-feed': '1' },
+      maxRedirects: 0,
+    })
+    expect(response.status()).toBe(308)
+    expect(response.headers().location).toBe(`${canonical}?highlights=1`)
+  }
   await page.route('**/electrocute-api/test-session-4', (route) =>
     route.fulfill({
       json: {
@@ -97,13 +106,24 @@ test('the shared feed keeps one player, returns by project and only locks naviga
         email: 'listener@example.org',
         artist: false,
         csrfToken: 'synthetic-csrf',
-        highlights: [],
+        highlights: [
+          {
+            id: 'test-passage',
+            title: 'Synthetic passage',
+            person: 'Test listener',
+            start: 12,
+            end: 32,
+            revision: 1,
+            own: true,
+            canEdit: true,
+          },
+        ],
       },
     }),
   )
   await page.goto('/electrocute')
-  await page.getByRole('link', { name: /Test session 04/ }).click()
-  await expect(page).toHaveURL('/feed/test-session-4')
+  await page.getByRole('link', { name: /IV Sky to Sea/ }).click()
+  await expect(page).toHaveURL(canonical)
   const feed = page.locator('.temple-feed')
   const back = feed.locator('[data-back]')
   const seek = feed.getByRole('slider', { name: 'Playback position', exact: true })
@@ -111,9 +131,23 @@ test('the shared feed keeps one player, returns by project and only locks naviga
   const sharedVideo = await video.elementHandle()
   await feed.locator('.ec-video-tap').hover()
   await expect(seek).toBeEnabled()
+  const activePost = feed.locator('[data-post-id="iv-sky-to-sea"]')
+  await expect(activePost.locator('.feed-title')).toHaveText('Sky to Sea')
+  const subtitle = activePost.locator('.feed-subheadline time')
+  await expect(subtitle).toHaveText('January 28, 2023')
+  const star = feed.getByRole('button', { name: 'Highlight at playhead' })
+  const list = feed.getByRole('button', { name: 'Toggle highlights' })
+  await expect(star).toHaveCSS('border-radius', '6px')
+  await expect(list).toHaveCSS('border-radius', '6px')
+  expect((await star.boundingBox())!.x).toBeLessThan((await list.boundingBox())!.x)
   await expect(back).toHaveAttribute('href', '/electrocute')
-  await feed.getByRole('button', { name: 'Toggle highlights' }).click()
-  await expect(feed.getByRole('complementary', { name: 'Highlights' })).toBeVisible()
+  await list.click()
+  const chapters = feed.getByRole('complementary', { name: 'Highlights' })
+  await expect(chapters).toBeVisible()
+  await expect(chapters.getByRole('link', { name: 'Synthetic passage' })).toHaveAttribute(
+    'href',
+    `${canonical}?highlight=test-passage&highlights=1`,
+  )
   await expect(feed).toHaveCSS('overflow-y', 'auto')
   await move(page, 'oldest')
   await expect(feed.getByRole('button', { name: 'Highlight at playhead' })).toHaveCount(0)
@@ -121,9 +155,9 @@ test('the shared feed keeps one player, returns by project and only locks naviga
   expect(await video.evaluate((current, original) => current === original, sharedVideo)).toBe(true)
 
   await feed
-    .locator('[data-post-id="test-session-4"]')
+    .locator('[data-post-id="iv-sky-to-sea"]')
     .evaluate((node) => node.scrollIntoView({ block: 'start', behavior: 'instant' }))
-  await expect(page).toHaveURL('/feed/test-session-4')
+  await expect(page).toHaveURL(canonical)
   await expect(back).toHaveAttribute('href', '/electrocute')
   await feed.locator('.ec-video-tap').hover()
   await expect(seek).toBeEnabled()
@@ -131,7 +165,7 @@ test('the shared feed keeps one player, returns by project and only locks naviga
   await expect(feed.getByRole('slider', { name: 'Highlight start', exact: true })).toBeVisible()
   await expect(feed).toHaveCSS('overflow-y', 'hidden')
   await page.mouse.wheel(0, 900)
-  await expect(page).toHaveURL('/feed/test-session-4')
+  await expect(page).toHaveURL(canonical)
   await page.keyboard.press('Escape')
   await expect(feed).toHaveCSS('overflow-y', 'auto')
   await back.click()

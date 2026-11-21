@@ -6,7 +6,7 @@ import assets from '../../../../.generated/assets.json' with { type: 'json' }
 import type { ContentPage } from '../../document-host/index.ts'
 import { SiteContent } from '../../ui-library/context.ts'
 import { resolvePostCover } from '../posts.tsx'
-import { feedDocument } from './document.ts'
+import { feedDocument, findFeedPost } from './document.ts'
 import { Feed as FeedComponent } from './view.tsx'
 import { feedSequence, postPath, type FeedEntry } from './model.ts'
 import { dateLabel } from '../../date.tsx'
@@ -19,7 +19,7 @@ const Feed = clientEntry(`${assets.templeFeed}#Feed`, FeedComponent)
 export async function renderFeed(page: ContentPage, id?: string) {
   const { posts, document } = await feedDocument(await externalLinksDocument(page.document))
   const selected = id
-    ? posts.find((post) => post.id === id)
+    ? findFeedPost(posts, id)
     : feedSequence(posts as unknown as FeedEntry[]).at(-1)
   if (!selected || typeof selected.title !== 'string') return undefined
   const selectedId = selected.id as string
@@ -37,7 +37,10 @@ export async function renderFeed(page: ContentPage, id?: string) {
             posts={posts.map((post) => ({
               ...post,
               cover: 'session' in post ? post.session.poster : resolvePostCover(post, site.media),
-              dateLabel: dateLabel({ value: post.postedAt, showTime: !('session' in post) }),
+              dateLabel:
+                'session' in post
+                  ? dateLabel({ value: post.session.recordedAt })
+                  : dateLabel({ value: post.postedAt, showTime: true }),
             }))}
           />
           <noscript>
@@ -56,7 +59,15 @@ export async function renderFeed(page: ContentPage, id?: string) {
                 />
               </a>
               <h1>{selected.title}</h1>
-              {selected.subheadline && <p>{selected.subheadline}</p>}
+              {'session' in selected ? (
+                <p>
+                  <time dateTime={selected.session.recordedAt}>
+                    {dateLabel({ value: selected.session.recordedAt })}
+                  </time>
+                </p>
+              ) : (
+                selected.subheadline && <p>{selected.subheadline}</p>
+              )}
               {'session' in selected ? (
                 <video
                   src={selected.session.src}
@@ -76,9 +87,11 @@ export async function renderFeed(page: ContentPage, id?: string) {
               ) : (
                 selected.body
               )}
-              <time dateTime={selected.postedAt}>
-                {dateLabel({ value: selected.postedAt, showTime: !('session' in selected) })}
-              </time>
+              {!('session' in selected) && (
+                <time dateTime={selected.postedAt}>
+                  {dateLabel({ value: selected.postedAt, showTime: true })}
+                </time>
+              )}
               {selected.children}
               <nav aria-label="Content">
                 {posts

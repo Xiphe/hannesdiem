@@ -9,7 +9,11 @@ export interface ElectroCuteHighlight {
 }
 
 export interface ElectroCuteSession {
+  /** Stable key used for saved highlights and listening progress. */
   id: string
+  /** Public Feed address. Legacy Publications use the session ID. */
+  slug?: string
+  romanNumeral?: string
   title: string
   subheadline?: string
   recordedAt: string
