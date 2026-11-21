@@ -3,9 +3,18 @@ import { createWorker } from '../app/worker.ts'
 import { documents, image, imageSvg } from './browser-fixture.ts'
 import { renderToString } from 'remix/component/server'
 import { NewsletterPage } from '../app/newsletter/view.tsx'
+import { sharedFeedFixtureDocument } from './feed-fixture.ts'
+import type { CmxComponentNode } from '@cmx-tools/contracts'
 
 export { ContentState, NewsletterState, CircleState, ElectroCuteState } from '../app/worker.ts'
 const worker = createWorker({ source: createContentSource(documents, 'fixture') })
+const shared = structuredClone(documents)
+shared.feed = sharedFeedFixtureDocument(documents.fixture)
+const archive = shared.electrocute.content.default as CmxComponentNode
+archive.props = { ...archive.props, feed: true }
+const sharedFeedWorker = createWorker({
+  source: createContentSource(shared, 'shared-feed-fixture'),
+})
 export default {
   ...worker,
   async fetch(request, env, ctx) {
@@ -16,6 +25,7 @@ export default {
       )
     if (new URL(request.url).pathname === image.src)
       return new Response(imageSvg, { headers: { 'Content-Type': 'image/svg+xml' } })
-    return worker.fetch!(request, env, ctx)
+    return (request.headers.get('x-fixture-shared-feed') === '1' ? sharedFeedWorker : worker)
+      .fetch!(request, env, ctx)
   },
 } satisfies ExportedHandler<Env>

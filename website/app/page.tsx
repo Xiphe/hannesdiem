@@ -190,7 +190,7 @@ export function Page(
             rel="stylesheet"
             href={assets.style}
           />
-          {temple && (
+          {(temple || feed) && (
             <link
               rel="stylesheet"
               href={assets.templeStyle}

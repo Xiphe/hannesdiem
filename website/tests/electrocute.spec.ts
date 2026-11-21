@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { readFile } from 'node:fs/promises'
+import { serveElectroCuteMedia } from './electrocute-media.ts'
 import sharp from 'sharp'
 import type { HighlightState, RuntimeHighlight } from '../app/electrocute/contract.ts'
 
@@ -16,28 +16,7 @@ async function openHighlight(page: Page, touch = false) {
   )
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.route('**/fixture-media/electrocute.mp4', async (route) => {
-    const clip = await readFile(new URL('./media/electrocute.mp4', import.meta.url))
-    const range = route
-      .request()
-      .headers()
-      .range?.match(/^bytes=(\d+)-(\d*)$/)
-    const start = range ? Number(range[1]) : 0
-    const end = range?.[2] ? Math.min(Number(range[2]), clip.length - 1) : clip.length - 1
-    const body = clip.subarray(start, end + 1)
-    return route.fulfill({
-      status: range ? 206 : 200,
-      headers: {
-        'Content-Type': 'video/mp4',
-        'Accept-Ranges': 'bytes',
-        'Content-Length': String(body.length),
-        ...(range ? { 'Content-Range': `bytes ${start}-${end}/${clip.length}` } : {}),
-      },
-      body,
-    })
-  })
-})
+test.beforeEach(({ page }) => serveElectroCuteMedia(page))
 
 test('archive reverses chronology without loading any recordings', async ({ page }) => {
   let mediaRequests = 0

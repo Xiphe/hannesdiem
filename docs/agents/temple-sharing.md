@@ -109,7 +109,7 @@ The tool is committed under `content/development/cover-review*`, with the
 native CMX content, rebuild the Publication and restart that script with the
 current recording IDs. No standalone catalogue needs updating.
 
-The artist's three approved covers are now imported in `_recordings.tsx`.
+The artist's three approved covers are now imported in `content/pages/feed/_temple-of-sound/recordings.tsx`.
 Their full source JPEGs live in Git LFS under `content/media/`. Each native cover
 object retains `focalX`, `focalY` and `videoFrame: { videoId, time }`. This durable
 metadata reopens the selected time and point even when the local review cache

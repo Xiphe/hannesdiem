@@ -11,6 +11,7 @@ export interface ElectroCuteHighlight {
 export interface ElectroCuteSession {
   id: string
   title: string
+  subheadline?: string
   recordedAt: string
   src: string
   duration: number
@@ -23,6 +24,8 @@ export interface ElectroCuteSession {
 export interface ElectroCuteArchiveProps {
   sessions: readonly ElectroCuteSession[]
   selectedId?: string
+  /** Open archive entries in the published Feed. */
+  feed?: boolean
   /** Enables device-local draft editing instead of public contributions in test previews. */
   preview?: boolean
   children?: RemixNode

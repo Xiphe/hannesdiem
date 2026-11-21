@@ -1,4 +1,27 @@
-import type { TemplePost } from '@hannesdiem/content-components'
+import type { ElectroCuteSession, TemplePost } from '@hannesdiem/content-components'
+
+export interface SessionPost {
+  id: string
+  title: string
+  subheadline?: string
+  kind: 'video'
+  postedAt: string
+  aspectRatio?: number
+  session: ElectroCuteSession
+  cover?: string
+  children?: never
+}
+
+export type FeedEntry = TemplePost | SessionPost
+
+export function feedProject(post: FeedEntry) {
+  return 'session' in post ? '/electrocute' : templePath
+}
+
+export function feedSequence<T extends FeedEntry>(posts: readonly T[]) {
+  const chronological = sortedPosts(posts).toReversed()
+  return chronological.toSorted((a, b) => Number('session' in b) - Number('session' in a))
+}
 
 export const templePath = '/temple-of-sound'
 export const watchPath = `${templePath}/watch`
@@ -29,7 +52,8 @@ export function streamBase(post: { customerCode: string; videoId: string }) {
   return `https://customer-${post.customerCode}.cloudflarestream.com/${encodeURIComponent(post.videoId)}`
 }
 
-export function mediaSource(post: TemplePost) {
+export function mediaSource(post: FeedEntry) {
+  if ('session' in post) return post.session.src
   return post.kind === 'video'
     ? `${streamBase(post)}/manifest/video.m3u8`
     : post.kind === 'audio'
@@ -44,7 +68,11 @@ export function thumbnail(post: TemplePost) {
 }
 
 /** A plain frame at the playback position; authored video covers belong to Watch. */
-export function videoFrame(post: { customerCode: string; videoId: string }, position = 0) {
+export function videoFrame(
+  post: { customerCode: string; videoId: string } | SessionPost,
+  position = 0,
+) {
+  if ('session' in post) return post.session.poster ?? ''
   const time = Number.isFinite(position) ? Math.max(0, Math.round(position * 1000) / 1000) : 0
   return `${streamBase(post)}/thumbnails/thumbnail.jpg?time=${time}s&width=1920&height=1920&fit=clip`
 }

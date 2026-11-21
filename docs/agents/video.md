@@ -90,7 +90,7 @@ island.
 The artist requested the first recording after Watch, titled `Mic/Tech-Check`,
 with their supplied description unchanged. Its direct link is
 `/temple-of-sound#mic-tech-check`; authored content lives in
-`content/pages/temple-of-sound/_recordings.tsx`. The title itself links to that
+`content/pages/feed/_temple-of-sound/recordings.tsx`. The title itself links to that
 anchor. Rich-text descriptions use ordinary paragraphs, emphasis, links and lists
 rather than a new Markdown parser or HTML string.
 
@@ -131,7 +131,7 @@ Printing stacks the collection vertically.
 The artist supplied `permission-spaces.mov` and `kennt-ihr-das.MP4` on
 2026-11-05, with their titles, descriptions and Berlin posting times. Both
 Stream uploads were ready at 1080 × 1920. Their authored entries join the
-existing technical recording in `_recordings.tsx`.
+existing technical recording in `recordings.tsx`.
 
 ### Permissions recording audio repair: 2026-11-05
 

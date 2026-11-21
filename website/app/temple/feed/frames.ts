@@ -42,6 +42,10 @@ export function retainFeedFrames(video: HTMLVideoElement, signal: AbortSignal) {
         // A source without a decoded frame falls back to its timestamp image.
       }
     }
+    // Keep the recent MP4 frame even when the source has no thumbnail service.
+    // Native image caching owns older Stream frames.
+    while (pending.size > 3) discard(pending.keys().next().value!)
+    if ('session' in post) return
     image.hidden = true
     const src = videoFrame(post, position)
     image.src = src
@@ -53,7 +57,5 @@ export function retainFeedFrames(video: HTMLVideoElement, signal: AbortSignal) {
       },
       () => {},
     )
-    // Native image caching owns older frames; never accumulate canvas buffers.
-    while (pending.size > 3) discard(pending.keys().next().value!)
   }
 }

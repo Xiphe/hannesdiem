@@ -10,3 +10,5 @@ export { PoemCanvas, PoemOpening, PoemSection } from '../temple/poem.tsx'
 export { TempleVideo, TempleRecordings } from '../temple/video.tsx'
 export { TemplePosts } from '../temple/posts.tsx'
 export { ElectroCuteArchive } from '../electrocute/index.tsx'
+
+export { FeedCollection } from '../temple/feed/collection.tsx'

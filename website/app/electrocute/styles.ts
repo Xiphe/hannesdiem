@@ -83,6 +83,20 @@ export const archiveStyle = css({
     maxHeight: 'none',
   },
   '&[data-session] .ec-video': { objectPosition: 'center' },
+  '&[data-feed-session] .ec-player, &[data-feed-session] .ec-player-layout, &[data-feed-session] .ec-stage':
+    {
+      height: '100%',
+      maxHeight: 'none',
+      aspectRatio: 'auto',
+      background: 'transparent',
+    },
+  '&[data-feed-session] .ec-feed-video-slot': { position: 'absolute', inset: 0 },
+  '&[data-feed-session] .ec-player .ec-highlights-toggle': {
+    position: 'relative',
+    inset: 'auto',
+    background: 'transparent',
+  },
+  '&[data-feed-session] .ec-video-tap': { touchAction: 'pan-y' },
   '&[data-session] .ec-play-badge': {
     position: 'absolute',
     left: '50%',

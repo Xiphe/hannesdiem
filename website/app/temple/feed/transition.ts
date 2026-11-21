@@ -36,7 +36,7 @@ export function mountFeedTransitions() {
       void navigate(url.href, { history: 'replace' })
       return
     }
-    const origin = leaving ? feedOrigin() : null
+    const origin = leaving && !link.hasAttribute('data-feed-detached') ? feedOrigin() : null
     const id = entering ? link.id : origin?.preview
     const before = entering ? link : feed!
     const perform = async () => {

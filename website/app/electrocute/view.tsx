@@ -5,6 +5,8 @@ import { HighlightsDrawer } from './highlights-drawer.tsx'
 import { InlineLogin } from './inline-login.tsx'
 import { XMarkIcon } from '../heroicons.tsx'
 import { FeedIcon } from '../temple/feed/icon.tsx'
+import { postPath } from '../temple/feed/model.ts'
+import { replaceFeedHistory } from '../temple/feed/navigation.ts'
 import { preciseClock, TrimTimeline, type TrimEdge } from './trim.tsx'
 import { HighlightStar, playedProgress, PlaybackTimeline } from './timeline.tsx'
 import { readSessionState, submitSessionForm } from '../identity/client.ts'
@@ -53,13 +55,25 @@ const date = (value: string) =>
     timeZone: 'UTC',
   }).format(new Date(`${value}T12:00:00Z`))
 
+/** Playback belongs to the host when the session is mounted in the Feed. */
+export interface SessionMedia {
+  video: HTMLVideoElement
+  toggle(): void
+  play(): Promise<void>
+}
+
 export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
-  const { sessions, selectedId, preview } = handle.props
+  return () => <ArchiveView {...handle.props} />
+}
+
+export function ArchiveView(handle: Handle<ElectroCuteArchiveProps & { media?: SessionMedia }>) {
+  const { sessions, selectedId, preview, media, feed } = handle.props
+  const sessionHref = (id: string) => (feed ? postPath(id) : sessionPath(id))
   const session = sessions.find((item) => item.id === selectedId)
   let progress: ListeningProgress = { positions: {} }
   let newest = false
   let drafts: ElectroCuteHighlight[] = []
-  let video: HTMLVideoElement | undefined
+  let video = media?.video
   let player: HTMLDivElement | undefined
   let enhanced = false
   let fullscreen = false
@@ -104,9 +118,9 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     return start !== undefined && end !== undefined && validRange(start, end, duration)
   }
 
-  function savePosition(force = false) {
-    if (!session || !video || !heard || !Number.isFinite(video.currentTime)) return
-    const now = Math.floor(video.currentTime)
+  function savePosition(force = false, time = video?.currentTime ?? 0) {
+    if (!session || !video || !heard || !Number.isFinite(time)) return
+    const now = Math.floor(time)
     if (!force && Math.abs(now - lastSave) < 5) return
     // Merge the latest stored state, so another tab's sessions are retained.
     progress = readProgress(stored(progressKey), sessions)
@@ -114,7 +128,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       delete progress.positions[session.id]
       if (progress.latest === session.id) delete progress.latest
     } else if (now > 0) {
-      progress.positions[session.id] = video.currentTime
+      progress.positions[session.id] = time
       progress.latest = session.id
     }
     store(progressKey, progress)
@@ -126,7 +140,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     previewEnd = end
     video.currentTime = Math.max(0, Math.min(start, duration))
     try {
-      await video.play()
+      await (media ? media.play() : video.play())
     } catch {
       feedback = 'Press play to listen.'
       handle.update()
@@ -135,9 +149,9 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
 
   function choose(highlight: ElectroCuteHighlight) {
     const url = new URL(location.href)
-    url.pathname = sessionPath(session!.id)
+    url.pathname = media ? postPath(session!.id) : sessionPath(session!.id)
     url.searchParams.set('highlight', highlight.id)
-    history.replaceState(history.state, '', url.pathname + url.search + url.hash)
+    replaceFeedHistory(history.state, url.pathname + url.search + url.hash)
     void playAt(highlight.start)
   }
 
@@ -151,6 +165,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
 
   async function togglePlayback() {
     if (!video || !ready) return
+    if (media) return media.toggle()
     if (!video.paused) video.pause()
     else {
       try {
@@ -261,7 +276,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     editing = true
     feedback = ''
     await handle.update()
-    player?.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+    if (!media) player?.scrollIntoView({ block: 'nearest', behavior: 'instant' })
     player
       ?.querySelector<HTMLElement>('[aria-label="Highlight start"]')
       ?.focus({ preventScroll: true })
@@ -391,20 +406,64 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     handle.update()
   }
 
+  const mediaEvents = {
+    loadedmetadata: metadata,
+    play() {
+      heard = true
+      handle.update()
+    },
+    pause() {
+      savePosition(true)
+      handle.update()
+    },
+    volumechange() {
+      handle.update()
+    },
+    seeked() {
+      position = video?.currentTime ?? position
+      handle.update()
+    },
+    ended() {
+      savePosition(true)
+      handle.update()
+    },
+    error() {
+      ready = false
+      failed = true
+      handle.update()
+    },
+    timeupdate() {
+      if (!video) return
+      if (previewEnd !== undefined && video.currentTime >= previewEnd) {
+        const stop = previewEnd
+        previewEnd = undefined
+        video.pause()
+        video.currentTime = stop
+      }
+      position = video.currentTime
+      savePosition()
+      handle.update()
+    },
+  }
+
   handle.queueTask(() => {
     // These listeners belong to the mounted player, not one render. A queued
     // task's signal is aborted by the very first state update.
     const signal = handle.signal
     enhanced = true
     if (video) video.controls = false
-    document.addEventListener(
-      'fullscreenchange',
-      () => {
-        fullscreen = document.fullscreenElement === player
-        handle.update()
-      },
-      { signal },
-    )
+    if (media)
+      for (const [event, listener] of Object.entries(mediaEvents))
+        media.video.addEventListener(event, listener, { signal })
+    if (!media)
+      document.addEventListener(
+        'fullscreenchange',
+        () => {
+          fullscreen = document.fullscreenElement === player
+          handle.update()
+        },
+        { signal },
+      )
     if (session) {
       window.addEventListener(
         'pointerdown',
@@ -423,6 +482,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
             handle.update()
           }
           if (
+            media ||
             (event.code !== 'Space' && event.key !== ' ') ||
             event.altKey ||
             event.ctrlKey ||
@@ -456,7 +516,12 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     const requested = new URL(location.href).searchParams.get('highlight')
     const highlight = highlights().find((item) => item.id === requested)
     if (highlight) initialPosition = highlight.start
-    else if (!requested && session) initialPosition = progress.positions[session.id]
+    else if (
+      !requested &&
+      session &&
+      (!media || new URL(location.href).searchParams.get('resume') === '1')
+    )
+      initialPosition = progress.positions[session.id]
     else if (requested)
       feedback = preview
         ? 'This highlight is no longer available. You can still play the full session.'
@@ -469,13 +534,21 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       },
       { signal },
     )
-    if (session && video?.readyState) metadata()
+    if (
+      session &&
+      video?.readyState &&
+      (!media || video.currentSrc === new URL(session.src, location.href).href)
+    )
+      metadata()
     handle.update()
-    signal.addEventListener('abort', () => savePosition(true), { once: true })
+    signal.addEventListener('abort', () => savePosition(true, media ? position : undefined), {
+      once: true,
+    })
   })
 
   function metadata() {
     if (!video) return
+    if (media && video.currentSrc !== new URL(session!.src, location.href).href) return
     duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : duration
     ready = true
     failed = false
@@ -733,14 +806,15 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
     const url = new URL(location.href)
     if (url.searchParams.get('highlight') === highlight.id) {
       url.searchParams.delete('highlight')
-      history.replaceState(history.state, '', url.pathname + url.search + url.hash)
+      replaceFeedHistory(history.state, url.pathname + url.search + url.hash)
     }
     handle.update()
   }
 
   async function shareHighlight(highlight: ElectroCuteHighlight) {
     if (!session) return
-    const url = new URL(highlightPath(session.id, highlight.id, true), location.origin).href
+    const url = new URL(highlightPath(session.id, highlight.id, true, !!media), location.origin)
+      .href
     shareUrl = ''
     try {
       await navigator.clipboard.writeText(url)
@@ -759,6 +833,8 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
       <section
         mix={archiveStyle}
         aria-label="ElectroCute archive"
+        data-feed-session={media ? '' : undefined}
+        data-feed-scroll-lock={media && editing ? '' : undefined}
         data-session={session ? '' : undefined}
       >
         {preview && !session && (
@@ -801,6 +877,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                     on('keydown', (event) => {
                       if (event.key === 'Escape' && editing && !busy) {
                         event.preventDefault()
+                        event.stopPropagation()
                         closeEditor()
                       }
                     }),
@@ -808,6 +885,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                 >
                   <HighlightsDrawer
                     sessionId={session.id}
+                    feed={!!media}
                     highlights={highlights()}
                     position={position}
                     ready={ready}
@@ -821,57 +899,32 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                     error={actionError}
                     renderPlayer={(highlightsToggle) => (
                       <div class="ec-stage">
-                        <video
-                          class="ec-video"
-                          controls
-                          playsInline
-                          preload="metadata"
-                          src={session.src}
-                          poster={session.poster}
-                          aria-label={session.title}
-                          mix={[
-                            ref((node) => {
-                              video = node
-                            }),
-                            on('loadedmetadata', metadata),
-                            on('play', () => {
-                              heard = true
-                              handle.update()
-                            }),
-                            on('pause', () => {
-                              savePosition(true)
-                              handle.update()
-                            }),
-                            on('volumechange', () => {
-                              handle.update()
-                            }),
-                            on('seeked', () => {
-                              position = video?.currentTime ?? position
-                              handle.update()
-                            }),
-                            on('ended', () => {
-                              savePosition(true)
-                              handle.update()
-                            }),
-                            on('error', () => {
-                              ready = false
-                              failed = true
-                              handle.update()
-                            }),
-                            on('timeupdate', () => {
-                              if (!video) return
-                              if (previewEnd !== undefined && video.currentTime >= previewEnd) {
-                                const stop = previewEnd
-                                previewEnd = undefined
-                                video.pause()
-                                video.currentTime = stop
-                              }
-                              position = video.currentTime
-                              savePosition()
-                              handle.update()
-                            }),
-                          ]}
-                        />
+                        {media ? (
+                          <div class="ec-feed-video-slot" />
+                        ) : (
+                          <video
+                            class="ec-video"
+                            controls
+                            playsInline
+                            preload="metadata"
+                            src={session.src}
+                            poster={session.poster}
+                            aria-label={session.title}
+                            mix={[
+                              ref((node) => {
+                                video = node
+                              }),
+                              on('loadedmetadata', mediaEvents.loadedmetadata),
+                              on('play', mediaEvents.play),
+                              on('pause', mediaEvents.pause),
+                              on('volumechange', mediaEvents.volumechange),
+                              on('seeked', mediaEvents.seeked),
+                              on('ended', mediaEvents.ended),
+                              on('error', mediaEvents.error),
+                              on('timeupdate', mediaEvents.timeupdate),
+                            ]}
+                          />
+                        )}
 
                         <button
                           class="ec-video-tap"
@@ -886,15 +939,17 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                             </span>
                           )}
                         </button>
-                        <button
-                          type="button"
-                          class="ec-icon-button ec-fullscreen"
-                          aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                          disabled={!ready}
-                          mix={on('click', () => void toggleFullscreen())}
-                        >
-                          <FeedIcon name={fullscreen ? 'exit-fullscreen' : 'fullscreen'} />
-                        </button>
+                        {!media && (
+                          <button
+                            type="button"
+                            class="ec-icon-button ec-fullscreen"
+                            aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                            disabled={!ready}
+                            mix={on('click', () => void toggleFullscreen())}
+                          >
+                            <FeedIcon name={fullscreen ? 'exit-fullscreen' : 'fullscreen'} />
+                          </button>
+                        )}
                         {loginAt !== undefined && (
                           <InlineLogin
                             close={async () => {
@@ -907,7 +962,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                             authenticated={loadRuntime}
                           />
                         )}
-                        {highlightsToggle}
+                        {!media && highlightsToggle}
                         <div class="ec-transport">
                           <div class="ec-transport-row">
                             <button
@@ -941,6 +996,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                                 {timeline()}
                               </div>
                             </PlaybackTimeline>
+                            {media && highlightsToggle}
                             <button
                               type="button"
                               class="ec-icon-button ec-highlight-star ec-playhead-highlight"
@@ -1124,7 +1180,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                 </div>
                 <a
                   class="ec-button ec-primary"
-                  href={sessionPath(latest.id)}
+                  href={sessionHref(latest.id) + (feed ? '?resume=1' : '')}
                 >
                   Continue
                 </a>
@@ -1150,7 +1206,7 @@ export function Archive(handle: Handle<ElectroCuteArchiveProps>) {
                 <li key={item.id}>
                   <a
                     class="ec-session"
-                    href={sessionPath(item.id)}
+                    href={sessionHref(item.id)}
                   >
                     <span class="ec-session-title">{item.title}</span>
                     <time

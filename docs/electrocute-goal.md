@@ -159,17 +159,21 @@ unbekannt; aus der Speicherkapazität ergibt sich keine bestätigte Traffic-Zusa
 - Nachträgliches Korrigieren und Ausblenden bleibt möglich. Darüber hinaus ist
   kein umfangreiches Vorabmoderationssystem vorgesehen.
 
-## Spätere Feed-Erweiterung
+## Gemeinsamer Feed
 
-Der bisher auf Temple of Sound ausgerichtete Feed nimmt auch andere Arbeiten und
-Projekte auf. ElectroCute-Highlights werden dort als Passagen mit genau dem
-gesetzten Anfang und Ende abgespielt. Fremde Highlights benötigen nach dem
-bestandenen automatischen Check keine zusätzliche redaktionelle Freigabe für den
-Feed.
+Die ElectroCute-Tabelle und Temple of Sound Watch öffnen Beiträge über
+`/feed/<slug>`. Die gemeinsame Reihenfolge zeigt zuerst die vollständigen
+ElectroCute-Sessions nach Aufnahmedatum, dann die Temple-Beiträge nach
+Veröffentlichungsdatum, jeweils von alt nach neu. Die Sortierung der Tabelle und
+Fortsetzen wählen den Einstieg. Highlights bleiben innerhalb ihrer Session und
+sind direkt verlinkbar. Eine geöffnete Liste erlaubt den Swipe; ein aktiver
+Highlight-Entwurf hält den Feed auf der Session.
 
-Der gemeinsame Feed soll chronologisches Durchsehen, Zufallswiedergabe und Filtern
-nach Projekt ermöglichen. Übergänge zwischen Passagen und das genaue Verhalten
-der Feed-Wiedergabe werden in diesem Ausbauschritt konkretisiert.
+Der Back-Button führt zum Einstieg zurück, solange der Feed dasselbe Projekt
+zeigt. Beim Wechsel zum anderen Projekt zeigt er Home. Wer ins Einstiegsprojekt
+zurückswipet, erhält den ursprünglichen Back-Button wieder. Direkte Links ohne
+Einstieg zeigen Home. Eigenständige Highlight-Beiträge, kuratierte Feeds und
+Zufallswiedergabe bleiben spätere Entscheidungen.
 
 ## Nächster Schritt und offene Voraussetzungen
 
@@ -180,7 +184,7 @@ Bildarbeit bleiben für die gesonderte Session offen.
 Die technische Integration beginnt mit der vom Künstler bereitgestellten Session
 XLV vom 23. April 2023, „outside to ovations“. Ihr Dateiname folgt dem Schema
 `{yymmdd}_electrocute_{session_number_roman}_{session_name}`. Der native CMX-Eintrag
-liegt in [Sessions](../content/pages/electrocute/_sessions.ts). Die MP4 ist
+liegt in [Sessions](../content/pages/feed/_electrocute/sessions.ts). Die MP4 ist
 47:51,1 Minuten lang und enthält H.264-Video mit 1280×720 sowie Stereo-AAC-Audio
 mit 48 kHz. Der direkte pCloud-Link unterstützt HTTP-Teilabrufe.
 

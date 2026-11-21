@@ -1,6 +1,7 @@
 import { expect, test as base, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import sharp from 'sharp'
+import { serveElectroCuteMedia } from '../../../tests/electrocute-media.ts'
 
 const test = base.extend({
   launchOptions: async ({ browserName }, use) => {
@@ -83,6 +84,59 @@ async function move(page: Page, id: string) {
   await expect(page.locator('.temple-feed')).toHaveAttribute('data-current-post', `fixture-${id}`)
   await expect(page).toHaveURL(path(id))
 }
+
+test('the shared feed keeps one player, returns by project and only locks navigation for editing', async ({
+  page,
+}) => {
+  await serveElectroCuteMedia(page)
+  await page.setExtraHTTPHeaders({ 'x-fixture-shared-feed': '1' })
+  await page.route('**/electrocute-api/test-session-4', (route) =>
+    route.fulfill({
+      json: {
+        ready: true,
+        email: 'listener@example.org',
+        artist: false,
+        csrfToken: 'synthetic-csrf',
+        highlights: [],
+      },
+    }),
+  )
+  await page.goto('/electrocute')
+  await page.getByRole('link', { name: /Test session 04/ }).click()
+  await expect(page).toHaveURL('/feed/test-session-4')
+  const feed = page.locator('.temple-feed')
+  const back = feed.locator('[data-back]')
+  const seek = feed.getByRole('slider', { name: 'Playback position', exact: true })
+  const video = feed.locator('video')
+  const sharedVideo = await video.elementHandle()
+  await feed.locator('.ec-video-tap').hover()
+  await expect(seek).toBeEnabled()
+  await expect(back).toHaveAttribute('href', '/electrocute')
+  await feed.getByRole('button', { name: 'Toggle highlights' }).click()
+  await expect(feed.getByRole('complementary', { name: 'Highlights' })).toBeVisible()
+  await expect(feed).toHaveCSS('overflow-y', 'auto')
+  await move(page, 'oldest')
+  await expect(feed.getByRole('button', { name: 'Highlight at playhead' })).toHaveCount(0)
+  await expect(back).toHaveAttribute('href', '/')
+  expect(await video.evaluate((current, original) => current === original, sharedVideo)).toBe(true)
+
+  await feed
+    .locator('[data-post-id="test-session-4"]')
+    .evaluate((node) => node.scrollIntoView({ block: 'start', behavior: 'instant' }))
+  await expect(page).toHaveURL('/feed/test-session-4')
+  await expect(back).toHaveAttribute('href', '/electrocute')
+  await feed.locator('.ec-video-tap').hover()
+  await expect(seek).toBeEnabled()
+  await feed.getByRole('button', { name: 'Highlight at playhead' }).click()
+  await expect(feed.getByRole('slider', { name: 'Highlight start', exact: true })).toBeVisible()
+  await expect(feed).toHaveCSS('overflow-y', 'hidden')
+  await page.mouse.wheel(0, 900)
+  await expect(page).toHaveURL('/feed/test-session-4')
+  await page.keyboard.press('Escape')
+  await expect(feed).toHaveCSS('overflow-y', 'auto')
+  await back.click()
+  await expect(page).toHaveURL('/electrocute')
+})
 
 for (const width of [390, 1440]) {
   test(`subheadline sits below the title and shares its playback visibility at ${width}px`, async ({

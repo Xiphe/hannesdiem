@@ -38,7 +38,11 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
   ) {
     const src = mediaSource(post)
     if (!src) return
-    if (post.kind !== 'video' || target.canPlayType('application/vnd.apple.mpegurl')) {
+    if (
+      'session' in post ||
+      post.kind !== 'video' ||
+      target.canPlayType('application/vnd.apple.mpegurl')
+    ) {
       if (!stale()) {
         target.src = src
         target.load()
@@ -140,7 +144,7 @@ export function createPlayback(video: HTMLVideoElement, signal: AbortSignal, fai
       nextId = post?.id
       const current = ++preloadRevision
       releaseNext()
-      if (!post || signal.aborted) return
+      if (!post || signal.aborted || 'session' in post) return
       next = document.createElement('video')
       next.muted = true
       next.playsInline = true

@@ -1,6 +1,7 @@
 import { on, ref, type Handle, type RemixNode } from 'remix/component'
 import type { ElectroCuteHighlight } from '@hannesdiem/content-components'
 import { ShareIcon, ListBulletIcon } from '../heroicons.tsx'
+import { replaceFeedHistory } from '../temple/feed/navigation.ts'
 import { HighlightMenu } from './highlight-menu.tsx'
 import { clock, highlightPath } from './model.ts'
 
@@ -8,6 +9,7 @@ import { clock, highlightPath } from './model.ts'
 export function HighlightsDrawer(
   handle: Handle<{
     sessionId: string
+    feed?: boolean
     highlights: ElectroCuteHighlight[]
     position: number
     ready: boolean
@@ -62,7 +64,7 @@ export function HighlightsDrawer(
           const url = new URL(location.href)
           if (open) url.searchParams.set('highlights', '1')
           else url.searchParams.delete('highlights')
-          history.replaceState(history.state, '', url.pathname + url.search + url.hash)
+          replaceFeedHistory(history.state, url.pathname + url.search + url.hash)
           handle.update()
         })}
       >
@@ -100,7 +102,7 @@ export function HighlightsDrawer(
                     <div class="ec-drawer-info">
                       <a
                         class="ec-drawer-link"
-                        href={highlightPath(p.sessionId, highlight.id, true)}
+                        href={highlightPath(p.sessionId, highlight.id, true, p.feed)}
                         aria-current={
                           p.position >= highlight.start && p.position < highlight.end
                             ? 'true'

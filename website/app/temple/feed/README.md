@@ -1,5 +1,21 @@
 # Content viewer
 
+The site-wide Feed is authored at `content/pages/feed/index.tsx`. Its CMX
+`FeedCollection` contains the ElectroCute and Temple of Sound collections in one
+document. The project overviews import the same source modules under `feed/`.
+Their underscore folders have no public routes. Each authored slug supplies its
+`/feed/<slug>` address and the stable key used internally. The feed shows complete
+sessions before Temple posts, oldest first within each project. Older session
+links redirect with their query parameters intact.
+
+The Feed owns the video element, source loading, scroll, fullscreen and playback
+shortcuts. For an active complete ElectroCute session it mounts the existing
+session controls against that video element. The session controls own highlights,
+trim state and saved listening progress. An active edit locks the outer feed
+scroll until the edit ends, while the highlights list stays compatible with
+swiping. When the visitor crosses projects, the Feed shows Home until they swipe
+back into their entry project; it keeps the original return point for that visit.
+
 Approved after the feed interview, 2026-11-05. Implements only the content below
 Watch; the entry and share-image conversations own their corresponding views.
 

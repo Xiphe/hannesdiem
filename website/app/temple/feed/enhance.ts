@@ -1,5 +1,5 @@
-import type { FeedProps, FeedPost } from './view.tsx'
-import { postPath } from './model.ts'
+import type { ActiveSession, FeedProps, FeedPost } from './view.tsx'
+import { feedProject, postPath } from './model.ts'
 import { feedOrigin, replaceFeedHistory } from './navigation.ts'
 import { createPlayback } from './playback.ts'
 import { audioPeaks, drawWaveform } from './waveform.ts'
@@ -8,7 +8,12 @@ import { mountFeedControls } from './controls.ts'
 import { mountFeedDrawer } from './drawer.ts'
 import { retainFeedFrames } from './frames.ts'
 
-export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSignal) {
+export function mountFeed(
+  root: HTMLElement,
+  props: FeedProps,
+  signal: AbortSignal,
+  mountSession: (session?: ActiveSession) => Promise<unknown> | void,
+) {
   const articles = [...root.querySelectorAll<HTMLElement>('.feed-post')]
   const video = root.querySelector<HTMLVideoElement>('.feed-player')!
   const home = root.querySelector<HTMLElement>('.feed-player-home')!
@@ -30,10 +35,19 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   const options = { signal }
   const origin = feedOrigin()
   const back = root.querySelector<HTMLAnchorElement>('[data-back]')!
-  back.href = origin?.href ?? '/'
-  back.setAttribute('aria-label', origin ? 'Back' : 'Home')
-  back.querySelector<HTMLElement>('[data-return-back]')!.hidden = !origin
-  back.querySelector<HTMLElement>('[data-return-home]')!.hidden = !!origin
+  const originPath = origin && new URL(origin.href, location.origin).pathname
+  const originProject = ['/electrocute', '/temple-of-sound'].find(
+    (path) => originPath === path || originPath?.startsWith(`${path}/`),
+  )
+  const reflectBack = () => {
+    const destination =
+      origin && (!originProject || feedProject(post()) === originProject) ? origin : null
+    back.href = destination?.href ?? '/'
+    back.setAttribute('aria-label', destination ? 'Back' : 'Home')
+    back.toggleAttribute('data-feed-detached', !destination)
+    back.querySelector<HTMLElement>('[data-return-back]')!.hidden = !destination
+    back.querySelector<HTMLElement>('[data-return-home]')!.hidden = !!destination
+  }
   const fullscreenAvailable =
     document.fullscreenEnabled && typeof root.requestFullscreen === 'function'
   const fullscreenDesktop = matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)')
@@ -61,6 +75,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     }
   }
   const post = () => props.posts[index]
+  const editingSession = () => !!active?.querySelector('[data-feed-scroll-lock]')
   const controls = mountFeedControls(root, video, signal, (input, event, startY) => {
     drawer.startFromScrubber(input, event, startY)
   })
@@ -126,6 +141,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     return props.posts.findIndex((item, candidate) => candidate > index && item.kind === 'video')
   }
   function advance() {
+    if (editingSession()) return
     const next = nextVideo()
     if (next < 0) return
     articles[next].scrollIntoView({
@@ -215,6 +231,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   }
   async function activate(next: number, initial = false) {
     if (!initial && next === index) return
+    if (editingSession()) return
     const direction = next < index ? -1 : 1
     const incomingOpen = !initial && root.hasAttribute('data-paused-details')
     if (active) {
@@ -236,9 +253,17 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     drawer.cancel()
     ready = false
     video.pause()
+    home.appendChild(video)
     waveformTask?.abort()
     index = next
     active = articles[index]
+    const entry = post()
+    const requestedHighlight =
+      initial && 'session' in entry && new URL(location.href).searchParams.has('highlight')
+    if (requestedHighlight) {
+      keepPaused = true
+      intent = 'paused'
+    }
     const position = positions.get(post().id) ?? 0
     active.toggleAttribute('data-restoring', post().kind === 'video' && position > 0)
     active.querySelector<HTMLInputElement>('.feed-seek')?.setAttribute('disabled', '')
@@ -254,17 +279,40 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
     document.title = `${post().title} • Hannes Diem`
     const path = postPath(post().id)
     if (!initial && location.pathname !== path) replaceFeedHistory(history.state, path)
+    reflectBack()
     root
       .querySelector<HTMLButtonElement>('[data-share]')!
       .setAttribute('aria-label', `Share ${post().title}`)
     playback.preload(undefined)
+    const binding: ActiveSession | undefined =
+      'session' in entry
+        ? {
+            id: entry.id,
+            video,
+            toggle() {
+              if (video.paused) resume()
+              else pause()
+            },
+            play() {
+              keepPaused = false
+              return play()
+            },
+          }
+        : undefined
+    const mounting = mountSession(binding)
+    if (mounting) {
+      await mounting
+      if (signal.aborted || current !== loading) return
+    }
     if (post().kind === 'text') {
       playback.clear()
       home.appendChild(video)
       if (!document.hidden) playback.preload(nextMedia(direction))
       return
     }
-    active.querySelector<HTMLElement>('.feed-media-mount')!.appendChild(video)
+    active
+      .querySelector<HTMLElement>(binding ? '.ec-feed-video-slot' : '.feed-media-mount')!
+      .appendChild(video)
     void waveform(post(), active)
     try {
       const attached = await playback.load(post(), position)
@@ -377,13 +425,17 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
       const target = event.target as HTMLElement
       if (!root.contains(target) && target !== document.body && target !== document.documentElement)
         return
+      const controlsWithNativeSpace =
+        'session' in post()
+          ? 'input:not([type=range]), textarea, select, [role=textbox], [role=menu], [aria-haspopup=menu]'
+          : '.feed-caption, input, textarea, select, a, button'
       if (
         event.defaultPrevented ||
         event.altKey ||
         event.ctrlKey ||
         event.metaKey ||
         target.isContentEditable ||
-        target.closest('.feed-caption, input, textarea, select, a, button')
+        target.closest(controlsWithNativeSpace)
       )
         return
       if (event.key === ' ' && post().kind !== 'text') {
@@ -401,13 +453,22 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   document.addEventListener(
     'keydown',
     (event) => {
-      if (event.key !== 'Escape') return
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      if (editingSession()) {
+        event.preventDefault()
+        active?.querySelector<HTMLButtonElement>('.ec-cancel-clip')?.click()
+        return
+      }
       event.preventDefault()
       root.querySelector<HTMLAnchorElement>('[data-back]')!.click()
     },
     options,
   )
   const selectAtViewport = () => {
+    if (editingSession()) {
+      root.scrollTo({ top: articles[index].offsetTop, behavior: 'instant' })
+      return
+    }
     const middle = root.getBoundingClientRect().top + root.clientHeight / 2
     const next = articles.findIndex((article) => {
       const box = article.getBoundingClientRect()
@@ -475,7 +536,7 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
             ? null
             : new MediaMetadata({
                 title: post().title,
-                artist: 'Temple of Sound',
+                artist: 'session' in post() ? 'ElectroCute' : 'Temple of Sound',
                 artwork: post().cover
                   ? [{ src: new URL(post().cover!, location.origin).href }]
                   : [],
@@ -509,7 +570,10 @@ export function mountFeed(root: HTMLElement, props: FeedProps, signal: AbortSign
   document.documentElement.removeAttribute('data-temple-loading')
   const localize = requestAnimationFrame(() => {
     for (const time of root.querySelectorAll('time'))
-      time.textContent = dateLabel({ value: time.dateTime, showTime: true }, true)
+      time.textContent = dateLabel(
+        { value: time.dateTime, showTime: !time.closest('[data-session]') },
+        true,
+      )
   })
   signal.addEventListener('abort', () => cancelAnimationFrame(localize), { once: true })
   root.scrollTo({ top: articles[index].offsetTop, behavior: 'instant' })

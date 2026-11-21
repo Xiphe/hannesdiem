@@ -1,5 +1,6 @@
 import type { CmxComponentNode, CmxDocument } from '@cmx-tools/contracts'
 import { recordingsTempleContent, entryTempleContent } from '../app/temple/tests/fixture.ts'
+import { electroCuteSessions } from './electrocute-fixture.ts'
 
 /** Authored by the test suite; neither production media nor Publications. */
 export const mixedFeedContent = structuredClone(recordingsTempleContent)
@@ -69,4 +70,27 @@ export function feedFixtureDocument(
   ;(opening.props!.facts as Record<string, unknown>[])[0].after = structuredClone(collection)
   opening.slots = [['facts', 0, 'after']]
   return { ...structuredClone(template), content: { ...content, metadata: { kind: 'temple' } } }
+}
+
+export function sharedFeedFixtureDocument(template: CmxDocument): CmxDocument {
+  return {
+    ...structuredClone(template),
+    content: {
+      title: 'Synthetic shared feed',
+      default: {
+        type: 'component',
+        from: '@hannesdiem/content-components',
+        import: 'FeedCollection',
+        children: [
+          {
+            type: 'component',
+            from: '@hannesdiem/content-components',
+            import: 'ElectroCuteArchive',
+            props: { sessions: electroCuteSessions },
+          },
+          structuredClone(collection),
+        ],
+      },
+    },
+  }
 }

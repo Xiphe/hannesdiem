@@ -250,6 +250,9 @@
 .temple-feed:focus-visible {
   outline: none;
 }
+.temple-feed:has([data-active] [data-feed-scroll-lock]) {
+  overflow-y: hidden;
+}
 .feed-post {
   position: relative;
   min-height: 100dvh;
@@ -271,6 +274,43 @@
 }
 .feed-stage {
   overflow: hidden;
+}
+.feed-post[data-session] > .feed-stage > :is(.feed-tap, .feed-start),
+.feed-post[data-session] .feed-transport,
+.feed-post[data-session] .feed-disclosure {
+  display: none;
+}
+.feed-post[data-session] .feed-panel-motion:not(:has(.feed-share-url:not([hidden]))) {
+  display: none;
+}
+.feed-post[data-session] .feed-title {
+  font-family: Bricolage, sans-serif;
+}
+.feed-post[data-session] img.feed-frame:not([src]) {
+  visibility: hidden;
+}
+.feed-post[data-session] .ec-transport {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 3s ease,
+    visibility 0s linear 3s;
+}
+.temple-feed[data-transport-peek] [data-active] .ec-transport,
+.feed-post[data-session][data-overlay] .ec-transport,
+.feed-post[data-session]
+  .ec-player:is([data-editing], :has([data-open]), :focus-within)
+  .ec-transport {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 1s ease,
+    visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .feed-post[data-session] .ec-transport {
+    transition: none !important;
+  }
 }
 .feed-frame,
 .feed-cover,
@@ -417,6 +457,10 @@
 .feed-heading {
   position: absolute;
   z-index: 4;
+}
+.temple-feed:has(.feed-post[data-active] .ec-highlights-drawer[data-open]) .feed-corners,
+.feed-post:has(.ec-highlights-drawer[data-open]) .feed-heading {
+  inset-inline-end: calc(max(12px, env(safe-area-inset-right)) + min(360px, 42vw));
 }
 .temple-feed[data-fullscreen-available] :is(.feed-corners, .feed-heading) {
   grid-template-columns: 96px minmax(0, 1fr) 96px;

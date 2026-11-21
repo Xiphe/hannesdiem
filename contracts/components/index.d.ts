@@ -190,3 +190,6 @@ export type {
   TemplePost,
   TemplePostsProps,
 } from './temple.d.ts'
+
+/** Published sources for the site-wide feed, in viewing order. */
+export declare const FeedCollection: (handle: Handle<{ children: RemixNode }>) => () => RemixNode

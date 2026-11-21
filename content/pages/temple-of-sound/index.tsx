@@ -16,7 +16,7 @@ import mixing from '../../media/mixing-scene-one-week-retreat-1803-2fadbcefea805
 import circlePhoto from '../../media/A7406429-1.jpg'
 import { watchActionContext, watchIntroduction, watchFragments } from './_watch.ts'
 import { createCopy } from './_create.ts'
-import { recordings } from './_recordings.tsx'
+import { recordings } from '../feed/_temple-of-sound/recordings.tsx'
 
 export const dates = { start: '2026-11-01', end: '2026-12-20' }
 export const metadata = {

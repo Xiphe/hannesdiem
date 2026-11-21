@@ -1,14 +1,13 @@
 import { ref, type Handle } from 'remix/component'
-import type { TemplePost } from '@hannesdiem/content-components'
-import { videoFrame, postPath } from './model.ts'
+import { ArchiveView, type SessionMedia } from '../../electrocute/view.tsx'
+import { videoFrame, postPath, type FeedEntry } from './model.ts'
 import { mountFeed } from './enhance.ts'
 import { FeedIcon } from './icon.tsx'
 import { ThemedImage } from '../../themed-image.tsx'
 
-type ResolvedCover<Post> = Post extends TemplePost
-  ? Omit<Post, 'cover'> & { cover?: string }
-  : never
-export type FeedPost = ResolvedCover<TemplePost>
+type ResolvedCover<Post> = Post extends FeedEntry ? Omit<Post, 'cover'> & { cover?: string } : never
+export type FeedPost = ResolvedCover<FeedEntry>
+export type ActiveSession = SessionMedia & { id: string }
 export interface FeedProps {
   selected: string
   mark: string
@@ -18,8 +17,15 @@ export interface FeedProps {
 
 export function Feed(handle: Handle<FeedProps>) {
   let root: HTMLElement | undefined
-  handle.queueTask((signal) => {
-    if (root) mountFeed(root, handle.props, signal)
+  let activeSession: ActiveSession | undefined
+  const sessions = handle.props.posts.flatMap((post) => ('session' in post ? [post.session] : []))
+  handle.queueTask(() => {
+    if (root)
+      mountFeed(root, handle.props, handle.signal, (session) => {
+        if (!session && !activeSession) return
+        activeSession = session
+        return handle.update()
+      })
   })
   return () => (
     <div
@@ -47,9 +53,14 @@ export function Feed(handle: Handle<FeedProps>) {
           class="feed-post"
           data-post-id={post.id}
           data-kind={post.kind}
+          data-session={'session' in post ? '' : undefined}
           data-active={post.id === handle.props.selected ? '' : undefined}
           data-orientation={
-            post.kind === 'video' && (post.aspectRatio ?? 16 / 9) < 1 ? 'portrait' : 'landscape'
+            'session' in post
+              ? undefined
+              : post.kind === 'video' && (post.aspectRatio ?? 16 / 9) < 1
+                ? 'portrait'
+                : 'landscape'
           }
           aria-labelledby={`feed-title-${post.id}`}
         >
@@ -60,12 +71,19 @@ export function Feed(handle: Handle<FeedProps>) {
               {(post.kind === 'video' || post.cover) && (
                 <img
                   class={post.kind === 'video' ? 'feed-frame' : 'feed-cover'}
-                  src={post.kind === 'video' ? videoFrame(post) : post.cover}
+                  src={post.kind === 'video' ? videoFrame(post) || undefined : post.cover}
                   alt=""
                   loading={post.id === handle.props.selected ? 'eager' : 'lazy'}
                 />
               )}
               <div class="feed-media-mount" />
+              {activeSession?.id === post.id && (
+                <ArchiveView
+                  sessions={sessions}
+                  selectedId={post.id}
+                  media={activeSession}
+                />
+              )}
               <button
                 class="feed-tap"
                 type="button"

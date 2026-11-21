@@ -1,9 +1,10 @@
 import type { ElectroCuteHighlight, ElectroCuteSession } from '@hannesdiem/content-components'
+import { postPath } from '../temple/feed/model.ts'
 
 export const archivePath = '/electrocute'
 export const sessionPath = (id: string) => `${archivePath}/${encodeURIComponent(id)}`
-export const highlightPath = (session: string, highlight: string, list = false) =>
-  `${sessionPath(session)}?highlight=${encodeURIComponent(highlight)}${list ? '&highlights=1' : ''}`
+export const highlightPath = (session: string, highlight: string, list = false, feed = false) =>
+  `${feed ? postPath(session) : sessionPath(session)}?highlight=${encodeURIComponent(highlight)}${list ? '&highlights=1' : ''}`
 
 export function clock(seconds: number) {
   const value = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0))
