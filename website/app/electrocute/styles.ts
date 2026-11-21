@@ -7,6 +7,7 @@ export const archiveStyle = css({
   marginInline: 'auto',
   padding: '7rem 1.25rem 4rem',
   '--ec-rule': 'color-mix(in oklab,var(--theme-fg) 22%,transparent)',
+  '--ec-control-hover': 'rgb(255 248 251 / 8%)',
   '& :is(button,a,input)': { borderRadius: 6 },
   '& :is(button,a)': { touchAction: 'manipulation' },
   '& button, & .ec-button': {
@@ -95,6 +96,7 @@ export const archiveStyle = css({
     position: 'relative',
     inset: 'auto',
     background: 'transparent',
+    '&:hover, &[aria-expanded=true]': { background: 'var(--ec-control-hover)' },
   },
   '&[data-feed-session] .ec-video-tap': { touchAction: 'pan-y' },
   '&[data-session] .ec-play-badge': {
@@ -699,7 +701,7 @@ export const archiveStyle = css({
     border: 0,
     borderRadius: 6,
     background: 'transparent',
-    '&:hover': { background: 'rgb(255 248 251 / 8%)' },
+    '&:hover': { background: 'var(--ec-control-hover)' },
     '& svg': { width: 16, height: 16 },
   },
   '& .ec-time-tooltip[data-editing]': {
