@@ -41,4 +41,4 @@ All external links open in a new tab.
 - Triage: independent label groups; skill overrides in `docs/agents/triage-labels.md`.
 - Domain: before exploration, read `GLOSSARY.md` and relevant `docs/adr/*.md`.
 - Artistic work without a clear specification: use the installed `$explore` skill from `Xiphe/skills`.
-- Temple of Sound design: read `website/app/temple/docs/collaboration.md` before proposing or implementing artwork changes.
+- Temple of Sound typography, masks or reuse: read `website/app/temple/docs/design-rules.md` before proposing or implementing changes. For artwork context, also read `website/app/temple/docs/collaboration.md`.
