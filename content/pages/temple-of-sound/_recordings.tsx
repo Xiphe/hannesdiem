@@ -7,6 +7,7 @@ import waitingBandCover from '../../media/temple-recording-waiting-band-cover.jp
 import theFallCover from '../../media/temple-recording-the-fall-cover.jpg'
 import feuerUndVergessenCover from '../../media/temple-recording-feuer-und-vergessen-cover.jpg'
 import letUsShowYouThisWebsiteCover from '../../media/temple-recording-let-us-show-you-this-website-cover.jpg'
+import farCover from '../../media/temple-recording-far-cover.jpg'
 
 export const recordings = (
   <TempleRecordings
@@ -184,6 +185,47 @@ export const recordings = (
               "For orientation, you are on my website, seeing a video where Nerd-Hannes shows you this website while Front-Singer-Hannes makes sure you watch this. I know it can be confusing but you can do it. We believe in y'all!"
             }
           </p>
+        ),
+      },
+      {
+        id: 'far',
+        title: 'Far (Interpretation)',
+        subheadline: 'by Roxanna Diercks',
+        postedAt: '2026-11-24T00:00:00+01:00',
+        customerCode: 'ku6r49ei7df9hym2',
+        videoId: 'fcc3c30755e61fcb8ff6b1ccb268691c',
+        cover: {
+          ...farCover,
+          alt: 'Far (Interpretation)',
+          focalX: 42.7,
+          focalY: 36,
+          videoFrame: { videoId: 'fcc3c30755e61fcb8ff6b1ccb268691c', time: 137.765847 },
+        },
+        aspectRatio: 9 / 16,
+        children: (
+          <>
+            <p>
+              Meine geliebte{' '}
+              <a
+                href="https://roxanna-diercks.de/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Partnerin
+              </a>{' '}
+              hat dieses Gedicht geschrieben, um die Trauer um ihren Vater zu verarbeiten, und mir
+              vorgeschlagen, dass ich es vertonen könnte.
+            </p>
+            <p>
+              Das Ergebnis scheint uns beiden auf den ersten Blick etwas pathetisch, ist bei
+              genauerem Hinsehen aber ein Abbild genau der Dynamik, die sie in ihrer Familie
+              beschrieben hat.
+            </p>
+            <p>
+              Ich habe nicht ihre Trauer vertont, sondern das, was in mir vorgeht, wenn ich mir
+              vorstelle, was in ihr vorgegangen sein könnte/sollte.
+            </p>
+          </>
         ),
       },
     ]}
